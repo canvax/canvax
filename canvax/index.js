@@ -112,8 +112,8 @@ define(
         },
         resize : function( opt ){
             //重新设置坐标系统 高宽 等。
-            this.width      = parseInt("width"  in opt || this._rootDom.offsetWidth  , 10); 
-            this.height     = parseInt("height" in opt || this._rootDom.offsetHeight , 10); 
+            this.width      = parseInt((opt && "width" in opt) || this._rootDom.offsetWidth  , 10); 
+            this.height     = parseInt((opt && "height" in opt) || this._rootDom.offsetHeight , 10); 
  
             this.el.style.width  = this.width +"px";
             this.el.style.height = this.height+"px";
