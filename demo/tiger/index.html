@@ -17,6 +17,67 @@
 <body>
     <div id="ready"></div>
    <script>
+   if (!window.define) {
+    if(KISSY){
+        window.define = function define(id, dependencies, factory) {
+            // KISSY.add(name?, factory?, deps)
+            function proxy() {
+                var slice = [].slice;
+                var args = slice.call(arguments, 1, arguments.length);
+                return factory.apply(window, args)
+            }
+            switch (arguments.length) {
+                case 2:
+                    factory = dependencies;
+                dependencies = id;
+                KISSY.add(proxy, {
+                    requires: dependencies
+                });
+                break;
+                case 3:
+                    KISSY.add(id, proxy, {
+                    requires: dependencies
+                });
+                break;
+            }
+        };
+        window.define.kmd = {}
+    }
+} 
+if( typeof define == "function" && define.cmd ){
+    var cmdDefine = define
+    window.define = function( id , deps , factory ){
+
+        //只有固定的一些包是按照amd规范写的才需要转换。
+        //比如canvax项目，是按照amd规范的，但是这个包是给业务项目中去使用的。
+        //而这个业务使用seajs规范，所以业务中自己的本身的module肯定是按照seajs来编写的不需要转换
+        if( typeof id == "string" && id.indexOf("canvax/") >= 0 ){
+            //只有canvax包下面的才需要做转换，因为canvax的module是安装amd格式编写的
+            return cmdDefine(id , deps , function( require, exports, module ){
+                var depList = []
+                for( var i = 0 , l = deps.length ; i<l ; i++ ){
+                    depList.push( require(deps[i]) )
+                }
+                //return factory.apply(window , depList);
+
+                //其实用上面的直接return也是可以的
+                //但是为了遵循cmd的规范，还是给module的exports赋值
+                module.exports = factory.apply(window , depList)
+            });
+        } else {
+            return cmdDefine.apply(window , arguments)
+        }
+    }
+}    
+if( typeof define == "function" && define.amd ){
+    //额，本来就是按照amd规范来开发的，就不需要改造了。
+}
+
+
+
+
+
+
    KISSY.ready(function(){
        KISSY.config({
            debug:true,
@@ -36,7 +97,7 @@
        var colorInd=0;
        window.stage=null;
 
-       KISSY.use("demo/tiger/tigerData,canvax/, canvax/library/color,node" , function( S ,tigerData ,Canvax,color ){
+       KISSY.use("demo/tiger/tigerData,canvax/,canvax/shape/Path , canvax/library/color,node" , function( S ,tigerData ,Canvax,Path,color ){
            var box = S.one("#canvasTest");
            var width = box.width();
            var height = box.height();
@@ -91,7 +152,7 @@
            
                            
                //console.log(Data.path)
-               var map = new Canvax.Shapes.Path({
+               var map = new Path({
                    //id:"map1",
                    context : {
                        x:200,
