@@ -13,9 +13,10 @@ define(
     "canvax/shape/BrokenLine", [
         "canvax/display/Shape",
         "canvax/core/Base",
-        "canvax/geom/SmoothSpline"
+        "canvax/geom/SmoothSpline",
+        "canvax/library/underscore"
     ],
-    function(Shape, Base, SmoothSpline) {
+    function(Shape, Base, SmoothSpline , _) {
         var BrokenLine = function(opt , atype) {
             var self = this;
             self.type = "brokenline";

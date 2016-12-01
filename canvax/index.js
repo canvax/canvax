@@ -26,14 +26,16 @@ define(
         "canvax/display/Point",
         "canvax/display/Text",
 
-        "canvax/animation/AnimationFrame"
+        "canvax/animation/AnimationFrame",
+        "canvax/library/underscore"
     ]
     , 
     function( 
         Base , AnimationFrame , EventHandler ,  EventDispatcher , EventManager , 
         DisplayObjectContainer , 
         Stage , Sprite , Shape , Point , Text,
-        AnimationFrame   
+        AnimationFrame,
+        _   
     ) {
 
     var Canvax = function( opt ){
@@ -216,7 +218,9 @@ define(
            if( !self.requestAid ){
                self.requestAid = AnimationFrame.registFrame( {
                    id : "enterFrame", //同时肯定只有一个enterFrame的task
-                   task : _.bind( self.__enterFrame , self)
+                   task : function(){
+                        self.__enterFrame.apply(self);
+                   }
                } );
            }
         },

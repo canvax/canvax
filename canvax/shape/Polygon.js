@@ -13,9 +13,10 @@
 define(
     "canvax/shape/Polygon", [
         "canvax/core/Base",
-        "canvax/shape/BrokenLine"
+        "canvax/shape/BrokenLine",
+        "canvax/library/underscore"
     ],
-    function(Base, BrokenLine) {
+    function(Base, BrokenLine , _) {
         var Polygon = function(opt , atype) {
             var self = this;
             opt = Base.checkOpt(opt);

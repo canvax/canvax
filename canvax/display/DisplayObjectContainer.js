@@ -10,11 +10,12 @@
 define(
     "canvax/display/DisplayObjectContainer",
     [
+        "canvax/library/underscore",
         "canvax/core/Base",
         "canvax/display/DisplayObject",
         "canvax/display/Point"
     ],
-    function(Base , DisplayObject , Point){
+    function( _ , Base , DisplayObject , Point){
 
         DisplayObjectContainer = function(opt){
            var self = this;

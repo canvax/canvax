@@ -13,9 +13,10 @@ define(
     "canvax/shape/Droplet",
     [
         "canvax/core/Base",
-        "canvax/shape/Path"
+        "canvax/shape/Path",
+        "canvax/library/underscore"
     ],
-    function(Base,Path){
+    function(Base,Path,_){
         var Droplet = function(opt){
             var self = this;
             opt = Base.checkOpt( opt );

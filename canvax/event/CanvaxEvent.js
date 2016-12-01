@@ -8,9 +8,10 @@
 define(
     "canvax/event/CanvaxEvent",
     [
-         "canvax/core/Base"
+         "canvax/core/Base",
+         "canvax/library/underscore"
     ],
-    function(EventBase){
+    function(EventBase , _){
         var CanvaxEvent = function( e ) {
             this.target = null;
             this.currentTarget = null;	

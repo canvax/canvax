@@ -17,9 +17,10 @@ define(
     "canvax/shape/Ellipse",
     [
         "canvax/display/Shape",
-        "canvax/core/Base"
+        "canvax/core/Base",
+        "canvax/library/underscore"
     ],
-    function(Shape,Base){
+    function(Shape,Base,_){
 
         var Ellipse = function(opt){
             var self = this;

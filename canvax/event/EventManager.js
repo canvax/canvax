@@ -9,8 +9,10 @@
 
 define(
     "canvax/event/EventManager",
-    [ ],
-    function(){
+    [ 
+        "canvax/library/underscore"
+    ],
+    function(_){
         /**
          * 构造函数.
          * @name EventDispatcher

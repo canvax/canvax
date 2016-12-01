@@ -8,8 +8,10 @@
  * */
 define(
     "canvax/geom/Vector",
-    [],
-    function(){
+    [
+        "canvax/library/underscore"
+    ],
+    function( _ ){
         function Vector(x, y) {
             var vx = 0,vy = 0;
             if ( arguments.length == 1 && _.isObject( x ) ){

@@ -15,9 +15,10 @@
 define(
     "canvax/shape/Isogon", [
         "canvax/core/Base",
-        "canvax/shape/Polygon"
+        "canvax/shape/Polygon",
+        "canvax/library/underscore"
     ],
-    function(Base, Polygon) {
+    function(Base, Polygon, _) {
         var Isogon = function(opt) {
             var self = this;
             opt = Base.checkOpt(opt);

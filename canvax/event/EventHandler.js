@@ -7,11 +7,16 @@
 define(
     "canvax/event/EventHandler", [
         "canvax/core/Base", 
-        ('ontouchstart' in window) ? "canvax/event/handler/touch" : "canvax/event/handler/mouse",
+        "canvax/event/handler/mouse",
+        "canvax/event/handler/touch",
         "canvax/display/Point",
-        "canvax/event/CanvaxEvent"
+        "canvax/event/CanvaxEvent",
+        "canvax/library/underscore"
     ],
-    function(Base, Handler, Point, CanvaxEvent) {
+    function(Base, Mouse, Touch, Point, CanvaxEvent , _) {
+        
+        var Handler = ('ontouchstart' in window) ? Touch : Mouse;
+
         var EventHandler = function(canvax) {
             this.canvax = canvax;
             this.curPoints = [new Point(0, 0)] //X,Y 的 point 集合, 在touch下面则为 touch的集合，只是这个touch被添加了对应的x，y
@@ -26,6 +31,7 @@ define(
             //当前的鼠标状态
             this._cursor = "default";
         };
+
         Base.creatClass(EventHandler, Handler, {
             /*
              *@param {array} childs 

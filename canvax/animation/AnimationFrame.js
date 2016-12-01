@@ -1,9 +1,10 @@
 define(
     "canvax/animation/AnimationFrame", [
         "canvax/animation/Tween",
-        "canvax/core/Base"
+        "canvax/core/Base",
+        "canvax/library/underscore"
     ],
-    function(Tween, Base) {
+    function(Tween, Base , _) {
         window.Tween = Tween;
         /**
          * 设置 AnimationFrame begin

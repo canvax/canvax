@@ -10,8 +10,8 @@
         //canvas {background:#999}
     </style>
 
-    <script type="text/javascript" src="./js/requirejs.js"></script>
-    <script src="./js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="http://seajs.github.io/examples/sea-modules/seajs/seajs/2.1.1/sea.js"></script>
+    <script src="http://g.tbcdn.cn/kissy/k/1.3.1/seed-min.js"></script>
 
 </head>
 
@@ -123,7 +123,7 @@ var colorInd=0;
 window.stage=null;
 var S = KISSY;
 KISSY.use("node" , function(S){
-    seajs.use(["canvax/index" , "canvax/shape/Shapes" , "canvax/animation/Tween" , "canvax/library/color" ] , function( Canvax , Shapes , Tween , color ){
+    seajs.use(["canvax/index" , "canvax/shape/Shapes" , "canvax/animation/Tween" , "canvax/library/color" , "canvax/library/underscore"] , function( Canvax , Shapes , Tween , color , _){
             //KISSY.use("canvax/index , canvax/shape/Shapes , canvax/animation/Tween , canvax/library/color ,  node" , function( S , Canvax , Shapes , Tween , color ){
                 S.all("#ready").html("ready");
 

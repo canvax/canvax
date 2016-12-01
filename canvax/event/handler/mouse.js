@@ -9,9 +9,10 @@ define(
     [
         "canvax/core/Base",
         "canvax/display/Point",
-        "canvax/event/CanvaxEvent"
+        "canvax/event/CanvaxEvent",
+        "canvax/library/underscore"
     ],
-    function( Base , Point , CanvaxEvent ){
+    function( Base , Point , CanvaxEvent , _){
         var mouseHandler = function(){
         
         };

@@ -13,9 +13,10 @@ define(
         "canvax/display/Shape",
         "canvax/core/Base",
         "canvax/geom/Matrix",
-        "canvax/geom/bezier"
+        "canvax/geom/bezier",
+        "canvax/library/underscore"
     ],
-    function(Shape, Base, Matrix, Bezier) {
+    function(Shape, Base, Matrix, Bezier , _) {
         var Path = function(opt) {
             var self = this;
             self.type = "path";

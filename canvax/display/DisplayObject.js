@@ -10,6 +10,7 @@
 define(
     "canvax/display/DisplayObject",
     [
+        "canvax/library/underscore",
         "canvax/event/EventDispatcher",
         "canvax/geom/Matrix",
         "canvax/display/Point",
@@ -18,7 +19,7 @@ define(
         "canvax/animation/AnimationFrame",
         "canvax/core/PropertyFactory"
     ],
-    function(EventDispatcher , Matrix , Point , Base , HitTestPoint , AnimationFrame , PropertyFactory){
+    function( _ , EventDispatcher , Matrix , Point , Base , HitTestPoint , AnimationFrame , PropertyFactory){
 
         var DisplayObject = function(opt){
             arguments.callee.superclass.constructor.apply(this, arguments);
@@ -348,7 +349,6 @@ define(
     
                 var rotation = ctx.rotation;
                 if( rotation ){
-                    debugger
                     //如果有旋转
                     //旋转的原点坐标
                     var origin = new Point(ctx.rotateOrigin);

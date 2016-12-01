@@ -10,10 +10,11 @@
 define(
     "canvax/display/Movieclip",
     [
+        "canvax/library/underscore",
         "canvax/display/DisplayObjectContainer",
         "canvax/core/Base"
     ],
-    function(DisplayObjectContainer , Base){
+    function( _ , DisplayObjectContainer , Base){
       
         var Movieclip = function( opt ){
       

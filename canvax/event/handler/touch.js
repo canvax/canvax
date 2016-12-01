@@ -8,9 +8,10 @@ define(
     "canvax/event/handler/touch",
     [
         "canvax/core/Base",
-        "canvax/library/hammer"
+        "canvax/library/hammer",
+        "canvax/library/underscore"
     ],
-    function( Base , Hammer ){
+    function( Base , Hammer , _){
         var EventsTypes = [ 
             "pan","panstart","panmove","panend","pancancel","panleft","panright","panup","pandown",
             "press" , "pressup",

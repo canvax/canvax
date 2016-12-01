@@ -11,9 +11,10 @@ define(
     "canvax/event/EventDispatcher",
     [
         "canvax/core/Base",
-        "canvax/event/EventManager"
+        "canvax/event/EventManager",
+        "canvax/library/underscore"
     ],
-    function( Base ,EventManager){
+    function( Base ,EventManager , _){
 
         var EventDispatcher = function(){
             arguments.callee.superclass.constructor.call(this, name);

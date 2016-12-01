@@ -17,9 +17,10 @@
 define(
     "canvax/shape/Line", [
         "canvax/display/Shape",
-        "canvax/core/Base"
+        "canvax/core/Base",
+        "canvax/library/underscore"
     ],
-    function(Shape, Base) {
+    function(Shape, Base , _) {
         var Line = function(opt) {
             var self = this;
             this.type = "line";

@@ -16,9 +16,10 @@ define(
     "canvax/shape/Circle",
     [
         "canvax/display/Shape",
-        "canvax/core/Base"
+        "canvax/core/Base",
+        "canvax/library/underscore"
     ],
-    function(Shape , Base) {
+    function(Shape , Base , _) {
         var Circle = function(opt) {
             var self = this;
             self.type = "circle";

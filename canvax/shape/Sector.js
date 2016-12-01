@@ -20,9 +20,10 @@ define(
     [
         "canvax/display/Shape",
         "canvax/geom/Math",
-        "canvax/core/Base"
+        "canvax/core/Base",
+        "canvax/library/underscore"
     ],
-    function(Shape , myMath , Base){
+    function(Shape , myMath , Base , _){
  
         var Sector = function(opt){
             var self  = this;

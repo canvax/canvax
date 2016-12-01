@@ -5,9 +5,10 @@
  * */
 define(
     "canvax/geom/HitTestPoint", [
-        "canvax/geom/Math"
+        "canvax/geom/Math",
+        "canvax/library/underscore"
     ],
-    function(myMath) {
+    function(myMath , _) {
         /**
          * TODO:本检测只为进一步的 详细 检测。也就是说 进过了基本的矩形范围检测后才会
          */

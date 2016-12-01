@@ -8,9 +8,10 @@
 define(
     "canvax/geom/SmoothSpline",
     [
-        "canvax/geom/Vector"
+        "canvax/geom/Vector",
+        "canvax/library/underscore"
     ],
-    function( Vector ){
+    function( Vector , _ ){
         /**
          * @inner
          */
