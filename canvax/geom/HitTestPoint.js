@@ -6,7 +6,7 @@
 define(
     "canvax/geom/HitTestPoint", [
         "canvax/geom/Math",
-        "canvax/library/underscore"
+        "canvax/utils/underscore"
     ],
     function(myMath , _) {
         /**

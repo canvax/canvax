@@ -10,7 +10,7 @@ define(
     "canvax/display/Text", [
         "canvax/display/DisplayObject",
         "canvax/core/Base",
-        "canvax/library/underscore"
+        "canvax/utils/underscore"
     ],
     function(DisplayObject, Base , _) {
         var Text = function(text, opt) {

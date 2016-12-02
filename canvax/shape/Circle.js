@@ -17,7 +17,7 @@ define(
     [
         "canvax/display/Shape",
         "canvax/core/Base",
-        "canvax/library/underscore"
+        "canvax/utils/underscore"
     ],
     function(Shape , Base , _) {
         var Circle = function(opt) {

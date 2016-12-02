@@ -14,7 +14,7 @@ define(
     [
         "canvax/core/Base",
         "canvax/shape/Path",
-        "canvax/library/underscore"
+        "canvax/utils/underscore"
     ],
     function(Base,Path,_){
         var Droplet = function(opt){

@@ -1,4 +1,4 @@
-define("canvax/animation/Tween", ["canvax/library/underscore"], function(_) {
+define("canvax/animation/Tween", ["canvax/utils/underscore"], function(_) {
 
 	/**
 	 * Tween.js - Licensed under the MIT license

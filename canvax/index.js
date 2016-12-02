@@ -27,7 +27,8 @@ define(
         "canvax/display/Text",
 
         "canvax/animation/AnimationFrame",
-        "canvax/library/underscore"
+        "canvax/utils/underscore",
+        "canvax/utils/dom"
     ]
     , 
     function( 
@@ -35,14 +36,14 @@ define(
         DisplayObjectContainer , 
         Stage , Sprite , Shape , Point , Text,
         AnimationFrame,
-        _   
+        _ , $   
     ) {
 
     var Canvax = function( opt ){
         this.type = "canvax";
         this._cid = new Date().getTime() + "_" + Math.floor(Math.random()*100); 
         
-        this._rootDom   = Base.getEl(opt.el);
+        this._rootDom   = $.query(opt.el);
         if( !this._rootDom ){
             //如果宿主对象不存在,那么，我也懒的画了
             return;
@@ -72,9 +73,9 @@ define(
 
         this._rootDom.innerHTML = htmlStr;
  
-        this.el = Base.getEl("cc-"+this._cid);
+        this.el = $.query("cc-"+this._cid);
         
-        this.rootOffset      = Base.getOffset(this.el); //this.el.offset();
+        this.rootOffset      = $.offset(this.el); //this.el.offset();
         this.lastGetRO       = 0;//最后一次获取rootOffset的时间
  
         //每帧 由 心跳 上报的 需要重绘的stages 列表
@@ -124,7 +125,7 @@ define(
             this.el.style.width  = this.width +"px";
             this.el.style.height = this.height+"px";
  
-            this.rootOffset     = Base.getOffset(this.el);
+            this.rootOffset     = $.offset(this.el);
             this._notWatch      = true;
             this.context.width  = this.width;
             this.context.height = this.height;
@@ -151,7 +152,7 @@ define(
                 s._notWatch     = false;
             });
 
-            var canvaxDOMc = Base.getEl("cdc-"+this._cid);
+            var canvaxDOMc = $.query("cdc-"+this._cid);
             canvaxDOMc.style.width  = this.width  + "px";
             canvaxDOMc.style.height = this.height + "px";
 
@@ -159,7 +160,7 @@ define(
  
         },
         getDomContainer  : function(){
-            return Base.getEl("cdc-"+this._cid);
+            return $.query("cdc-"+this._cid);
         },
         getHoverStage : function(){
             return this._hoverStage;
@@ -182,7 +183,7 @@ define(
          * @return {Object} 上下文
         */
         _createPixelContext : function() {
-            var _pixelCanvas = Base.getEl("_pixelCanvas");
+            var _pixelCanvas = $.query("_pixelCanvas");
             if(!_pixelCanvas){
                 _pixelCanvas = Base._createCanvas("_pixelCanvas" , 0 , 0); 
             } else {
@@ -208,7 +209,7 @@ define(
             var now = new Date().getTime();
             if( now - this.lastGetRO > 1000 ){
                 //alert( this.lastGetRO )
-                this.rootOffset      = Base.getOffset(this.el);
+                this.rootOffset      = $.offset(this.el);
                 this.lastGetRO       = now;
             }
         },
@@ -265,7 +266,7 @@ define(
                 canvas = stage.context2D.canvas;
             }
 
-            var canvaxDOMc = Base.getEl("cdc-"+this._cid);
+            var canvaxDOMc = $.query("cdc-"+this._cid);
 
             if(this.children.length == 1){
                 //this.el.append( canvas );

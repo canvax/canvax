@@ -12,7 +12,7 @@ define(
     [
         "canvax/core/Base",
         "canvax/event/EventManager",
-        "canvax/library/underscore"
+        "canvax/utils/underscore"
     ],
     function( Base ,EventManager , _){
 

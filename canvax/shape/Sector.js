@@ -21,7 +21,7 @@ define(
         "canvax/display/Shape",
         "canvax/geom/Math",
         "canvax/core/Base",
-        "canvax/library/underscore"
+        "canvax/utils/underscore"
     ],
     function(Shape , myMath , Base , _){
  

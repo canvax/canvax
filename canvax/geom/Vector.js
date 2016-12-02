@@ -9,7 +9,7 @@
 define(
     "canvax/geom/Vector",
     [
-        "canvax/library/underscore"
+        "canvax/utils/underscore"
     ],
     function( _ ){
         function Vector(x, y) {

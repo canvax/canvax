@@ -10,7 +10,7 @@
 define(
     "canvax/display/DisplayObjectContainer",
     [
-        "canvax/library/underscore",
+        "canvax/utils/underscore",
         "canvax/core/Base",
         "canvax/display/DisplayObject",
         "canvax/display/Point"

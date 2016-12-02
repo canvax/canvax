@@ -9,7 +9,7 @@ define(
     [
         "canvax/core/Base",
         "canvax/library/hammer",
-        "canvax/library/underscore"
+        "canvax/utils/underscore"
     ],
     function( Base , Hammer , _){
         var EventsTypes = [ 

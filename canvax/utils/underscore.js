@@ -1,5 +1,5 @@
 define(
-    "canvax/library/underscore",
+    "canvax/utils/underscore",
     [],
     function(){
         var _ = {}

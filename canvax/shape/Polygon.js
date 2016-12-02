@@ -14,7 +14,7 @@ define(
     "canvax/shape/Polygon", [
         "canvax/core/Base",
         "canvax/shape/BrokenLine",
-        "canvax/library/underscore"
+        "canvax/utils/underscore"
     ],
     function(Base, BrokenLine , _) {
         var Polygon = function(opt , atype) {

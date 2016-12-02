@@ -11,7 +11,7 @@
 define(
     "canvax/core/PropertyFactory",
     [
-        "canvax/library/underscore"
+        "canvax/utils/underscore"
     ],
     function( _ ){
     //定义封装好的兼容大部分浏览器的defineProperties 的 属性工厂

@@ -10,7 +10,7 @@
 define(
     "canvax/display/Movieclip",
     [
-        "canvax/library/underscore",
+        "canvax/utils/underscore",
         "canvax/display/DisplayObjectContainer",
         "canvax/core/Base"
     ],

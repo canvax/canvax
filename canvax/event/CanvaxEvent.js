@@ -9,7 +9,7 @@ define(
     "canvax/event/CanvaxEvent",
     [
          "canvax/core/Base",
-         "canvax/library/underscore"
+         "canvax/utils/underscore"
     ],
     function(EventBase , _){
         var CanvaxEvent = function( e ) {

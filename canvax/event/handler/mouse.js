@@ -7,12 +7,12 @@
 define(
     "canvax/event/handler/mouse",
     [
-        "canvax/core/Base",
         "canvax/display/Point",
         "canvax/event/CanvaxEvent",
-        "canvax/library/underscore"
+        "canvax/utils/underscore",
+        "canvax/utils/dom"
     ],
-    function( Base , Point , CanvaxEvent , _){
+    function( Point , CanvaxEvent , _ , $){
         var mouseHandler = function(){
         
         };
@@ -22,7 +22,7 @@ define(
                 var me   = this;
                 var root = this.canvax;
                 _.each( ["click","dblclick","mousedown","mousemove","mouseup","mouseout"] , function( type ){
-                    Base.addEvent( root.el , type , function( e ){
+                    $.addEvent( root.el , type , function( e ){
                         root.updateRootOffset();
                         me.__mouseHandler( e );
                         /*

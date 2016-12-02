@@ -10,7 +10,7 @@
 define(
     "canvax/display/DisplayObject",
     [
-        "canvax/library/underscore",
+        "canvax/utils/underscore",
         "canvax/event/EventDispatcher",
         "canvax/geom/Matrix",
         "canvax/display/Point",

@@ -11,7 +11,7 @@ define(
         "canvax/event/handler/touch",
         "canvax/display/Point",
         "canvax/event/CanvaxEvent",
-        "canvax/library/underscore"
+        "canvax/utils/underscore"
     ],
     function(Base, Mouse, Touch, Point, CanvaxEvent , _) {
         

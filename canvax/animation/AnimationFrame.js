@@ -2,7 +2,7 @@ define(
     "canvax/animation/AnimationFrame", [
         "canvax/animation/Tween",
         "canvax/core/Base",
-        "canvax/library/underscore"
+        "canvax/utils/underscore"
     ],
     function(Tween, Base , _) {
         window.Tween = Tween;
