@@ -22,7 +22,7 @@ define(
         var Isogon = function(opt) {
             var self = this;
             opt = Base.checkOpt(opt);
-            self._context = _.deepExtend({
+            self._context = _.extend({
                 pointList: [], //从下面的r和n计算得到的边界值的集合
                 r: 0, //{number},  // 必须，正n边形外接圆半径
                 n: 0 //{number},  // 必须，指明正几边形

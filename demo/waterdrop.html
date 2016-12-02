@@ -174,10 +174,10 @@
                     };
                     waterDrop.prototype = {
                         init : function( opt ){
-                            _.deepExtend( this.opt , opt );
+                            _.extend( this.opt , opt );
                         },
                         reset : function( opt ){
-                            _.deepExtend( this.opt , opt );
+                            _.extend( this.opt , opt );
                             this.draw();
                         },
                         /**

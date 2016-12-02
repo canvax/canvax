@@ -191,21 +191,7 @@ define(
                 if (charCode >= 48 && charCode <= 57) name += "_";
                 return name + Base.getUID();
             },
-            /**
-             * 简单的浅复制对象。
-             * @param strict  当为true时只覆盖已有属性
-             */
-            copy: function(target, source, strict){ 
-                if ( _.isEmpty(source) ){
-                    return target;
-                }
-                for(var key in source){
-                    if(!strict || target.hasOwnProperty(key) || target[key] !== undefined){
-                        target[key] = source[key];
-                    }
-                }
-                return target;
-            },
+            
             /**
              * 按照css的顺序，返回一个[上,右,下,左]
              */

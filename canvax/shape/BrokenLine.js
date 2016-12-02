@@ -25,7 +25,7 @@ define(
             if( atype !== "clone" ){
                 self._initPointList(opt.context);
             };
-            self._context = _.deepExtend({
+            self._context = _.extend({
                 lineType: null,
                 smooth: false,
                 pointList: [], //{Array}  // 必须，各个顶角坐标

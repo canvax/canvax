@@ -64,6 +64,23 @@ define(
             //所有属性准备好了后，先要计算一次this._updateTransform()得到_tansform
             this._updateTransform();
         };
+
+        /**
+         * 简单的浅复制对象。
+         * @param strict  当为true时只覆盖已有属性
+         */
+        var copy = function(target, source, strict){ 
+            if ( _.isEmpty(source) ){
+                return target;
+            }
+            for(var key in source){
+                if(!strict || target.hasOwnProperty(key) || target[key] !== undefined){
+                    target[key] = source[key];
+                }
+            }
+            return target;
+        };
+
         Base.creatClass( DisplayObject , EventDispatcher , {
             init : function(){},
             _createContext : function( opt ){
@@ -75,7 +92,7 @@ define(
     
                 //提供给Coer.PropertyFactory() 来 给 self.context 设置 propertys
                 //这里不能用_.extend， 因为要保证_contextATTRS的纯粹，只覆盖下面已有的属性
-                var _contextATTRS = Base.copy( {
+                var _contextATTRS = copy( {
                     width         : 0,
                     height        : 0,
                     x             : 0,

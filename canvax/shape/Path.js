@@ -38,7 +38,7 @@ define(
                     //T = smooth quadratic Belzier curveto
                     //Z = closepath
             };
-            self._context = _.deepExtend(_context, (self._context || {}));
+            self._context = _.extend(_context, (self._context || {}));
             arguments.callee.superclass.constructor.apply(self, arguments);
         };
 
