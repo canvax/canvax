@@ -32,12 +32,9 @@
  * toArray: 返回颜色值数组
  * alpha  : 设置颜色的透明度
  **/
-define(
-    "canvax/library/color",
-    [
-        "canvax/core/Base"
-    ],
-    function(Base){
+(
+
+    function(){
 
 
         var _ctx;
@@ -274,7 +271,7 @@ define(
          */
         function getRadialGradient(x0, y0, r0, x1, y1, r1, colorList) {
             if (!_ctx) {
-                _ctx = Base.getContext();
+                //_ctx = Base.getContext();
             }
             var gradient = _ctx.createRadialGradient(x0, y0, r0, x1, y1, r1);
             for ( var i = 0, l = colorList.length; i < l; i++) {
@@ -294,7 +291,7 @@ define(
          */
         function getLinearGradient(x0, y0, x1, y1, colorList) {
             if (!_ctx) {
-                _ctx = Base.getContext();
+                //_ctx = Base.getContext();
             }
             var gradient = _ctx.createLinearGradient(x0, y0, x1, y1);
             for ( var i = 0, l = colorList.length; i < l; i++) {
@@ -995,7 +992,7 @@ define(
             return [ H, S, L ];
         }
     
-        return {
+        window.colors = {
             customPalette : customPalette,
             resetPalette : resetPalette,
             getColor : getColor,
@@ -1027,4 +1024,4 @@ define(
             getData : getData
         };
     }
-)
+)();

@@ -12,6 +12,7 @@
 
     <script type="text/javascript" src="http://seajs.github.io/examples/sea-modules/seajs/seajs/2.1.1/sea.js"></script>
     <script src="http://g.tbcdn.cn/kissy/k/1.3.1/seed-min.js"></script>
+    <script src="./js/color.js"></script>
 
 </head>
 
@@ -123,7 +124,7 @@ var colorInd=0;
 window.stage=null;
 var S = KISSY;
 KISSY.use("node" , function(S){
-    seajs.use(["canvax/index" , "canvax/shape/Shapes" , "canvax/animation/Tween" , "canvax/library/color" , "canvax/utils/underscore"] , function( Canvax , Shapes , Tween , color , _){
+    seajs.use(["canvax/index" , "canvax/shape/Shapes" , "canvax/animation/Tween" , "canvax/utils/underscore"] , function( Canvax , Shapes , Tween ,  _){
             //KISSY.use("canvax/index , canvax/shape/Shapes , canvax/animation/Tween , canvax/library/color ,  node" , function( S , Canvax , Shapes , Tween , color ){
                 S.all("#ready").html("ready");
 
@@ -170,7 +171,7 @@ KISSY.use("node" , function(S){
 
                         r : 50,
                         fillStyle : 'rgba(220, 20, 60, 0.8)',          // rgba supported
-                        strokeStyle : color.getColor(colorInd++),  // getColor from default palette
+                        strokeStyle : colors.getColor(colorInd++),  // getColor from default palette
                         lineWidth : 5
                         //lineType  : "dashed"
                     }
@@ -197,7 +198,7 @@ KISSY.use("node" , function(S){
                     context : {
                         x:300,
                         pointList : [[10, 10], [60, 100], [148, 130], [250, 40], [446, 100]],
-                        strokeStyle : "red",//color.getColor(colorInd++),
+                        strokeStyle : "red",//colors.getColor(colorInd++),
                         lineWidth : 1,
                         smooth    : true ,
                         lineType  : "dashed"
@@ -221,8 +222,8 @@ KISSY.use("node" , function(S){
 
                         hr : 50,
                         vr : 70,
-                        fillStyle:color.getColor(colorInd++),
-                        strokeStyle:color.getColor(colorInd++),
+                        fillStyle:colors.getColor(colorInd++),
+                        strokeStyle:colors.getColor(colorInd++),
                         lineWidth : 4
                     }
                 });
@@ -263,8 +264,8 @@ KISSY.use("node" , function(S){
 
                         hr : 70,
                         vr : 30,
-                        fillStyle:color.getColor(colorInd++),
-                        strokeStyle:color.getColor(colorInd++),
+                        fillStyle:colors.getColor(colorInd++),
+                        strokeStyle:colors.getColor(colorInd++),
                         lineWidth : 8
 
                     }
@@ -293,8 +294,8 @@ KISSY.use("node" , function(S){
                         startAngle : 110 ,
 
                         endAngle : 60,
-                        fillStyle:color.getColor(colorInd++),
-                        strokeStyle:color.getColor(colorInd++),
+                        fillStyle:colors.getColor(colorInd++),
+                        strokeStyle:colors.getColor(colorInd++),
                         lineWidth : 0
                         //lineJoin : "round"
                     }
@@ -337,8 +338,8 @@ KISSY.use("node" , function(S){
                         lineType  : "dashed",
                         //pointList : [[310, 120], [360, 120], [348, 230], [250, 340], [146, 200]],
                         pointList : [[120,42],[175,75],[225,144],[162,207],[90,180],[55,134],[82,90]],
-                        fillStyle:color.getColor(colorInd++),
-                        strokeStyle:color.getColor(colorInd++),
+                        fillStyle:colors.getColor(colorInd++),
+                        strokeStyle:colors.getColor(colorInd++),
                         lineWidth : 1
                     }
                 });
@@ -377,8 +378,8 @@ KISSY.use("node" , function(S){
                         y:0,
                         path : map1Path,
                         lineWidth : 1,
-                        fillStyle:color.getColor(colorInd++),
-                        strokeStyle:color.getColor(colorInd++)
+                        fillStyle:colors.getColor(colorInd++),
+                        strokeStyle:colors.getColor(colorInd++)
                     }
                 });
                 map1.on("mouseover" , function(){
@@ -402,8 +403,8 @@ KISSY.use("node" , function(S){
                         n : 9,
                         lineWidth : 3,
                         smooth: true,
-                        fillStyle:color.getColor(colorInd++),
-                        strokeStyle:color.getColor(colorInd++)
+                        fillStyle:colors.getColor(colorInd++),
+                        strokeStyle:colors.getColor(colorInd++)
                     }
                 });
                 isogon.on("mouseover" , function(){
@@ -437,8 +438,8 @@ KISSY.use("node" , function(S){
 
                         radius: [10, 20,0],
                         //lineWidth : 6,
-                        fillStyle:color.getColor(colorInd++)
-                        //strokeStyle:color.getColor(colorInd++),
+                        fillStyle:colors.getColor(colorInd++)
+                        //strokeStyle:colors.getColor(colorInd++),
                         //shadowColor :"blue",
 
                         //shadowOffsetX : 3,
@@ -468,7 +469,7 @@ KISSY.use("node" , function(S){
                         lineType : "dashed",
                         lineWidth : 2,
                         dashLength : 2, //虚线的长度
-                        strokeStyle:color.getColor(colorInd++)
+                        strokeStyle:colors.getColor(colorInd++)
                     }
                 });
                 line.once("mouseover" , function(){
