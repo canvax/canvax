@@ -133,6 +133,10 @@ KISSY.use("node" , function(S){
                     id : "canvax",
                     el : box
                 });
+                var evt = canvax.registEvent({
+
+                });
+                evt.init();
 
                 stage = new Canvax.Display.Stage({
                     id : "chart0"

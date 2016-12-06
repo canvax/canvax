@@ -95,7 +95,7 @@ define(
         
         this._isReady    = false;
 
-        this.evt = null;
+        this.event = null;
  
         arguments.callee.superclass.constructor.apply(this, arguments);
     };
@@ -108,14 +108,17 @@ define(
             //然后创建一个用于绘制激活shape的 stage到activation
             this._creatHoverStage();
  
-            //初始化事件委托到root元素上面
-            this.evt = new EventHandler( this );
-            this.evt.init();
- 
             //创建一个如果要用像素检测的时候的容器
             this._createPixelContext();
             
             this._isReady = true;
+        },
+        registEvent : function(opt){
+            //初始化事件委托到root元素上面
+            var evt = new EventHandler( this );
+            
+            this.event = evt;
+            return evt;
         },
         resize : function( opt ){
             //重新设置坐标系统 高宽 等。
