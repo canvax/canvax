@@ -140,7 +140,7 @@ define(
         _.isPlainObject = function( obj ) {
             // Because of IE, we also have to check the presence of the constructor property.
             // Make sure that DOM nodes and window objects don't pass through, as well
-            if ( !obj || typeof obj !== "object" || obj.nodeType || isWindow( obj ) ) {
+            if ( !obj || typeof obj !== "object" || obj.nodeType || _.isWindow( obj ) ) {
                 return false;
             }
             try {
@@ -191,12 +191,12 @@ define(
                       if ( target === copy ) {  
                           continue;  
                       }  
-                      if ( deep && copy && ( isPlainObject(copy) || (copyIsArray = _.isArray(copy)) ) ) {  
+                      if ( deep && copy && ( _.isPlainObject(copy) || (copyIsArray = _.isArray(copy)) ) ) {  
                           if ( copyIsArray ) {  
                               copyIsArray = false;  
                               clone = src && _.isArray(src) ? src : [];  
                           } else {  
-                              clone = src && isPlainObject(src) ? src : {};  
+                              clone = src && _.isPlainObject(src) ? src : {};  
                           }  
                           target[ name ] = _.extend( deep, clone, copy );  
                       } else if ( copy !== undefined ) {  

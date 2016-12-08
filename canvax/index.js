@@ -115,10 +115,9 @@ define(
         },
         registEvent : function(opt){
             //初始化事件委托到root元素上面
-            var evt = new EventHandler( this );
-            
-            this.event = evt;
-            return evt;
+            this.event = new EventHandler( this , opt);;
+            this.event.init();
+            return this.event;
         },
         resize : function( opt ){
             //重新设置坐标系统 高宽 等。

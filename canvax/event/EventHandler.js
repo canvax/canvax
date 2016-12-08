@@ -12,8 +12,16 @@ define(
         "canvax/utils/dom"
     ],
     function(Point, CanvaxEvent , _ , $) {
+
+        var _mouseEventTypes = ["click","dblclick","mousedown","mousemove","mouseup","mouseout"];
+        var _hammerEventTypes = [ 
+            "pan","panstart","panmove","panend","pancancel","panleft","panright","panup","pandown",
+            "press" , "pressup",
+            "swipe" , "swipeleft" , "swiperight" , "swipeup" , "swipedown",
+            "tap"
+        ];
         
-        var EventHandler = function(canvax) {
+        var EventHandler = function(canvax , opt) {
             this.canvax = canvax;
 
             this.curPoints = [new Point(0, 0)] //X,Y 的 point 集合, 在touch下面则为 touch的集合，只是这个touch被添加了对应的x，y
@@ -27,16 +35,18 @@ define(
             //当前的鼠标状态
             this._cursor = "default";
 
-            this.eventTarget = this.canvax.el;
-            this.eventTypes = ["click","dblclick","mousedown","mousemove","mouseup","mouseout"];
+            this.target = this.canvax.el;
+            this.types = [];
+
             //mouse体统中不需要配置drag,touch中会用到第三方的touch库，每个库的事件名称可能不一样，
             //就要这里配置，默认实现的是hammerjs的,所以默认可以在项目里引入hammerjs http://hammerjs.github.io/
             this.drag = {
                 start : "panstart",
                 move : "panmove",
                 end : "panend"
-            }; 
+            };
 
+            _.extend( true , this , opt );
 
         };
 
@@ -55,28 +65,33 @@ define(
 
         EventHandler.prototype = {
             init : function(){
+                
                 //依次添加上浏览器的自带事件侦听
                 var me   = this;
-                _.each( me.eventTypes , function( type ){
-                    if( me.eventTarget.nodeType == 1 ){
-                        $.addEvent( me.eventTarget , type , function( e ){
-                            me.__handler( e );
+                if( me.target.nodeType == undefined ){
+                    //如果target.nodeType没有的话， 说明该target为一个jQuery对象 or kissy 对象or hammer对象
+                    //即为第三方库，那么就要对接第三方库的事件系统。默认实现hammer的大部分事件系统
+                    if( !me.types || me.types.length == 0  ){
+                        me.types = _hammerEventTypes;
+                    };
+                } else if( me.target.nodeType == 1 ){
+                    me.types = _mouseEventTypes;
+                };
+
+                _.each( me.types , function( type ){
+                    //不再关心浏览器环境是否 'ontouchstart' in window 
+                    //而是直接只管传给事件模块的是一个原生dom还是 jq对象 or hammer对象等
+                    if( me.target.nodeType == 1 ){
+                        $.addEvent( me.target , type , function( e ){
+                            me.__mouseHandler( e );
                         } );
                     } else {
-                        me.eventTarget.on( type , function( e ){
-                            me.__handler( e );
+                        me.target.on( type , function( e ){
+                            me.__libHandler( e );
                         });
                     };
-                } );   
+                } );
             },
-            __handler : function( e ){
-                if( 'ontouchstart' in window ){
-                    this.__TouchHandler( e );
-                } else {
-                    this.__mouseHandler( e );
-                };
-            },
-
             /*
             * 原生事件系统------------------------------------------------begin
             * 鼠标事件处理函数
@@ -91,6 +106,7 @@ define(
                     CanvaxEvent.pageX( e ) - root.rootOffset.left , 
                     CanvaxEvent.pageY( e ) - root.rootOffset.top
                 )];
+
                 //理论上来说，这里拿到point了后，就要计算这个point对应的target来push到curPointsTarget里，
                 //但是因为在drag的时候其实是可以不用计算对应target的。
                 //所以放在了下面的me.__getcurPointsTarget( e , curMousePoint );常规mousemove中执行
@@ -136,20 +152,12 @@ define(
                         //说明正在拖动啊
                         if(!me._draging){
                             //begin drag
-                            //curMouseTarget.dragBegin && curMouseTarget.dragBegin(e);
-
                             curMouseTarget.fire("dragstart" , e);
-                            
-                            curMouseTarget._globalAlpha = curMouseTarget.context.globalAlpha;
-
                             //先把本尊给隐藏了
                             curMouseTarget.context.globalAlpha = 0;
-                                                 
                             //然后克隆一个副本到activeStage
                             var cloneObject = me._clone2hoverStage( curMouseTarget , 0 );
-
                             cloneObject.context.globalAlpha = curMouseTarget._globalAlpha;
-                            
                         } else {
                             //drag ing
                             me._dragHander( e , curMouseTarget , 0 );
@@ -261,65 +269,66 @@ define(
             */
 
             /*
-             *touch事件系统------------------------------------------------begin
+             *第三方库的事件系统------------------------------------------------begin
              *触屏事件处理函数
              * */
-            __TouchHandler : function( e ) {
+            __libHandler : function( e ) {
                 var me   = this;
                 var root = me.canvax;
                 root.updateRootOffset();
- 
                 // touch 下的 curPointsTarget 从touches中来
                 //获取canvax坐标系统里面的坐标
                 me.curPoints = me.__getCanvaxPointInTouchs( e );
+                if( !me._draging ){
+                    //如果在draging的话，target已经是选中了的，可以不用 检测了
+                    me.curPointsTarget = me.__getChildInTouchs( me.curPoints );
+                };
+                if( me.curPointsTarget.length > 0 ){
+                    //drag开始
+                    if( e.type == me.drag.start){
+                        //dragstart的时候touch已经准备好了target， curPointsTarget 里面只要有一个是有效的
+                        //就认为drags开始
+                        _.each( me.curPointsTarget , function( child , i ){
+                            if( child && child.dragEnabled ){
+                               //只要有一个元素就认为正在准备drag了
+                               me._draging = true;
+                               //然后克隆一个副本到activeStage
+                               me._clone2hoverStage( child , i );
+                               //先把本尊给隐藏了
+                               child.context.globalAlpha = 0;
 
-                //drag开始
-                if( e.type == me.drag.start){
-                    //dragstart的时候touch已经准备好了target， curPointsTarget 里面只要有一个是有效的
-                    //就认为drags开始
-                    _.each( me.curPointsTarget , function( child , i ){
-                        if( child && child.dragEnabled ){
-                           //只要有一个元素就认为正在准备drag了
-                           me._draging = true;
-                           //然后克隆一个副本到activeStage
-                           me._clone2hoverStage( child , i );
-                           //先把本尊给隐藏了
-                           child.context.globalAlpha = 0;
-
-                           child.fire("dragstart" ,e);
- 
-                           return false;
+                               child.fire("dragstart" ,e);
+     
+                               return false;
+                            }
+                        } ) 
+                    };
+     
+                    //dragIng
+                    if( e.type == me.drag.move){
+                        if( me._draging ){
+                            _.each( me.curPointsTarget , function( child , i ){
+                                if( child && child.dragEnabled) {
+                                   me._dragHander( e , child , i);
+                                   child.fire("dragmove" ,e);
+                                }
+                            } )
                         }
-                    } ) 
-                }
- 
-                //dragIng
-                if( e.type == me.drag.move){
-                    if( me._draging ){
-                        _.each( me.curPointsTarget , function( child , i ){
-                            if( child && child.dragEnabled) {
-                               me._dragHander( e , child , i);
-                               child.fire("dragmove" ,e);
-                            }
-                        } )
-                    }
-                };
- 
-                //drag结束
-                if( e.type == me.drag.end){
-                    if( me._draging ){
-                        _.each( me.curPointsTarget , function( child , i ){
-                            if( child && child.dragEnabled) {
-                                me._dragEnd( e , child , 0 );
-                                child.fire("dragend" ,e);
-                            }
-                        } );
-                        me._draging = false;
-                    }
-                };
-                var childs = me.__getChildInTouchs( me.curPoints );
-                if( me.__dispatchEventInChilds( e , childs ) ){
-                    me.curPointsTarget = childs;
+                    };
+     
+                    //drag结束
+                    if( e.type == me.drag.end){
+                        if( me._draging ){
+                            _.each( me.curPointsTarget , function( child , i ){
+                                if( child && child.dragEnabled) {
+                                    me._dragEnd( e , child , 0 );
+                                    child.fire("dragend" ,e);
+                                }
+                            } );
+                            me._draging = false;
+                        }
+                    };
+                    me.__dispatchEventInChilds( e , me.curPointsTarget );
                 } else {
                     //如果当前没有一个target，就把事件派发到canvax上面
                     me.__dispatchEventInChilds( e , [ root ] );
@@ -347,7 +356,7 @@ define(
                 return touchesTarget;
             },
             /*
-            *touch事件系统------------------------------------------------begin
+            *第三方库的事件系统------------------------------------------------begin
             */
 
 
