@@ -156,24 +156,13 @@ define(
                             //先把本尊给隐藏了
                             curMouseTarget.context.globalAlpha = 0;
                             //然后克隆一个副本到activeStage
+                            
                             var cloneObject = me._clone2hoverStage( curMouseTarget , 0 );
                             cloneObject.context.globalAlpha = curMouseTarget._globalAlpha;
                         } else {
-                            //drag ing
-                            me._dragHander( e , curMouseTarget , 0 );
-
-                            curMouseTarget._notWatch = true;
-                            curMouseTarget.fire("dragmove" , e);
-                            curMouseTarget._notWatch = false;
-
-                            //拖动中可能会限定其x,y轨迹。必须拖动的时候，x或者y轴恒定
-                            //比如在kanga中的rect调整框的上下左右改变大小的时候x或者y有一个会是恒定的
-                            var _dragDuplicate = root._hoverStage.getChildById( curMouseTarget.id );
-                            var _dmt = curMouseTarget.getConcatenatedMatrix();
- 
-                            _dragDuplicate.context.x = _dmt.tx;//curMouseTarget.context.x;
-                            _dragDuplicate.context.y = _dmt.ty;//curMouseTarget.context.y;
-                        }
+                            //drag move ing
+                            me._dragMoveHander( e , curMouseTarget , 0 );
+                        };
                         me._draging = true;
                     } else {
                         //常规mousemove检测
@@ -309,8 +298,7 @@ define(
                         if( me._draging ){
                             _.each( me.curPointsTarget , function( child , i ){
                                 if( child && child.dragEnabled) {
-                                   me._dragHander( e , child , i);
-                                   child.fire("dragmove" ,e);
+                                   me._dragMoveHander( e , child , i);
                                 }
                             } )
                         }
@@ -387,51 +375,56 @@ define(
             _clone2hoverStage: function(target, i) {
                 var me = this;
                 var root = me.canvax;
-                var _dragDuplicate = root._hoverStage.getChildById(target.id);
+                var _dragDuplicate = root._bufferStage.getChildById(target.id);
                 if (!_dragDuplicate) {
                     _dragDuplicate = target.clone(true);
                     _dragDuplicate._transform = target.getConcatenatedMatrix();
 
                     /**
-                     *TODO: 因为后续可能会有手动添加的 元素到_hoverStage 里面来
+                     *TODO: 因为后续可能会有手动添加的 元素到_bufferStage 里面来
                      *比如tips
                      *这类手动添加进来的肯定是因为需要显示在最外层的。在hover元素之上。
-                     *所有自动添加的hover元素都默认添加在_hoverStage的最底层
+                     *所有自动添加的hover元素都默认添加在_bufferStage的最底层
                      **/
-                    root._hoverStage.addChildAt(_dragDuplicate, 0);
+                    root._bufferStage.addChildAt(_dragDuplicate, 0);
                 }
                 _dragDuplicate.context.globalAlpha = target._globalAlpha;
                 _dragDuplicate._dragPoint = target.globalToLocal(me.curPoints[i]);
                 return _dragDuplicate;
             },
             //drag 中 的处理函数
-            _dragHander: function(e, target, i) {
+            _dragMoveHander: function(e, target, i) {
                 var me = this;
                 var root = me.canvax;
-                var _dragDuplicate = root._hoverStage.getChildById(target.id);
+                var _dragDuplicate = root._bufferStage.getChildById(target.id);
                 var gPoint = new Point(me.curPoints[i].x - _dragDuplicate._dragPoint.x, me.curPoints[i].y - _dragDuplicate._dragPoint.y);
-                _dragDuplicate.context.x = gPoint.x;
-                _dragDuplicate.context.y = gPoint.y;
-                target.drag && target.drag(e);
 
                 //要对应的修改本尊的位置，但是要告诉引擎不要watch这个时候的变化
+                debugger
                 var tPoint = gPoint;
                 if (target.type != "stage" && target.parent && target.parent.type != "stage") {
                     tPoint = target.parent.globalToLocal(gPoint);
-                }
+                };
                 target._notWatch = true;
                 target.context.x = tPoint.x;
                 target.context.y = tPoint.y;
+                target.fire("dragmove" , e);
                 target._notWatch = false;
                 //同步完毕本尊的位置
+
+                //这里只能直接修改_transform 。 不能用下面的修改x，y的方式。
+                _dragDuplicate._transform = target.getConcatenatedMatrix();
+                //以为直接修改的_transform不会出发心跳上报， 渲染引擎不制动这个stage需要绘制。
+                //所以要手动出发心跳包
+                _dragDuplicate.heartBeat();
             },
             //drag结束的处理函数
             _dragEnd: function(e, target, i) {
                 var me = this;
                 var root = me.canvax;
 
-                //_dragDuplicate 复制在_hoverStage 中的副本
-                var _dragDuplicate = root._hoverStage.getChildById(target.id);
+                //_dragDuplicate 复制在_bufferStage 中的副本
+                var _dragDuplicate = root._bufferStage.getChildById(target.id);
                 _dragDuplicate.destroy();
 
                 target.context.globalAlpha = target._globalAlpha;

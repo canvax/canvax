@@ -133,10 +133,7 @@ KISSY.use("node" , function(S){
                     id : "canvax",
                     el : box
                 });
-                var evt = canvax.registEvent({
-
-                });
-                evt.init();
+                canvax.registEvent();
 
                 stage = new Canvax.Display.Stage({
                     id : "chart0"
@@ -144,12 +141,12 @@ KISSY.use("node" , function(S){
 
                 window.sprite = new Canvax.Display.Sprite({
                     context : {
-                        x    : 10,
-                        y    : 10,
+                        x    : 100,
+                        y    : 100,
                         width : 300,
                         height: 300,
 
-                        rotation : 15,
+                        //rotation : 15,
                         scaleX : 1.2,
                         scaleOrigin:{
                             x:50,

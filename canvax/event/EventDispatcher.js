@@ -92,10 +92,10 @@ define(
                         this._hoverClass = true;
                         if( this.hoverClone ){
                             var canvax = this.getStage().parent;
-                            //然后clone一份obj，添加到_hoverStage 中
+                            //然后clone一份obj，添加到_bufferStage 中
                             var activShape = this.clone(true);                     
                             activShape._transform = this.getConcatenatedMatrix();
-                            canvax._hoverStage.addChildAt( activShape , 0 ); 
+                            canvax._bufferStage.addChildAt( activShape , 0 ); 
                             //然后把自己隐藏了
                             this._globalAlpha = pregAlpha;
                             this.context.globalAlpha = 0;
@@ -111,7 +111,7 @@ define(
                         //说明刚刚over的时候有添加样式
                         var canvax = this.getStage().parent;
                         this._hoverClass = false;
-                        canvax._hoverStage.removeChildById(this.id);
+                        canvax._bufferStage.removeChildById(this.id);
                         
                         if( this._globalAlpha ){
                             this.context.globalAlpha = this._globalAlpha;

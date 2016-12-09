@@ -91,7 +91,7 @@ define(
         //比如Movieclip的__enterFrame方法。
         this._taskList = [];
         
-        this._hoverStage = null;
+        this._bufferStage = null;
         
         this._isReady    = false;
 
@@ -165,11 +165,11 @@ define(
             return $.query("cdc-"+this._cid);
         },
         getHoverStage : function(){
-            return this._hoverStage;
+            return this._bufferStage;
         },
         _creatHoverStage : function(){
             //TODO:创建stage的时候一定要传入width height  两个参数
-            this._hoverStage = new Stage( {
+            this._bufferStage = new Stage( {
                 id : "activCanvas"+(new Date()).getTime(),
                 context : {
                     width : this.context.width,
@@ -177,8 +177,8 @@ define(
                 }
             } );
             //该stage不参与事件检测
-            this._hoverStage._eventEnabled = false;
-            this.addChild( this._hoverStage );
+            this._bufferStage._eventEnabled = false;
+            this.addChild( this._bufferStage );
         },
         /**
          * 用来检测文本width height 
@@ -275,8 +275,8 @@ define(
                 this.el.insertBefore( canvas , canvaxDOMc );
             } else if(this.children.length>1) {
                 if( index == undefined ) {
-                    //如果没有指定位置，那么就放到_hoverStage的下面。
-                    this.el.insertBefore( canvas , this._hoverStage.context2D.canvas);
+                    //如果没有指定位置，那么就放到_bufferStage的下面。
+                    this.el.insertBefore( canvas , this._bufferStage.context2D.canvas);
                 } else {
                     //如果有指定的位置，那么就指定的位置来
                     if( index >= this.children.length-1 ){
