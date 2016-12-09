@@ -194,6 +194,10 @@ define(
                 var me     = this;
                 var root   = me.canvax;
                 var oldObj = me.curPointsTarget[0];
+
+                if( oldObj && !oldObj.context ){
+                    oldObj = null;
+                };
  
                 var e = new CanvaxEvent( e );
  
@@ -348,8 +352,6 @@ define(
             */
 
 
-
-
             /*
              *@param {array} childs 
              * */
@@ -389,30 +391,25 @@ define(
                     root._bufferStage.addChildAt(_dragDuplicate, 0);
                 }
                 _dragDuplicate.context.globalAlpha = target._globalAlpha;
-                _dragDuplicate._dragPoint = target.globalToLocal(me.curPoints[i]);
+                target._dragPoint = target.globalToLocal(me.curPoints[i]);
                 return _dragDuplicate;
             },
             //drag 中 的处理函数
             _dragMoveHander: function(e, target, i) {
                 var me = this;
                 var root = me.canvax;
-                var _dragDuplicate = root._bufferStage.getChildById(target.id);
-                var gPoint = new Point(me.curPoints[i].x - _dragDuplicate._dragPoint.x, me.curPoints[i].y - _dragDuplicate._dragPoint.y);
+                var _point = target.globalToLocal( me.curPoints[i] );
 
                 //要对应的修改本尊的位置，但是要告诉引擎不要watch这个时候的变化
-                debugger
-                var tPoint = gPoint;
-                if (target.type != "stage" && target.parent && target.parent.type != "stage") {
-                    tPoint = target.parent.globalToLocal(gPoint);
-                };
                 target._notWatch = true;
-                target.context.x = tPoint.x;
-                target.context.y = tPoint.y;
+                target.context.x += (_point.x - target._dragPoint.x);
+                target.context.y += (_point.y - target._dragPoint.y);
                 target.fire("dragmove" , e);
                 target._notWatch = false;
                 //同步完毕本尊的位置
 
                 //这里只能直接修改_transform 。 不能用下面的修改x，y的方式。
+                var _dragDuplicate = root._bufferStage.getChildById(target.id);
                 _dragDuplicate._transform = target.getConcatenatedMatrix();
                 //以为直接修改的_transform不会出发心跳上报， 渲染引擎不制动这个stage需要绘制。
                 //所以要手动出发心跳包
