@@ -402,9 +402,12 @@ define(
 
                 //要对应的修改本尊的位置，但是要告诉引擎不要watch这个时候的变化
                 target._notWatch = true;
+                var _moveStage = target.moveing;
+                target.moveing = true;
                 target.context.x += (_point.x - target._dragPoint.x);
                 target.context.y += (_point.y - target._dragPoint.y);
                 target.fire("dragmove" , e);
+                target.moveing = _moveStage;
                 target._notWatch = false;
                 //同步完毕本尊的位置
 

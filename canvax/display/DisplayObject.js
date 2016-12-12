@@ -49,6 +49,8 @@ define(
 
             self.xyToInt         = "xyToInt" in opt ? opt.xyToInt : true;    //是否对xy坐标统一int处理，默认为true，但是有的时候可以由外界用户手动指定是否需要计算为int，因为有的时候不计算比较好，比如，进度图表中，再sector的两端添加两个圆来做圆角的进度条的时候，圆circle不做int计算，才能和sector更好的衔接
 
+            self.moveing = false; //如果元素在最轨道运动中的时候，最好把这个设置为true，这样能保证轨迹的丝搬顺滑，否则因为xyToInt的原因，会有跳跃
+
             //创建好context
             self._createContext( opt );
     
@@ -380,7 +382,10 @@ define(
 
                 //如果有位移
                 var x,y;
-                if( this.xyToInt ){
+
+                if( this.xyToInt && !this.moveing ){
+                    //当这个元素在做轨迹运动的时候，比如drag，animation如果实时的调整这个x ， y
+                    //那么该元素的轨迹会有跳跃的情况发生。所以加个条件过滤，
                     var x = parseInt( ctx.x );//Math.round(ctx.x);
                     var y = parseInt( ctx.y );//Math.round(ctx.y);
     
