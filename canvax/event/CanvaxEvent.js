@@ -5,42 +5,36 @@
  *
  * canvas 上委托的事件管理
  */
-define(
-    "canvax/event/CanvaxEvent",
-    [
-         "canvax/core/Base",
-         "canvax/utils/underscore"
-    ],
-    function(EventBase , _){
-        var CanvaxEvent = function( e ) {
-            this.target = null;
-            this.currentTarget = null;	
-            this.params = null;
+import _ from "../utils/underscore";
+import Base from "../core/Base";
 
-            this.type   = e.type;
-            this.points = null;
+var CanvaxEvent = function( e ) {
+    this.target = null;
+    this.currentTarget = null;	
+    this.params = null;
 
-            this._stopPropagation = false ; //默认不阻止事件冒泡
-        }
-        CanvaxEvent.prototype = {
-            stopPropagation : function() {
-                this._stopPropagation = true;
-            }
-        }
-        CanvaxEvent.pageX = function(e) {
-            if (e.pageX) return e.pageX;
-            else if (e.clientX)
-                return e.clientX + (document.documentElement.scrollLeft ?
-                        document.documentElement.scrollLeft : document.body.scrollLeft);
-            else return null;
-        }
-        CanvaxEvent.pageY = function(e) {
-            if (e.pageY) return e.pageY;
-            else if (e.clientY)
-                return e.clientY + (document.documentElement.scrollTop ?
-                        document.documentElement.scrollTop : document.body.scrollTop);
-            else return null;
-        }
-        return CanvaxEvent;
-    } 
-);
+    this.type   = e.type;
+    this.points = null;
+
+    this._stopPropagation = false ; //默认不阻止事件冒泡
+}
+CanvaxEvent.prototype = {
+    stopPropagation : function() {
+        this._stopPropagation = true;
+    }
+}
+CanvaxEvent.pageX = function(e) {
+    if (e.pageX) return e.pageX;
+    else if (e.clientX)
+        return e.clientX + (document.documentElement.scrollLeft ?
+                document.documentElement.scrollLeft : document.body.scrollLeft);
+    else return null;
+}
+CanvaxEvent.pageY = function(e) {
+    if (e.pageY) return e.pageY;
+    else if (e.clientY)
+        return e.clientY + (document.documentElement.scrollTop ?
+                document.documentElement.scrollTop : document.body.scrollTop);
+    else return null;
+}
+export default CanvaxEvent;

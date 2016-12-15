@@ -9,32 +9,26 @@
  * @hr 水滴横宽（中心到水平边缘最宽处距离）
  * @vr 水滴纵高（中心到尖端距离）
  **/
-define(
-    "canvax/shape/Droplet",
-    [
-        "canvax/core/Base",
-        "canvax/shape/Path",
-        "canvax/utils/underscore"
-    ],
-    function(Base,Path,_){
-        var Droplet = function(opt){
-            var self = this;
-            opt = Base.checkOpt( opt );
-            self._context = {
-                hr : opt.context.hr || 0 , //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
-                vr : opt.context.vr || 0   //{number},  // 必须，水滴纵高（中心到尖端距离）
-            };
-            arguments.callee.superclass.constructor.apply(this, arguments);
-            self.type = "droplet";
-        };
-        Base.creatClass( Droplet , Path , {
-            draw : function(ctx, style) {
-               var ps = "M 0 "+style.hr+" C "+style.hr+" "+style.hr+" "+( style.hr*3/2 ) +" "+(-style.hr/3)+" 0 "+(-style.vr);
-               ps += " C "+(-style.hr * 3/ 2)+" "+(-style.hr / 3)+" "+(-style.hr)+" "+style.hr+" 0 "+ style.hr;
-               this.context.path = ps;
-               this._draw(ctx , style);
-            }
-        } );
-        return Droplet;
+import Path from "./Path";
+import Base from "../core/Base";
+import _ from "../utils/underscore";
+
+var Droplet = function(opt){
+    var self = this;
+    opt = Base.checkOpt( opt );
+    self._context = {
+        hr : opt.context.hr || 0 , //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
+        vr : opt.context.vr || 0   //{number},  // 必须，水滴纵高（中心到尖端距离）
+    };
+    arguments.callee.superclass.constructor.apply(this, arguments);
+    self.type = "droplet";
+};
+Base.creatClass( Droplet , Path , {
+    draw : function(ctx, style) {
+       var ps = "M 0 "+style.hr+" C "+style.hr+" "+style.hr+" "+( style.hr*3/2 ) +" "+(-style.hr/3)+" 0 "+(-style.vr);
+       ps += " C "+(-style.hr * 3/ 2)+" "+(-style.hr / 3)+" "+(-style.hr)+" "+style.hr+" 0 "+ style.hr;
+       this.context.path = ps;
+       this._draw(ctx , style);
     }
-);
+} );
+export default Droplet;

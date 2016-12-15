@@ -11,16 +11,11 @@
  * @hr 椭圆横轴半径
  * @vr 椭圆纵轴半径
  */
+import Shape from "../display/Shape";
+import Base from "../core/Base";
+import _ from "../utils/underscore";
 
 
-define(
-    "canvax/shape/Ellipse",
-    [
-        "canvax/display/Shape",
-        "canvax/core/Base",
-        "canvax/utils/underscore"
-    ],
-    function(Shape,Base,_){
 
         var Ellipse = function(opt){
             var self = this;
@@ -74,7 +69,4 @@ define(
             }
         });
      
-        return Ellipse;
-     
-    } 
-)
+        export default Ellipse;
