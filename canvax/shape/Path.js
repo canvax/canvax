@@ -543,10 +543,10 @@ Base.creatClass(Path, Shape, {
         }
 
         var minX = Number.MAX_VALUE;
-        var maxX = Number.MIN_VALUE;
+        var maxX = -Number.MAX_VALUE;//Number.MIN_VALUE;
 
         var minY = Number.MAX_VALUE;
-        var maxY = Number.MIN_VALUE;
+        var maxY = -Number.MAX_VALUE;//Number.MIN_VALUE;
 
         // 平移坐标
         var x = 0;
