@@ -28,7 +28,7 @@ var BrokenLine = function(opt , atype) {
         smoothFilter: null
     }, opt.context );
 
-    arguments.callee.superclass.constructor.apply(this, arguments);
+    BrokenLine.superclass.constructor.apply(this, arguments);
 };
 
 Base.creatClass(BrokenLine, Shape, {

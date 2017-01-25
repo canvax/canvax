@@ -5,7 +5,7 @@
 */
 import _ from "../utils/underscore";
 
-export default {
+var Base = {
     mainFrameRate   : 60,//默认主帧率
     now : 0,
     /*像素检测专用*/
@@ -60,7 +60,7 @@ export default {
     },
     setContextStyle : function( ctx , style ){
         // 简单判断不做严格类型检测
-        for(p in style){
+        for(var p in style){
             if( p != "textBaseline" && ( p in ctx ) ){
                 if ( style[p] || _.isNumber( style[p] ) ) {
                     if( p == "globalAlpha" ){
@@ -147,3 +147,5 @@ export default {
         return [r1,r2,r3,r4];
     }
 };
+
+export default Base;

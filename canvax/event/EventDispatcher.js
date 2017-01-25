@@ -9,8 +9,9 @@ import Base from "../core/Base";
 import EventManager from "./EventManager";
 import _ from "../utils/underscore";
 
+
 var EventDispatcher = function(){
-    arguments.callee.superclass.constructor.call(this, name);
+    EventDispatcher.superclass.constructor.call(this, name);
 };
 
 Base.creatClass(EventDispatcher , EventManager , {
@@ -48,39 +49,35 @@ Base.creatClass(EventDispatcher , EventManager , {
         };
         var preCurr = e ? e.currentTarget : null;
         _.each( eventType.split(" ") , function(evt){
-            var preEventType = null;
             if( !e ){
                 e = { type : evt };
-            } else {
-                //把原有的e.type暂存起来
-                preEventType = e.type;
-                //如果有传递e过来
-                e.type = evt;
-            };
-            e.currentTarget = me;
-            me.dispatchEvent( e );
-            if( preEventType ){
-                e.type = preEventType;
             }
+            e.currentTarget = me;
+            me.dispatchEvent( e , evt);
         } );
         e.currentTarget = preCurr;
         return this;
     },
-    dispatchEvent:function(event){
-        
-        if( this instanceof DisplayObjectContainer && event.point ){
+    dispatchEvent:function(event , evt){
+        //this instanceof DisplayObjectContainer ==> this.children
+        //TODO: 这里import DisplayObjectContainer 的话，在displayObject里面的import EventDispatcher from "../event/EventDispatcher";
+        //会得到一个undefined，所以这里换用简单的判断来判断自己是一个容易，拥有children就可以。
+
+        var _evt = evt || event.type;
+
+        if( this.children  && event.point ){
             var target = this.getObjectsUnderPoint( event.point , 1)[0];
             if( target ){
-                target.dispatchEvent( event );
+                target.dispatchEvent( event , evt );
             }
             return;
         };
         
-        if(this.context && event.type == "mouseover"){
+        if(this.context && _evt == "mouseover"){
             //记录dispatchEvent之前的心跳
             var preHeartBeat = this._heartBeatNum;
             var pregAlpha    = this.context.globalAlpha;
-            this._dispatchEvent( event );
+            this._dispatchEvent( event , evt );
             if( preHeartBeat != this._heartBeatNum ){
                 this._hoverClass = true;
                 if( this.hoverClone ){
@@ -97,9 +94,9 @@ Base.creatClass(EventDispatcher , EventManager , {
             return;
         };
 
-        this._dispatchEvent( event );
+        this._dispatchEvent( event , evt );
 
-        if( this.context && event.type == "mouseout"){
+        if( this.context && _evt == "mouseout"){
             if(this._hoverClass){
                 //说明刚刚over的时候有添加样式
                 var canvax = this.getStage().parent;
@@ -127,10 +124,12 @@ Base.creatClass(EventDispatcher , EventManager , {
         return this;
     },
     once : function(type, listener){
-        this.on(type , function(){
-            listener.apply(this , arguments);
-            this.un(type , arguments.callee);
-        });
+        var me = this;
+        var onceHandle = function(){
+            listener.apply(me , arguments);
+            this.un(type , onceHandle);
+        };
+        this.on(type , onceHandle);
         return this;
     }
 });

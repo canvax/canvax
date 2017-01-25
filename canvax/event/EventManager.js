@@ -105,8 +105,9 @@ EventManager.prototype = {
     /**
     * 派发事件，调用事件侦听器。
     */
-    _dispatchEvent : function(e) {
-        var map = this._eventMap[e.type];
+    _dispatchEvent : function(e , evt) {
+
+        var map = this._eventMap[ evt || e.type ];
         
         if( map ){
             if(!e.target) e.target = this;
@@ -115,7 +116,7 @@ EventManager.prototype = {
             for(var i = 0; i < map.length; i++) {
                 var listener = map[i];
                 if(typeof(listener) == "function") {
-                    listener.call(this, e);
+                    listener.apply(this, arguments);
                 }
             }
         }
@@ -124,7 +125,7 @@ EventManager.prototype = {
             //向上冒泡
             if( this.parent ){
                 e.currentTarget = this.parent;
-                this.parent._dispatchEvent( e );
+                this.parent._dispatchEvent( e , evt );
             }
         } 
         return true;

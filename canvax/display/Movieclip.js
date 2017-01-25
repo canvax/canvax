@@ -27,7 +27,7 @@ var Movieclip = function( opt ){
     self._context = {
         //r : opt.context.r || 0   //{number},  // 必须，圆半径
     }
-    arguments.callee.superclass.constructor.apply(this, [ opt ] );
+    Movieclip.superclass.constructor.apply(this, [ opt ] );
 };
 
 Base.creatClass(Movieclip , DisplayObjectContainer , {

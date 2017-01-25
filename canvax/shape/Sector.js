@@ -33,7 +33,7 @@ var Sector = function(opt){
         endAngle   : opt.context.endAngle   || 0, //{number},  // 必须，结束角度(0, 360]
         clockwise  : opt.context.clockwise  || false //是否顺时针，默认为false(顺时针)
     }
-    arguments.callee.superclass.constructor.apply(this , arguments);
+    Sector.superclass.constructor.apply(this , arguments);
 };
 
 Base.creatClass(Sector , Shape , {

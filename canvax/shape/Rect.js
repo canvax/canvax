@@ -25,7 +25,7 @@ var Rect = function(opt){
          height        : opt.context.height|| 0,//{number},  // 必须，高度
          radius        : opt.context.radius|| []     //{array},   // 默认为[0]，圆角 
     }
-    arguments.callee.superclass.constructor.apply(this, arguments);
+    Rect.superclass.constructor.apply(this, arguments);
 };
 
 Base.creatClass( Rect , Shape , {

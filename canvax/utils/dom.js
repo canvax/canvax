@@ -2,20 +2,21 @@ import _ from "./underscore";
 
 var addOrRmoveEventHand = function( domHand , ieHand ){
     if( document[ domHand ] ){
-        return function( el , type , fn ){
+        function eventDomFn( el , type , fn ){
             if( el.length ){
                 for(var i=0 ; i < el.length ; i++){
-                    arguments.callee( el[i] , type , fn );
+                    eventDomFn( el[i] , type , fn );
                 }
             } else {
                 el[ domHand ]( type , fn , false );
             }
         };
+        return eventDomFn
     } else {
-        return function( el , type , fn ){
+        function eventFn( el , type , fn ){
             if( el.length ){
                 for(var i=0 ; i < el.length ; i++){
-                    arguments.callee( el[i],type,fn );
+                    eventFn( el[i],type,fn );
                 }
             } else {
                 el[ ieHand ]( "on"+type , function(){
@@ -23,6 +24,7 @@ var addOrRmoveEventHand = function( domHand , ieHand ){
                 });
             }
         };
+        return eventFn
     }
 };
 

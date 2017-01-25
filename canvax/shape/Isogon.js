@@ -26,7 +26,7 @@ var Isogon = function(opt) {
     } , opt.context);
     self.setPointList(self._context);
     opt.context = self._context;
-    arguments.callee.superclass.constructor.apply(this, arguments);
+    Isogon.superclass.constructor.apply(this, arguments);
     this.type = "isogon";
 };
 Base.creatClass(Isogon, Polygon, {

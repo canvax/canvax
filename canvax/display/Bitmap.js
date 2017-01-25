@@ -25,7 +25,7 @@ var Bitmap = function(opt){
         dHeight: opt.context.dHeight|| 0  //切片的height
     }
 
-    arguments.callee.superclass.constructor.apply(this, arguments);
+    Bitmap.superclass.constructor.apply(this, arguments);
 
 };
 

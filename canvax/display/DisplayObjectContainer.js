@@ -8,13 +8,13 @@
 import _ from "../utils/underscore";
 import Base from "../core/Base";
 import DisplayObject from "./DisplayObject";
-import Point from "./point";
+import Point from "./Point";
 
-DisplayObjectContainer = function(opt){
+var DisplayObjectContainer = function(opt){
    var self = this;
    self.children = [];
    self.mouseChildren = [];
-   arguments.callee.superclass.constructor.apply(this, arguments);
+   DisplayObjectContainer.superclass.constructor.apply(this, arguments);
 
    //所有的容器默认支持event 检测，因为 可能有里面的shape是eventEnable是true的
    //如果用户有强制的需求让容器下的所有元素都 不可检测，可以调用

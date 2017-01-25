@@ -26,7 +26,7 @@ var Polygon = function(opt , atype) {
         }
     };
     
-    arguments.callee.superclass.constructor.apply(this, arguments);
+    Polygon.superclass.constructor.apply(this, arguments);
 
     if(atype !== "clone" && opt.context.smooth && end){
 

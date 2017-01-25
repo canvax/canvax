@@ -30,7 +30,7 @@ var Line = function(opt) {
         yEnd: opt.context.yEnd || 0, //{number},  // 必须，终点纵坐标
         dashLength: opt.context.dashLength
     }
-    arguments.callee.superclass.constructor.apply(this, arguments);
+    Line.superclass.constructor.apply(this, arguments);
 };
 
 Base.creatClass(Line, Shape, {

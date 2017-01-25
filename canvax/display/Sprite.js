@@ -10,7 +10,7 @@ import Base from "../core/Base";
 
 var Sprite = function(){
     this.type = "sprite";
-    arguments.callee.superclass.constructor.apply(this, arguments);
+    Sprite.superclass.constructor.apply(this, arguments);
 };
 
 Base.creatClass(Sprite , DisplayObjectContainer , {

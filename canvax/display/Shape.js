@@ -32,7 +32,7 @@ var Shape = function(opt){
     //处理所有的图形一些共有的属性配置
     self.initCompProperty(opt);
 
-    arguments.callee.superclass.constructor.apply(this , arguments);
+    Shape.superclass.constructor.apply(this , arguments);
     self._rect = null;
 };
 

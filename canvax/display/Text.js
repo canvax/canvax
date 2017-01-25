@@ -35,7 +35,7 @@ var Text = function(text, opt) {
 
     self.text = text.toString();
 
-    arguments.callee.superclass.constructor.apply(this, [opt]);
+    Text.superclass.constructor.apply(this, [opt]);
 
 };
 
@@ -59,7 +59,7 @@ Base.creatClass(Text, DisplayObject, {
         c.height = this.getTextHeight();
     },
     render: function(ctx) {
-        for (p in this.context.$model) {
+        for (var p in this.context.$model) {
             if (p in ctx) {
                 if (p != "textBaseline" && this.context.$model[p]) {
                     ctx[p] = this.context.$model[p];

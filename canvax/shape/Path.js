@@ -36,7 +36,7 @@ var Path = function(opt) {
             //Z = closepath
     };
     self._context = _.extend(_context, (self._context || {}));
-    arguments.callee.superclass.constructor.apply(self, arguments);
+    Path.superclass.constructor.apply(self, arguments);
 };
 
 Base.creatClass(Path, Shape, {

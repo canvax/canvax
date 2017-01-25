@@ -15,7 +15,7 @@ import AnimationFrame from "../animation/AnimationFrame";
 import PropertyFactory from "../core/PropertyFactory";
 
 var DisplayObject = function(opt){
-    arguments.callee.superclass.constructor.apply(this, arguments);
+    DisplayObject.superclass.constructor.apply(this, arguments);
     var self = this;
 
     //如果用户没有传入context设置，就默认为空的对象

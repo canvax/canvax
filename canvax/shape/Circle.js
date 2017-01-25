@@ -10,65 +10,60 @@
  * 对应context的属性有
  * @r 圆半径
  **/
+import Shape from "../display/Shape";
+import Base from "../core/Base";
+import _ from "../utils/underscore";
 
 
-define(
-    "canvax/shape/Circle",
-    [
-        "canvax/display/Shape",
-        "canvax/core/Base",
-        "canvax/utils/underscore"
-    ],
-    function(Shape , Base , _) {
-        var Circle = function(opt) {
-            var self = this;
-            self.type = "circle";
+var Circle = function(opt) {
+    var self = this;
+    self.type = "circle";
 
-            opt = Base.checkOpt( opt );
+    opt = Base.checkOpt( opt );
 
-            //默认情况下面，circle不需要把xy进行parentInt转换
-            ( "xyToInt" in opt ) || ( opt.xyToInt = false );
+    //默认情况下面，circle不需要把xy进行parentInt转换
+    ( "xyToInt" in opt ) || ( opt.xyToInt = false );
 
-            self._context = {
-                r : opt.context.r || 0   //{number},  // 必须，圆半径
-            }
-            arguments.callee.superclass.constructor.apply(this, arguments);
-        }
-
-        Base.creatClass(Circle , Shape , {
-           /**
-             * 创建圆形路径
-             * @param {Context2D} ctx Canvas 2D上下文
-             * @param {Object} style 样式
-             */
-            draw : function(ctx, style) {
-                if (!style) {
-                  return;
-                }
-                ctx.arc(0 , 0, style.r, 0, Math.PI * 2, true);
-            },
-
-            /**
-             * 返回矩形区域，用于局部刷新和文字定位
-             * @param {Object} style
-             */
-            getRect : function(style) {
-                var lineWidth;
-                var style = style ? style : this.context;
-                if (style.fillStyle || style.strokeStyle ) {
-                    lineWidth = style.lineWidth || 1;
-                } else {
-                    lineWidth = 0;
-                }
-                return {
-                    x : Math.round(0 - style.r - lineWidth / 2),
-                    y : Math.round(0 - style.r - lineWidth / 2),
-                    width : style.r * 2 + lineWidth,
-                    height : style.r * 2 + lineWidth
-                };
-            }
-        });
-
-        return Circle;
+    self._context = {
+        r : opt.context.r || 0   //{number},  // 必须，圆半径
     }
-)
+    Circle.superclass.constructor.apply(this, arguments);
+}
+
+Base.creatClass(Circle , Shape , {
+   /**
+     * 创建圆形路径
+     * @param {Context2D} ctx Canvas 2D上下文
+     * @param {Object} style 样式
+     */
+    draw : function(ctx, style) {
+        if (!style) {
+          return;
+        }
+        ctx.arc(0 , 0, style.r, 0, Math.PI * 2, true);
+    },
+
+    /**
+     * 返回矩形区域，用于局部刷新和文字定位
+     * @param {Object} style
+     */
+    getRect : function(style) {
+        var lineWidth;
+        var style = style ? style : this.context;
+        if (style.fillStyle || style.strokeStyle ) {
+            lineWidth = style.lineWidth || 1;
+        } else {
+            lineWidth = 0;
+        }
+        return {
+            x : Math.round(0 - style.r - lineWidth / 2),
+            y : Math.round(0 - style.r - lineWidth / 2),
+            width : style.r * 2 + lineWidth,
+            height : style.r * 2 + lineWidth
+        };
+    }
+});
+
+export default Circle;
+
+
