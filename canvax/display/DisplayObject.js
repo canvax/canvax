@@ -178,7 +178,12 @@ Base.creatClass( DisplayObject , EventDispatcher , {
         if( this.img ){
             conf.img = this.img;
         };
-        var newObj = new this.constructor( conf , "clone");
+        var newObj;
+        if( this.type == 'text' ){
+            newObj = new this.constructor( this.text , conf );
+        } else {
+            newObj = new this.constructor( conf );
+        }
         if( this.children ){
             newObj.children = this.children;
         }
@@ -375,7 +380,6 @@ Base.creatClass( DisplayObject , EventDispatcher , {
 
         //如果有位移
         var x,y;
-
         if( this.xyToInt && !this.moveing ){
             //当这个元素在做轨迹运动的时候，比如drag，animation如果实时的调整这个x ， y
             //那么该元素的轨迹会有跳跃的情况发生。所以加个条件过滤，

@@ -74,5 +74,19 @@ export default {
     },
     addEvent : addOrRmoveEventHand( "addEventListener" , "attachEvent" ),
     removeEvent : addOrRmoveEventHand( "removeEventListener" , "detachEvent" ),
+    pageX: function(e) {
+        if (e.pageX) return e.pageX;
+        else if (e.clientX)
+            return e.clientX + (document.documentElement.scrollLeft ?
+                    document.documentElement.scrollLeft : document.body.scrollLeft);
+        else return null;
+    },
+    pageY: function(e) {
+        if (e.pageY) return e.pageY;
+        else if (e.clientY)
+            return e.clientY + (document.documentElement.scrollTop ?
+                    document.documentElement.scrollTop : document.body.scrollTop);
+        else return null;
+    }
     //dom相关代码结束
-}
+};

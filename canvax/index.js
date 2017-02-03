@@ -1,5 +1,5 @@
 /**
- * Canvax
+ * Canvax {{PKG_VERSION}}
  *
  * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
  *

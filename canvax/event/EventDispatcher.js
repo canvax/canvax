@@ -7,6 +7,7 @@
  */
 import Base from "../core/Base";
 import EventManager from "./EventManager";
+import CanvaxEvent from "./CanvaxEvent";
 import _ from "../utils/underscore";
 
 
@@ -39,45 +40,46 @@ Base.creatClass(EventDispatcher , EventManager , {
         this._removeAllEventListeners();
         return this;
     },
-    fire : function(eventType , event){
-        //因为需要在event上面冒泡传递信息，所以还是不用clone了
-        var e       = event || {};//_.clone( event );
-        var me      = this;
-        if( _.isObject(eventType) && eventType.type ){
-            e         = _.extend( e , eventType );
-            eventType = eventType.type;
-        };
-        var preCurr = e ? e.currentTarget : null;
-        _.each( eventType.split(" ") , function(evt){
-            if( !e ){
-                e = { type : evt };
+
+    //params 要传给evt的eventhandler处理函数的参数，会被merge到Canvax event中
+    fire : function(eventType , params){
+        var e = new CanvaxEvent( eventType );
+
+        if( params ){
+            for( var p in params ){
+                if( p in e ){
+                    //params中的数据不能覆盖event属性
+                    console.log( p + "属性不能覆盖CanvaxEvent属性" )
+                } else {
+                    e[p] = params[p];
+                }
             }
+        };
+
+        var me = this;
+        _.each( eventType.split(" ") , function(eType){
             e.currentTarget = me;
-            me.dispatchEvent( e , evt);
+            me.dispatchEvent( e );
         } );
-        e.currentTarget = preCurr;
         return this;
     },
-    dispatchEvent:function(event , evt){
+    dispatchEvent:function(event){
         //this instanceof DisplayObjectContainer ==> this.children
         //TODO: 这里import DisplayObjectContainer 的话，在displayObject里面的import EventDispatcher from "../event/EventDispatcher";
-        //会得到一个undefined，所以这里换用简单的判断来判断自己是一个容易，拥有children就可以。
-
-        var _evt = evt || event.type;
-
+        //会得到一个undefined，感觉是成了一个循环依赖的问题，所以这里换用简单的判断来判断自己是一个容易，拥有children
         if( this.children  && event.point ){
             var target = this.getObjectsUnderPoint( event.point , 1)[0];
             if( target ){
-                target.dispatchEvent( event , evt );
+                target.dispatchEvent( event );
             }
             return;
         };
         
-        if(this.context && _evt == "mouseover"){
+        if(this.context && event.type == "mouseover"){
             //记录dispatchEvent之前的心跳
             var preHeartBeat = this._heartBeatNum;
             var pregAlpha    = this.context.globalAlpha;
-            this._dispatchEvent( event , evt );
+            this._dispatchEvent( event );
             if( preHeartBeat != this._heartBeatNum ){
                 this._hoverClass = true;
                 if( this.hoverClone ){
@@ -94,9 +96,9 @@ Base.creatClass(EventDispatcher , EventManager , {
             return;
         };
 
-        this._dispatchEvent( event , evt );
+        this._dispatchEvent( event );
 
-        if( this.context && _evt == "mouseout"){
+        if( this.context && event.type == "mouseout"){
             if(this._hoverClass){
                 //说明刚刚over的时候有添加样式
                 var canvax = this.getStage().parent;

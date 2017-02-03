@@ -10,11 +10,8 @@
         //canvas {background:#999}
     </style>
 
-    <!--
-    <script type="text/javascript" src="http://seajs.github.io/examples/sea-modules/seajs/seajs/2.1.1/sea.js"></script>
-    -->
-
-    <script type="text/javascript" src="../build/canvax.js"></script>
+    
+    <script type="text/javascript" src="./js/sea.js"></script>
     <script src="./js/jquery-1.11.1.min.js"></script>
     <script src="./js/color.js"></script>
     <script src="./js/underscore.js"></script>
@@ -25,7 +22,23 @@
     <div id="ready"></div>
     <script>
 
+
+    //TODO:这里居然不能用cjs版本的，蛋疼，只能和amd共用一个了
+    var packageObj = {
+        'canvax': '../build/amd/'    
+    }; 
+
+    seajs.config({
+        paths: packageObj
+    });
+
     var pageload = function(){
+        seajs.use(["canvax/canvax"] , function( Canvax ){
+            draw( Canvax );
+        });
+    }
+
+    var draw = function( Canvax ){
         var Shapes = Canvax.Shapes;
         var colorInd=0;
 

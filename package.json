@@ -1,0 +1,33 @@
+{
+    "name": "canvax",
+    "title": "Canvax.JS",
+    "description": "A javascript canvas 2d rendering engine",
+    "version": "1.0.0",
+    "homepage": "http://canvax.org",
+    "license": "MIT",
+    "keywords": [
+        "2d",
+        "canvas",
+        "webgl",
+        "Cross-platform",
+        "Cross-terminal"
+    ],
+    "author": {
+        "name": "nickli",
+        "email": "252759102@qq.com"
+    },
+    "devDependencies": {
+        "babel-core": "^6.13.0",
+        "babel-preset-es2015-rollup": "^1.1.1",
+        "rollup": "^0.41.4",
+        "rollup-plugin-babel": "^2.6.1",
+        "rollup-plugin-commonjs": "^3.3.1",
+        "rollup-plugin-node-resolve": "^2.0.0",
+        "rollup-plugin-uglify": "^1.0.1"
+    },
+    "scripts": {
+        "rollup": "node rollup.config.js",
+        "string-replace": "node string-replace.js",
+        "build": "npm run rollup"
+    }
+}

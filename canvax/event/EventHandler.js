@@ -99,8 +99,8 @@ EventHandler.prototype = {
         root.updateRootOffset();
     
         me.curPoints = [ new Point( 
-            CanvaxEvent.pageX( e ) - root.rootOffset.left , 
-            CanvaxEvent.pageY( e ) - root.rootOffset.top
+            $.pageX( e ) - root.rootOffset.left , 
+            $.pageY( e ) - root.rootOffset.top
         )];
 
         //理论上来说，这里拿到point了后，就要计算这个point对应的target来push到curPointsTarget里，
@@ -132,7 +132,7 @@ EventHandler.prototype = {
             if(me._draging == true){
                 //说明刚刚在拖动
                 me._dragEnd( e , curMouseTarget , 0 );
-                curMouseTarget.fire("dragend" , e);
+                curMouseTarget.fire("dragend");
             };
             me._draging  = false;
             me._touching = false;
@@ -148,7 +148,7 @@ EventHandler.prototype = {
                 //说明正在拖动啊
                 if(!me._draging){
                     //begin drag
-                    curMouseTarget.fire("dragstart" , e);
+                    curMouseTarget.fire("dragstart");
                     //先把本尊给隐藏了
                     curMouseTarget.context.globalAlpha = 0;
                     //然后克隆一个副本到activeStage
@@ -286,7 +286,7 @@ EventHandler.prototype = {
                        //先把本尊给隐藏了
                        child.context.globalAlpha = 0;
 
-                       child.fire("dragstart" ,e);
+                       child.fire("dragstart");
 
                        return false;
                     }
@@ -310,7 +310,7 @@ EventHandler.prototype = {
                     _.each( me.curPointsTarget , function( child , i ){
                         if( child && child.dragEnabled) {
                             me._dragEnd( e , child , 0 );
-                            child.fire("dragend" ,e);
+                            child.fire("dragend");
                         }
                     } );
                     me._draging = false;
@@ -327,7 +327,7 @@ EventHandler.prototype = {
         var me        = this;
         var root      = me.canvax;
         var curTouchs = [];
-        _.each( e.pointers , function( touch ){
+        _.each( e.point , function( touch ){
            touch.x = touch.pageX - root.rootOffset.left , 
            touch.y = touch.pageY - root.rootOffset.top
            curTouchs.push( touch );
@@ -402,7 +402,7 @@ EventHandler.prototype = {
         target.moveing = true;
         target.context.x += (_point.x - target._dragPoint.x);
         target.context.y += (_point.y - target._dragPoint.y);
-        target.fire("dragmove" , e);
+        target.fire("dragmove");
         target.moveing = _moveStage;
         target._notWatch = false;
         //同步完毕本尊的位置
