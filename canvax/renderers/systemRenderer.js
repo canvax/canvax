@@ -23,10 +23,6 @@ export default class SystemRenderer
 		//比如 Movieclip 的enterFrame方法。
 		//改属性目前主要是 movieclip 使用
 		this._taskList = [];
-
-		this._bufferStage = null;
-
-		this._isReady    = false;
     }
 
     //如果引擎处于静默状态的话，就会启动
@@ -80,8 +76,8 @@ export default class SystemRenderer
 
     _convertCanvax(opt)
     {
-        _.each( this.app.children , function(stage){
-        	//TODO:这里用到了context
+        var me = this;
+        _.each( me.app.children , function(stage){
             stage.context[opt.name] = opt.value; 
         } );  
     }
@@ -99,11 +95,6 @@ export default class SystemRenderer
                 var name    = opt.name;
                 var value   = opt.value;
                 var preValue= opt.preValue;
-
-                if (!self._isReady) {
-                    //在还没初始化完毕的情况下，无需做任何处理
-                    return;
-                };
 
                 if( shape.type == "canvax" ){
                     self._convertCanvax(opt)

@@ -36,7 +36,6 @@ var Application = function( opt ){
     this.view = viewObj.view;
     this.stage_c = viewObj.stage_c;
     this.dom_c = viewObj.dom_c;
-
     
     this.el.innerHTML = "";
     this.el.appendChild( this.view );
@@ -44,9 +43,11 @@ var Application = function( opt ){
     this.viewOffset = $.offset(this.view);
     this.lastGetRO = 0;//最后一次获取 viewOffset 的时间
 
-    this.renderer = new Renderer();
+    this.renderer = new Renderer( this );
 
     this.event = null;
+
+    this._bufferStage = null;
 
     //是否阻止浏览器默认事件的执行
     this.preventDefault = true;
@@ -68,7 +69,6 @@ Utils.creatClass(Application , DisplayObjectContainer , {
         //创建一个如果要用像素检测的时候的容器
         this._createPixelContext();
         
-        this._isReady = true;
     },
     registEvent : function(opt){
         //初始化事件委托到root元素上面
