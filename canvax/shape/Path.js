@@ -9,7 +9,7 @@
  * @path path串
  **/
 import Shape from "../display/Shape";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import _ from "../utils/underscore";
 import Matrix from "../geom/Matrix";
 import Bezier from "../geom/bezier";
@@ -17,7 +17,7 @@ import Bezier from "../geom/bezier";
 var Path = function(opt) {
     var self = this;
     self.type = "path";
-    opt = Base.checkOpt(opt);
+    opt = Utils.checkOpt(opt);
     if ("drawTypeOnly" in opt) {
         self.drawTypeOnly = opt.drawTypeOnly;
     };
@@ -39,7 +39,7 @@ var Path = function(opt) {
     Path.superclass.constructor.apply(self, arguments);
 };
 
-Base.creatClass(Path, Shape, {
+Utils.creatClass(Path, Shape, {
     $watch: function(name, value, preValue) {
         if (name == "path") { //如果path有变动，需要自动计算新的pointList
             this.__parsePathData = null;

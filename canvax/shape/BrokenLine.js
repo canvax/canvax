@@ -9,7 +9,7 @@
  * @pointList 各个顶角坐标
  **/
 import Shape from "../display/Shape";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import SmoothSpline from "../geom/SmoothSpline";
 import _ from "../utils/underscore";
 
@@ -17,7 +17,7 @@ var BrokenLine = function(opt , atype) {
     var self = this;
     self.type = "brokenline";
     self._drawTypeOnly = "stroke";
-    opt = Base.checkOpt(opt);
+    opt = Utils.checkOpt(opt);
     if( atype !== "clone" ){
         self._initPointList(opt.context);
     };
@@ -31,7 +31,7 @@ var BrokenLine = function(opt , atype) {
     BrokenLine.superclass.constructor.apply(this, arguments);
 };
 
-Base.creatClass(BrokenLine, Shape, {
+Utils.creatClass(BrokenLine, Shape, {
     $watch: function(name, value, preValue) {
         if (name == "pointList") {
             this._initPointList(this.context, value, preValue);

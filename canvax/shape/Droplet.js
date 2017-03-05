@@ -10,12 +10,12 @@
  * @vr 水滴纵高（中心到尖端距离）
  **/
 import Path from "./Path";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import _ from "../utils/underscore";
 
 var Droplet = function(opt){
     var self = this;
-    opt = Base.checkOpt( opt );
+    opt = Utils.checkOpt( opt );
     self._context = {
         hr : opt.context.hr || 0 , //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
         vr : opt.context.vr || 0   //{number},  // 必须，水滴纵高（中心到尖端距离）
@@ -23,7 +23,7 @@ var Droplet = function(opt){
     Droplet.superclass.constructor.apply(this, arguments);
     self.type = "droplet";
 };
-Base.creatClass( Droplet , Path , {
+Utils.creatClass( Droplet , Path , {
     draw : function(ctx, style) {
        var ps = "M 0 "+style.hr+" C "+style.hr+" "+style.hr+" "+( style.hr*3/2 ) +" "+(-style.hr/3)+" 0 "+(-style.vr);
        ps += " C "+(-style.hr * 3/ 2)+" "+(-style.hr / 3)+" "+(-style.hr)+" "+style.hr+" 0 "+ style.hr;

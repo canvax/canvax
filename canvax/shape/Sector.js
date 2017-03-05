@@ -14,7 +14,7 @@
  * @endAngle   结束角度(0, 360)
  **/
 import Shape from "../display/Shape";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import _ from "../utils/underscore";
 import myMath from "../geom/Math";
 
@@ -24,7 +24,7 @@ var Sector = function(opt){
     self.regAngle  = [];
     self.isRing    = false;//是否为一个圆环
 
-    opt = Base.checkOpt( opt );
+    opt = Utils.checkOpt( opt );
     self._context  = {
         pointList  : [],//边界点的集合,私有，从下面的属性计算的来
         r0         : opt.context.r0         || 0,// 默认为0，内圆半径指定后将出现内弧，同时扇边长度 = r - r0
@@ -36,7 +36,7 @@ var Sector = function(opt){
     Sector.superclass.constructor.apply(this , arguments);
 };
 
-Base.creatClass(Sector , Shape , {
+Utils.creatClass(Sector , Shape , {
     draw : function(ctx, context) {
         // 形内半径[0,r)
         var r0 = typeof context.r0 == 'undefined' ? 0 : context.r0;

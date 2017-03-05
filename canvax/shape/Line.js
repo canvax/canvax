@@ -14,14 +14,14 @@
  * @yEnd      必须，终点纵坐标
  **/
 import Shape from "../display/Shape";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import _ from "../utils/underscore";
 
 var Line = function(opt) {
     var self = this;
     this.type = "line";
     this.drawTypeOnly = "stroke";
-    opt = Base.checkOpt(opt);
+    opt = Utils.checkOpt(opt);
     self._context = {
         lineType: opt.context.lineType || null, //可选 虚线 实现 的 类型
         xStart: opt.context.xStart || 0, //{number},  // 必须，起点横坐标
@@ -33,7 +33,7 @@ var Line = function(opt) {
     Line.superclass.constructor.apply(this, arguments);
 };
 
-Base.creatClass(Line, Shape, {
+Utils.creatClass(Line, Shape, {
     /**
      * 创建线条路径
      * ctx Canvas 2D上下文

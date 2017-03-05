@@ -8,7 +8,7 @@
  * 里面， 不是唯一的根节点。而是会交由canvax类来统一管理其层级
  */
 import DisplayObjectContainer from "./DisplayObjectContainer";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 
 var Stage = function( ){
     var self = this;
@@ -19,7 +19,7 @@ var Stage = function( ){
     self._isReady = false;
     Stage.superclass.constructor.apply(this, arguments);
 };
-Base.creatClass( Stage , DisplayObjectContainer , {
+Utils.creatClass( Stage , DisplayObjectContainer , {
     init : function(){},
     //由canvax的afterAddChild 回调
     initStage : function( context2D , width , height ){
@@ -27,8 +27,8 @@ Base.creatClass( Stage , DisplayObjectContainer , {
        self.context2D = context2D;
        self.context.width  = width;
        self.context.height = height;
-       self.context.scaleX = Base._devicePixelRatio;
-       self.context.scaleY = Base._devicePixelRatio;
+       self.context.scaleX = Utils._devicePixelRatio;
+       self.context.scaleY = Utils._devicePixelRatio;
        self._isReady = true;
     },
     render : function( context ){

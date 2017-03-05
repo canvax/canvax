@@ -107,18 +107,25 @@ export default {
         return canvas;
     },
     createView: function(_width , _height, id){
-        var viewHtml = "<div id='canvax-view-"+id+"' class='canvax-view' ";
-        viewHtml+= "   style='position:relative;width:" + _width + "px;height:" + _height +"px;'>";
-        viewHtml+= "      <div id='canvax-stage-container-"+id+"' class='canvax-stage-container' ";
-        viewHtml+= "      style='position:absolute;width:" + _width + "px;height:" + _height +"px;'>";
-        viewHtml+= "      </div>";
-        viewHtml+= "      <div id='canvax-dom-container-"+id+"' class='canvax-dom-container' ";
-        viewHtml+= "      style='position:absolute;width:" + _width + "px;height:" + _height +"px;'>";
-        viewHtml+= "      </div>";
-        viewHtml+= "   </div>";
-        var fragment = document.createDocumentFragment();
-        fragment.innerHTML = viewHtml;
-        return fragment;
+        var view = document.createElement("div");
+        view.className = "canvax-view";
+        view.style.cssText += "position:relative;width:" + _width + "px;height:" + _height +"px;"
+
+        var stage_c = document.createElement("div");
+        view.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height +"px;"
+
+        //用来存放一些dom元素
+        var dom_c = document.createElement("div");
+        view.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height +"px;"
+
+        view.appendChild(stage_c);
+        view.appendChild(dom_c);
+        
+        return {
+            view : view,
+            stage_c: stage_c,
+            dom_c: dom_c
+        }
     }
     //dom相关代码结束
 };

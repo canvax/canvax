@@ -1,7 +1,13 @@
 var rollup = require('rollup');
+var babel = require('rollup-plugin-babel');
 
 rollup.rollup({
-    entry: 'canvax/index.js'
+    entry: 'canvax/index.js',
+    plugins: [
+      babel({
+        exclude: 'node_modules/**'
+      })
+    ]
 }).then(function(bundle) {
 
 	// output format - 'amd', 'cjs', 'es6', 'iife', 'umd'

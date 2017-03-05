@@ -7,7 +7,6 @@
  * Matrix 矩阵库 用于整个系统的几何变换计算
  * code from http://evanw.github.io/lightgl.js/docs/matrix.html
  */
-import Base from "../core/Base";
 
 var Matrix = function(a, b, c, d, tx, ty){
     this.a = a != undefined ? a : 1;
@@ -18,7 +17,7 @@ var Matrix = function(a, b, c, d, tx, ty){
     this.ty = ty != undefined ? ty : 0;
 };
 
-Base.creatClass( Matrix , function(){} , {
+Matrix.prototype = {
     concat : function(mtx){
         var a = this.a;
         var c = this.c;
@@ -127,6 +126,6 @@ Base.creatClass( Matrix , function(){} , {
 
         return out;
     }    
-} );
+}
 
 export default Matrix;

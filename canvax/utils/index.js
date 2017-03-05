@@ -5,7 +5,7 @@
 */
 import _ from "../utils/underscore";
 
-var Base = {
+var Utils = {
     mainFrameRate   : 60,//默认主帧率
     now : 0,
     /*像素检测专用*/
@@ -21,27 +21,7 @@ var Base = {
         //if end with a digit, then append an undersBase before appending
         var charCode = name.charCodeAt(name.length - 1);
         if (charCode >= 48 && charCode <= 57) name += "_";
-        return name + Base.getUID();
-    },
-    /**
-     * 创建dom
-     * @param {string} id dom id 待用
-     * @param {string} type : dom type， such as canvas, div etc.
-     */
-    _createCanvas : function(id, _width , _height) {
-        var newDom = document.createElement("canvas");
-
-        newDom.style.position = 'absolute';
-        newDom.style.width  = _width + 'px';
-        newDom.style.height = _height + 'px';
-        newDom.style.left   = 0;
-        newDom.style.top    = 0;
-        //newDom.setAttribute('width', _width );
-        //newDom.setAttribute('height', _height );
-        newDom.setAttribute('width', _width * this._devicePixelRatio);
-        newDom.setAttribute('height', _height * this._devicePixelRatio);
-        newDom.setAttribute('id', id);
-        return newDom;
+        return name + Utils.getUID();
     },
     canvasSupport : function() {
         return !!document.createElement('canvas').getContext;
@@ -52,8 +32,8 @@ var Base = {
         if (ObjectCreate) {
             newProto = ObjectCreate(proto);
         } else {
-            Base.__emptyFunc.prototype = proto;
-            newProto = new Base.__emptyFunc();
+            Utils.__emptyFunc.prototype = proto;
+            newProto = new Utils.__emptyFunc();
         }
         newProto.constructor = constructor;
         return newProto;
@@ -80,9 +60,9 @@ var Base = {
         }
         var sp = s.prototype, rp;
         // add prototype chain
-        rp = Base.createObject(sp, r);
+        rp = Utils.createObject(sp, r);
         r.prototype = _.extend(rp, r.prototype);
-        r.superclass = Base.createObject(sp, s);
+        r.superclass = Utils.createObject(sp, s);
         // add prototype overrides
         if (px) {
             _.extend(rp, px);
@@ -148,4 +128,4 @@ var Base = {
     }
 };
 
-export default Base;
+export default Utils;

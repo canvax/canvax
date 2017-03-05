@@ -9,12 +9,12 @@
  * @pointList 多边形各个顶角坐标
  **/
 import BrokenLine from "./BrokenLine";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import _ from "../utils/underscore";
 
 var Polygon = function(opt , atype) {
     var self = this;
-    opt = Base.checkOpt(opt);
+    opt = Utils.checkOpt(opt);
 
     if(atype !== "clone"){
         var start = opt.context.pointList[0];
@@ -35,7 +35,7 @@ var Polygon = function(opt , atype) {
     self._drawTypeOnly = null;
     self.type = "polygon";
 };
-Base.creatClass(Polygon, BrokenLine, {
+Utils.creatClass(Polygon, BrokenLine, {
     draw: function(ctx, context) {
         if (context.fillStyle) {
             if (context.lineType == 'dashed' || context.lineType == 'dotted') {

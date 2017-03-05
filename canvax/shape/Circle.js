@@ -11,7 +11,7 @@
  * @r 圆半径
  **/
 import Shape from "../display/Shape";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import _ from "../utils/underscore";
 
 
@@ -19,7 +19,7 @@ var Circle = function(opt) {
     var self = this;
     self.type = "circle";
 
-    opt = Base.checkOpt( opt );
+    opt = Utils.checkOpt( opt );
 
     //默认情况下面，circle不需要把xy进行parentInt转换
     ( "xyToInt" in opt ) || ( opt.xyToInt = false );
@@ -30,7 +30,7 @@ var Circle = function(opt) {
     Circle.superclass.constructor.apply(this, arguments);
 }
 
-Base.creatClass(Circle , Shape , {
+Utils.creatClass(Circle , Shape , {
    /**
      * 创建圆形路径
      * @param {Context2D} ctx Canvas 2D上下文

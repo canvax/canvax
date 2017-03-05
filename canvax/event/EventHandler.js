@@ -31,7 +31,7 @@ var EventHandler = function(canvax , opt) {
     //当前的鼠标状态
     this._cursor = "default";
 
-    this.target = this.canvax.el;
+    this.target = this.canvax.view;
     this.types = [];
 
     //mouse体统中不需要配置drag,touch中会用到第三方的touch库，每个库的事件名称可能不一样，
@@ -96,11 +96,11 @@ EventHandler.prototype = {
         var me = this;
         var root = me.canvax;
 
-        root.updateRootOffset();
+        root.updateViewOffset();
     
         me.curPoints = [ new Point( 
-            $.pageX( e ) - root.rootOffset.left , 
-            $.pageY( e ) - root.rootOffset.top
+            $.pageX( e ) - root.viewOffset.left , 
+            $.pageY( e ) - root.viewOffset.top
         )];
 
         //理论上来说，这里拿到point了后，就要计算这个point对应的target来push到curPointsTarget里，
@@ -128,7 +128,7 @@ EventHandler.prototype = {
            };
         };
 
-        if( e.type == "mouseup" || (e.type == "mouseout" && !contains(root.el , (e.toElement || e.relatedTarget) )) ){
+        if( e.type == "mouseup" || (e.type == "mouseout" && !contains(root.view , (e.toElement || e.relatedTarget) )) ){
             if(me._draging == true){
                 //说明刚刚在拖动
                 me._dragEnd( e , curMouseTarget , 0 );
@@ -139,7 +139,7 @@ EventHandler.prototype = {
         };
 
         if( e.type == "mouseout" ){
-            if( !contains(root.el , (e.toElement || e.relatedTarget) ) ){
+            if( !contains(root.view , (e.toElement || e.relatedTarget) ) ){
                 me.__getcurPointsTarget(e , curMousePoint);
             }
         } else if( e.type == "mousemove" ){  //|| e.type == "mousedown" ){
@@ -250,7 +250,7 @@ EventHandler.prototype = {
           //如果两次要设置的鼠标状态是一样的
           return;
         };
-        this.canvax.el.style.cursor = cursor;
+        this.canvax.view.style.cursor = cursor;
         this._cursor = cursor;
     },
     /*
@@ -264,7 +264,7 @@ EventHandler.prototype = {
     __libHandler : function( e ) {
         var me   = this;
         var root = me.canvax;
-        root.updateRootOffset();
+        root.updateViewOffset();
         // touch 下的 curPointsTarget 从touches中来
         //获取canvax坐标系统里面的坐标
         me.curPoints = me.__getCanvaxPointInTouchs( e );
@@ -329,8 +329,8 @@ EventHandler.prototype = {
         var curTouchs = [];
         _.each( e.point , function( touch ){
            curTouchs.push( {
-               x : CanvaxEvent.pageX( touch ) - root.rootOffset.left,
-               y : CanvaxEvent.pageY( touch ) - root.rootOffset.top
+               x : CanvaxEvent.pageX( touch ) - root.viewOffset.left,
+               y : CanvaxEvent.pageY( touch ) - root.viewOffset.top
            } );
         });
         return curTouchs;

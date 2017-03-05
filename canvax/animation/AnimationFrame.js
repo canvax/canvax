@@ -1,5 +1,5 @@
 import Tween from "./Tween";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import _ from "../utils/underscore";
 
 /**
@@ -104,7 +104,7 @@ function registTween(options) {
     }, options);
 
     var tween = {};
-    var tid = "tween_" + Base.getUID();
+    var tid = "tween_" + Utils.getUID();
     opt.id && ( tid = tid+"_"+opt.id );
 
     if (opt.from && opt.to) {

@@ -13,12 +13,12 @@
  * @pointList 私有，从上面的r和n计算得到的边界值的集合
  */
 import Polygon from "./Polygon";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import _ from "../utils/underscore";
 
 var Isogon = function(opt) {
     var self = this;
-    opt = Base.checkOpt(opt);
+    opt = Utils.checkOpt(opt);
     self._context = _.extend({
         pointList: [], //从下面的r和n计算得到的边界值的集合
         r: 0, //{number},  // 必须，正n边形外接圆半径
@@ -29,7 +29,7 @@ var Isogon = function(opt) {
     Isogon.superclass.constructor.apply(this, arguments);
     this.type = "isogon";
 };
-Base.creatClass(Isogon, Polygon, {
+Utils.creatClass(Isogon, Polygon, {
     $watch: function(name, value, preValue) {
         if (name == "r" || name == "n") { //如果path有变动，需要自动计算新的pointList
             this.setPointList( this.context );

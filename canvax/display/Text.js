@@ -6,7 +6,7 @@
  * 文本 类
  **/
 import DisplayObject from "./DisplayObject";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import _ from "../utils/underscore";
 
 var Text = function(text, opt) {
@@ -16,7 +16,7 @@ var Text = function(text, opt) {
     self.fontProperts = ["fontStyle", "fontVariant", "fontWeight", "fontSize", "fontFamily"];
 
     //做一次简单的opt参数校验，保证在用户不传opt的时候 或者传了opt但是里面没有context的时候报错
-    opt = Base.checkOpt(opt);
+    opt = Utils.checkOpt(opt);
 
     self._context = _.extend({
         fontSize: 13, //字体大小默认13
@@ -39,7 +39,7 @@ var Text = function(text, opt) {
 
 };
 
-Base.creatClass(Text, DisplayObject, {
+Utils.creatClass(Text, DisplayObject, {
     $watch: function(name, value, preValue) {
         //context属性有变化的监听函数
         if (_.indexOf(this.fontProperts, name) >= 0) {
@@ -74,14 +74,14 @@ Base.creatClass(Text, DisplayObject, {
     },
     getTextWidth: function() {
         var width = 0;
-        Base._pixelCtx.save();
-        Base._pixelCtx.font = this.context.font;
-        width = this._getTextWidth(Base._pixelCtx, this._getTextLines());
-        Base._pixelCtx.restore();
+        Utils._pixelCtx.save();
+        Utils._pixelCtx.font = this.context.font;
+        width = this._getTextWidth(Utils._pixelCtx, this._getTextLines());
+        Utils._pixelCtx.restore();
         return width;
     },
     getTextHeight: function() {
-        return this._getTextHeight(Base._pixelCtx, this._getTextLines());
+        return this._getTextHeight(Utils._pixelCtx, this._getTextLines());
     },
     _getTextLines: function() {
         return this.text.split(this._reNewline);

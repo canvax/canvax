@@ -5,7 +5,7 @@
  *
  * 事件派发类
  */
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import EventManager from "./EventManager";
 import CanvaxEvent from "./CanvaxEvent";
 import _ from "../utils/underscore";
@@ -15,7 +15,7 @@ var EventDispatcher = function(){
     EventDispatcher.superclass.constructor.call(this, name);
 };
 
-Base.creatClass(EventDispatcher , EventManager , {
+Utils.creatClass(EventDispatcher , EventManager , {
     on : function(type, listener){
         this._addEventListener( type, listener);
         return this;

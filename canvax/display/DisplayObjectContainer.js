@@ -6,7 +6,7 @@
  * 模拟as3的DisplayList 中的容器类
  */
 import _ from "../utils/underscore";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import DisplayObject from "./DisplayObject";
 import Point from "./Point";
 
@@ -22,7 +22,7 @@ var DisplayObjectContainer = function(opt){
    self._eventEnabled = true;
 };
 
-Base.creatClass( DisplayObjectContainer , DisplayObject , {
+Utils.creatClass( DisplayObjectContainer , DisplayObject , {
     addChild : function(child){
         if( !child ) {
             return;

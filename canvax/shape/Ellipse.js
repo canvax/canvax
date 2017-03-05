@@ -12,13 +12,13 @@
  * @vr 椭圆纵轴半径
  */
 import Shape from "../display/Shape";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import _ from "../utils/underscore";
 var Ellipse = function(opt){
     var self = this;
     self.type = "ellipse";
 
-    opt = Base.checkOpt( opt );
+    opt = Utils.checkOpt( opt );
     self._context = {
         //x             : 0 , //{number},  // 丢弃
         //y             : 0 , //{number},  // 丢弃，原因同circle
@@ -29,7 +29,7 @@ var Ellipse = function(opt){
     Ellipse.superclass.constructor.apply(this, arguments);
 };
 
-Base.creatClass(Ellipse , Shape , {
+Utils.creatClass(Ellipse , Shape , {
     draw :  function(ctx, style) {
         var r = (style.hr > style.vr) ? style.hr : style.vr;
         var ratioX = style.hr / r; //横轴缩放比率

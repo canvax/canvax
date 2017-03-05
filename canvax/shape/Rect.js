@@ -12,14 +12,14 @@
  * @radius 如果是圆角的，则为【上右下左】顺序的圆角半径数组
  **/
 import Shape from "../display/Shape";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import _ from "../utils/underscore";
 
 var Rect = function(opt){
     var self = this;
     self.type = "rect";
 
-    opt = Base.checkOpt( opt );
+    opt = Utils.checkOpt( opt );
     self._context = {
          width         : opt.context.width || 0,//{number},  // 必须，宽度
          height        : opt.context.height|| 0,//{number},  // 必须，高度
@@ -28,7 +28,7 @@ var Rect = function(opt){
     Rect.superclass.constructor.apply(this, arguments);
 };
 
-Base.creatClass( Rect , Shape , {
+Utils.creatClass( Rect , Shape , {
     /**
      * 绘制圆角矩形
      * @param {Context2D} ctx Canvas 2D上下文
@@ -45,7 +45,7 @@ Base.creatClass( Rect , Shape , {
         var width = this.context.width;
         var height = this.context.height;
     
-        var r = Base.getCssOrderArr(style.radius);
+        var r = Utils.getCssOrderArr(style.radius);
      
         ctx.moveTo( parseInt(x + r[0]), parseInt(y));
         ctx.lineTo( parseInt(x + width - r[1]), parseInt(y));

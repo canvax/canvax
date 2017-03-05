@@ -6,7 +6,7 @@
  * canvas 上委托的事件管理
  */
 import _ from "../utils/underscore";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 
 var CanvaxEvent = function( evt , params ) {
 	

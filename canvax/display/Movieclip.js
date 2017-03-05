@@ -7,12 +7,12 @@
  */
 import _ from "../utils/underscore";
 import DisplayObjectContainer from "./DisplayObjectContainer";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 
 var Movieclip = function( opt ){
 
     var self = this;
-    opt = Base.checkOpt( opt );
+    opt = Utils.checkOpt( opt );
     self.type = "movieclip";
     self.currentFrame  = 0;
     self.autoPlay      = opt.autoPlay   || false;//是否自动播放
@@ -20,7 +20,7 @@ var Movieclip = function( opt ){
 
     self.overPlay      = opt.overPlay   || false; //是否覆盖播放，为false只播放currentFrame 当前帧,true则会播放当前帧 和 当前帧之前的所有叠加
 
-    self._frameRate    = Base.mainFrameRate;
+    self._frameRate    = Utils.mainFrameRate;
     self._speedTime    = parseInt(1000/self._frameRate);
     self._preRenderTime= 0;
 
@@ -30,7 +30,7 @@ var Movieclip = function( opt ){
     Movieclip.superclass.constructor.apply(this, [ opt ] );
 };
 
-Base.creatClass(Movieclip , DisplayObjectContainer , {
+Utils.creatClass(Movieclip , DisplayObjectContainer , {
     init : function(){
        
     },
@@ -132,7 +132,7 @@ Base.creatClass(Movieclip , DisplayObjectContainer , {
     _enterInCanvax:false, 
     __enterFrame:function(){
        var self = this;
-       if((Base.now-self._preRenderTime) >= self._speedTime ){
+       if((Utils.now-self._preRenderTime) >= self._speedTime ){
            //大于_speedTime，才算完成了一帧
            //上报心跳 无条件心跳吧。
            //后续可以加上对应的 Movieclip 跳帧 心跳
@@ -178,7 +178,7 @@ Base.creatClass(Movieclip , DisplayObjectContainer , {
 
         //TODO：如果是改变moviclip的x or y 等 非帧动画 属性的时候加上这个就会 有漏帧现象，先注释掉
         /* 
-        if( (Base.now-this._preRenderTime) < this._speedTime ){
+        if( (Utils.now-this._preRenderTime) < this._speedTime ){
            return;
         }
         */
@@ -215,9 +215,9 @@ Base.creatClass(Movieclip , DisplayObjectContainer , {
 
         if(this.autoPlay){
             //如果要播放
-            if( (Base.now-this._preRenderTime) >= this._speedTime ){
+            if( (Utils.now-this._preRenderTime) >= this._speedTime ){
                 //先把当前绘制的时间点记录
-                this._preRenderTime = Base.now;
+                this._preRenderTime = Utils.now;
                 this._next();
             }
             this._push2TaskList();

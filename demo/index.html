@@ -31,11 +31,11 @@
 
 
         var box = $("#canvasTest");
-        canvax = new Canvax({
+        app = new Canvax.App({
             id : "canvax",
             el : box
         });
-        canvax.registEvent();
+        app.registEvent();
 
         stage = new Canvax.Display.Stage({
             id : "chart0"
@@ -446,9 +446,9 @@
         });
 
         stage1.addChild( text );
-        canvax.addChild( stage1 );
+        app.addChild( stage1 );
 
-        canvax.addChild(stage); 
+        app.addChild(stage); 
 
     }
 

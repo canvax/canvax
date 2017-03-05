@@ -9,17 +9,17 @@ import _ from "../utils/underscore";
 import EventDispatcher from "../event/EventDispatcher";
 import Matrix from "../geom/Matrix";
 import Point from "./Point";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 import HitTestPoint from "../geom/HitTestPoint";
 import AnimationFrame from "../animation/AnimationFrame";
-import PropertyFactory from "../core/PropertyFactory";
+import Observe from "../utils/observe";
 
 var DisplayObject = function(opt){
     DisplayObject.superclass.constructor.apply(this, arguments);
     var self = this;
 
     //如果用户没有传入context设置，就默认为空的对象
-    opt      = Base.checkOpt( opt );
+    opt      = Utils.checkOpt( opt );
 
     //设置默认属性
     self.id  = opt.id || null;
@@ -47,7 +47,7 @@ var DisplayObject = function(opt){
     //创建好context
     self._createContext( opt );
 
-    var UID = Base.createId(self.type);
+    var UID = Utils.createId(self.type);
 
     //如果没有id 则 沿用uid
     if(self.id == null){
@@ -76,16 +76,16 @@ var copy = function(target, source, strict){
     return target;
 };
 
-Base.creatClass( DisplayObject , EventDispatcher , {
+Utils.creatClass( DisplayObject , EventDispatcher , {
     init : function(){},
     _createContext : function( opt ){
         var self = this;
         //所有显示对象，都有一个类似canvas.context类似的 context属性
         //用来存取改显示对象所有和显示有关的属性，坐标，样式等。
-        //该对象为Coer.PropertyFactory()工厂函数生成
+        //该对象为Coer.Observe()工厂函数生成
         self.context = null;
 
-        //提供给Coer.PropertyFactory() 来 给 self.context 设置 propertys
+        //提供给Coer.Observe() 来 给 self.context 设置 propertys
         //这里不能用_.extend， 因为要保证_contextATTRS的纯粹，只覆盖下面已有的属性
         var _contextATTRS = copy( {
             width         : 0,
@@ -163,7 +163,7 @@ Base.creatClass( DisplayObject , EventDispatcher , {
         };
 
         //执行init之前，应该就根据参数，把context组织好线
-        self.context = PropertyFactory( _contextATTRS );
+        self.context = Observe( _contextATTRS );
     },
     /* @myself 是否生成自己的镜像 
      * 克隆又两种，一种是镜像，另外一种是绝对意义上面的新个体
@@ -188,7 +188,7 @@ Base.creatClass( DisplayObject , EventDispatcher , {
             newObj.children = this.children;
         }
         if (!myself){
-            newObj.id       = Base.createId(newObj.type);
+            newObj.id       = Utils.createId(newObj.type);
         };
         return newObj;
     },
@@ -513,7 +513,7 @@ Base.creatClass( DisplayObject , EventDispatcher , {
 
         //文本有自己的设置样式方式
         if( this.type != "text" ) {
-            Base.setContextStyle( ctx , this.context.$model );
+            Utils.setContextStyle( ctx , this.context.$model );
         }
 
         this.render( ctx );

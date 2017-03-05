@@ -6,7 +6,7 @@
  * 模拟as3 DisplayList 中的shape 类
  */
 import DisplayObject from "./DisplayObject";
-import Base from "../core/Base";
+import Utils from "../utils/index";
 
 var Shape = function(opt){
     
@@ -36,7 +36,7 @@ var Shape = function(opt){
     self._rect = null;
 };
 
-Base.creatClass(Shape , DisplayObject , {
+Utils.creatClass(Shape , DisplayObject , {
    init : function(){
    },
    initCompProperty : function( opt ){

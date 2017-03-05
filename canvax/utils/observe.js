@@ -20,7 +20,7 @@ var unwatchOne = {
     "$parent"    : 7  //用于建立数据的关系链
 }
 
-function PropertyFactory(scope, model, watchMore) {
+function Observe(scope, model, watchMore) {
 
     var stopRepeatAssign=true;
 
@@ -62,7 +62,7 @@ function PropertyFactory(scope, model, watchMore) {
                             !(neo instanceof Array) &&
                             !neo.addColorStop // neo instanceof CanvasGradient
                          ){
-                            value = neo.$model ? neo : PropertyFactory(neo , neo);
+                            value = neo.$model ? neo : Observe(neo , neo);
                             complexValue = value.$model;
                         } else {//如果是其他数据类型
                             //if( neoType === "array" ){
@@ -102,7 +102,7 @@ function PropertyFactory(scope, model, watchMore) {
                        && !value.addColorStop) {
                         //建立和父数据节点的关系
                         value.$parent = pmodel;
-                        value = PropertyFactory(value , value);
+                        value = Observe(value , value);
 
                         //accessor.value 重新复制为defineProperty过后的对象
                         accessor.value = value;
@@ -244,6 +244,5 @@ if (!defineProperties && window.VBArray) {
         return  window[className + "Factory"](description, VBMediator);//得到其产品
     }
 }
-window.PropertyFactory = PropertyFactory;
-export default PropertyFactory;
+export default Observe;
 
