@@ -22,7 +22,6 @@ import Sprite from "./display/Sprite";
 import Shape from "./display/Shape";
 import Point from "./display/Point";
 import Text from "./display/Text";
-import Bitmap from "./display/Bitmap";
 import Movieclip from "./display/Movieclip";
 
 //shapes
@@ -92,6 +91,7 @@ var Canvax = function( opt ){
     //任务列表, 如果_taskList 不为空，那么主引擎就一直跑
     //为 含有__enterFrame 方法 DisplayObject 的对象列表
     //比如Movieclip的__enterFrame方法。
+    //改属性目前主要是movieclip使用
     this._taskList = [];
     
     this._bufferStage = null;
@@ -400,8 +400,7 @@ Canvax.Display = {
     Shape  : Shape,
     Point  : Point,
     Text   : Text,
-    Movieclip : Movieclip,
-    Bitmap : Bitmap
+    Movieclip : Movieclip
 }
 
 Canvax.Shapes = {

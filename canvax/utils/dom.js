@@ -1,4 +1,5 @@
 import _ from "./underscore";
+import settings from "../settings"
 
 var addOrRmoveEventHand = function( domHand , ieHand ){
     if( document[ domHand ] ){
@@ -87,6 +88,37 @@ export default {
             return e.clientY + (document.documentElement.scrollTop ?
                     document.documentElement.scrollTop : document.body.scrollTop);
         else return null;
+    },
+    /**
+     * 创建dom
+     * @param {string} id dom id 待用
+     * @param {string} type : dom type， such as canvas, div etc.
+     */
+    createCanvas : function( _width , _height , id) {
+        var canvas = document.createElement("canvas");
+        canvas.style.position = 'absolute';
+        canvas.style.width  = _width + 'px';
+        canvas.style.height = _height + 'px';
+        canvas.style.left   = 0;
+        canvas.style.top    = 0;
+        canvas.setAttribute('width', _width * settings.RESOLUTION);
+        canvas.setAttribute('height', _height * settings.RESOLUTION);
+        canvas.setAttribute('id', id);
+        return canvas;
+    },
+    createView: function(_width , _height, id){
+        var viewHtml = "<div id='canvax-view-"+id+"' class='canvax-view' ";
+        viewHtml+= "   style='position:relative;width:" + _width + "px;height:" + _height +"px;'>";
+        viewHtml+= "      <div id='canvax-stage-container-"+id+"' class='canvax-stage-container' ";
+        viewHtml+= "      style='position:absolute;width:" + _width + "px;height:" + _height +"px;'>";
+        viewHtml+= "      </div>";
+        viewHtml+= "      <div id='canvax-dom-container-"+id+"' class='canvax-dom-container' ";
+        viewHtml+= "      style='position:absolute;width:" + _width + "px;height:" + _height +"px;'>";
+        viewHtml+= "      </div>";
+        viewHtml+= "   </div>";
+        var fragment = document.createDocumentFragment();
+        fragment.innerHTML = viewHtml;
+        return fragment;
     }
     //dom相关代码结束
 };

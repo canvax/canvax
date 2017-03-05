@@ -21,7 +21,7 @@ var Text = function(text, opt) {
     self._context = _.extend({
         fontSize: 13, //字体大小默认13
         fontWeight: "normal",
-        fontFamily: "微软雅黑",
+        fontFamily: "微软雅黑,sans-serif",
         textDecoration: null,
         fillStyle: 'blank',
         strokeStyle: null,

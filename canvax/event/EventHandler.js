@@ -328,9 +328,10 @@ EventHandler.prototype = {
         var root      = me.canvax;
         var curTouchs = [];
         _.each( e.point , function( touch ){
-           touch.x = touch.pageX - root.rootOffset.left , 
-           touch.y = touch.pageY - root.rootOffset.top
-           curTouchs.push( touch );
+           curTouchs.push( {
+               x : CanvaxEvent.pageX( touch ) - root.rootOffset.left,
+               y : CanvaxEvent.pageY( touch ) - root.rootOffset.top
+           } );
         });
         return curTouchs;
     },
