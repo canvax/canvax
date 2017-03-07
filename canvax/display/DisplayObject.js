@@ -13,6 +13,7 @@ import Utils from "../utils/index";
 import HitTestPoint from "../geom/HitTestPoint";
 import AnimationFrame from "../animation/AnimationFrame";
 import Observe from "../utils/observe";
+import {CONTEXT_DEFAULT} from "../const"
 
 var DisplayObject = function(opt){
     DisplayObject.superclass.constructor.apply(this, arguments);
@@ -42,7 +43,7 @@ var DisplayObject = function(opt){
 
     self.xyToInt         = "xyToInt" in opt ? opt.xyToInt : true;    //是否对xy坐标统一int处理，默认为true，但是有的时候可以由外界用户手动指定是否需要计算为int，因为有的时候不计算比较好，比如，进度图表中，再sector的两端添加两个圆来做圆角的进度条的时候，圆circle不做int计算，才能和sector更好的衔接
 
-    self.moveing = false; //如果元素在最轨道运动中的时候，最好把这个设置为true，这样能保证轨迹的丝搬顺滑，否则因为xyToInt的原因，会有跳跃
+    self.moveing         = false; //如果元素在最轨道运动中的时候，最好把这个设置为true，这样能保证轨迹的丝搬顺滑，否则因为xyToInt的原因，会有跳跃
 
     //创建好context
     self._createContext( opt );
@@ -60,21 +61,7 @@ var DisplayObject = function(opt){
     this._updateTransform();
 };
 
-/**
- * 简单的浅复制对象。
- * @param strict  当为true时只覆盖已有属性
- */
-var copy = function(target, source, strict){ 
-    if ( _.isEmpty(source) ){
-        return target;
-    }
-    for(var key in source){
-        if(!strict || target.hasOwnProperty(key) || target[key] !== undefined){
-            target[key] = source[key];
-        }
-    }
-    return target;
-};
+
 
 Utils.creatClass( DisplayObject , EventDispatcher , {
     init : function(){},
@@ -87,48 +74,11 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
 
         //提供给Coer.Observe() 来 给 self.context 设置 propertys
         //这里不能用_.extend， 因为要保证_contextATTRS的纯粹，只覆盖下面已有的属性
-        var _contextATTRS = copy( {
-            width         : 0,
-            height        : 0,
-            x             : 0,
-            y             : 0,
-            scaleX        : 1,
-            scaleY        : 1,
-            scaleOrigin   : {
-                x : 0,
-                y : 0
-            },
-            rotation      : 0,
-            rotateOrigin  :  {
-                x : 0,
-                y : 0
-            },
-            visible       : true,
-            cursor        : "default",
-            //canvas context 2d 的 系统样式。目前就知道这么多
-            fillStyle     : null,//"#000000",
-            lineCap       : null,
-            lineJoin      : null,
-            lineWidth     : null,
-            miterLimit    : null,
-            shadowBlur    : null,
-            shadowColor   : null,
-            shadowOffsetX : null,
-            shadowOffsetY : null,
-            strokeStyle   : null,
-            globalAlpha   : 1,
-            font          : null,
-            textAlign     : "left",
-            textBaseline  : "top", 
-            arcScaleX_    : null,
-            arcScaleY_    : null,
-            lineScale_    : null,
-            globalCompositeOperation : null
-        } , opt.context , true );            
+        var _contextATTRS = Utils.copy2context( _.clone(CONTEXT_DEFAULT), opt.context , true );            
 
         //然后看继承者是否有提供_context 对象 需要 我 merge到_context2D_context中去的
         if (self._context) {
-            _contextATTRS = _.extend(_contextATTRS , self._context );
+            _contextATTRS = _.extend(true, _contextATTRS, self._context);
         }
 
         //有些引擎内部设置context属性的时候是不用上报心跳的，比如做hitTestPoint热点检测的时候
@@ -137,7 +87,7 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         _contextATTRS.$owner = self;
         _contextATTRS.$watch = function(name , value , preValue){
 
-            //下面的这些属性变化，都会需要重新组织矩阵属性_transform 
+            //下面的这些属性变化，都会需要重新组织矩阵属性 _transform 
             var transFormProps = [ "x" , "y" , "scaleX" , "scaleY" , "rotation" , "scaleOrigin" , "rotateOrigin, lineWidth" ];
 
             if( _.indexOf( transFormProps , name ) >= 0 ) {
@@ -175,18 +125,18 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
             id      : this.id,
             context : _.clone(this.context.$model)
         };
-        if( this.img ){
-            conf.img = this.img;
-        };
+
         var newObj;
         if( this.type == 'text' ){
             newObj = new this.constructor( this.text , conf );
         } else {
             newObj = new this.constructor( conf );
         }
+
         if( this.children ){
             newObj.children = this.children;
         }
+
         if (!myself){
             newObj.id       = Utils.createId(newObj.type);
         };
@@ -337,38 +287,29 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         }
         this.parent.addChildAt( me , toIndex-1 );
     },
-    _transformHander : function( ctx ){
-        var transForm = this._transform;
-        if( !transForm ) {
-            transForm = this._updateTransform();
-        };
-        //运用矩阵开始变形
-        ctx.transform.apply( ctx , transForm.toArray() );
-        //ctx.globalAlpha *= this.context.globalAlpha;
-    },
     _updateTransform : function() {
         var _transform = new Matrix();
         _transform.identity();
-        var ctx = this.context;
+        var context = this.context;
         //是否需要Transform
-        if(ctx.scaleX !== 1 || ctx.scaleY !==1 ){
+        if(context.scaleX !== 1 || context.scaleY !==1 ){
             //如果有缩放
             //缩放的原点坐标
-            var origin = new Point(ctx.scaleOrigin);
+            var origin = new Point(context.scaleOrigin);
             if( origin.x || origin.y ){
                 _transform.translate( -origin.x , -origin.y );
             }
-            _transform.scale( ctx.scaleX , ctx.scaleY );
+            _transform.scale( context.scaleX , context.scaleY );
             if( origin.x || origin.y ){
                 _transform.translate( origin.x , origin.y );
             };
         };
 
-        var rotation = ctx.rotation;
+        var rotation = context.rotation;
         if( rotation ){
             //如果有旋转
             //旋转的原点坐标
-            var origin = new Point(ctx.rotateOrigin);
+            var origin = new Point(context.rotateOrigin);
             if( origin.x || origin.y ){
                 _transform.translate( -origin.x , -origin.y );
             }
@@ -383,24 +324,22 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         if( this.xyToInt && !this.moveing ){
             //当这个元素在做轨迹运动的时候，比如drag，animation如果实时的调整这个x ， y
             //那么该元素的轨迹会有跳跃的情况发生。所以加个条件过滤，
-            var x = parseInt( ctx.x );//Math.round(ctx.x);
-            var y = parseInt( ctx.y );//Math.round(ctx.y);
+            var x = parseInt( context.x );
+            var y = parseInt( context.y );
 
-            if( parseInt(ctx.lineWidth , 10) % 2 == 1 && ctx.strokeStyle ){
+            if( parseInt(context.lineWidth , 10) % 2 == 1 && context.strokeStyle ){
                 x += 0.5;
                 y += 0.5;
             }
         } else {
-            x = ctx.x;
-            y = ctx.y;
+            x = context.x;
+            y = context.y;
         };
 
         if( x != 0 || y != 0 ){
             _transform.translate( x , y );
         };
         this._transform = _transform;
-        //console.log(this.id+":tx_"+_transform.tx+":cx_"+this.context.x);
-
         return _transform;
     },
     //显示对象的选取检测处理函数
@@ -504,16 +443,38 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         tween = AnimationFrame.registTween( options );
         return tween;
     },
+
+
+    //渲染相关部分，迁移到renderers中去
     _render : function( ctx ){	
         if( !this.context.visible || this.context.globalAlpha <= 0 ){
             return;
         }
         ctx.save();
-        this._transformHander( ctx );
+        
 
-        //文本有自己的设置样式方式
+        var transForm = this._transform;
+        if( !transForm ) {
+            transForm = this._updateTransform();
+        };
+        //运用矩阵开始变形
+        ctx.transform.apply( ctx , transForm.toArray() );
+
+        //设置样式，文本有自己的设置样式方式
         if( this.type != "text" ) {
-            Utils.setContextStyle( ctx , this.context.$model );
+            var style = this.context.$model;
+            for(var p in style){
+                if( p != "textBaseline" && ( p in ctx ) ){
+                    if ( style[p] || _.isNumber( style[p] ) ) {
+                        if( p == "globalAlpha" ){
+                            //透明度要从父节点继承
+                            ctx[p] *= style[p];
+                        } else {
+                            ctx[p] = style[p];
+                        }
+                    }
+                }
+            };
         }
 
         this.render( ctx );

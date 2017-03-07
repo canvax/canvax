@@ -31,4 +31,43 @@ export const SHAPES = {
     RREC: 4,
 };
 
+export const CONTEXT_DEFAULT = {
+    width         : 0,
+    height        : 0,
+    x             : 0,
+    y             : 0,
+    scaleX        : 1,
+    scaleY        : 1,
+    scaleOrigin   : {
+        x : 0,
+        y : 0
+    },
+    rotation      : 0,
+    rotateOrigin  :  {
+        x : 0,
+        y : 0
+    },
+    visible       : true,
+    cursor        : "default",
+    //canvas context 2d 的 系统样式。目前就知道这么多
+    fillStyle     : null,//"#000000",
+    lineCap       : null,
+    lineJoin      : null,
+    lineWidth     : null,
+    miterLimit    : null,
+    shadowBlur    : null,
+    shadowColor   : null,
+    shadowOffsetX : null,
+    shadowOffsetY : null,
+    strokeStyle   : null,
+    globalAlpha   : 1,
+    font          : null,
+    textAlign     : "left",
+    textBaseline  : "top", 
+    arcScaleX_    : null,
+    arcScaleY_    : null,
+    lineScale_    : null,
+    globalCompositeOperation : null
+};
+
 

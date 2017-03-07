@@ -95,7 +95,6 @@ Utils.creatClass(Path, Shape, {
             //有的时候，比如“22，-22” 数据可能会经常的被写成22-22，那么需要手动修改
             //str = str.replace(new RegExp('-', 'g'), ',-');
             //str = str.replace(/(.)-/g, "$1,-")
-
             var p = str.split(',');
 
             if (p.length > 0 && p[0] === '') {

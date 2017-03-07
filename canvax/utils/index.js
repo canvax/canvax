@@ -38,22 +38,6 @@ var Utils = {
         newProto.constructor = constructor;
         return newProto;
     },
-    setContextStyle : function( ctx , style ){
-        // 简单判断不做严格类型检测
-        for(var p in style){
-            if( p != "textBaseline" && ( p in ctx ) ){
-                if ( style[p] || _.isNumber( style[p] ) ) {
-                    if( p == "globalAlpha" ){
-                        //透明度要从父节点继承
-                        ctx[p] *= style[p];
-                    } else {
-                        ctx[p] = style[p];
-                    }
-                }
-            }
-        };
-        return;
-    },
     creatClass : function(r, s, px){
         if (!s || !r) {
             return r;
@@ -88,6 +72,21 @@ var Utils = {
         } else {
           return opt;
         }
+    },
+    /**
+     * 简单的浅复制对象。
+     * @param strict  当为true时只覆盖已有属性
+     */
+    copy2context : function(target, source, strict){ 
+        if ( _.isEmpty(source) ){
+            return target;
+        }
+        for(var key in source){
+            if(!strict || target.hasOwnProperty(key) || target[key] !== undefined){
+                target[key] = source[key];
+            }
+        }
+        return target;
     },
 
     

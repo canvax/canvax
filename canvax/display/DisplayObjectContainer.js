@@ -201,6 +201,8 @@ Utils.creatClass( DisplayObjectContainer , DisplayObject , {
         }
         return result;
     },
+
+    //渲染相关，等下也会移到renderer中去
     render : function( ctx ) {
         for(var i = 0, len = this.children.length; i < len; i++) {
             this.children[i]._render( ctx );

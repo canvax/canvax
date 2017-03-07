@@ -9,7 +9,6 @@ import Sprite from "./display/Sprite";
 import Shape from "./display/Shape";
 import Point from "./display/Point";
 import Text from "./display/Text";
-import Movieclip from "./display/Movieclip";
 
 //shapes
 import BrokenLine from "./shape/BrokenLine";
@@ -34,8 +33,7 @@ Canvax.Display = {
     Sprite : Sprite,
     Shape  : Shape,
     Point  : Point,
-    Text   : Text,
-    Movieclip : Movieclip
+    Text   : Text
 }
 
 Canvax.Shapes = {

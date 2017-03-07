@@ -36,7 +36,6 @@ var Text = function(text, opt) {
     self.text = text.toString();
 
     Text.superclass.constructor.apply(this, [opt]);
-
 };
 
 Utils.creatClass(Text, DisplayObject, {

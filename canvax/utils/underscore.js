@@ -157,6 +157,11 @@ _.isPlainObject = function( obj ) {
 
     return key === undefined || hasOwn.call( obj, key );
 };
+
+/**
+*
+*如果是深度extend，第一个参数就设置为true
+*/
 _.extend = function() {  
   var options, name, src, copy, copyIsArray, clone,  
       target = arguments[0] || {},  
@@ -201,6 +206,6 @@ _.extend = function() {
 }; 
 _.clone = function(obj) {
   if (!_.isObject(obj)) return obj;
-  return _.isArray(obj) ? obj.slice() : _.extend({}, obj);
+  return _.isArray(obj) ? obj.slice() : _.extend(true, {}, obj);
 };
 export default _;

@@ -7,10 +7,14 @@
  */
 import DisplayObject from "./DisplayObject";
 import Utils from "../utils/index";
+import Graphics from "../graphics/Graphics";
 
 var Shape = function(opt){
     
     var self = this;
+
+    self.graphics = new Graphics();
+
     //元素是否有hover事件 和 chick事件，由addEvenetLister和remiveEventLister来触发修改
     self._hoverable  = false;
     self._clickable  = false;

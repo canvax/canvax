@@ -154,12 +154,13 @@ Utils.creatClass(Application , DisplayObjectContainer , {
             //flashCanvas 的话，swf如果display:none了。就做不了measureText 文本宽度 检测了
             _pixelCanvas.style.zIndex     = -1;
             _pixelCanvas.style.position   = "absolute";
-            _pixelCanvas.style.left       = - this.context.width  + "px";
-            _pixelCanvas.style.top        = - this.context.height + "px";
+            _pixelCanvas.style.left       = -this.context.width  + "px";
+            _pixelCanvas.style.top        = -this.context.height + "px";
             _pixelCanvas.style.visibility = "hidden";
         }
         Utils._pixelCtx = _pixelCanvas.getContext('2d');
     },
+
     updateViewOffset : function(){
         var now = new Date().getTime();
         if( now - this.lastGetRO > 1000 ){
