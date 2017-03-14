@@ -15,7 +15,7 @@ import Utils from "./utils/index";
 import EventHandler from "./event/EventHandler";
 import DisplayObjectContainer from "./display/DisplayObjectContainer";
 import Stage from "./display/Stage";
-import Renderer from "./renderers/canvas/CanvasRenderer"
+import autoRenderer from "./renderers/autoRenderer";
 
 
 //utils
@@ -43,7 +43,8 @@ var Application = function( opt ){
     this.viewOffset = $.offset(this.view);
     this.lastGetRO = 0;//最后一次获取 viewOffset 的时间
 
-    this.renderer = new Renderer( this );
+    this.noWebGL  = opt.noWebGL;
+    this.renderer = autoRenderer(this);
 
     this.event = null;
 
@@ -54,6 +55,9 @@ var Application = function( opt ){
     if( opt.preventDefault === false ){
         this.preventDefault = false
     };
+
+    //该属性在systenRender里面操作，每帧由心跳上报的 需要重绘的stages 列表
+    this.convertStages = {};
 
     Application.superclass.constructor.apply(this, arguments);
 };
@@ -107,7 +111,7 @@ Utils.creatClass(Application , DisplayObjectContainer , {
             s._notWatch     = true;
             s.context.width = me.width;
             s.context.height= me.height;
-            reSizeCanvas(s.context2D);
+            reSizeCanvas(s.canvas);
             s._notWatch     = false;
         });
 
@@ -172,10 +176,10 @@ Utils.creatClass(Application , DisplayObjectContainer , {
     _afterAddChild : function( stage , index ){
         var canvas;
 
-        if(!stage.context2D){
+        if(!stage.canvas){
             canvas = $.createCanvas( this.context.width , this.context.height, stage.id );
         } else {
-            canvas = stage.context2D.canvas;
+            canvas = stage.canvas;
         }
 
         if(this.children.length == 1){
@@ -183,22 +187,22 @@ Utils.creatClass(Application , DisplayObjectContainer , {
         } else if(this.children.length>1) {
             if( index == undefined ) {
                 //如果没有指定位置，那么就放到_bufferStage的下面。
-                this.stage_c.insertBefore( canvas , this._bufferStage.context2D.canvas);
+                this.stage_c.insertBefore( canvas , this._bufferStage.canvas);
             } else {
                 //如果有指定的位置，那么就指定的位置来
                 if( index >= this.children.length-1 ){
                    this.stage_c.appendChild( canvas );
                 } else {
-                   this.stage_c.insertBefore( canvas , this.children[ index ].context2D.canvas );
+                   this.stage_c.insertBefore( canvas , this.children[ index ].canvas );
                 }
             }
         };
 
         Utils.initElement( canvas );
-        stage.initStage( canvas.getContext("2d") , this.context.width , this.context.height ); 
+        stage.initStage( canvas , this.context.width , this.context.height ); 
     },
     _afterDelChild : function(stage){
-        this.stage_c.removeChild( stage.context2D.canvas );
+        this.stage_c.removeChild( stage.canvas );
     },
     
     heartBeat : function(opt){

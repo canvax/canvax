@@ -14,56 +14,40 @@ import Shape from "../display/Shape";
 import Utils from "../utils/index";
 import _ from "../utils/underscore";
 
+export default class Circle extends Shape
+{
+    constructor( opt )
+    {
+        opt = Utils.checkOpt( opt );
+        //默认情况下面，circle不需要把xy进行parentInt转换
+        ( "xyToInt" in opt ) || ( opt.xyToInt = false );
+        var _context = _.extend({
+            r : 0   //{number},  // 必须，圆半径
+        } , opt.context);
 
-var Circle = function(opt) {
-    var self = this;
-    self.type = "circle";
+        opt.context = _context;
 
-    opt = Utils.checkOpt( opt );
+        super( opt );
+        
+        this.type = "circle";
+        this.id = Utils.createId(this.type);
 
-    //默认情况下面，circle不需要把xy进行parentInt转换
-    ( "xyToInt" in opt ) || ( opt.xyToInt = false );
-
-    self._context = {
-        r : opt.context.r || 0   //{number},  // 必须，圆半径
+        this.setGraphics();
     }
-    Circle.superclass.constructor.apply(this, arguments);
+    
+    $watch(name, value, preValue) 
+    {
+        if ( name == "r" ) {
+            this.setGraphics();
+        }
+    }
+
+    setGraphics() 
+    {
+        this.graphics.clear();
+        //this.graphics.arc(0 , 0, this.context.r, 0, Math.PI * 2, true);
+        this.graphics.drawCircle(0, 0, this.context.r);
+    }
+
 }
-
-Utils.creatClass(Circle , Shape , {
-   /**
-     * 创建圆形路径
-     * @param {Context2D} ctx Canvas 2D上下文
-     * @param {Object} style 样式
-     */
-    draw : function(ctx, style) {
-        if (!style) {
-          return;
-        }
-        ctx.arc(0 , 0, style.r, 0, Math.PI * 2, true);
-    },
-
-    /**
-     * 返回矩形区域，用于局部刷新和文字定位
-     * @param {Object} style
-     */
-    getRect : function(style) {
-        var lineWidth;
-        var style = style ? style : this.context;
-        if (style.fillStyle || style.strokeStyle ) {
-            lineWidth = style.lineWidth || 1;
-        } else {
-            lineWidth = 0;
-        }
-        return {
-            x : Math.round(0 - style.r - lineWidth / 2),
-            y : Math.round(0 - style.r - lineWidth / 2),
-            width : style.r * 2 + lineWidth,
-            height : style.r * 2 + lineWidth
-        };
-    }
-});
-
-export default Circle;
-
 

@@ -210,8 +210,8 @@ function _isPointInElipse(shape, x, y) {
  * 多边形包含判断 Nonzero Winding Number Rule
  */
 
-function _isInsidePolygon_WindingNumber(shape, x, y) {
-    var context = shape.context ? shape.context : shape;
+function _isInsidePolygon_WindingNumber( graphicsData , x, y) {
+    var points = graphicsData.shape.points;
     var poly = _.clone(context.pointList); //poly 多边形顶点，数组成员的格式同 p
     poly.push(poly[0]); //记得要闭合
     var wn = 0;
@@ -227,6 +227,7 @@ function _isInsidePolygon_WindingNumber(shape, x, y) {
         if ( inLine ){
             return true;
         };
+        
         //如果有fillStyle ， 那么肯定需要做面的检测
         if (context.fillStyle) {
             shiftP = shift;
@@ -247,14 +248,11 @@ function _isInsidePolygon_WindingNumber(shape, x, y) {
  */
 function _isInsidePath(shape, x, y) {
     var context = shape.context;
-    var pointList = context.pointList;
+    var graphics = shape.graphics;
+
     var insideCatch = false;
-    for (var i = 0, l = pointList.length; i < l; i++) {
-        insideCatch = _isInsidePolygon_WindingNumber({
-            pointList: pointList[i],
-            lineWidth: context.lineWidth,
-            fillStyle: context.fillStyle
-        }, x, y);
+    for (var i = 0, l = graphics.graphicsData.length; i < l; i++) {
+        insideCatch = _isInsidePolygon_WindingNumber( graphics.graphicsData[i] , x, y);
         if (insideCatch) {
             break;
         }

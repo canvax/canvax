@@ -23,11 +23,16 @@
         "rollup-plugin-babel": "^2.6.1",
         "rollup-plugin-commonjs": "^3.3.1",
         "rollup-plugin-node-resolve": "^2.0.0",
-        "rollup-plugin-uglify": "^1.0.1"
+        "rollup-plugin-uglify": "^1.0.1",
+        "onchange": "^3.0.2"
+    },
+    "dependencies":{
+        "rollup-watch":"3.2.2"
     },
     "scripts": {
         "rollup": "node rollup.config.js",
         "string-replace": "node string-replace.js",
-        "build": "npm run rollup"
+        "build": "npm run rollup",
+        "build:watch": "onchange 'canvax/**/**' -- npm run build"
     }
 }

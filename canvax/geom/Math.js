@@ -7,6 +7,7 @@
  *
  **/
 
+import SmoothSpline from "../geom/SmoothSpline";
 
 
 var _cache = {
@@ -66,12 +67,44 @@ function degreeTo360( angle ) {
     return reAng;
 }
 
+function getIsgonPointList( n , r ){
+    var pointList = [];
+    var dStep = 2 * Math.PI / n;
+    var beginDeg = -Math.PI / 2;
+    var deg = beginDeg;
+    for (var i = 0, end = n; i < end; i++) {
+        pointList.push([r * Math.cos(deg), r * Math.sin(deg)]);
+        deg += dStep;
+    };
+    return pointList;
+}
+
+function getSmoothPointList( pList, smoothFilter ){
+    //smoothFilter -- 比如在折线图中。会传一个smoothFilter过来做point的纠正。
+    //让y不能超过底部的原点
+    var obj = {
+        points: pList
+    }
+    if (_.isFunction(smoothFilter)) {
+        obj.smoothFilter = smoothFilter;
+    }
+
+    var currL = SmoothSpline(obj);
+    if (pList && pList.length>0) {
+        currL.push( pList[pList.length - 1] );
+    };
+
+    return currL;
+}
+
 export default {
     PI  : Math.PI  ,
     sin : sin      ,
     cos : cos      ,
     degreeToRadian : degreeToRadian,
     radianToDegree : radianToDegree,
-    degreeTo360    : degreeTo360   
+    degreeTo360    : degreeTo360,
+    getIsgonPointList : getIsgonPointList,
+    getSmoothPointList: getSmoothPointList   
 };
 

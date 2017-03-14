@@ -13,7 +13,8 @@ import Utils from "../utils/index";
 var Stage = function( ){
     var self = this;
     self.type = "stage";
-    self.context2D = null;
+    self.canvas = null;
+    self.ctx = null; //渲染的时候由renderer决定,这里不做初始值
     //stage正在渲染中
     self.stageRending = false;
     self._isReady = false;
@@ -22,23 +23,14 @@ var Stage = function( ){
 Utils.creatClass( Stage , DisplayObjectContainer , {
     init : function(){},
     //由canvax的afterAddChild 回调
-    initStage : function( context2D , width , height ){
+    initStage : function( canvas , width , height ){
        var self = this;
-       self.context2D = context2D;
+       self.canvas = canvas;
        self.context.width  = width;
        self.context.height = height;
        self.context.scaleX = Utils._devicePixelRatio;
        self.context.scaleY = Utils._devicePixelRatio;
        self._isReady = true;
-    },
-    render : function( context ){
-        this.stageRending = true;
-        //TODO：
-        //clear 看似 很合理，但是其实在无状态的cavnas绘图中，其实没必要执行一步多余的clear操作
-        //反而增加无谓的开销，如果后续要做脏矩阵判断的话。在说
-        this.clear();
-        Stage.superclass.render.call( this, context );
-        this.stageRending = false;
     },
     heartBeat : function( opt ){
         //shape , name , value , preValue 
@@ -52,13 +44,6 @@ Utils.creatClass( Stage , DisplayObjectContainer , {
 
         //TODO临时先这么处理
         this.parent && this.parent.heartBeat(opt);
-    },
-    clear : function(x, y, width, height) {
-        if(arguments.length >= 4) {
-            this.context2D.clearRect(x, y, width, height);
-        } else {
-            this.context2D.clearRect( 0, 0, this.parent.width , this.parent.height );
-        }
     }
 });
 export default Stage;

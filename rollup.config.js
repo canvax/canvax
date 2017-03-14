@@ -21,7 +21,7 @@ rollup.rollup({
         format: 'iife',
         moduleName: 'Canvax',
         dest: 'build/canvax.js',
-        sourceMap: 'inline'
+        //sourceMap: 'inline'
     });
 
 

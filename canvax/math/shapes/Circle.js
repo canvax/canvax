@@ -43,6 +43,8 @@ export default class Circle
          * @see PIXI.SHAPES
          */
         this.type = SHAPES.CIRC;
+
+        this.closed = true;
     }
 
     /**

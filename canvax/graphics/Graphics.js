@@ -1,49 +1,61 @@
+/*
+* Graphics绘图法则
+* 单个grahics实例里的fill line 样式属性，都从对应shape.context中获取
+* 
+*/
+
 import GraphicsData from './GraphicsData';
-import { Matrix, Point, Rectangle, RoundedRectangle, Ellipse, Polygon, Circle } from '../math/index';
+import { Rectangle, Ellipse, Polygon, Circle } from '../math/index';
 import { SHAPES } from '../const';
 import bezierCurveTo from './utils/bezierCurveTo';
+import _ from "../utils/underscore";
+import InsideLine from '../geom/InsideLine'
 
-const tempMatrix = new Matrix();
-const tempPoint = new Point();
-const tempColor1 = new Float32Array(4);
-const tempColor2 = new Float32Array(4);
-
-export default class Graphics
+export default class Graphics 
 {
-    constructor()
+    constructor( shape )
     {
+        this.shape = shape;
+
+        this.lineWidth = 1;
+        this.strokeStyle = null;
+        this.lineAlpha = 1;
+        this.fillStyle = null;
         this.fillAlpha = 1;
-        this.lineWidth = 0;
-        this.lineColor = 0;
+
         this.graphicsData = [];
-        this.tint = 0xFFFFFF;
-        this._prevTint = 0xFFFFFF;
         this.currentPath = null;
 
-        this._webGL = {};
+        this.synsStyle();
 
-        this.dirty = 0;
-        this.fastRectDirty = -1;
-        this.clearDirty = 0;
-        this.boundsDirty = -1;
-        this.cachedSpriteDirty = false;
-
-        this._spriteRect = null;
-        this._fastRect = false;
+        this.dirty = 0; //脏数据
     }
 
+    synsStyle()
+    {
+        //从shape中把绘图需要的style属性同步过来
+        var sctx = this.shape.context;
+        this.lineWidth = sctx.lineWidth;
+        this.strokeStyle = sctx.strokeStyle;
+        this.lineAlpha = sctx.lineAlpha * sctx.globalAlpha;
+
+        this.fillStyle = sctx.fillStyle;
+        this.fillAlpha = sctx.fillAlpha * sctx.globalAlpha;
+
+
+        //如果graphicsData有多分组的情况下，如果以为shape的 style 属性改变调用的synsStyle
+        //则会覆盖全部的 graphicsData 元素
+        for (let i = 0; i < this.graphicsData.length; ++i)
+        {
+            this.graphicsData[i].synsStyle(this);
+        }
+    }
 
     clone()
     {
         const clone = new Graphics();
 
-        clone.fillAlpha = this.fillAlpha;
-        clone.lineWidth = this.lineWidth;
-        clone.lineColor = this.lineColor;
-        clone.tint = this.tint;
-        clone.boundsPadding = this.boundsPadding;
         clone.dirty = 0;
-        clone.cachedSpriteDirty = this.cachedSpriteDirty;
 
         // copy graphics data
         for (let i = 0; i < this.graphicsData.length; ++i)
@@ -52,41 +64,9 @@ export default class Graphics
         }
 
         clone.currentPath = clone.graphicsData[clone.graphicsData.length - 1];
-
-        clone.updateLocalBounds();
-
         return clone;
     }
 
-
-    lineStyle(lineWidth = 0, color = 0, alpha = 1)
-    {
-        this.lineWidth = lineWidth;
-        this.lineColor = color;
-        this.lineAlpha = alpha;
-
-        if (this.currentPath)
-        {
-            if (this.currentPath.shape.points.length)
-            {
-                // halfway through a line? start a new one!
-                const shape = new Polygon(this.currentPath.shape.points.slice(-2));
-
-                shape.closed = false;
-
-                this.drawShape(shape);
-            }
-            else
-            {
-                // otherwise its empty so lets just set the line properties
-                this.currentPath.lineWidth = this.lineWidth;
-                this.currentPath.lineColor = this.lineColor;
-                this.currentPath.lineAlpha = this.lineAlpha;
-            }
-        }
-
-        return this;
-    }
 
     moveTo(x, y)
     {
@@ -97,33 +77,18 @@ export default class Graphics
 
         return this;
     }
-
-    /**
-     * Draws a line using the current line style from the current drawing position to (x, y);
-     * The current drawing position is then set to (x, y).
-     *
-     * @param {number} x - the X coordinate to draw to
-     * @param {number} y - the Y coordinate to draw to
-     * @return {PIXI.Graphics} This Graphics object. Good for chaining method calls
-     */
+    
     lineTo(x, y)
     {
-        this.currentPath.shape.points.push(x, y);
-        this.dirty++;
-
+        if( this.currentPath ){
+            this.currentPath.shape.points.push(x, y);
+            this.dirty++;
+        } else {
+            this.moveTo(0,0);
+        }
         return this;
     }
 
-    /**
-     * Calculate the points for a quadratic bezier curve and then draws it.
-     * Based on: https://stackoverflow.com/questions/785097/how-do-i-implement-a-bezier-curve-in-c
-     *
-     * @param {number} cpX - Control point x
-     * @param {number} cpY - Control point y
-     * @param {number} toX - Destination point x
-     * @param {number} toY - Destination point y
-     * @return {PIXI.Graphics} This Graphics object. Good for chaining method calls
-     */
     quadraticCurveTo(cpX, cpY, toX, toY)
     {
         if (this.currentPath)
@@ -324,44 +289,9 @@ export default class Graphics
         return this;
     }
 
-    beginFill(color = 0, alpha = 1)
-    {
-        this.filling = true;
-        this.fillColor = color;
-        this.fillAlpha = alpha;
-
-        if (this.currentPath)
-        {
-            if (this.currentPath.shape.points.length <= 2)
-            {
-                this.currentPath.fill = this.filling;
-                this.currentPath.fillColor = this.fillColor;
-                this.currentPath.fillAlpha = this.fillAlpha;
-            }
-        }
-
-        return this;
-    }
-
-    endFill()
-    {
-        this.filling = false;
-        this.fillColor = null;
-        this.fillAlpha = 1;
-
-        return this;
-    }
-
     drawRect(x, y, width, height)
     {
         this.drawShape(new Rectangle(x, y, width, height));
-        return this;
-    }
-
-    drawRoundedRect(x, y, width, height, radius)
-    {
-        this.drawShape(new RoundedRectangle(x, y, width, height, radius));
-
         return this;
     }
 
@@ -416,60 +346,21 @@ export default class Graphics
 
     clear()
     {
-        if (this.lineWidth || this.filling || this.graphicsData.length > 0)
+        if (this.graphicsData.length > 0)
         {
-            this.lineWidth = 0;
-            this.filling = false;
-
-            this.boundsDirty = -1;
             this.dirty++;
-            this.clearDirty++;
             this.graphicsData.length = 0;
         }
 
         this.currentPath = null;
-        this._spriteRect = null;
 
         return this;
     }
 
-
-    /**
-     * Renders the object using the WebGL renderer
-     *
-     * @private
-     * @param {PIXI.WebGLRenderer} renderer - The renderer
-     */
-    _renderWebGL(renderer)
-    {
-
-        renderer.setObjectRenderer(renderer.plugins.graphics);
-        renderer.plugins.graphics.render(this);
-    }
-
-    /**
-     * Renders the object using the Canvas renderer
-     *
-     * @private
-     * @param {PIXI.CanvasRenderer} renderer - The renderer
-     */
-    _renderCanvas(renderer)
-    {
-        renderer.plugins.graphics.render(this);
-    }
-
-
-    /**
-     * Draws the given shape to this Graphics object. Can be any of Circle, Rectangle, Ellipse, Line or Polygon.
-     *
-     * @param {PIXI.Circle|PIXI.Ellipse|PIXI.Polygon|PIXI.Rectangle|PIXI.RoundedRectangle} shape - The shape object to draw.
-     * @return {PIXI.GraphicsData} The generated GraphicsData object.
-     */
     drawShape(shape)
     {
         if (this.currentPath)
         {
-            // check current path!
             if (this.currentPath.shape.points.length <= 2)
             {
                 this.graphicsData.pop();
@@ -480,11 +371,10 @@ export default class Graphics
 
         const data = new GraphicsData(
             this.lineWidth,
-            this.lineColor,
+            this.strokeStyle,
             this.lineAlpha,
-            this.fillColor,
+            this.fillStyle,
             this.fillAlpha,
-            this.filling,
             shape
         );
 
@@ -492,7 +382,7 @@ export default class Graphics
 
         if (data.type === SHAPES.POLY)
         {
-            data.shape.closed = data.shape.closed || this.filling;
+            data.shape.closed = data.shape.closed;
             this.currentPath = data;
         }
 
@@ -502,14 +392,8 @@ export default class Graphics
     }
 
 
-    /**
-     * Closes the current path.
-     *
-     * @return {PIXI.Graphics} Returns itself.
-     */
     closePath()
     {
-        // ok so close path assumes next one is a hole!
         const currentPath = this.currentPath;
 
         if (currentPath && currentPath.shape)
@@ -520,35 +404,186 @@ export default class Graphics
         return this;
     }
 
+    /**
+     * Tests if a point is inside this graphics object
+     *
+     * @param {PIXI.Point} point - the point to test
+     * @return {boolean} the result of the test
+     */
+    containsPoint(point)
+    {
+        const graphicsData = this.graphicsData;
+        let inside = false;
+        for (let i = 0; i < graphicsData.length; ++i)
+        {
+            const data = graphicsData[i];
+            if (data.shape)
+            {
+                //先检测fill， fill的检测概率大些。
+                //像circle,ellipse这样的shape 就直接把lineWidth算在fill里面计算就好了，所以他们是没有insideLine的
+                if ( data.hasFill() && data.shape.contains(point.x, point.y) )
+                {
+                    inside = true;
+                    if( inside ){
+                        break;
+                    }
+                }
+
+                //circle,ellipse等就没有points
+                if( data.hasLine() && data.shape.points )
+                {
+                    //然后检测是否和描边碰撞
+                    inside = InsideLine( data , point.x , point.y );
+                    if( inside ){
+                        break;
+                    }
+                }
+            }
+            
+        }
+
+        return inside;
+    }
+
+    
+
+     /**
+     * Update the bounds of the object
+     *
+     */
+    updateLocalBounds()
+    {
+        let minX = Infinity;
+        let maxX = -Infinity;
+
+        let minY = Infinity;
+        let maxY = -Infinity;
+
+        if (this.graphicsData.length)
+        {
+            let shape = 0;
+            let x = 0;
+            let y = 0;
+            let w = 0;
+            let h = 0;
+
+            for (let i = 0; i < this.graphicsData.length; i++)
+            {
+                const data = this.graphicsData[i];
+                const type = data.type;
+                const lineWidth = data.lineWidth;
+
+                shape = data.shape;
+
+                if (type === SHAPES.RECT || type === SHAPES.RREC)
+                {
+                    x = shape.x - (lineWidth / 2);
+                    y = shape.y - (lineWidth / 2);
+                    w = shape.width + lineWidth;
+                    h = shape.height + lineWidth;
+
+                    minX = x < minX ? x : minX;
+                    maxX = x + w > maxX ? x + w : maxX;
+
+                    minY = y < minY ? y : minY;
+                    maxY = y + h > maxY ? y + h : maxY;
+                }
+                else if (type === SHAPES.CIRC)
+                {
+                    x = shape.x;
+                    y = shape.y;
+                    w = shape.radius + (lineWidth / 2);
+                    h = shape.radius + (lineWidth / 2);
+
+                    minX = x - w < minX ? x - w : minX;
+                    maxX = x + w > maxX ? x + w : maxX;
+
+                    minY = y - h < minY ? y - h : minY;
+                    maxY = y + h > maxY ? y + h : maxY;
+                }
+                else if (type === SHAPES.ELIP)
+                {
+                    x = shape.x;
+                    y = shape.y;
+                    w = shape.width + (lineWidth / 2);
+                    h = shape.height + (lineWidth / 2);
+
+                    minX = x - w < minX ? x - w : minX;
+                    maxX = x + w > maxX ? x + w : maxX;
+
+                    minY = y - h < minY ? y - h : minY;
+                    maxY = y + h > maxY ? y + h : maxY;
+                }
+                else
+                {
+                    // POLY
+                    const points = shape.points;
+                    let x2 = 0;
+                    let y2 = 0;
+                    let dx = 0;
+                    let dy = 0;
+                    let rw = 0;
+                    let rh = 0;
+                    let cx = 0;
+                    let cy = 0;
+
+                    for (let j = 0; j + 2 < points.length; j += 2)
+                    {
+                        x = points[j];
+                        y = points[j + 1];
+                        x2 = points[j + 2];
+                        y2 = points[j + 3];
+                        dx = Math.abs(x2 - x);
+                        dy = Math.abs(y2 - y);
+                        h = lineWidth;
+                        w = Math.sqrt((dx * dx) + (dy * dy));
+
+                        if (w < 1e-9)
+                        {
+                            continue;
+                        }
+
+                        rw = ((h / w * dy) + dx) / 2;
+                        rh = ((h / w * dx) + dy) / 2;
+                        cx = (x2 + x) / 2;
+                        cy = (y2 + y) / 2;
+
+                        minX = cx - rw < minX ? cx - rw : minX;
+                        maxX = cx + rw > maxX ? cx + rw : maxX;
+
+                        minY = cy - rh < minY ? cy - rh : minY;
+                        maxY = cy + rh > maxY ? cy + rh : maxY;
+                    }
+                }
+            }
+        }
+        else
+        {
+            minX = 0;
+            maxX = 0;
+            minY = 0;
+            maxY = 0;
+        }
+
+
+        this.Bound.minX = minX 
+        this.Bound.maxX = maxX;
+
+        this.Bound.minY = minY;
+        this.Bound.maxY = maxY;
+    }
+
     destroy(options)
     {
         super.destroy(options);
 
-        // destroy each of the GraphicsData objects
         for (let i = 0; i < this.graphicsData.length; ++i)
         {
             this.graphicsData[i].destroy();
         }
 
-        // for each webgl data entry, destroy the WebGLGraphicsData
-        for (const id in this._webgl)
-        {
-            for (let j = 0; j < this._webgl[id].data.length; ++j)
-            {
-                this._webgl[id].data[j].destroy();
-            }
-        }
-
-        if (this._spriteRect)
-        {
-            this._spriteRect.destroy();
-        }
-
         this.graphicsData = null;
-
         this.currentPath = null;
-        this._webgl = null;
-        this._localBounds = null;
     }
 
 }

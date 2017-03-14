@@ -10,58 +10,46 @@ import EventDispatcher from "../event/EventDispatcher";
 import Matrix from "../geom/Matrix";
 import Point from "./Point";
 import Utils from "../utils/index";
-import HitTestPoint from "../geom/HitTestPoint";
 import AnimationFrame from "../animation/AnimationFrame";
 import Observe from "../utils/observe";
 import {CONTEXT_DEFAULT} from "../const"
 
 var DisplayObject = function(opt){
     DisplayObject.superclass.constructor.apply(this, arguments);
-    var self = this;
 
     //如果用户没有传入context设置，就默认为空的对象
     opt      = Utils.checkOpt( opt );
 
-    //设置默认属性
-    self.id  = opt.id || null;
-
     //相对父级元素的矩阵
-    self._transform      = null;
+    this._transform      = null;
 
     //心跳次数
-    self._heartBeatNum   = 0;
+    this._heartBeatNum   = 0;
 
     //元素对应的stage元素
-    self.stage           = null;
+    this.stage           = null;
 
     //元素的父元素
-    self.parent          = null;
+    this.parent          = null;
 
-    self._eventEnabled   = false;   //是否响应事件交互,在添加了事件侦听后会自动设置为true
+    this._eventEnabled   = false;   //是否响应事件交互,在添加了事件侦听后会自动设置为true
 
-    self.dragEnabled     = true ;//"dragEnabled" in opt ? opt.dragEnabled : false;   //是否启用元素的拖拽
+    this.dragEnabled     = true ;//"dragEnabled" in opt ? opt.dragEnabled : false;   //是否启用元素的拖拽
 
-    self.xyToInt         = "xyToInt" in opt ? opt.xyToInt : true;    //是否对xy坐标统一int处理，默认为true，但是有的时候可以由外界用户手动指定是否需要计算为int，因为有的时候不计算比较好，比如，进度图表中，再sector的两端添加两个圆来做圆角的进度条的时候，圆circle不做int计算，才能和sector更好的衔接
+    this.xyToInt         = "xyToInt" in opt ? opt.xyToInt : true;    //是否对xy坐标统一int处理，默认为true，但是有的时候可以由外界用户手动指定是否需要计算为int，因为有的时候不计算比较好，比如，进度图表中，再sector的两端添加两个圆来做圆角的进度条的时候，圆circle不做int计算，才能和sector更好的衔接
 
-    self.moveing         = false; //如果元素在最轨道运动中的时候，最好把这个设置为true，这样能保证轨迹的丝搬顺滑，否则因为xyToInt的原因，会有跳跃
+    this.moveing         = false; //如果元素在最轨道运动中的时候，最好把这个设置为true，这样能保证轨迹的丝搬顺滑，否则因为xyToInt的原因，会有跳跃
 
     //创建好context
-    self._createContext( opt );
+    this._createContext( opt );
 
-    var UID = Utils.createId(self.type);
+    this.id = Utils.createId(this.type || "displayObject");
 
-    //如果没有id 则 沿用uid
-    if(self.id == null){
-        self.id = UID ;
-    };
-
-    self.init.apply(self , arguments);
+    this.init.apply(this , arguments);
 
     //所有属性准备好了后，先要计算一次this._updateTransform()得到_tansform
     this._updateTransform();
 };
-
-
 
 Utils.creatClass( DisplayObject , EventDispatcher , {
     init : function(){},
@@ -74,14 +62,9 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
 
         //提供给Coer.Observe() 来 给 self.context 设置 propertys
         //这里不能用_.extend， 因为要保证_contextATTRS的纯粹，只覆盖下面已有的属性
-        var _contextATTRS = Utils.copy2context( _.clone(CONTEXT_DEFAULT), opt.context , true );            
+        var _contextATTRS = _.extend( _.clone(CONTEXT_DEFAULT), opt.context , true);
 
-        //然后看继承者是否有提供_context 对象 需要 我 merge到_context2D_context中去的
-        if (self._context) {
-            _contextATTRS = _.extend(true, _contextATTRS, self._context);
-        }
-
-        //有些引擎内部设置context属性的时候是不用上报心跳的，比如做hitTestPoint热点检测的时候
+        //有些引擎内部设置context属性的时候是不用上报心跳的，比如做热点检测的时候
         self._notWatch = false;
 
         _contextATTRS.$owner = self;
@@ -133,12 +116,14 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
             newObj = new this.constructor( conf );
         }
 
+        newObj.id = conf.id;
+
         if( this.children ){
             newObj.children = this.children;
         }
 
         if (!myself){
-            newObj.id       = Utils.createId(newObj.type);
+            newObj.id = Utils.createId(newObj.type);
         };
         return newObj;
     },
@@ -344,7 +329,8 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
     },
     //显示对象的选取检测处理函数
     getChildInPoint : function( point ){
-        var result; //检测的结果
+
+        var result = false; //检测的结果
 
         //第一步，吧glob的point转换到对应的obj的层级内的坐标系统
         if( this.type != "stage" && this.parent && this.parent.type != "stage" ) {
@@ -353,10 +339,6 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
 
         var x = point.x;
         var y = point.y;
-
-        //这个时候如果有对context的set，告诉引擎不需要watch，因为这个是引擎触发的，不是用户
-        //用户set context 才需要触发watch
-        this._notWatch = true;
     
         //对鼠标的坐标也做相同的变换
         if( this._transform ){
@@ -368,36 +350,10 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
             y = originPos[1];
         };
 
-        var _rect = this._rect = this.getRect(this.context);
-
-        if(!_rect){
-            return false;
-        };
-        if( !this.context.width && !!_rect.width ){
-            this.context.width = _rect.width;
-        };
-        if( !this.context.height && !!_rect.height ){
-            this.context.height = _rect.height;
-        };
-        if(!_rect.width || !_rect.height) {
-            return false;
-        };
-        //正式开始第一步的矩形范围判断
-        if ( x    >= _rect.x
-            &&  x <= (_rect.x + _rect.width)
-            &&  y >= _rect.y
-            &&  y <= (_rect.y + _rect.height)
-        ) {
-           //那么就在这个元素的矩形范围内
-           result = HitTestPoint.isInside( this , {
-               x : x,
-               y : y
-           } );
-        } else {
-           //如果连矩形内都不是，那么肯定的，这个不是我们要找的shap
-           result = false;
+        if( this.graphics ){
+            result = this.graphics.containsPoint( {x: x , y: y} );
         }
-        this._notWatch = false;
+
         return result;
     },
     /*

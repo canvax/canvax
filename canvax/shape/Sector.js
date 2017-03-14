@@ -18,26 +18,43 @@ import Utils from "../utils/index";
 import _ from "../utils/underscore";
 import myMath from "../geom/Math";
 
-var Sector = function(opt){
-    var self  = this;
-    self.type = "sector";
-    self.regAngle  = [];
-    self.isRing    = false;//是否为一个圆环
+export default class Sector extends Shape
+{
+    constructor(opt)
+    {
+        opt = Utils.checkOpt( opt );
+        var _context = _.extend({
+            pointList  : [],//边界点的集合,私有，从下面的属性计算的来
+            r0         : 0,// 默认为0，内圆半径指定后将出现内弧，同时扇边长度 = r - r0
+            r          : 0,//{number},  // 必须，外圆半径
+            startAngle : 0,//{number},  // 必须，起始角度[0, 360)
+            endAngle   : 0, //{number},  // 必须，结束角度(0, 360]
+            clockwise  : false //是否顺时针，默认为false(顺时针)
+        } , opt.context);
+        
+        opt.context = _context;
 
-    opt = Utils.checkOpt( opt );
-    self._context  = {
-        pointList  : [],//边界点的集合,私有，从下面的属性计算的来
-        r0         : opt.context.r0         || 0,// 默认为0，内圆半径指定后将出现内弧，同时扇边长度 = r - r0
-        r          : opt.context.r          || 0,//{number},  // 必须，外圆半径
-        startAngle : opt.context.startAngle || 0,//{number},  // 必须，起始角度[0, 360)
-        endAngle   : opt.context.endAngle   || 0, //{number},  // 必须，结束角度(0, 360]
-        clockwise  : opt.context.clockwise  || false //是否顺时针，默认为false(顺时针)
+        super(opt);
+
+
+        this.regAngle  = [];
+        this.isRing    = false;//是否为一个圆环
+        this.type = "sector";
+        this.id = Utils.createId(this.type);
+
+        this.setGraphics();
     }
-    Sector.superclass.constructor.apply(this , arguments);
-};
 
-Utils.creatClass(Sector , Shape , {
-    draw : function(ctx, context) {
+    $watch(name, value, preValue) 
+    {
+        if ( name == "r0" || name == "r" || name == "startAngle" || name =="endAngle" || name =="clockwise" ) {
+            this.setGraphics();
+        }
+    }
+
+    setGraphics() 
+    {
+        var context = this.context;
         // 形内半径[0,r)
         var r0 = typeof context.r0 == 'undefined' ? 0 : context.r0;
         var r  = context.r;                            // 扇形外半径(0,r]
@@ -62,23 +79,29 @@ Utils.creatClass(Sector , Shape , {
             startAngle -= 0.003
         }
 
-        ctx.arc( 0 , 0 , r, startAngle, endAngle, this.context.clockwise);
+        var G = this.graphics;
+
+        G.arc( 0 , 0 , r, startAngle, endAngle, this.context.clockwise);
         if (r0 !== 0) {
             if( this.isRing ){
                 //加上这个isRing的逻辑是为了兼容flashcanvas下绘制圆环的的问题
                 //不加这个逻辑flashcanvas会绘制一个大圆 ， 而不是圆环
-                ctx.moveTo( r0 , 0 );
-                ctx.arc( 0 , 0 , r0 , startAngle , endAngle , !this.context.clockwise);
+                G.moveTo( r0 , 0 );
+                G.arc( 0 , 0 , r0 , startAngle , endAngle , !this.context.clockwise);
             } else {
-                ctx.arc( 0 , 0 , r0 , endAngle , startAngle , !this.context.clockwise);
+                G.arc( 0 , 0 , r0 , endAngle , startAngle , !this.context.clockwise);
             }
         } else {
             //TODO:在r0为0的时候，如果不加lineTo(0,0)来把路径闭合，会出现有搞笑的一个bug
             //整个圆会出现一个以每个扇形两端为节点的镂空，我可能描述不清楚，反正这个加上就好了
-            ctx.lineTo(0,0);
-        }
-     },
-     getRegAngle : function(){
+            G.lineTo(0,0);
+        };
+        
+        G.closePath();
+     }
+
+     getRegAngle()
+     {
          this.regIn      = true;  //如果在start和end的数值中，end大于start而且是顺时针则regIn为true
          var c           = this.context;
          var startAngle = myMath.degreeTo360(c.startAngle);          // 起始角度[0,360)
@@ -92,8 +115,10 @@ Utils.creatClass(Sector , Shape , {
              Math.min( startAngle , endAngle ) , 
              Math.max( startAngle , endAngle ) 
          ];
-     },
-     getRect : function(context){
+     }
+
+     getRect(context)
+     {
          var context = context ? context : this.context;
          var r0 = typeof context.r0 == 'undefined'     // 形内半径[0,r)
              ? 0 : context.r0;
@@ -103,14 +128,6 @@ Utils.creatClass(Sector , Shape , {
 
          var startAngle = myMath.degreeTo360(context.startAngle);          // 起始角度[0,360)
          var endAngle   = myMath.degreeTo360(context.endAngle);            // 结束角度(0,360]
-
-         /*
-         var isCircle = false;
-         if( Math.abs( startAngle - endAngle ) == 360 
-                 || ( startAngle == endAngle && startAngle * endAngle != 0 ) ){
-             isCircle = true;
-         }
-         */
 
          var pointList  = [];
 
@@ -152,7 +169,4 @@ Utils.creatClass(Sector , Shape , {
          context.pointList = pointList;
          return this.getRectFormPointList( context );
      }
-
-});
-
-export default Sector;
+}

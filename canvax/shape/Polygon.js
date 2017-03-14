@@ -8,57 +8,102 @@
  * 对应context的属性有
  * @pointList 多边形各个顶角坐标
  **/
-import BrokenLine from "./BrokenLine";
+import Shape from "../display/Shape";
 import Utils from "../utils/index";
 import _ from "../utils/underscore";
+import _Math from "../geom/Math"
 
-var Polygon = function(opt , atype) {
-    var self = this;
-    opt = Utils.checkOpt(opt);
+export default class Polygon extends Shape 
+{
+    constructor(opt, atype)
+    {
+        opt = Utils.checkOpt(opt);
+        var _context = _.extend({
+            lineType: null,
+            smooth: false,
+            pointList: [], //{Array}  // 必须，各个顶角坐标
+            smoothFilter: Utils.__emptyFunc
+        }, opt.context );
 
-    if(atype !== "clone"){
-        var start = opt.context.pointList[0];
-        var end   = opt.context.pointList[ opt.context.pointList.length - 1 ];
-        if( opt.context.smooth ){
-            opt.context.pointList.unshift( end );
-        } else {
-            opt.context.pointList.push( start );
-        }
-    };
-    
-    Polygon.superclass.constructor.apply(this, arguments);
-
-    if(atype !== "clone" && opt.context.smooth && end){
-
-    };
-
-    self._drawTypeOnly = null;
-    self.type = "polygon";
-};
-Utils.creatClass(Polygon, BrokenLine, {
-    draw: function(ctx, context) {
-        if (context.fillStyle) {
-            if (context.lineType == 'dashed' || context.lineType == 'dotted') {
-                var pointList = context.pointList;
-                //特殊处理，虚线围不成path，实线再build一次
-                ctx.save();
-                ctx.beginPath();
-                ctx.moveTo(pointList[0][0], pointList[0][1]);
-                for (var i = 1, l = pointList.length; i < l; i++) {
-                    ctx.lineTo(pointList[i][0], pointList[i][1]);
-                };
-                ctx.closePath();
-                ctx.restore();
-                ctx.fill();
-                this._drawTypeOnly = "stroke";
-            };
+        if(atype !== "clone"){
+            var start = _context.pointList[0];
+            var end   = _context.pointList.slice( - 1 )[0];
+            if( _context.smooth ){
+                _context.pointList.unshift( end );
+                _context.pointList = _Math.getSmoothPointList( _context.pointList );
+            } 
+            //else {
+            //    _context.pointList.push( start );
+            //}
         };
-        //如果下面不加save restore，canvas会把下面的path和上面的path一起算作一条path。就会绘制了一条实现边框和一虚线边框。
-        ctx.save();
-        ctx.beginPath();
-        this._draw(ctx, context);
-        ctx.closePath();
-        ctx.restore();
+
+        opt.context = _context;
+        
+        super(opt, atype);
+
+        this._drawTypeOnly = null;
+        this.type = "polygon";
+        this.id = Utils.createId(this.type);
+
+        this.setGraphics();
     }
-});
-export default Polygon;
+
+    $watch(name, value, preValue) 
+    {
+        //调用parent的setGraphics
+        if (name == "pointList" || name == "smooth" || name == "lineType") {
+            this.setGraphics();
+        }
+    }
+
+    setGraphics() 
+    {
+        this.graphics.clear();
+
+        const context = this.context;
+        const pointList = context.pointList;
+        if (pointList.length < 2) {
+            //少于2个点就不画了~
+            return;
+        };
+
+        this.graphics.moveTo(pointList[0][0], pointList[0][1]);
+        for (var i = 1, l = pointList.length; i < l; i++) {
+            this.graphics.lineTo(pointList[i][0], pointList[i][1]);
+        };
+        this.graphics.closePath();
+
+        //如果为虚线
+        if (context.lineType == 'dashed' || context.lineType == 'dotted') {
+            //首先把前面的draphicsData设置为fill only
+            //也就是把line强制设置为false，这点很重要，否则你虚线画不出来，会和这个实现重叠了
+            this.graphics.currentPath.line = false;
+
+            if (context.smooth) {
+                //如果是smooth，本身已经被用曲率打散过了，不需要采用间隔法
+                for (var si = 0, sl = pointList.length; si < sl; si++) {
+                    if (si == sl-1) {
+                        break;
+                    };
+                    this.graphics.moveTo( pointList[si][0] , pointList[si][1] );
+                    this.graphics.lineTo( pointList[si+1][0] , pointList[si+1][1] );
+                    si+=1;
+                };
+            } else {
+                //画虚线的方法  
+                this.graphics.moveTo(pointList[0][0], pointList[0][1]);
+                for (var i = 1, l = pointList.length; i < l; i++) {
+                    var fromX = pointList[i - 1][0];
+                    var toX = pointList[i][0];
+                    var fromY = pointList[i - 1][1];
+                    var toY = pointList[i][1];
+                    this.dashedLineTo(fromX, fromY, toX, toY, 5);
+                };
+            }
+        };
+        return;
+    }
+
+
+
+};

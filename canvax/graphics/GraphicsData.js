@@ -1,42 +1,65 @@
 export default class GraphicsData
 {
-    constructor(lineWidth, lineColor, lineAlpha, fillColor, fillAlpha, fill, shape)
+    constructor(lineWidth, strokeStyle, lineAlpha, fillStyle, fillAlpha, shape)
     {
         this.lineWidth = lineWidth;
-        this.lineColor = lineColor;
+        this.strokeStyle = strokeStyle;
         this.lineAlpha = lineAlpha;
-        this._lineTint = lineColor;
-        this.fillColor = fillColor;
+
+        this.fillStyle = fillStyle;
         this.fillAlpha = fillAlpha;
-        this._fillTint = fillColor;
-        this.fill = fill;
-        this.holes = [];
+        
         this.shape = shape;
         this.type = shape.type;
+
+        //这两个可以被后续修改， 具有一票否决权
+        //比如polygon的 虚线描边。必须在fill的poly上面设置line为false
+        this.fill = true;
+        this.line = true;
+
     }
 
     clone()
     {
         return new GraphicsData(
             this.lineWidth,
-            this.lineColor,
+            this.strokeStyle,
             this.lineAlpha,
-            this.fillColor,
+            this.fillStyle,
             this.fillAlpha,
-            this.fill,
             this.shape
         );
     }
 
-    addHole(shape)
+    //从宿主graphics中同步最新的style属性
+    synsStyle( graphics )
     {
-        this.holes.push(shape);
+        //从shape中把绘图需要的style属性同步过来
+        this.lineWidth = graphics.lineWidth;
+        this.strokeStyle = graphics.strokeStyle;
+        this.lineAlpha = graphics.lineAlpha;
+
+        this.fillStyle = graphics.fillStyle;
+        this.fillAlpha = graphics.fillAlpha;
+
+    }
+
+    hasFill()
+    {
+        return this.fillStyle &&
+               this.fill && 
+               ( this.shape.closed !== undefined && this.shape.closed ) && 
+               this.fillAlpha;
+    }
+
+    hasLine()
+    {
+        return this.strokeStyle && this.lineWidth && this.lineAlpha && this.line
     }
 
     destroy()
     {
         this.shape = null;
-        this.holes = null;
     }
     
 }

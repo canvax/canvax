@@ -13,22 +13,42 @@ import Path from "./Path";
 import Utils from "../utils/index";
 import _ from "../utils/underscore";
 
-var Droplet = function(opt){
-    var self = this;
-    opt = Utils.checkOpt( opt );
-    self._context = {
-        hr : opt.context.hr || 0 , //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
-        vr : opt.context.vr || 0   //{number},  // 必须，水滴纵高（中心到尖端距离）
-    };
-    Droplet.superclass.constructor.apply(this, arguments);
-    self.type = "droplet";
-};
-Utils.creatClass( Droplet , Path , {
-    draw : function(ctx, style) {
-       var ps = "M 0 "+style.hr+" C "+style.hr+" "+style.hr+" "+( style.hr*3/2 ) +" "+(-style.hr/3)+" 0 "+(-style.vr);
-       ps += " C "+(-style.hr * 3/ 2)+" "+(-style.hr / 3)+" "+(-style.hr)+" "+style.hr+" 0 "+ style.hr;
-       this.context.path = ps;
-       this._draw(ctx , style);
+export default class Droplet extends Path
+{
+    constructor(opt)
+    {
+        opt = Utils.checkOpt( opt );
+        var _context = _.extend({
+            hr : 0, //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
+            vr : 0   //{number},  // 必须，水滴纵高（中心到尖端距离）
+        } , opt.context);
+
+        opt.context = _context;
+
+        var my = super(opt);
+
+        this.type = "droplet";
+        this.id = Utils.createId(this.type);
+
+        this.context.path = this._createPath();
     }
-} );
-export default Droplet;
+
+    $watch(name, value, preValue) 
+    {
+        if ( name == "hr" || name == "vr" ) {
+            this.context.path = this._createPath();
+        }
+
+        if (name == "path") {
+            this.setGraphics();
+        }
+    }
+    
+    _createPath() 
+    {
+       var context = this.context;
+       var ps = "M 0 "+context.hr+" C "+context.hr+" "+context.hr+" "+( context.hr*3/2 ) +" "+(-context.hr/3)+" 0 "+(-context.vr);
+       ps += " C "+(-context.hr * 3/ 2)+" "+(-context.hr / 3)+" "+(-context.hr)+" "+context.hr+" 0 "+ context.hr+ "z";
+       return ps;
+    }
+}

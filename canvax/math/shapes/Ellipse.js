@@ -50,6 +50,8 @@ export default class Ellipse
          * @see PIXI.SHAPES
          */
         this.type = SHAPES.ELIP;
+
+        this.closed = true;
     }
 
     /**

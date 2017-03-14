@@ -48,26 +48,57 @@ export const CONTEXT_DEFAULT = {
         y : 0
     },
     visible       : true,
-    cursor        : "default",
-    //canvas context 2d 的 系统样式。目前就知道这么多
-    fillStyle     : null,//"#000000",
-    lineCap       : null,
-    lineJoin      : null,
-    lineWidth     : null,
-    miterLimit    : null,
-    shadowBlur    : null,
-    shadowColor   : null,
-    shadowOffsetX : null,
-    shadowOffsetY : null,
-    strokeStyle   : null,
     globalAlpha   : 1,
-    font          : null,
-    textAlign     : "left",
-    textBaseline  : "top", 
-    arcScaleX_    : null,
-    arcScaleY_    : null,
-    lineScale_    : null,
-    globalCompositeOperation : null
+
+    //shape 才需要用到， 已经迁移到shape中去了，这里先注释掉
+    /*
+    cursor        : "default",
+
+    fillAlpha     : 1,//context2d里没有，自定义
+    fillStyle     : null,//"#000000",
+
+    lineCap       : null,//默认都是直角
+    lineJoin      : null,//这两个目前webgl里面没实现
+    miterLimit    : null,//miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
+
+    lineAlpha     : 1,//context2d里没有，自定义
+    strokeStyle   : null,
+    lineType      : "solid", //context2d里没有，自定义线条的type，默认为实线
+    lineWidth     : null,
+    */
+    
+    
+    //没用到的暂时不用
+    //shadowBlur    : null,
+    //shadowColor   : null,
+    //shadowOffsetX : null,
+    //shadowOffsetY : null,
+    
+    //font          : null,
+    //textAlign     : "left",
+    //textBaseline  : "top", 
+    //arcScaleX_    : null,
+    //arcScaleY_    : null,
+    //lineScale_    : null,
+    
+    //globalCompositeOperation : null
+
 };
+export const SHAPE_CONTEXT_DEFAULT = {
+    cursor        : "default",
+
+    fillAlpha     : 1,//context2d里没有，自定义
+    fillStyle     : null,//"#000000",
+
+    lineCap       : null,//默认都是直角
+    lineJoin      : null,//这两个目前webgl里面没实现
+    miterLimit    : null,//miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
+
+    lineAlpha     : 1,//context2d里没有，自定义
+    strokeStyle   : null,
+    lineType      : "solid", //context2d里没有，自定义线条的type，默认为实线
+    lineWidth     : null
+}
+
 
 

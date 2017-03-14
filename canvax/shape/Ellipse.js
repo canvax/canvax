@@ -14,56 +14,39 @@
 import Shape from "../display/Shape";
 import Utils from "../utils/index";
 import _ from "../utils/underscore";
-var Ellipse = function(opt){
-    var self = this;
-    self.type = "ellipse";
 
-    opt = Utils.checkOpt( opt );
-    self._context = {
-        //x             : 0 , //{number},  // 丢弃
-        //y             : 0 , //{number},  // 丢弃，原因同circle
-        hr : opt.context.hr || 0 , //{number},  // 必须，椭圆横轴半径
-        vr : opt.context.vr || 0   //{number},  // 必须，椭圆纵轴半径
+export default class Ellipse extends Shape
+{
+    constructor(opt)
+    {
+        opt = Utils.checkOpt( opt );
+        var _context = _.extend({
+            //x             : 0 , //{number},  // 丢弃
+            //y             : 0 , //{number},  // 丢弃，原因同circle
+            hr : 0,  //{number},  // 必须，椭圆横轴半径
+            vr : 0   //{number},  // 必须，椭圆纵轴半径
+        } , opt.context);
+
+        opt.context = _context;
+
+        super( opt );
+
+        this.type = "ellipse";
+        this.id = Utils.createId(this.type);
+
+        this.setGraphics();
     }
 
-    Ellipse.superclass.constructor.apply(this, arguments);
+    $watch(name, value, preValue) 
+    {
+        if ( name == "hr" || name == "vr" ) {
+            this.setGraphics();
+        }
+    }
+
+    setGraphics()
+    {    
+        this.graphics.clear();
+        this.graphics.drawEllipse(0,0, this.context.hr*2 , this.context.vr*2);
+    }
 };
-
-Utils.creatClass(Ellipse , Shape , {
-    draw :  function(ctx, style) {
-        var r = (style.hr > style.vr) ? style.hr : style.vr;
-        var ratioX = style.hr / r; //横轴缩放比率
-        var ratioY = style.vr / r;
-        
-        ctx.scale(ratioX, ratioY);
-        ctx.arc(
-            0, 0, r, 0, Math.PI * 2, true
-            );
-        if ( document.createElement('canvas').getContext ){
-           //ie下面要想绘制个椭圆出来，就不能执行这步了
-           //算是excanvas 实现上面的一个bug吧
-           ctx.scale(1/ratioX, 1/ratioY);
-
-        }
-        return;
-    },
-    getRect : function(style){
-        var lineWidth;
-        var style = style ? style : this.context;
-        if (style.fillStyle || style.strokeStyle) {
-            lineWidth = style.lineWidth || 1;
-        }
-        else {
-            lineWidth = 0;
-        }
-        return {
-              x : Math.round(0 - style.hr - lineWidth / 2),
-              y : Math.round(0 - style.vr - lineWidth / 2),
-              width : style.hr * 2 + lineWidth,
-              height : style.vr * 2 + lineWidth
-        };
-
-    }
-});
-
-export default Ellipse;

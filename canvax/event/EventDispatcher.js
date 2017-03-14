@@ -85,7 +85,7 @@ Utils.creatClass(EventDispatcher , EventManager , {
                 if( this.hoverClone ){
                     var canvax = this.getStage().parent;
                     //然后clone一份obj，添加到_bufferStage 中
-                    var activShape = this.clone(true);                     
+                    var activShape = this.clone(true);  
                     activShape._transform = this.getConcatenatedMatrix();
                     canvax._bufferStage.addChildAt( activShape , 0 ); 
                     //然后把自己隐藏了
@@ -103,6 +103,7 @@ Utils.creatClass(EventDispatcher , EventManager , {
                 //说明刚刚over的时候有添加样式
                 var canvax = this.getStage().parent;
                 this._hoverClass = false;
+
                 canvax._bufferStage.removeChildById(this.id);
                 
                 if( this._globalAlpha ){

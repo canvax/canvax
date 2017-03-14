@@ -18,6 +18,9 @@ var Utils = {
         return this._UID++;
     },
     createId : function(name) {
+        if(!name){
+            debugger
+        }
         //if end with a digit, then append an undersBase before appending
         var charCode = name.charCodeAt(name.length - 1);
         if (charCode >= 48 && charCode <= 57) name += "_";
@@ -73,22 +76,6 @@ var Utils = {
           return opt;
         }
     },
-    /**
-     * 简单的浅复制对象。
-     * @param strict  当为true时只覆盖已有属性
-     */
-    copy2context : function(target, source, strict){ 
-        if ( _.isEmpty(source) ){
-            return target;
-        }
-        for(var key in source){
-            if(!strict || target.hasOwnProperty(key) || target[key] !== undefined){
-                target[key] = source[key];
-            }
-        }
-        return target;
-    },
-
     
     /**
      * 按照css的顺序，返回一个[上,右,下,左]
@@ -124,6 +111,24 @@ var Utils = {
             r1 = r2 = r3 = r4 = 0;
         }
         return [r1,r2,r3,r4];
+    },
+
+    isWebGLSupported : function (){
+        var contextOptions = { stencil: true };
+        try
+        {
+            if (!window.WebGLRenderingContext) //不存在直接return
+            {
+                return false;
+            }
+            var canvas = document.createElement('canvas'), 
+                gl = canvas.getContext('webgl', contextOptions) || canvas.getContext('experimental-webgl', contextOptions);
+            return !!(gl && gl.getContextAttributes().stencil); //还要确实检测是否支持webGL模式
+        }
+        catch (e)
+        {
+            return false;
+        }
     }
 };
 

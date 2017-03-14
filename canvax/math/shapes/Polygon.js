@@ -71,43 +71,36 @@ export default class Polygon
     close()
     {
         const points = this.points;
-
-        // close the poly if the value is true!
         if (points[0] !== points[points.length - 2] || points[1] !== points[points.length - 1])
         {
             points.push(points[0], points[1]);
         }
+        this.closed = true;
     }
 
-    /**
-     * Checks whether the x and y coordinates passed to this function are contained within this polygon
-     *
-     * @param {number} x - The X coordinate of the point to test
-     * @param {number} y - The Y coordinate of the point to test
-     * @return {boolean} Whether the x/y coordinates are within this polygon
-     */
     contains(x, y)
     {
-        let inside = false;
+        return this._isInsidePolygon_WindingNumber(x,y);
+    }
 
-        // use some raycasting to test hits
-        // https://github.com/substack/point-in-polygon/blob/master/index.js
-        const length = this.points.length / 2;
 
-        for (let i = 0, j = length - 1; i < length; j = i++)
-        {
-            const xi = this.points[i * 2];
-            const yi = this.points[(i * 2) + 1];
-            const xj = this.points[j * 2];
-            const yj = this.points[(j * 2) + 1];
-            const intersect = ((yi > y) !== (yj > y)) && (x < ((xj - xi) * ((y - yi) / (yj - yi))) + xi);
-
-            if (intersect)
-            {
-                inside = !inside;
-            }
-        }
-
-        return inside;
+    /**
+     * 多边形包含判断 Nonzero Winding Number Rule
+     */
+    _isInsidePolygon_WindingNumber(x, y) 
+    {
+        var points = this.points;
+        var wn = 0;
+        for (var shiftP, shift = points[1] > y, i = 3; i < points.length; i += 2) {
+            shiftP = shift;
+            shift = points[i] > y;
+            if (shiftP != shift) {
+                var n = (shiftP ? 1 : 0) - (shift ? 1 : 0);
+                if (n * ((points[i - 3] - x) * (points[i - 0] - y) - (points[i - 2] - y) * (points[i - 1] - x)) > 0) {
+                    wn += n;
+                }
+            };
+        };
+        return wn
     }
 }

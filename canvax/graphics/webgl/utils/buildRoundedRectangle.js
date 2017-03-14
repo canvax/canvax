@@ -35,7 +35,7 @@ export default function buildRoundedRectangle(graphicsData, webGLData)
 
     if (graphicsData.fill)
     {
-        const color = hex2rgb(graphicsData.fillColor);
+        const color = hex2rgb(graphicsData.fillStyle);
         const alpha = graphicsData.fillAlpha;
 
         const r = color[0] * alpha;

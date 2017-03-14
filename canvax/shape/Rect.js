@@ -15,26 +15,39 @@ import Shape from "../display/Shape";
 import Utils from "../utils/index";
 import _ from "../utils/underscore";
 
-var Rect = function(opt){
-    var self = this;
-    self.type = "rect";
+export default class Rect extends Shape
+{
+    constructor(opt)
+    {
+        opt = Utils.checkOpt( opt );
+        var _context = _.extend({
+            width : 0,
+            height: 0,
+            radius: [],
+        } , opt.context);
+        opt.context = _context;
 
-    opt = Utils.checkOpt( opt );
-    self._context = {
-         width         : opt.context.width || 0,//{number},  // 必须，宽度
-         height        : opt.context.height|| 0,//{number},  // 必须，高度
-         radius        : opt.context.radius|| []     //{array},   // 默认为[0]，圆角 
+        super( opt );
+
+        this.type = "rect";
+        this.id = Utils.createId(this.type);
+
+        this.setGraphics();
     }
-    Rect.superclass.constructor.apply(this, arguments);
-};
 
-Utils.creatClass( Rect , Shape , {
+    $watch(name, value, preValue) 
+    {
+        if ( name == "width" || name == "height" || name == "radius" ) {
+            this.setGraphics();
+        }
+    }
+
     /**
      * 绘制圆角矩形
-     * @param {Context2D} ctx Canvas 2D上下文
-     * @param {Object} style 样式
      */
-    _buildRadiusPath: function(ctx, style) {
+    _buildRadiusPath()
+    {
+        var context = this.context;
         //左上、右上、右下、左下角的半径依次为r1、r2、r3、r4
         //r缩写为1         相当于 [1, 1, 1, 1]
         //r缩写为[1]       相当于 [1, 1, 1, 1]
@@ -45,63 +58,39 @@ Utils.creatClass( Rect , Shape , {
         var width = this.context.width;
         var height = this.context.height;
     
-        var r = Utils.getCssOrderArr(style.radius);
+        var r = Utils.getCssOrderArr(context.radius);
+        var G = this.graphics;
      
-        ctx.moveTo( parseInt(x + r[0]), parseInt(y));
-        ctx.lineTo( parseInt(x + width - r[1]), parseInt(y));
-        r[1] !== 0 && ctx.quadraticCurveTo(
+        G.moveTo( parseInt(x + r[0]), parseInt(y));
+        G.lineTo( parseInt(x + width - r[1]), parseInt(y));
+        r[1] !== 0 && G.quadraticCurveTo(
                 x + width, y, x + width, y + r[1]
                 );
-        ctx.lineTo( parseInt(x + width), parseInt(y + height - r[2]));
-        r[2] !== 0 && ctx.quadraticCurveTo(
+        G.lineTo( parseInt(x + width), parseInt(y + height - r[2]));
+        r[2] !== 0 && G.quadraticCurveTo(
                 x + width, y + height, x + width - r[2], y + height
                 );
-        ctx.lineTo( parseInt(x + r[3]), parseInt(y + height));
-        r[3] !== 0 && ctx.quadraticCurveTo(
+        G.lineTo( parseInt(x + r[3]), parseInt(y + height));
+        r[3] !== 0 && G.quadraticCurveTo(
                 x, y + height, x, y + height - r[3]
                 );
-        ctx.lineTo( parseInt(x), parseInt(y + r[0]));
-        r[0] !== 0 && ctx.quadraticCurveTo(x, y, x + r[0], y);
-    },
+        G.lineTo( parseInt(x), parseInt(y + r[0]));
+        r[0] !== 0 && G.quadraticCurveTo(x, y, x + r[0], y);
+    }
     /**
      * 创建矩形路径
      * @param {Context2D} ctx Canvas 2D上下文
-     * @param {Object} style 样式
+     * @param {Object} context 样式
      */
-    draw : function(ctx, style) {
-        if(!style.$model.radius.length) {
-            if(!!style.fillStyle){
-               ctx.fillRect( 0 , 0 ,this.context.width,this.context.height)
-            }
-            if(!!style.lineWidth){
-               ctx.strokeRect( 0 , 0 , this.context.width,this.context.height);
-            }
+    setGraphics() 
+    {
+        this.graphics.clear();
+        if(!this.context.radius.length) {
+            this.graphics.drawRect(0,0,this.context.width , this.context.height);
         } else {
-            this._buildRadiusPath(ctx, style);
+            this._buildRadiusPath();
         }
+        this.graphics.closePath();
         return;
-    },
-
-    /**
-     * 返回矩形区域，用于局部刷新和文字定位
-     * @param {Object} style
-     */
-    getRect : function(style) {
-            var lineWidth;
-            var style = style ? style : this.context;
-            if (style.fillStyle || style.strokeStyle) {
-                lineWidth = style.lineWidth || 1;
-            }
-            else {
-                lineWidth = 0;
-            }
-            return {
-                  x : Math.round(0 - lineWidth / 2),
-                  y : Math.round(0 - lineWidth / 2),
-                  width : this.context.width + lineWidth,
-                  height : this.context.height + lineWidth
-            };
-        }
-
-} );
-export default Rect;
+    }
+}

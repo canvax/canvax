@@ -8,102 +8,65 @@
 import DisplayObject from "./DisplayObject";
 import Utils from "../utils/index";
 import Graphics from "../graphics/Graphics";
+import _ from "../utils/underscore";
+import {SHAPE_CONTEXT_DEFAULT} from "../const"
 
-var Shape = function(opt){
-    
-    var self = this;
+export default class Shape extends DisplayObject
+{
+    constructor(opt){
 
-    self.graphics = new Graphics();
+        opt = Utils.checkOpt(opt);
+        var _context = _.extend( _.clone(SHAPE_CONTEXT_DEFAULT) , opt.context );
+        opt.context = _context;
 
-    //元素是否有hover事件 和 chick事件，由addEvenetLister和remiveEventLister来触发修改
-    self._hoverable  = false;
-    self._clickable  = false;
+        super( opt );
 
-    //over的时候如果有修改样式，就为true
-    self._hoverClass = false;
-    self.hoverClone  = true;    //是否开启在hover的时候clone一份到active stage 中 
-    self.pointChkPriority = true; //在鼠标mouseover到该节点，然后mousemove的时候，是否优先检测该节点
+        this.graphics = new Graphics( this );
 
-    //拖拽drag的时候显示在activShape的副本
-    self._dragDuplicate = null;
+        //元素是否有hover事件 和 chick事件，由addEvenetLister和remiveEventLister来触发修改
+        this._hoverable  = false;
+        this._clickable  = false;
 
-    //元素是否 开启 drag 拖动，这个有用户设置传入
-    //self.draggable = opt.draggable || false;
+        //over的时候如果有修改样式，就为true
+        this._hoverClass = false;
+        this.hoverClone  = true;    //是否开启在hover的时候clone一份到active stage 中 
+        this.pointChkPriority = true; //在鼠标mouseover到该节点，然后mousemove的时候，是否优先检测该节点
 
-    self.type = self.type || "shape" ;
-    opt.draw && (self.draw=opt.draw);
-    
-    //处理所有的图形一些共有的属性配置
-    self.initCompProperty(opt);
+        //拖拽drag的时候显示在activShape的副本
+        this._dragDuplicate = null;
 
-    Shape.superclass.constructor.apply(this , arguments);
-    self._rect = null;
-};
+        //元素是否 开启 drag 拖动，这个有用户设置传入
+        //self.draggable = opt.draggable || false;
 
-Utils.creatClass(Shape , DisplayObject , {
-   init : function(){
-   },
-   initCompProperty : function( opt ){
-       for( var i in opt ){
+        this.type = this.type || "shape" ;
+        opt.draw && (this.draw=opt.draw);
+        
+        //处理所有的图形一些共有的属性配置,把除开id,context之外的所有属性，全部挂载到this上面
+        this.initCompProperty(opt);
+
+        this._rect = null;
+    }
+
+    init()
+    {}
+
+    draw()
+    {}
+
+    initCompProperty(opt)
+    {
+        for( var i in opt ){
            if( i != "id" && i != "context"){
                this[i] = opt[i];
            }
-       }
-   },
-   /*
-    *下面两个方法为提供给 具体的 图形类覆盖实现，本shape类不提供具体实现
-    *draw() 绘制   and   setRect()获取该类的矩形边界
-   */
-   draw:function(){
-   
-   },
-   drawEnd : function(ctx){
-       if(this._hasFillAndStroke){
-           //如果在子shape类里面已经实现stroke fill 等操作， 就不需要统一的d
-           return;
-       }
+        }
+    }
 
-       //style 要从diaplayObject的 context上面去取
-       var style = this.context;
- 
-       //fill stroke 之前， 就应该要closepath 否则线条转角口会有缺口。
-       //drawTypeOnly 由继承shape的具体绘制类提供
-       if ( this._drawTypeOnly != "stroke" && this.type != "path"){
-           ctx.closePath();
-       }
-
-       if ( style.strokeStyle && style.lineWidth ){
-           ctx.stroke();
-       }
-       //比如贝塞尔曲线画的线,drawTypeOnly==stroke，是不能使用fill的，后果很严重
-       if (style.fillStyle && this._drawTypeOnly!="stroke"){
-           ctx.fill();
-       }
-       
-   },
-
-
-   render : function(){
-      var ctx  = this.getStage().context2D;
-      
-      if (this.context.type == "shape"){
-          //type == shape的时候，自定义绘画
-          //这个时候就可以使用self.graphics绘图接口了，该接口模拟的是as3的接口
-          this.draw.apply( this );
-      } else {
-          //这个时候，说明该shape是调用已经绘制好的 shape 模块，这些模块全部在../shape目录下面
-          if( this.draw ){
-              ctx.beginPath();
-              this.draw( ctx , this.context );
-              this.drawEnd( ctx );
-          }
-      }
-   }
-   ,
    /*
     * 画虚线
     */
-   dashedLineTo:function(ctx, x1, y1, x2, y2, dashLength) {
+   dashedLineTo( x1, y1, x2, y2, dashLength ) 
+   {
          dashLength = typeof dashLength == 'undefined'
                       ? 3 : dashLength;
          dashLength = Math.max( dashLength , this.context.lineWidth );
@@ -115,18 +78,20 @@ Utils.creatClass(Shape , DisplayObject , {
          for (var i = 0; i < numDashes; ++i) {
              var x = parseInt(x1 + (deltaX / numDashes) * i);
              var y = parseInt(y1 + (deltaY / numDashes) * i);
-             ctx[i % 2 === 0 ? 'moveTo' : 'lineTo']( x , y );
+             this.graphics[i % 2 === 0 ? 'moveTo' : 'lineTo']( x , y );
              if( i == (numDashes-1) && i%2 === 0){
-                 ctx.lineTo( x2 , y2 );
+                 this.graphics.lineTo( x2 , y2 );
              }
          }
-   },
+   }
+
    /*
     *从cpl节点中获取到4个方向的边界节点
     *@param  context 
     *
     **/
-   getRectFormPointList : function( context ){
+   getRectFormPointList( context )
+   {
        var minX =  Number.MAX_VALUE;
        var maxX =  Number.MIN_VALUE;
        var minY =  Number.MAX_VALUE;
@@ -161,6 +126,4 @@ Utils.creatClass(Shape , DisplayObject , {
            height : maxY - minY + lineWidth
        };
    }
-});
-
-export default Shape;
+}

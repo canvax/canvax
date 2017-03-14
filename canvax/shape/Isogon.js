@@ -15,36 +15,37 @@
 import Polygon from "./Polygon";
 import Utils from "../utils/index";
 import _ from "../utils/underscore";
+import _Math from "../geom/Math"
 
-var Isogon = function(opt) {
-    var self = this;
-    opt = Utils.checkOpt(opt);
-    self._context = _.extend({
-        pointList: [], //从下面的r和n计算得到的边界值的集合
-        r: 0, //{number},  // 必须，正n边形外接圆半径
-        n: 0 //{number},  // 必须，指明正几边形
-    } , opt.context);
-    self.setPointList(self._context);
-    opt.context = self._context;
-    Isogon.superclass.constructor.apply(this, arguments);
-    this.type = "isogon";
-};
-Utils.creatClass(Isogon, Polygon, {
-    $watch: function(name, value, preValue) {
-        if (name == "r" || name == "n") { //如果path有变动，需要自动计算新的pointList
-            this.setPointList( this.context );
-        }
-    },
-    setPointList: function(style) {
-        style.pointList.length = 0;
-        var n = style.n, r = style.r;
-        var dStep = 2 * Math.PI / n;
-        var beginDeg = -Math.PI / 2;
-        var deg = beginDeg;
-        for (var i = 0, end = n; i < end; i++) {
-            style.pointList.push([r * Math.cos(deg), r * Math.sin(deg)]);
-            deg += dStep;
-        };
+export default class Isogon extends Polygon
+{
+    constructor(opt)
+    {
+        opt = Utils.checkOpt(opt);
+        var _context = _.extend({
+            pointList: [], //从下面的r和n计算得到的边界值的集合
+            r: 0, //{number},  // 必须，正n边形外接圆半径
+            n: 0 //{number},  // 必须，指明正几边形
+        } , opt.context);
+        _context.pointList = _Math.getIsgonPointList( _context.n , _context.r );
+
+        opt.context = _context;
+
+        super( opt );
+
+        this.type = "isogon";
+        this.id = Utils.createId(this.type);
     }
-});
-export default Isogon;
+
+    $watch(name, value, preValue)
+    {
+        if (name == "r" || name == "n"){ //如果path有变动，需要自动计算新的pointList
+            this.context.pointList = _Math.getIsgonPointList( style.n , style.r );
+        }
+
+        if (name == "pointList" || name == "smooth" || name == "lineType") {
+            this.setGraphics();
+            this.graphics.closePath();
+        }
+    }
+};

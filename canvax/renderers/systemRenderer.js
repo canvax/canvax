@@ -11,9 +11,6 @@ export default class SystemRenderer
 
         this.requestAid = null;
 
-        //每帧由心跳上报的 需要重绘的stages 列表
-		this.convertStages = {};
-
 		this._heartBeat = false;//心跳，默认为false，即false的时候引擎处于静默状态 true则启动渲染
 
 		this._preRenderTime = 0;
@@ -41,11 +38,10 @@ export default class SystemRenderer
         self.requestAid = null;
         Utils.now = new Date().getTime();
         if( self._heartBeat ){
-            _.each(_.values( self.convertStages ) , function(convertStage){
-               convertStage.stage._render( convertStage.stage.context2D );
-            });
+
+            self.render( this.app );
+            
             self._heartBeat = false;
-            self.convertStages = {};
             //渲染完了，打上最新时间挫
             self._preRenderTime = new Date().getTime();
         };
@@ -76,15 +72,15 @@ export default class SystemRenderer
                 if( shape.type == "canvax" ){
                     self._convertCanvax(opt)
                 } else {
-                    if(!self.convertStages[stage.id]){
-                        self.convertStages[stage.id]={
+                    if(!self.app.convertStages[stage.id]){
+                        self.app.convertStages[stage.id]={
                             stage : stage,
                             convertShapes : {}
                         }
                     };
                     if(shape){
-                        if (!self.convertStages[ stage.id ].convertShapes[ shape.id ]){
-                            self.convertStages[ stage.id ].convertShapes[ shape.id ]={
+                        if (!self.app.convertStages[ stage.id ].convertShapes[ shape.id ]){
+                            self.app.convertStages[ stage.id ].convertShapes[ shape.id ]={
                                 shape : shape,
                                 convertType : opt.convertType
                             }
@@ -103,8 +99,8 @@ export default class SystemRenderer
                 if( stage || (target.type=="stage") ){
                     //如果操作的目标元素是Stage
                     stage = stage || target;
-                    if(!self.convertStages[stage.id]) {
-                        self.convertStages[stage.id]={
+                    if(!self.app.convertStages[stage.id]) {
+                        self.app.convertStages[stage.id]={
                             stage : stage,
                             convertShapes : {}
                         }
@@ -115,8 +111,8 @@ export default class SystemRenderer
             if(!opt.convertType){
                 //无条件要求刷新
                 var stage = opt.stage;
-                if(!self.convertStages[stage.id]) {
-                    self.convertStages[stage.id]={
+                if(!self.app.convertStages[stage.id]) {
+                    self.app.convertStages[stage.id]={
                         stage : stage ,
                         convertShapes : {}
                     }
@@ -125,7 +121,7 @@ export default class SystemRenderer
         } else {
             //无条件要求全部刷新，一般用在resize等。
             _.each( self.app.children , function( stage , i ){
-                self.convertStages[ stage.id ] = {
+                self.app.convertStages[ stage.id ] = {
                     stage : stage,
                     convertShapes : {}
                 }
