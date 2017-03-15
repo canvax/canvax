@@ -1,13 +1,34 @@
 import { RENDERER_TYPE } from '../const';
+import settings from '../settings';
 import AnimationFrame from "../animation/AnimationFrame";
 import Utils from "../utils/index";
+import _ from "../utils/underscore";
 
 export default class SystemRenderer 
 {
-    constructor( type=RENDERER_TYPE.UNKNOWN , app )
+    constructor( type=RENDERER_TYPE.UNKNOWN , app , options )
     {
     	this.type = type; //2canvas,1webgl
         this.app = app;
+
+        // prepare options
+        if (options)
+        {
+            for (const i in settings.RENDER_OPTIONS)
+            {
+                if (typeof options[i] === 'undefined')
+                {
+                    options[i] = settings.RENDER_OPTIONS[i];
+                }
+            }
+        }
+        else
+        {
+            options = settings.RENDER_OPTIONS;
+        }
+
+        this.options = options;
+        
 
         this.requestAid = null;
 

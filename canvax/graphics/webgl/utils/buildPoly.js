@@ -1,5 +1,5 @@
 import buildLine from './buildLine';
-import { hex2rgb } from '../../../utils';
+import { hex2rgb } from '../../../utils/color';
 import earcut from 'earcut';
 
 /**

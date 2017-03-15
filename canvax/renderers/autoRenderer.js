@@ -1,13 +1,13 @@
-import * as utils from './utils';
+import utils from '../utils/index';
 import CanvasRenderer from './canvas/CanvasRenderer';
 import WebGLRenderer from './webgl/WebGLRenderer';
 
-export function autoRenderer( app )
+export default function autoRenderer( app , options)
 {
     if (!app.noWebGL && utils.isWebGLSupported())
     {
-        return new WebGLRenderer( app );
+        return new WebGLRenderer( app , options);
     }
 
-    return new CanvasRenderer( app );
+    return new CanvasRenderer( app , options);
 }

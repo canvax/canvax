@@ -1,5 +1,5 @@
 import buildLine from './buildLine';
-import { hex2rgb } from '../../../utils';
+import { hex2rgb } from '../../../utils/color';
 
 /**
  * Builds a rectangle to draw

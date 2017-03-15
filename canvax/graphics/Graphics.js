@@ -29,6 +29,9 @@ export default class Graphics
         this.synsStyle();
 
         this.dirty = 0; //脏数据
+        this._webGL = {};
+        this.worldAlpha = 1;
+        this.tint = 0xFFFFFF; //目标对象附加颜色
     }
 
     synsStyle()
@@ -41,6 +44,8 @@ export default class Graphics
 
         this.fillStyle = sctx.fillStyle;
         this.fillAlpha = sctx.fillAlpha * sctx.globalAlpha;
+
+
 
 
         //如果graphicsData有多分组的情况下，如果以为shape的 style 属性改变调用的synsStyle
@@ -581,9 +586,17 @@ export default class Graphics
         {
             this.graphicsData[i].destroy();
         }
+        for (const id in this._webgl)
+        {
+            for (let j = 0; j < this._webgl[id].data.length; ++j)
+            {
+                this._webgl[id].data[j].destroy();
+            }
+        }
 
         this.graphicsData = null;
         this.currentPath = null;
+        this._webgl = null;
     }
 
 }

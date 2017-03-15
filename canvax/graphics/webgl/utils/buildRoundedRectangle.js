@@ -1,6 +1,6 @@
 import earcut from 'earcut';
 import buildLine from './buildLine';
-import { hex2rgb } from '../../../utils';
+import { hex2rgb } from '../../../utils/color';
 
 /**
  * Builds a rounded rectangle to draw

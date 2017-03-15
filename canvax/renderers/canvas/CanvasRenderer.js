@@ -1,19 +1,21 @@
 import SystemRenderer from '../SystemRenderer';
 import { RENDERER_TYPE } from '../../const';
 import Settings from '../../settings';
-import CGR from "./CanvasGraphicsRenderer";
+import CGR from "../../graphics/canvas/GraphicsRenderer";
+import _ from "../../utils/underscore";
 
 export default class CanvasRenderer extends SystemRenderer
 {
-    constructor(app)
+    constructor(app, options={})
     {
-        super(RENDERER_TYPE.CANVAS, app);
+        super(RENDERER_TYPE.CANVAS, app, options);
         this.CGR = new CGR(this);
     }
 
     render( app )
     {
     	var me = this;
+        me.app = app;
     	_.each(_.values( app.convertStages ) , function(convertStage){
             me.renderStage( convertStage.stage );
         });
@@ -22,8 +24,10 @@ export default class CanvasRenderer extends SystemRenderer
 
     renderStage( stage )
     {
+        if(!stage.ctx){
+            stage.ctx = stage.canvas.getContext("2d");
+        }
         stage.stageRending = true;
-        stage.ctx = stage.canvas.getContext("2d");
         this._clear( stage );
         this._render( stage );
         stage.stageRending = false;

@@ -1,6 +1,6 @@
 import buildLine from './buildLine';
 import { SHAPES } from '../../../const';
-import { hex2rgb } from '../../../utils';
+import { hex2rgb } from '../../../utils/color';
 
 /**
  * Builds a circle to draw

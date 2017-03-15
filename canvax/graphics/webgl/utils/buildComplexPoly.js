@@ -1,4 +1,4 @@
-import { hex2rgb } from '../../../utils';
+import { hex2rgb } from '../../../utils/color';
 
 /**
  * Builds a complex polygon to draw

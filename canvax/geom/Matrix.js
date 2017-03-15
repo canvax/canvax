@@ -110,8 +110,47 @@ Matrix.prototype = {
     clone : function(){
         return new Matrix(this.a, this.b, this.c, this.d, this.tx, this.ty);
     },
-    toArray : function(){
-        return [ this.a , this.b , this.c , this.d , this.tx , this.ty ];
+    toArray : function(transpose, out){
+        if( arguments.length == 0 )
+        {
+            //canvas2d 中不会有任何的参数传入
+            return [ this.a , this.b , this.c , this.d , this.tx , this.ty ];
+        }
+
+        //webgl的glsl需要用的时候，需要传入transpose 来转换为一个3*3完整矩阵
+        if (!this.array)
+        {
+            this.array = new Float32Array(9);
+        }
+
+        var array = out || this.array;
+
+        if (transpose)
+        {
+            array[0] = this.a;
+            array[1] = this.b;
+            array[2] = 0;
+            array[3] = this.c;
+            array[4] = this.d;
+            array[5] = 0;
+            array[6] = this.tx;
+            array[7] = this.ty;
+            array[8] = 1;
+        }
+        else
+        {
+            array[0] = this.a;
+            array[1] = this.c;
+            array[2] = this.tx;
+            array[3] = this.b;
+            array[4] = this.d;
+            array[5] = this.ty;
+            array[6] = 0;
+            array[7] = 0;
+            array[8] = 1;
+        }
+
+        return array;
     },
     /**
      * 矩阵左乘向量

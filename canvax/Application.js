@@ -23,7 +23,7 @@ import _ from "./utils/underscore";
 import $ from "./utils/dom";
 
 
-var Application = function( opt ){
+var Application = function( opt , options = {}){
     this.type = "canvax";
     this._cid = new Date().getTime() + "_" + Math.floor(Math.random()*100); 
     
@@ -44,7 +44,7 @@ var Application = function( opt ){
     this.lastGetRO = 0;//最后一次获取 viewOffset 的时间
 
     this.noWebGL  = opt.noWebGL;
-    this.renderer = autoRenderer(this);
+    this.renderer = autoRenderer(this , options);
 
     this.event = null;
 

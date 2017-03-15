@@ -31,6 +31,11 @@ export const SHAPES = {
     RREC: 4,
 };
 
+export const SCALE_MODES = {
+    LINEAR:     0,
+    NEAREST:    1,
+};
+
 export const CONTEXT_DEFAULT = {
     width         : 0,
     height        : 0,

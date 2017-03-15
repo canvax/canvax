@@ -12,6 +12,8 @@ export default class GraphicsData
         this.shape = shape;
         this.type = shape.type;
 
+        this.holes = [];
+
         //这两个可以被后续修改， 具有一票否决权
         //比如polygon的 虚线描边。必须在fill的poly上面设置line为false
         this.fill = true;
@@ -29,6 +31,11 @@ export default class GraphicsData
             this.fillAlpha,
             this.shape
         );
+    }
+
+    addHole(shape)
+    {
+        this.holes.push(shape);
     }
 
     //从宿主graphics中同步最新的style属性
@@ -60,6 +67,7 @@ export default class GraphicsData
     destroy()
     {
         this.shape = null;
+        this.holes = null;
     }
     
 }

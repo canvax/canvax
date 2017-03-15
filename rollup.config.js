@@ -1,12 +1,16 @@
 var rollup = require('rollup');
 var babel = require('rollup-plugin-babel');
+var commonjs = require('rollup-plugin-commonjs');
+var resolve = require('rollup-plugin-node-resolve');
 
 rollup.rollup({
     entry: 'canvax/index.js',
     plugins: [
       babel({
         exclude: 'node_modules/**'
-      })
+      }),
+      resolve({ jsnext: true, main: true, browser: true, }), 
+      commonjs()
     ]
 }).then(function(bundle) {
 

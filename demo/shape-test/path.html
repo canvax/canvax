@@ -33,7 +33,8 @@
         var box = $("#canvasTest");
         app = new Canvax.App({
             id : "canvax",
-            el : box
+            el : box,
+            noWebGL: false
         });
         app.registEvent();
 
@@ -51,27 +52,29 @@
         var map = new Shapes.Path({
             id:"map1",
             context : {
-                x:0,
-                y:0,
+                x:100,
+                y:50,
                 path : mapPath,
-                lineWidth : 2,
+                lineWidth : 1,
                 //scaleX: 0.5,
                 //scaleY: 0.5,
                 //scaleOrigin: {
                 //    x : 200,
                 //    y : 200
                 //},
-                //rotation: 45,
-                //rotateOrigin  :  {
-                //    x : 200,
-                //    y : 200
-                //},
-                fillStyle:colors.getColor(colorInd++),
-                strokeStyle:colors.getColor(colorInd++)
+                rotation: 45,
+                rotateOrigin  :  {
+                    x : 200,
+                    y : 200
+                },
+                fillStyle:0x4e6dc4,
+                fillAlpha:0.3,
+                strokeStyle:0x4e6dc4
             }
         });
+
         map.on("mouseover" , function(){
-            this.context.lineWidth = 5;
+            this.context.lineWidth = 2;
         });
 
         map.on("mouseout" , function(){

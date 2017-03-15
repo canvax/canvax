@@ -1,5 +1,5 @@
-import { Point } from '../../../math';
-import { hex2rgb } from '../../../utils';
+import { Point } from '../../../math/index';
+import { hex2rgb } from '../../../utils/color';
 
 /**
  * Builds a line to draw

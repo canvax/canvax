@@ -430,6 +430,21 @@ var Utils = {
             r1 = r2 = r3 = r4 = 0;
         }
         return [r1, r2, r3, r4];
+    },
+
+    isWebGLSupported: function isWebGLSupported() {
+        var contextOptions = { stencil: true };
+        try {
+            if (!window.WebGLRenderingContext) //不存在直接return
+                {
+                    return false;
+                }
+            var canvas = document.createElement('canvas'),
+                gl = canvas.getContext('webgl', contextOptions) || canvas.getContext('experimental-webgl', contextOptions);
+            return !!(gl && gl.getContextAttributes().stencil); //还要确实检测是否支持webGL模式
+        } catch (e) {
+            return false;
+        }
     }
 };
 
@@ -506,12 +521,168 @@ CanvaxEvent.prototype = {
     }
 };
 
-var Settings = {
-    //设备分辨率
-    RESOLUTION: window.devicePixelRatio || 1,
+var settings = {
+  //设备分辨率
+  RESOLUTION: window.devicePixelRatio || 1,
 
-    //渲染FPS
-    FPS: 60
+  /**
+   * Target frames per millisecond.
+   *
+   * @static
+   * @memberof PIXI.settings
+   * @type {number}
+   * @default 0.06
+   */
+  TARGET_FPMS: 0.06,
+
+  /**
+   * If set to true WebGL will attempt make textures mimpaped by default.
+   * Mipmapping will only succeed if the base texture uploaded has power of two dimensions.
+   *
+   * @static
+   * @memberof PIXI.settings
+   * @type {boolean}
+   * @default true
+   */
+  MIPMAP_TEXTURES: true,
+
+  /**
+   * Default filter resolution.
+   *
+   * @static
+   * @memberof PIXI.settings
+   * @type {number}
+   * @default 1
+   */
+  FILTER_RESOLUTION: 1,
+
+  // TODO: maybe change to SPRITE.BATCH_SIZE: 2000
+  // TODO: maybe add PARTICLE.BATCH_SIZE: 15000
+
+  /**
+   * The default sprite batch size.
+   *
+   * The default aims to balance desktop and mobile devices.
+   *
+   * @static
+   * @memberof PIXI.settings
+   * @type {number}
+   * @default 4096
+   */
+  SPRITE_BATCH_SIZE: 4096,
+
+  /**
+   * The prefix that denotes a URL is for a retina asset.
+   *
+   * @static
+   * @memberof PIXI.settings
+   * @type {RegExp|string}
+   * @example `@2x`
+   * @default /@(.+)x/
+   */
+  RETINA_PREFIX: /@(.+)x/,
+
+  /**
+   * The default render options if none are supplied to {@link PIXI.WebGLRenderer}
+   * or {@link PIXI.CanvasRenderer}.
+   *
+   * @static
+   * @constant
+   * @memberof PIXI.settings
+   * @type {object}
+   * @property {HTMLCanvasElement} view=null
+   * @property {number} resolution=1
+   * @property {boolean} antialias=false
+   * @property {boolean} forceFXAA=false
+   * @property {boolean} autoResize=false
+   * @property {boolean} transparent=false
+   * @property {number} backgroundColor=0x000000
+   * @property {boolean} clearBeforeRender=true
+   * @property {boolean} preserveDrawingBuffer=false
+   * @property {boolean} roundPixels=false
+   */
+  RENDER_OPTIONS: {
+    view: null,
+    antialias: true,
+    forceFXAA: false,
+    autoResize: false,
+    transparent: true,
+    backgroundColor: 0x000000,
+    clearBeforeRender: true,
+    preserveDrawingBuffer: false,
+    roundPixels: false
+  },
+
+  /**
+   * Default transform type.
+   *
+   * @static
+   * @memberof PIXI.settings
+   * @type {PIXI.TRANSFORM_MODE}
+   * @default PIXI.TRANSFORM_MODE.STATIC
+   */
+  TRANSFORM_MODE: 0,
+
+  /**
+   * Default Garbage Collection mode.
+   *
+   * @static
+   * @memberof PIXI.settings
+   * @type {PIXI.GC_MODES}
+   * @default PIXI.GC_MODES.AUTO
+   */
+  GC_MODE: 0,
+
+  /**
+   * Default Garbage Collection max idle.
+   *
+   * @static
+   * @memberof PIXI.settings
+   * @type {number}
+   * @default 3600
+   */
+  GC_MAX_IDLE: 60 * 60,
+
+  /**
+   * Default Garbage Collection maximum check count.
+   *
+   * @static
+   * @memberof PIXI.settings
+   * @type {number}
+   * @default 600
+   */
+  GC_MAX_CHECK_COUNT: 60 * 10,
+
+  /**
+   * Default wrap modes that are supported by pixi.
+   *
+   * @static
+   * @memberof PIXI.settings
+   * @type {PIXI.WRAP_MODES}
+   * @default PIXI.WRAP_MODES.CLAMP
+   */
+  WRAP_MODE: 0,
+
+  /**
+   * The scale modes that are supported by pixi.
+   *
+   * @static
+   * @memberof PIXI.settings
+   * @type {PIXI.SCALE_MODES}
+   * @default PIXI.SCALE_MODES.LINEAR
+   */
+  SCALE_MODE: 0,
+
+  /**
+   * Default specify float precision in shaders.
+   *
+   * @static
+   * @memberof PIXI.settings
+   * @type {PIXI.PRECISION}
+   * @default PIXI.PRECISION.MEDIUM
+   */
+  PRECISION: 'mediump'
+
 };
 
 var addOrRmoveEventHand = function addOrRmoveEventHand(domHand, ieHand) {
@@ -624,8 +795,8 @@ var $ = {
         canvas.style.height = _height + 'px';
         canvas.style.left = 0;
         canvas.style.top = 0;
-        canvas.setAttribute('width', _width * Settings.RESOLUTION);
-        canvas.setAttribute('height', _height * Settings.RESOLUTION);
+        canvas.setAttribute('width', _width * settings.RESOLUTION);
+        canvas.setAttribute('height', _height * settings.RESOLUTION);
         canvas.setAttribute('id', id);
         return canvas;
     },
@@ -1449,8 +1620,42 @@ Matrix.prototype = {
     clone: function clone() {
         return new Matrix(this.a, this.b, this.c, this.d, this.tx, this.ty);
     },
-    toArray: function toArray() {
-        return [this.a, this.b, this.c, this.d, this.tx, this.ty];
+    toArray: function toArray(transpose, out) {
+        if (arguments.length == 0) {
+            //canvas2d 中不会有任何的参数传入
+            return [this.a, this.b, this.c, this.d, this.tx, this.ty];
+        }
+
+        //webgl的glsl需要用的时候，需要传入transpose 来转换为一个3*3完整矩阵
+        if (!this.array) {
+            this.array = new Float32Array(9);
+        }
+
+        var array = out || this.array;
+
+        if (transpose) {
+            array[0] = this.a;
+            array[1] = this.b;
+            array[2] = 0;
+            array[3] = this.c;
+            array[4] = this.d;
+            array[5] = 0;
+            array[6] = this.tx;
+            array[7] = this.ty;
+            array[8] = 1;
+        } else {
+            array[0] = this.a;
+            array[1] = this.c;
+            array[2] = this.tx;
+            array[3] = this.b;
+            array[4] = this.d;
+            array[5] = this.ty;
+            array[6] = 0;
+            array[7] = 0;
+            array[8] = 1;
+        }
+
+        return array;
     },
     /**
      * 矩阵左乘向量
@@ -2669,7 +2874,15 @@ var RENDERER_TYPE = {
     CANVAS: 2
 };
 
-
+var DRAW_MODES = {
+    POINTS: 0,
+    LINES: 1,
+    LINE_LOOP: 2,
+    LINE_STRIP: 3,
+    TRIANGLES: 4,
+    TRIANGLE_STRIP: 5,
+    TRIANGLE_FAN: 6
+};
 
 var SHAPES = {
     POLY: 0,
@@ -2677,6 +2890,11 @@ var SHAPES = {
     CIRC: 2,
     ELIP: 3,
     RREC: 4
+};
+
+var SCALE_MODES = {
+    LINEAR: 0,
+    NEAREST: 1
 };
 
 var CONTEXT_DEFAULT = {
@@ -3408,10 +3626,24 @@ var SystemRenderer = function () {
     function SystemRenderer() {
         var type = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : RENDERER_TYPE.UNKNOWN;
         var app = arguments[1];
+        var options = arguments[2];
         classCallCheck(this, SystemRenderer);
 
         this.type = type; //2canvas,1webgl
         this.app = app;
+
+        // prepare options
+        if (options) {
+            for (var i in settings.RENDER_OPTIONS) {
+                if (typeof options[i] === 'undefined') {
+                    options[i] = settings.RENDER_OPTIONS[i];
+                }
+            }
+        } else {
+            options = settings.RENDER_OPTIONS;
+        }
+
+        this.options = options;
 
         this.requestAid = null;
 
@@ -3424,7 +3656,7 @@ var SystemRenderer = function () {
 
 
     createClass(SystemRenderer, [{
-        key: "startEnter",
+        key: 'startEnter',
         value: function startEnter() {
             var self = this;
             if (!self.requestAid) {
@@ -3437,7 +3669,7 @@ var SystemRenderer = function () {
             }
         }
     }, {
-        key: "enterFrame",
+        key: 'enterFrame',
         value: function enterFrame() {
             var self = this;
             //不管怎么样，enterFrame执行了就要把
@@ -3454,15 +3686,15 @@ var SystemRenderer = function () {
             }
         }
     }, {
-        key: "_convertCanvax",
+        key: '_convertCanvax',
         value: function _convertCanvax(opt) {
             var me = this;
-            _.each(me.app.children, function (stage) {
+            _$1.each(me.app.children, function (stage) {
                 stage.context[opt.name] = opt.value;
             });
         }
     }, {
-        key: "heartBeat",
+        key: 'heartBeat',
         value: function heartBeat(opt) {
             //displayList中某个属性改变了
             var self = this;
@@ -3527,7 +3759,7 @@ var SystemRenderer = function () {
                 }
             } else {
                 //无条件要求全部刷新，一般用在resize等。
-                _.each(self.app.children, function (stage, i) {
+                _$1.each(self.app.children, function (stage, i) {
                     self.app.convertStages[stage.id] = {
                         stage: stage,
                         convertShapes: {}
@@ -3684,9 +3916,10 @@ var CanvasRenderer = function (_SystemRenderer) {
     inherits(CanvasRenderer, _SystemRenderer);
 
     function CanvasRenderer(app) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         classCallCheck(this, CanvasRenderer);
 
-        var _this = possibleConstructorReturn(this, (CanvasRenderer.__proto__ || Object.getPrototypeOf(CanvasRenderer)).call(this, RENDERER_TYPE.CANVAS, app));
+        var _this = possibleConstructorReturn(this, (CanvasRenderer.__proto__ || Object.getPrototypeOf(CanvasRenderer)).call(this, RENDERER_TYPE.CANVAS, app, options));
 
         _this.CGR = new CanvasGraphicsRenderer(_this);
         return _this;
@@ -3696,7 +3929,8 @@ var CanvasRenderer = function (_SystemRenderer) {
         key: 'render',
         value: function render(app) {
             var me = this;
-            _.each(_.values(app.convertStages), function (convertStage) {
+            me.app = app;
+            _$1.each(_$1.values(app.convertStages), function (convertStage) {
                 me.renderStage(convertStage.stage);
             });
             app.convertStages = {};
@@ -3704,8 +3938,10 @@ var CanvasRenderer = function (_SystemRenderer) {
     }, {
         key: 'renderStage',
         value: function renderStage(stage) {
+            if (!stage.ctx) {
+                stage.ctx = stage.canvas.getContext("2d");
+            }
             stage.stageRending = true;
-            stage.ctx = stage.canvas.getContext("2d");
             this._clear(stage);
             this._render(stage);
             stage.stageRending = false;
@@ -3748,283 +3984,11 @@ var CanvasRenderer = function (_SystemRenderer) {
         key: '_clear',
         value: function _clear(stage) {
             //TODO:这里有点 奇怪， 之前的版本clearRect的时候，不需要 *RESOLUTION（分辨率）
-            stage.ctx.clearRect(0, 0, this.app.width * Settings.RESOLUTION, this.app.height * Settings.RESOLUTION);
+            stage.ctx.clearRect(0, 0, this.app.width * settings.RESOLUTION, this.app.height * settings.RESOLUTION);
         }
     }]);
     return CanvasRenderer;
 }(SystemRenderer);
-
-/**
- * Application {{PKG_VERSION}}
- *
- * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
- *
- * 主引擎 类
- *
- * 负责所有canvas的层级管理，和心跳机制的实现,捕获到心跳包后 
- * 分发到对应的stage(canvas)来绘制对应的改动
- * 然后 默认有实现了shape的 mouseover  mouseout  drag 事件
- *
- **/
-
-//utils
-var Application = function Application(opt) {
-    this.type = "canvax";
-    this._cid = new Date().getTime() + "_" + Math.floor(Math.random() * 100);
-
-    this.el = $.query(opt.el);
-
-    this.width = parseInt("width" in opt || this.el.offsetWidth, 10);
-    this.height = parseInt("height" in opt || this.el.offsetHeight, 10);
-
-    var viewObj = $.createView(this.width, this.height, this._cid);
-    this.view = viewObj.view;
-    this.stage_c = viewObj.stage_c;
-    this.dom_c = viewObj.dom_c;
-
-    this.el.innerHTML = "";
-    this.el.appendChild(this.view);
-
-    this.viewOffset = $.offset(this.view);
-    this.lastGetRO = 0; //最后一次获取 viewOffset 的时间
-
-    this.renderer = new CanvasRenderer(this);
-
-    this.event = null;
-
-    this._bufferStage = null;
-
-    //是否阻止浏览器默认事件的执行
-    this.preventDefault = true;
-    if (opt.preventDefault === false) {
-        this.preventDefault = false;
-    }
-
-    //该属性在systenRender里面操作，每帧由心跳上报的 需要重绘的stages 列表
-    this.convertStages = {};
-
-    Application.superclass.constructor.apply(this, arguments);
-};
-
-Utils.creatClass(Application, DisplayObjectContainer, {
-    init: function init() {
-        this.context.width = this.width;
-        this.context.height = this.height;
-
-        //然后创建一个用于绘制激活 shape 的 stage 到activation
-        this._creatHoverStage();
-
-        //创建一个如果要用像素检测的时候的容器
-        this._createPixelContext();
-    },
-    registEvent: function registEvent(opt) {
-        //初始化事件委托到root元素上面
-        this.event = new EventHandler(this, opt);
-        this.event.init();
-        return this.event;
-    },
-    resize: function resize(opt) {
-        //重新设置坐标系统 高宽 等。
-        this.width = parseInt(opt && "width" in opt || this.el.offsetWidth, 10);
-        this.height = parseInt(opt && "height" in opt || this.el.offsetHeight, 10);
-
-        this.view.style.width = this.width + "px";
-        this.view.style.height = this.height + "px";
-
-        this.viewOffset = $.offset(this.view);
-        this._notWatch = true;
-        this.context.width = this.width;
-        this.context.height = this.height;
-        this._notWatch = false;
-
-        var me = this;
-        var reSizeCanvas = function reSizeCanvas(ctx) {
-            var canvas = ctx.canvas;
-            canvas.style.width = me.width + "px";
-            canvas.style.height = me.height + "px";
-            canvas.setAttribute("width", me.width * Utils._devicePixelRatio);
-            canvas.setAttribute("height", me.height * Utils._devicePixelRatio);
-
-            //如果是swf的话就还要调用这个方法。
-            if (ctx.resize) {
-                ctx.resize(me.width, me.height);
-            }
-        };
-        _$1.each(this.children, function (s, i) {
-            s._notWatch = true;
-            s.context.width = me.width;
-            s.context.height = me.height;
-            reSizeCanvas(s.canvas);
-            s._notWatch = false;
-        });
-
-        this.dom_c.style.width = this.width + "px";
-        this.dom_c.style.height = this.height + "px";
-
-        this.heartBeat();
-    },
-    getHoverStage: function getHoverStage() {
-        return this._bufferStage;
-    },
-    _creatHoverStage: function _creatHoverStage() {
-        //TODO:创建stage的时候一定要传入width height  两个参数
-        this._bufferStage = new Stage({
-            id: "activCanvas" + new Date().getTime(),
-            context: {
-                width: this.context.width,
-                height: this.context.height
-            }
-        });
-        //该stage不参与事件检测
-        this._bufferStage._eventEnabled = false;
-        this.addChild(this._bufferStage);
-    },
-    /**
-     * 用来检测文本width height 
-     * @return {Object} 上下文
-    */
-    _createPixelContext: function _createPixelContext() {
-        var _pixelCanvas = $.query("_pixelCanvas");
-        if (!_pixelCanvas) {
-            _pixelCanvas = $.createCanvas(0, 0, "_pixelCanvas");
-        } else {
-            //如果又的话 就不需要在创建了
-            return;
-        }
-        document.body.appendChild(_pixelCanvas);
-        Utils.initElement(_pixelCanvas);
-        if (Utils.canvasSupport()) {
-            //canvas的话，哪怕是display:none的页可以用来左像素检测和measureText文本width检测
-            _pixelCanvas.style.display = "none";
-        } else {
-            //flashCanvas 的话，swf如果display:none了。就做不了measureText 文本宽度 检测了
-            _pixelCanvas.style.zIndex = -1;
-            _pixelCanvas.style.position = "absolute";
-            _pixelCanvas.style.left = -this.context.width + "px";
-            _pixelCanvas.style.top = -this.context.height + "px";
-            _pixelCanvas.style.visibility = "hidden";
-        }
-        Utils._pixelCtx = _pixelCanvas.getContext('2d');
-    },
-
-    updateViewOffset: function updateViewOffset() {
-        var now = new Date().getTime();
-        if (now - this.lastGetRO > 1000) {
-            this.viewOffset = $.offset(this.view);
-            this.lastGetRO = now;
-        }
-    },
-
-    _afterAddChild: function _afterAddChild(stage, index) {
-        var canvas;
-
-        if (!stage.canvas) {
-            canvas = $.createCanvas(this.context.width, this.context.height, stage.id);
-        } else {
-            canvas = stage.canvas;
-        }
-
-        if (this.children.length == 1) {
-            this.stage_c.appendChild(canvas);
-        } else if (this.children.length > 1) {
-            if (index == undefined) {
-                //如果没有指定位置，那么就放到_bufferStage的下面。
-                this.stage_c.insertBefore(canvas, this._bufferStage.canvas);
-            } else {
-                //如果有指定的位置，那么就指定的位置来
-                if (index >= this.children.length - 1) {
-                    this.stage_c.appendChild(canvas);
-                } else {
-                    this.stage_c.insertBefore(canvas, this.children[index].canvas);
-                }
-            }
-        }
-
-        Utils.initElement(canvas);
-        stage.initStage(canvas, this.context.width, this.context.height);
-    },
-    _afterDelChild: function _afterDelChild(stage) {
-        this.stage_c.removeChild(stage.canvas);
-    },
-
-    heartBeat: function heartBeat(opt) {
-        this.renderer.heartBeat(opt);
-    }
-});
-
-/**
- * Canvax
- *
- * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
- *
- * 模拟as3 中 的sprite类，目前还只是个简单的容易。
- */
-var Sprite = function Sprite() {
-    this.type = "sprite";
-    Sprite.superclass.constructor.apply(this, arguments);
-};
-
-Utils.creatClass(Sprite, DisplayObjectContainer, {
-    init: function init() {}
-});
-
-var GraphicsData = function () {
-    function GraphicsData(lineWidth, strokeStyle, lineAlpha, fillStyle, fillAlpha, shape) {
-        classCallCheck(this, GraphicsData);
-
-        this.lineWidth = lineWidth;
-        this.strokeStyle = strokeStyle;
-        this.lineAlpha = lineAlpha;
-
-        this.fillStyle = fillStyle;
-        this.fillAlpha = fillAlpha;
-
-        this.shape = shape;
-        this.type = shape.type;
-
-        //这两个可以被后续修改， 具有一票否决权
-        //比如polygon的 虚线描边。必须在fill的poly上面设置line为false
-        this.fill = true;
-        this.line = true;
-    }
-
-    createClass(GraphicsData, [{
-        key: "clone",
-        value: function clone() {
-            return new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, this.shape);
-        }
-
-        //从宿主graphics中同步最新的style属性
-
-    }, {
-        key: "synsStyle",
-        value: function synsStyle(graphics) {
-            //从shape中把绘图需要的style属性同步过来
-            this.lineWidth = graphics.lineWidth;
-            this.strokeStyle = graphics.strokeStyle;
-            this.lineAlpha = graphics.lineAlpha;
-
-            this.fillStyle = graphics.fillStyle;
-            this.fillAlpha = graphics.fillAlpha;
-        }
-    }, {
-        key: "hasFill",
-        value: function hasFill() {
-            return this.fillStyle && this.fill && this.shape.closed !== undefined && this.shape.closed && this.fillAlpha;
-        }
-    }, {
-        key: "hasLine",
-        value: function hasLine() {
-            return this.strokeStyle && this.lineWidth && this.lineAlpha && this.line;
-        }
-    }, {
-        key: "destroy",
-        value: function destroy() {
-            this.shape = null;
-        }
-    }]);
-    return GraphicsData;
-}();
 
 /**
  * The Point object represents a location in a two-dimensional coordinate system, where x represents
@@ -5542,6 +5506,4604 @@ var Polygon = function () {
  * @lends PIXI
  */
 
+function createCommonjsModule(fn, module) {
+	return module = { exports: {} }, fn(module, module.exports), module.exports;
+}
+
+/**
+ * Helper class to create a webGL Context
+ *
+ * @class
+ * @memberof PIXI.glCore
+ * @param canvas {HTMLCanvasElement} the canvas element that we will get the context from
+ * @param options {Object} An options object that gets passed in to the canvas element containing the context attributes,
+ *                         see https://developer.mozilla.org/en/docs/Web/API/HTMLCanvasElement/getContext for the options available
+ * @return {WebGLRenderingContext} the WebGL context
+ */
+var createContext = function(canvas, options)
+{
+    var gl = canvas.getContext('webgl', options) || 
+         canvas.getContext('experimental-webgl', options);
+
+    if (!gl)
+    {
+        // fail, not able to get a context
+        throw new Error('This browser does not support webGL. Try using the canvas renderer');
+    }
+
+    return gl;
+};
+
+var createContext_1 = createContext;
+
+// var GL_MAP = {};
+
+/**
+ * @param gl {WebGLRenderingContext} The current WebGL context
+ * @param attribs {*}
+ * @param state {*}
+ */
+var setVertexAttribArrays = function (gl, attribs, state)
+{
+    var i;
+    if(state)
+    {
+        var tempAttribState = state.tempAttribState,
+            attribState = state.attribState;
+
+        for (i = 0; i < tempAttribState.length; i++)
+        {
+            tempAttribState[i] = false;
+        }
+
+        // set the new attribs
+        for (i = 0; i < attribs.length; i++)
+        {
+            tempAttribState[attribs[i].attribute.location] = true;
+        }
+
+        for (i = 0; i < attribState.length; i++)
+        {
+            if (attribState[i] !== tempAttribState[i])
+            {
+                attribState[i] = tempAttribState[i];
+
+                if (state.attribState[i])
+                {
+                    gl.enableVertexAttribArray(i);
+                }
+                else
+                {
+                    gl.disableVertexAttribArray(i);
+                }
+            }
+        }
+
+    }
+    else
+    {
+        for (i = 0; i < attribs.length; i++)
+        {
+            var attrib = attribs[i];
+            gl.enableVertexAttribArray(attrib.attribute.location);
+        }
+    }
+};
+
+var setVertexAttribArrays_1 = setVertexAttribArrays;
+
+var EMPTY_ARRAY_BUFFER = new ArrayBuffer(0);
+
+/**
+ * Helper class to create a webGL buffer
+ *
+ * @class
+ * @memberof PIXI.glCore
+ * @param gl {WebGLRenderingContext} The current WebGL rendering context
+ * @param type {gl.ARRAY_BUFFER | gl.ELEMENT_ARRAY_BUFFER} @mat
+ * @param data {ArrayBuffer| SharedArrayBuffer|ArrayBufferView} an array of data
+ * @param drawType {gl.STATIC_DRAW|gl.DYNAMIC_DRAW|gl.STREAM_DRAW}
+ */
+var Buffer = function(gl, type, data, drawType)
+{
+
+	/**
+     * The current WebGL rendering context
+     *
+     * @member {WebGLRenderingContext}
+     */
+	this.gl = gl;
+
+	/**
+     * The WebGL buffer, created upon instantiation
+     *
+     * @member {WebGLBuffer}
+     */
+	this.buffer = gl.createBuffer();
+
+	/**
+     * The type of the buffer
+     *
+     * @member {gl.ARRAY_BUFFER|gl.ELEMENT_ARRAY_BUFFER}
+     */
+	this.type = type || gl.ARRAY_BUFFER;
+
+	/**
+     * The draw type of the buffer
+     *
+     * @member {gl.STATIC_DRAW|gl.DYNAMIC_DRAW|gl.STREAM_DRAW}
+     */
+	this.drawType = drawType || gl.STATIC_DRAW;
+
+	/**
+     * The data in the buffer, as a typed array
+     *
+     * @member {ArrayBuffer| SharedArrayBuffer|ArrayBufferView}
+     */
+	this.data = EMPTY_ARRAY_BUFFER;
+
+	if(data)
+	{
+		this.upload(data);
+	}
+
+	this._updateID = 0;
+};
+
+/**
+ * Uploads the buffer to the GPU
+ * @param data {ArrayBuffer| SharedArrayBuffer|ArrayBufferView} an array of data to upload
+ * @param offset {Number} if only a subset of the data should be uploaded, this is the amount of data to subtract
+ * @param dontBind {Boolean} whether to bind the buffer before uploading it
+ */
+Buffer.prototype.upload = function(data, offset, dontBind)
+{
+	// todo - needed?
+	if(!dontBind) this.bind();
+
+	var gl = this.gl;
+
+	data = data || this.data;
+	offset = offset || 0;
+
+	if(this.data.byteLength >= data.byteLength)
+	{
+		gl.bufferSubData(this.type, offset, data);
+	}
+	else
+	{
+		gl.bufferData(this.type, data, this.drawType);
+	}
+
+	this.data = data;
+};
+/**
+ * Binds the buffer
+ *
+ */
+Buffer.prototype.bind = function()
+{
+	var gl = this.gl;
+	gl.bindBuffer(this.type, this.buffer);
+};
+
+Buffer.createVertexBuffer = function(gl, data, drawType)
+{
+	return new Buffer(gl, gl.ARRAY_BUFFER, data, drawType);
+};
+
+Buffer.createIndexBuffer = function(gl, data, drawType)
+{
+	return new Buffer(gl, gl.ELEMENT_ARRAY_BUFFER, data, drawType);
+};
+
+Buffer.create = function(gl, type, data, drawType)
+{
+	return new Buffer(gl, type, data, drawType);
+};
+
+/**
+ * Destroys the buffer
+ *
+ */
+Buffer.prototype.destroy = function(){
+	this.gl.deleteBuffer(this.buffer);
+};
+
+var GLBuffer = Buffer;
+
+/**
+ * Helper class to create a WebGL Texture
+ *
+ * @class
+ * @memberof PIXI.glCore
+ * @param gl {WebGLRenderingContext} The current WebGL context
+ * @param width {number} the width of the texture
+ * @param height {number} the height of the texture
+ * @param format {number} the pixel format of the texture. defaults to gl.RGBA
+ * @param type {number} the gl type of the texture. defaults to gl.UNSIGNED_BYTE
+ */
+var Texture = function(gl, width, height, format, type)
+{
+	/**
+	 * The current WebGL rendering context
+	 *
+	 * @member {WebGLRenderingContext}
+	 */
+	this.gl = gl;
+
+
+	/**
+	 * The WebGL texture
+	 *
+	 * @member {WebGLTexture}
+	 */
+	this.texture = gl.createTexture();
+
+	/**
+	 * If mipmapping was used for this texture, enable and disable with enableMipmap()
+	 *
+	 * @member {Boolean}
+	 */
+	// some settings..
+	this.mipmap = false;
+
+
+	/**
+	 * Set to true to enable pre-multiplied alpha
+	 *
+	 * @member {Boolean}
+	 */
+	this.premultiplyAlpha = false;
+
+	/**
+	 * The width of texture
+	 *
+	 * @member {Number}
+	 */
+	this.width = width || -1;
+	/**
+	 * The height of texture
+	 *
+	 * @member {Number}
+	 */
+	this.height = height || -1;
+
+	/**
+	 * The pixel format of the texture. defaults to gl.RGBA
+	 *
+	 * @member {Number}
+	 */
+	this.format = format || gl.RGBA;
+
+	/**
+	 * The gl type of the texture. defaults to gl.UNSIGNED_BYTE
+	 *
+	 * @member {Number}
+	 */
+	this.type = type || gl.UNSIGNED_BYTE;
+
+
+};
+
+/**
+ * Uploads this texture to the GPU
+ * @param source {HTMLImageElement|ImageData|HTMLVideoElement} the source image of the texture
+ */
+Texture.prototype.upload = function(source)
+{
+	this.bind();
+
+	var gl = this.gl;
+
+
+	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this.premultiplyAlpha);
+
+	var newWidth = source.videoWidth || source.width;
+	var newHeight = source.videoHeight || source.height;
+
+	if(newHeight !== this.height || newWidth !== this.width)
+	{
+		gl.texImage2D(gl.TEXTURE_2D, 0, this.format, this.format, this.type, source);
+	}
+	else
+	{
+    	gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this.format, this.type, source);
+	}
+
+	// if the source is a video, we need to use the videoWidth / videoHeight properties as width / height will be incorrect.
+	this.width = newWidth;
+	this.height = newHeight;
+
+};
+
+var FLOATING_POINT_AVAILABLE = false;
+
+/**
+ * Use a data source and uploads this texture to the GPU
+ * @param data {TypedArray} the data to upload to the texture
+ * @param width {number} the new width of the texture
+ * @param height {number} the new height of the texture
+ */
+Texture.prototype.uploadData = function(data, width, height)
+{
+	this.bind();
+
+	var gl = this.gl;
+
+
+	if(data instanceof Float32Array)
+	{
+		if(!FLOATING_POINT_AVAILABLE)
+		{
+			var ext = gl.getExtension("OES_texture_float");
+
+			if(ext)
+			{
+				FLOATING_POINT_AVAILABLE = true;
+			}
+			else
+			{
+				throw new Error('floating point textures not available');
+			}
+		}
+
+		this.type = gl.FLOAT;
+	}
+	else
+	{
+		// TODO support for other types
+		this.type = this.type || gl.UNSIGNED_BYTE;
+	}
+
+	// what type of data?
+	gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this.premultiplyAlpha);
+
+
+	if(width !== this.width || height !== this.height)
+	{
+		gl.texImage2D(gl.TEXTURE_2D, 0, this.format,  width, height, 0, this.format, this.type, data || null);
+	}
+	else
+	{
+		gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, this.format, this.type, data || null);
+	}
+
+	this.width = width;
+	this.height = height;
+
+
+//	texSubImage2D
+};
+
+/**
+ * Binds the texture
+ * @param  location
+ */
+Texture.prototype.bind = function(location)
+{
+	var gl = this.gl;
+
+	if(location !== undefined)
+	{
+		gl.activeTexture(gl.TEXTURE0 + location);
+	}
+
+	gl.bindTexture(gl.TEXTURE_2D, this.texture);
+};
+
+/**
+ * Unbinds the texture
+ */
+Texture.prototype.unbind = function()
+{
+	var gl = this.gl;
+	gl.bindTexture(gl.TEXTURE_2D, null);
+};
+
+/**
+ * @param linear {Boolean} if we want to use linear filtering or nearest neighbour interpolation
+ */
+Texture.prototype.minFilter = function( linear )
+{
+	var gl = this.gl;
+
+	this.bind();
+
+	if(this.mipmap)
+	{
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, linear ? gl.LINEAR_MIPMAP_LINEAR : gl.NEAREST_MIPMAP_NEAREST);
+	}
+	else
+	{
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, linear ? gl.LINEAR : gl.NEAREST);
+	}
+};
+
+/**
+ * @param linear {Boolean} if we want to use linear filtering or nearest neighbour interpolation
+ */
+Texture.prototype.magFilter = function( linear )
+{
+	var gl = this.gl;
+
+	this.bind();
+
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, linear ? gl.LINEAR : gl.NEAREST);
+};
+
+/**
+ * Enables mipmapping
+ */
+Texture.prototype.enableMipmap = function()
+{
+	var gl = this.gl;
+
+	this.bind();
+
+	this.mipmap = true;
+
+	gl.generateMipmap(gl.TEXTURE_2D);
+};
+
+/**
+ * Enables linear filtering
+ */
+Texture.prototype.enableLinearScaling = function()
+{
+	this.minFilter(true);
+	this.magFilter(true);
+};
+
+/**
+ * Enables nearest neighbour interpolation
+ */
+Texture.prototype.enableNearestScaling = function()
+{
+	this.minFilter(false);
+	this.magFilter(false);
+};
+
+/**
+ * Enables clamping on the texture so WebGL will not repeat it
+ */
+Texture.prototype.enableWrapClamp = function()
+{
+	var gl = this.gl;
+
+	this.bind();
+
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+};
+
+/**
+ * Enable tiling on the texture
+ */
+Texture.prototype.enableWrapRepeat = function()
+{
+	var gl = this.gl;
+
+	this.bind();
+
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+};
+
+Texture.prototype.enableWrapMirrorRepeat = function()
+{
+	var gl = this.gl;
+
+	this.bind();
+
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
+};
+
+
+/**
+ * Destroys this texture
+ */
+Texture.prototype.destroy = function()
+{
+	var gl = this.gl;
+	//TODO
+	gl.deleteTexture(this.texture);
+};
+
+/**
+ * @static
+ * @param gl {WebGLRenderingContext} The current WebGL context
+ * @param source {HTMLImageElement|ImageData} the source image of the texture
+ * @param premultiplyAlpha {Boolean} If we want to use pre-multiplied alpha
+ */
+Texture.fromSource = function(gl, source, premultiplyAlpha)
+{
+	var texture = new Texture(gl);
+	texture.premultiplyAlpha = premultiplyAlpha || false;
+	texture.upload(source);
+
+	return texture;
+};
+
+/**
+ * @static
+ * @param gl {WebGLRenderingContext} The current WebGL context
+ * @param data {TypedArray} the data to upload to the texture
+ * @param width {number} the new width of the texture
+ * @param height {number} the new height of the texture
+ */
+Texture.fromData = function(gl, data, width, height)
+{
+	//console.log(data, width, height);
+	var texture = new Texture(gl);
+	texture.uploadData(data, width, height);
+
+	return texture;
+};
+
+
+var GLTexture = Texture;
+
+/**
+ * Helper class to create a webGL Framebuffer
+ *
+ * @class
+ * @memberof PIXI.glCore
+ * @param gl {WebGLRenderingContext} The current WebGL rendering context
+ * @param width {Number} the width of the drawing area of the frame buffer
+ * @param height {Number} the height of the drawing area of the frame buffer
+ */
+var Framebuffer = function(gl, width, height)
+{
+    /**
+     * The current WebGL rendering context
+     *
+     * @member {WebGLRenderingContext}
+     */
+    this.gl = gl;
+
+    /**
+     * The frame buffer
+     *
+     * @member {WebGLFramebuffer}
+     */
+    this.framebuffer = gl.createFramebuffer();
+
+    /**
+     * The stencil buffer
+     *
+     * @member {WebGLRenderbuffer}
+     */
+    this.stencil = null;
+
+    /**
+     * The stencil buffer
+     *
+     * @member {PIXI.glCore.GLTexture}
+     */
+    this.texture = null;
+
+    /**
+     * The width of the drawing area of the buffer
+     *
+     * @member {Number}
+     */
+    this.width = width || 100;
+    /**
+     * The height of the drawing area of the buffer
+     *
+     * @member {Number}
+     */
+    this.height = height || 100;
+};
+
+/**
+ * Adds a texture to the frame buffer
+ * @param texture {PIXI.glCore.GLTexture}
+ */
+Framebuffer.prototype.enableTexture = function(texture)
+{
+    var gl = this.gl;
+
+    this.texture = texture || new GLTexture(gl);
+
+    this.texture.bind();
+
+    //gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,  this.width, this.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+    this.bind();
+
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.texture.texture, 0);
+};
+
+/**
+ * Initialises the stencil buffer
+ */
+Framebuffer.prototype.enableStencil = function()
+{
+    if(this.stencil)return;
+
+    var gl = this.gl;
+
+    this.stencil = gl.createRenderbuffer();
+
+    gl.bindRenderbuffer(gl.RENDERBUFFER, this.stencil);
+
+    // TODO.. this is depth AND stencil?
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, this.stencil);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL,  this.width  , this.height );
+
+
+};
+
+/**
+ * Erases the drawing area and fills it with a colour
+ * @param  r {Number} the red value of the clearing colour
+ * @param  g {Number} the green value of the clearing colour
+ * @param  b {Number} the blue value of the clearing colour
+ * @param  a {Number} the alpha value of the clearing colour
+ */
+Framebuffer.prototype.clear = function( r, g, b, a )
+{
+    this.bind();
+
+    var gl = this.gl;
+
+    gl.clearColor(r, g, b, a);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+};
+
+/**
+ * Binds the frame buffer to the WebGL context
+ */
+Framebuffer.prototype.bind = function()
+{
+    var gl = this.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer );
+};
+
+/**
+ * Unbinds the frame buffer to the WebGL context
+ */
+Framebuffer.prototype.unbind = function()
+{
+    var gl = this.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null );
+};
+/**
+ * Resizes the drawing area of the buffer to the given width and height
+ * @param  width  {Number} the new width
+ * @param  height {Number} the new height
+ */
+Framebuffer.prototype.resize = function(width, height)
+{
+    var gl = this.gl;
+
+    this.width = width;
+    this.height = height;
+
+    if ( this.texture )
+    {
+        this.texture.uploadData(null, width, height);
+    }
+
+    if ( this.stencil )
+    {
+        // update the stencil buffer width and height
+        gl.bindRenderbuffer(gl.RENDERBUFFER, this.stencil);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_STENCIL, width, height);
+    }
+};
+
+/**
+ * Destroys this buffer
+ */
+Framebuffer.prototype.destroy = function()
+{
+    var gl = this.gl;
+
+    //TODO
+    if(this.texture)
+    {
+        this.texture.destroy();
+    }
+
+    gl.deleteFramebuffer(this.framebuffer);
+
+    this.gl = null;
+
+    this.stencil = null;
+    this.texture = null;
+};
+
+/**
+ * Creates a frame buffer with a texture containing the given data
+ * @static
+ * @param gl {WebGLRenderingContext} The current WebGL rendering context
+ * @param width {Number} the width of the drawing area of the frame buffer
+ * @param height {Number} the height of the drawing area of the frame buffer
+ * @param data {ArrayBuffer| SharedArrayBuffer|ArrayBufferView} an array of data
+ */
+Framebuffer.createRGBA = function(gl, width, height, data)
+{
+    var texture = GLTexture.fromData(gl, null, width, height);
+    texture.enableNearestScaling();
+    texture.enableWrapClamp();
+
+    //now create the framebuffer object and attach the texture to it.
+    var fbo = new Framebuffer(gl, width, height);
+    fbo.enableTexture(texture);
+
+    //fbo.enableStencil(); // get this back on soon!
+
+    fbo.unbind();
+
+    return fbo;
+};
+
+/**
+ * Creates a frame buffer with a texture containing the given data
+ * @static
+ * @param gl {WebGLRenderingContext} The current WebGL rendering context
+ * @param width {Number} the width of the drawing area of the frame buffer
+ * @param height {Number} the height of the drawing area of the frame buffer
+ * @param data {ArrayBuffer| SharedArrayBuffer|ArrayBufferView} an array of data
+ */
+Framebuffer.createFloat32 = function(gl, width, height, data)
+{
+    // create a new texture..
+    var texture = new GLTexture.fromData(gl, data, width, height);
+    texture.enableNearestScaling();
+    texture.enableWrapClamp();
+
+    //now create the framebuffer object and attach the texture to it.
+    var fbo = new Framebuffer(gl, width, height);
+    fbo.enableTexture(texture);
+
+    fbo.unbind();
+
+    return fbo;
+};
+
+var GLFramebuffer$1 = Framebuffer;
+
+/**
+ * @class
+ * @memberof PIXI.glCore.shader
+ * @param gl {WebGLRenderingContext} The current WebGL context {WebGLProgram}
+ * @param vertexSrc {string|string[]} The vertex shader source as an array of strings.
+ * @param fragmentSrc {string|string[]} The fragment shader source as an array of strings.
+ * @param attributeLocations {Object} An attribute location map that lets you manually set the attribute locations
+ * @return {WebGLProgram} the shader program
+ */
+var compileProgram = function(gl, vertexSrc, fragmentSrc, attributeLocations)
+{
+    var glVertShader = compileShader(gl, gl.VERTEX_SHADER, vertexSrc);
+    var glFragShader = compileShader(gl, gl.FRAGMENT_SHADER, fragmentSrc);
+
+    var program = gl.createProgram();
+
+    gl.attachShader(program, glVertShader);
+    gl.attachShader(program, glFragShader);
+
+    // optionally, set the attributes manually for the program rather than letting WebGL decide..
+    if(attributeLocations)
+    {
+        for(var i in attributeLocations)
+        {
+            gl.bindAttribLocation(program, attributeLocations[i], i);
+        }
+    }
+
+
+    gl.linkProgram(program);
+
+    // if linking fails, then log and cleanup
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS))
+    {
+        console.error('Pixi.js Error: Could not initialize shader.');
+        console.error('gl.VALIDATE_STATUS', gl.getProgramParameter(program, gl.VALIDATE_STATUS));
+        console.error('gl.getError()', gl.getError());
+
+        // if there is a program info log, log it
+        if (gl.getProgramInfoLog(program) !== '')
+        {
+            console.warn('Pixi.js Warning: gl.getProgramInfoLog()', gl.getProgramInfoLog(program));
+        }
+
+        gl.deleteProgram(program);
+        program = null;
+    }
+
+    // clean up some shaders
+    gl.deleteShader(glVertShader);
+    gl.deleteShader(glFragShader);
+
+    return program;
+};
+
+/**
+ * @private
+ * @param gl {WebGLRenderingContext} The current WebGL context {WebGLProgram}
+ * @param type {Number} the type, can be either VERTEX_SHADER or FRAGMENT_SHADER
+ * @param vertexSrc {string|string[]} The vertex shader source as an array of strings.
+ * @return {WebGLShader} the shader
+ */
+var compileShader = function (gl, type, src)
+{
+    var shader = gl.createShader(type);
+
+    gl.shaderSource(shader, src);
+    gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
+    {
+        console.log(gl.getShaderInfoLog(shader));
+        return null;
+    }
+
+    return shader;
+};
+
+var compileProgram_1 = compileProgram;
+
+var mapSize = function(gl, type) 
+{
+    if(!GL_TABLE) 
+    {
+        var typeNames = Object.keys(GL_TO_GLSL_TYPES);
+
+        GL_TABLE = {};
+
+        for(var i = 0; i < typeNames.length; ++i) 
+        {
+            var tn = typeNames[i];
+            GL_TABLE[ gl[tn] ] = GL_TO_GLSL_TYPES[tn];
+        }
+    }
+
+  return GL_TABLE[type];
+};
+
+var GL_TABLE = null;
+
+var GL_TO_GLSL_TYPES = {
+  'FLOAT':       'float',
+  'FLOAT_VEC2':  'vec2',
+  'FLOAT_VEC3':  'vec3',
+  'FLOAT_VEC4':  'vec4',
+
+  'INT':         'int',
+  'INT_VEC2':    'ivec2',
+  'INT_VEC3':    'ivec3',
+  'INT_VEC4':    'ivec4',
+  
+  'BOOL':        'bool',
+  'BOOL_VEC2':   'bvec2',
+  'BOOL_VEC3':   'bvec3',
+  'BOOL_VEC4':   'bvec4',
+  
+  'FLOAT_MAT2':  'mat2',
+  'FLOAT_MAT3':  'mat3',
+  'FLOAT_MAT4':  'mat4',
+  
+  'SAMPLER_2D':  'sampler2D'  
+};
+
+var mapType = mapSize;
+
+/**
+ * @class
+ * @memberof PIXI.glCore.shader
+ * @param type {String}
+ * @return {Number}
+ */
+var mapSize$1 = function(type) 
+{ 
+    return GLSL_TO_SIZE[type];
+};
+
+
+var GLSL_TO_SIZE = {
+    'float':    1,
+    'vec2':     2,
+    'vec3':     3,
+    'vec4':     4,
+
+    'int':      1,
+    'ivec2':    2,
+    'ivec3':    3,
+    'ivec4':    4,
+
+    'bool':     1,
+    'bvec2':    2,
+    'bvec3':    3,
+    'bvec4':    4,
+
+    'mat2':     4,
+    'mat3':     9,
+    'mat4':     16,
+
+    'sampler2D':  1
+};
+
+var mapSize_1 = mapSize$1;
+
+/**
+ * Extracts the attributes
+ * @class
+ * @memberof PIXI.glCore.shader
+ * @param gl {WebGLRenderingContext} The current WebGL rendering context
+ * @param program {WebGLProgram} The shader program to get the attributes from
+ * @return attributes {Object}
+ */
+var extractAttributes = function(gl, program)
+{
+    var attributes = {};
+
+    var totalAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+
+    for (var i = 0; i < totalAttributes; i++)
+    {
+        var attribData = gl.getActiveAttrib(program, i);
+        var type = mapType(gl, attribData.type);
+
+        attributes[attribData.name] = {
+            type:type,
+            size:mapSize_1(type),
+            location:gl.getAttribLocation(program, attribData.name),
+            //TODO - make an attribute object
+            pointer: pointer
+        };
+    }
+
+    return attributes;
+};
+
+var pointer = function(type, normalized, stride, start){
+    // console.log(this.location)
+    gl.vertexAttribPointer(this.location,this.size, type || gl.FLOAT, normalized || false, stride || 0, start || 0);
+};
+
+var extractAttributes_1 = extractAttributes;
+
+/**
+ * @class
+ * @memberof PIXI.glCore.shader
+ * @param type {String} Type of value
+ * @param size {Number}
+ */
+var defaultValue = function(type, size) 
+{
+    switch (type)
+    {
+        case 'float':
+            return 0;
+
+        case 'vec2': 
+            return new Float32Array(2 * size);
+
+        case 'vec3':
+            return new Float32Array(3 * size);
+
+        case 'vec4':     
+            return new Float32Array(4 * size);
+            
+        case 'int':
+        case 'sampler2D':
+            return 0;
+
+        case 'ivec2':   
+            return new Int32Array(2 * size);
+
+        case 'ivec3':
+            return new Int32Array(3 * size);
+
+        case 'ivec4': 
+            return new Int32Array(4 * size);
+
+        case 'bool':     
+            return false;
+
+        case 'bvec2':
+
+            return booleanArray( 2 * size);
+
+        case 'bvec3':
+            return booleanArray(3 * size);
+
+        case 'bvec4':
+            return booleanArray(4 * size);
+
+        case 'mat2':
+            return new Float32Array([1, 0,
+                                     0, 1]);
+
+        case 'mat3': 
+            return new Float32Array([1, 0, 0,
+                                     0, 1, 0,
+                                     0, 0, 1]);
+
+        case 'mat4':
+            return new Float32Array([1, 0, 0, 0,
+                                     0, 1, 0, 0,
+                                     0, 0, 1, 0,
+                                     0, 0, 0, 1]);
+    }
+};
+
+var booleanArray = function(size)
+{
+    var array = new Array(size);
+
+    for (var i = 0; i < array.length; i++) 
+    {
+        array[i] = false;
+    }
+
+    return array;
+};
+
+var defaultValue_1 = defaultValue;
+
+/**
+ * Extracts the uniforms
+ * @class
+ * @memberof PIXI.glCore.shader
+ * @param gl {WebGLRenderingContext} The current WebGL rendering context
+ * @param program {WebGLProgram} The shader program to get the uniforms from
+ * @return uniforms {Object}
+ */
+var extractUniforms = function(gl, program)
+{
+	var uniforms = {};
+
+    var totalUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+
+    for (var i = 0; i < totalUniforms; i++)
+    {
+    	var uniformData = gl.getActiveUniform(program, i);
+    	var name = uniformData.name.replace(/\[.*?\]/, "");
+        var type = mapType(gl, uniformData.type );
+
+    	uniforms[name] = {
+    		type:type,
+    		size:uniformData.size,
+    		location:gl.getUniformLocation(program, name),
+    		value:defaultValue_1(type, uniformData.size)
+    	};
+    }
+
+	return uniforms;
+};
+
+var extractUniforms_1 = extractUniforms;
+
+/**
+ * Sets the float precision on the shader. If the precision is already present this function will do nothing
+ * @param {string} src       the shader source
+ * @param {string} precision The float precision of the shader. Options are 'lowp', 'mediump' or 'highp'.
+ *
+ * @return {string} modified shader source
+ */
+var setPrecision = function(src, precision)
+{
+    if(src.substring(0, 9) !== 'precision')
+    {
+        return 'precision ' + precision + ' float;\n' + src;
+    }
+
+    return src;
+};
+
+var setPrecision_1 = setPrecision;
+
+/**
+ * Extracts the attributes
+ * @class
+ * @memberof PIXI.glCore.shader
+ * @param gl {WebGLRenderingContext} The current WebGL rendering context
+ * @param uniforms {Array} @mat ?
+ * @return attributes {Object}
+ */
+var generateUniformAccessObject = function(gl, uniformData)
+{
+    // this is the object we will be sending back.
+    // an object hierachy will be created for structs
+    var uniforms = {data:{}};
+
+    uniforms.gl = gl;
+
+    var uniformKeys= Object.keys(uniformData);
+
+    for (var i = 0; i < uniformKeys.length; i++)
+    {
+        var fullName = uniformKeys[i];
+
+        var nameTokens = fullName.split('.');
+        var name = nameTokens[nameTokens.length - 1];
+
+
+        var uniformGroup = getUniformGroup(nameTokens, uniforms);
+
+        var uniform =  uniformData[fullName];
+        uniformGroup.data[name] = uniform;
+
+        uniformGroup.gl = gl;
+
+        Object.defineProperty(uniformGroup, name, {
+            get: generateGetter(name),
+            set: generateSetter(name, uniform)
+        });
+    }
+
+    return uniforms;
+};
+
+var generateGetter = function(name)
+{
+	var template = getterTemplate.replace('%%', name);
+	return new Function(template); // jshint ignore:line
+};
+
+var generateSetter = function(name, uniform)
+{
+    var template = setterTemplate.replace(/%%/g, name);
+    var setTemplate;
+
+    if(uniform.size === 1)
+    {
+        setTemplate = GLSL_TO_SINGLE_SETTERS[uniform.type];
+    }
+    else
+    {
+        setTemplate = GLSL_TO_ARRAY_SETTERS[uniform.type];
+    }
+
+    if(setTemplate)
+    {
+        template += "\nthis.gl." + setTemplate + ";";
+    }
+
+  	return new Function('value', template); // jshint ignore:line
+};
+
+var getUniformGroup = function(nameTokens, uniform)
+{
+    var cur = uniform;
+
+    for (var i = 0; i < nameTokens.length - 1; i++)
+    {
+        var o = cur[nameTokens[i]] || {data:{}};
+        cur[nameTokens[i]] = o;
+        cur = o;
+    }
+
+    return cur;
+};
+
+var getterTemplate = [
+    'return this.data.%%.value;',
+].join('\n');
+
+var setterTemplate = [
+    'this.data.%%.value = value;',
+    'var location = this.data.%%.location;'
+].join('\n');
+
+
+var GLSL_TO_SINGLE_SETTERS = {
+
+    'float':    'uniform1f(location, value)',
+
+    'vec2':     'uniform2f(location, value[0], value[1])',
+    'vec3':     'uniform3f(location, value[0], value[1], value[2])',
+    'vec4':     'uniform4f(location, value[0], value[1], value[2], value[3])',
+
+    'int':      'uniform1i(location, value)',
+    'ivec2':    'uniform2i(location, value[0], value[1])',
+    'ivec3':    'uniform3i(location, value[0], value[1], value[2])',
+    'ivec4':    'uniform4i(location, value[0], value[1], value[2], value[3])',
+
+    'bool':     'uniform1i(location, value)',
+    'bvec2':    'uniform2i(location, value[0], value[1])',
+    'bvec3':    'uniform3i(location, value[0], value[1], value[2])',
+    'bvec4':    'uniform4i(location, value[0], value[1], value[2], value[3])',
+
+    'mat2':     'uniformMatrix2fv(location, false, value)',
+    'mat3':     'uniformMatrix3fv(location, false, value)',
+    'mat4':     'uniformMatrix4fv(location, false, value)',
+
+    'sampler2D':'uniform1i(location, value)'
+};
+
+var GLSL_TO_ARRAY_SETTERS = {
+
+    'float':    'uniform1fv(location, value)',
+
+    'vec2':     'uniform2fv(location, value)',
+    'vec3':     'uniform3fv(location, value)',
+    'vec4':     'uniform4fv(location, value)',
+
+    'int':      'uniform1iv(location, value)',
+    'ivec2':    'uniform2iv(location, value)',
+    'ivec3':    'uniform3iv(location, value)',
+    'ivec4':    'uniform4iv(location, value)',
+
+    'bool':     'uniform1iv(location, value)',
+    'bvec2':    'uniform2iv(location, value)',
+    'bvec3':    'uniform3iv(location, value)',
+    'bvec4':    'uniform4iv(location, value)',
+
+    'sampler2D':'uniform1iv(location, value)'
+};
+
+var generateUniformAccessObject_1 = generateUniformAccessObject;
+
+/**
+ * Helper class to create a webGL Shader
+ *
+ * @class
+ * @memberof PIXI.glCore
+ * @param gl {WebGLRenderingContext}
+ * @param vertexSrc {string|string[]} The vertex shader source as an array of strings.
+ * @param fragmentSrc {string|string[]} The fragment shader source as an array of strings.
+ * @param precision {precision]} The float precision of the shader. Options are 'lowp', 'mediump' or 'highp'.
+ * @param attributeLocations {object} A key value pair showing which location eact attribute should sit eg {position:0, uvs:1}
+ */
+var Shader = function(gl, vertexSrc, fragmentSrc, precision, attributeLocations)
+{
+	/**
+	 * The current WebGL rendering context
+	 *
+	 * @member {WebGLRenderingContext}
+	 */
+	this.gl = gl;
+
+	if(precision)
+	{
+		vertexSrc = setPrecision_1(vertexSrc, precision);
+		fragmentSrc = setPrecision_1(fragmentSrc, precision);
+	}
+
+	/**
+	 * The shader program
+	 *
+	 * @member {WebGLProgram}
+	 */
+	// First compile the program..
+	this.program = compileProgram_1(gl, vertexSrc, fragmentSrc, attributeLocations);
+
+	/**
+	 * The attributes of the shader as an object containing the following properties
+	 * {
+	 * 	type,
+	 * 	size,
+	 * 	location,
+	 * 	pointer
+	 * }
+	 * @member {Object}
+	 */
+	// next extract the attributes
+	this.attributes = extractAttributes_1(gl, this.program);
+
+    this.uniformData = extractUniforms_1(gl, this.program);
+
+	/**
+	 * The uniforms of the shader as an object containing the following properties
+	 * {
+	 * 	gl,
+	 * 	data
+	 * }
+	 * @member {Object}
+	 */
+	this.uniforms = generateUniformAccessObject_1( gl, this.uniformData );
+
+};
+/**
+ * Uses this shader
+ */
+Shader.prototype.bind = function()
+{
+	this.gl.useProgram(this.program);
+};
+
+/**
+ * Destroys this shader
+ * TODO
+ */
+Shader.prototype.destroy = function()
+{
+	this.attributes = null;
+	this.uniformData = null;
+	this.uniforms = null;
+
+	var gl = this.gl;
+	gl.deleteProgram(this.program);
+};
+
+
+var GLShader = Shader;
+
+// state object//
+
+
+/**
+ * Helper class to work with WebGL VertexArrayObjects (vaos)
+ * Only works if WebGL extensions are enabled (they usually are)
+ *
+ * @class
+ * @memberof PIXI.glCore
+ * @param gl {WebGLRenderingContext} The current WebGL rendering context
+ */
+function VertexArrayObject(gl, state)
+{
+    this.nativeVaoExtension = null;
+
+    if(!VertexArrayObject.FORCE_NATIVE)
+    {
+        this.nativeVaoExtension = gl.getExtension('OES_vertex_array_object') ||
+                                  gl.getExtension('MOZ_OES_vertex_array_object') ||
+                                  gl.getExtension('WEBKIT_OES_vertex_array_object');
+    }
+
+    this.nativeState = state;
+
+    if(this.nativeVaoExtension)
+    {
+        this.nativeVao = this.nativeVaoExtension.createVertexArrayOES();
+
+        var maxAttribs = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
+
+        // VAO - overwrite the state..
+        this.nativeState = {
+            tempAttribState: new Array(maxAttribs),
+            attribState: new Array(maxAttribs)
+        };
+    }
+
+    /**
+     * The current WebGL rendering context
+     *
+     * @member {WebGLRenderingContext}
+     */
+    this.gl = gl;
+
+    /**
+     * An array of attributes
+     *
+     * @member {Array}
+     */
+    this.attributes = [];
+
+    /**
+     * @member {PIXI.glCore.GLBuffer}
+     */
+    this.indexBuffer = null;
+
+    /**
+     * A boolean flag
+     *
+     * @member {Boolean}
+     */
+    this.dirty = false;
+}
+
+VertexArrayObject.prototype.constructor = VertexArrayObject;
+var VertexArrayObject_1 = VertexArrayObject;
+
+/**
+* Some devices behave a bit funny when using the newer extensions (im looking at you ipad 2!)
+* If you find on older devices that things have gone a bit weird then set this to true.
+*/
+/**
+ * Lets the VAO know if you should use the WebGL extension or the native methods.
+ * Some devices behave a bit funny when using the newer extensions (im looking at you ipad 2!)
+ * If you find on older devices that things have gone a bit weird then set this to true.
+ * @static
+ * @property {Boolean} FORCE_NATIVE
+ */
+VertexArrayObject.FORCE_NATIVE = false;
+
+/**
+ * Binds the buffer
+ */
+VertexArrayObject.prototype.bind = function()
+{
+    if(this.nativeVao)
+    {
+        this.nativeVaoExtension.bindVertexArrayOES(this.nativeVao);
+
+        if(this.dirty)
+        {
+            this.dirty = false;
+            this.activate();
+        }
+    }
+    else
+    {
+
+        this.activate();
+    }
+
+    return this;
+};
+
+/**
+ * Unbinds the buffer
+ */
+VertexArrayObject.prototype.unbind = function()
+{
+    if(this.nativeVao)
+    {
+        this.nativeVaoExtension.bindVertexArrayOES(null);
+    }
+
+    return this;
+};
+
+/**
+ * Uses this vao
+ */
+VertexArrayObject.prototype.activate = function()
+{
+
+    var gl = this.gl;
+    var lastBuffer = null;
+
+    for (var i = 0; i < this.attributes.length; i++)
+    {
+        var attrib = this.attributes[i];
+
+        if(lastBuffer !== attrib.buffer)
+        {
+            attrib.buffer.bind();
+            lastBuffer = attrib.buffer;
+        }
+
+        gl.vertexAttribPointer(attrib.attribute.location,
+                               attrib.attribute.size,
+                               attrib.type || gl.FLOAT,
+                               attrib.normalized || false,
+                               attrib.stride || 0,
+                               attrib.start || 0);
+    }
+
+    setVertexAttribArrays_1(gl, this.attributes, this.nativeState);
+
+    if(this.indexBuffer)
+    {
+        this.indexBuffer.bind();
+    }
+
+    return this;
+};
+
+/**
+ *
+ * @param buffer     {PIXI.gl.GLBuffer}
+ * @param attribute  {*}
+ * @param type       {String}
+ * @param normalized {Boolean}
+ * @param stride     {Number}
+ * @param start      {Number}
+ */
+VertexArrayObject.prototype.addAttribute = function(buffer, attribute, type, normalized, stride, start)
+{
+    this.attributes.push({
+        buffer:     buffer,
+        attribute:  attribute,
+
+        location:   attribute.location,
+        type:       type || this.gl.FLOAT,
+        normalized: normalized || false,
+        stride:     stride || 0,
+        start:      start || 0
+    });
+
+    this.dirty = true;
+
+    return this;
+};
+
+/**
+ *
+ * @param buffer   {PIXI.gl.GLBuffer}
+ */
+VertexArrayObject.prototype.addIndex = function(buffer/*, options*/)
+{
+    this.indexBuffer = buffer;
+
+    this.dirty = true;
+
+    return this;
+};
+
+/**
+ * Unbinds this vao and disables it
+ */
+VertexArrayObject.prototype.clear = function()
+{
+    // var gl = this.gl;
+
+    // TODO - should this function unbind after clear?
+    // for now, no but lets see what happens in the real world!
+    if(this.nativeVao)
+    {
+        this.nativeVaoExtension.bindVertexArrayOES(this.nativeVao);
+    }
+
+    this.attributes.length = 0;
+    this.indexBuffer = null;
+
+    return this;
+};
+
+/**
+ * @param type  {Number}
+ * @param size  {Number}
+ * @param start {Number}
+ */
+VertexArrayObject.prototype.draw = function(type, size, start)
+{
+    var gl = this.gl;
+
+    if(this.indexBuffer)
+    {
+        gl.drawElements(type, size || this.indexBuffer.data.length, gl.UNSIGNED_SHORT, (start || 0) * 2 );
+    }
+    else
+    {
+        // TODO need a better way to calculate size..
+        gl.drawArrays(type, start, size || this.getSize());
+    }
+
+    return this;
+};
+
+/**
+ * Destroy this vao
+ */
+VertexArrayObject.prototype.destroy = function()
+{
+    // lose references
+    this.gl = null;
+    this.indexBuffer = null;
+    this.attributes = null;
+    this.nativeState = null;
+
+    if(this.nativeVao)
+    {
+        this.nativeVaoExtension.deleteVertexArrayOES(this.nativeVao);
+    }
+
+    this.nativeVaoExtension = null;
+    this.nativeVao = null;
+};
+
+VertexArrayObject.prototype.getSize = function()
+{
+    var attrib = this.attributes[0];
+    return attrib.buffer.data.length / (( attrib.stride/4 ) || attrib.attribute.size);
+};
+
+var index$1 = {
+    compileProgram: compileProgram_1,
+    defaultValue: defaultValue_1,
+    extractAttributes: extractAttributes_1,
+    extractUniforms: extractUniforms_1,
+    generateUniformAccessObject: generateUniformAccessObject_1,
+    setPrecision: setPrecision_1,
+    mapSize: mapSize_1,
+    mapType: mapType
+};
+
+var index = createCommonjsModule(function (module) {
+var gl = {
+    createContext:          createContext_1,
+    setVertexAttribArrays:  setVertexAttribArrays_1,
+    GLBuffer:               GLBuffer,
+    GLFramebuffer:          GLFramebuffer$1,
+    GLShader:               GLShader,
+    GLTexture:              GLTexture,
+    VertexArrayObject:      VertexArrayObject_1,
+    shader:                 index$1
+};
+
+// Export for Node-compatible environments
+if ('object' !== 'undefined' && module.exports)
+{
+    // Export the module
+    module.exports = gl;
+}
+
+// Add to the browser window pixi.gl
+if (typeof window !== 'undefined')
+{
+    // add the window object
+    window.PIXI = window.PIXI || {};
+    window.PIXI.glCore = gl;
+}
+});
+
+var GLFramebuffer = index.GLFramebuffer;
+
+/**
+ * @class
+ * @memberof PIXI
+ */
+
+var RenderTarget = function () {
+  /**
+   * @param {WebGLRenderingContext} gl - The current WebGL drawing context
+   * @param {number} [width=0] - the horizontal range of the filter
+   * @param {number} [height=0] - the vertical range of the filter
+   * @param {number} [scaleMode=PIXI.settings.SCALE_MODE] - See {@link PIXI.SCALE_MODES} for possible values
+   * @param {number} [resolution=1] - The current resolution / device pixel ratio
+   * @param {boolean} [root=false] - Whether this object is the root element or not
+   */
+  function RenderTarget(gl, width, height, scaleMode, resolution, root) {
+    classCallCheck(this, RenderTarget);
+
+    // TODO Resolution could go here ( eg low res blurs )
+
+    /**
+     * The current WebGL drawing context.
+     *
+     * @member {WebGLRenderingContext}
+     */
+    this.gl = gl;
+
+    // next time to create a frame buffer and texture
+
+    /**
+     * A frame buffer
+     *
+     * @member {PIXI.glCore.GLFramebuffer}
+     */
+    this.frameBuffer = null;
+
+    /**
+     * The background colour of this render target, as an array of [r,g,b,a] values
+     *
+     * @member {number[]}
+     */
+    this.clearColor = [0, 0, 0, 0];
+
+    /**
+     * The size of the object as a rectangle
+     *
+     * @member {PIXI.Rectangle}
+     */
+    this.size = new Rectangle(0, 0, 1, 1);
+
+    /**
+     * The current resolution / device pixel ratio
+     *
+     * @member {number}
+     * @default 1
+     */
+    this.resolution = resolution || settings.RESOLUTION;
+
+    /**
+     * The projection matrix
+     *
+     * @member {PIXI.Matrix}
+     */
+    this.projectionMatrix = new Matrix$2();
+
+    /**
+     * The object's transform
+     *
+     * @member {PIXI.Matrix}
+     */
+    this.transform = null;
+
+    /**
+     * The frame.
+     *
+     * @member {PIXI.Rectangle}
+     */
+    this.frame = null;
+
+    /**
+     * The stencil buffer stores masking data for the render target
+     *
+     * @member {glCore.GLBuffer}
+     */
+    this.defaultFrame = new Rectangle();
+    this.destinationFrame = null;
+    this.sourceFrame = null;
+
+    /**
+     * The stencil buffer stores masking data for the render target
+     *
+     * @member {glCore.GLBuffer}
+     */
+    this.stencilBuffer = null;
+
+    /**
+     * The data structure for the stencil masks
+     *
+     * @member {PIXI.Graphics[]}
+     */
+    this.stencilMaskStack = [];
+
+    /**
+     * Stores filter data for the render target
+     *
+     * @member {object[]}
+     */
+    this.filterData = null;
+
+    /**
+     * The scale mode.
+     *
+     * @member {number}
+     * @default PIXI.settings.SCALE_MODE
+     * @see PIXI.SCALE_MODES
+     */
+    this.scaleMode = scaleMode || settings.SCALE_MODE;
+
+    /**
+     * Whether this object is the root element or not
+     *
+     * @member {boolean}
+     */
+    this.root = root;
+
+    if (!this.root) {
+      this.frameBuffer = GLFramebuffer.createRGBA(gl, 100, 100);
+
+      if (this.scaleMode === SCALE_MODES.NEAREST) {
+        this.frameBuffer.texture.enableNearestScaling();
+      } else {
+        this.frameBuffer.texture.enableLinearScaling();
+      }
+      /*
+          A frame buffer needs a target to render to..
+          create a texture and bind it attach it to the framebuffer..
+       */
+
+      // this is used by the base texture
+      this.texture = this.frameBuffer.texture;
+    } else {
+      // make it a null framebuffer..
+      this.frameBuffer = new GLFramebuffer(gl, 100, 100);
+      this.frameBuffer.framebuffer = null;
+    }
+
+    this.setFrame();
+
+    this.resize(width, height);
+  }
+
+  /**
+   * Clears the filter texture.
+   *
+   * @param {number[]} [clearColor=this.clearColor] - Array of [r,g,b,a] to clear the framebuffer
+   */
+
+
+  createClass(RenderTarget, [{
+    key: 'clear',
+    value: function clear(clearColor) {
+      var cc = clearColor || this.clearColor;
+
+      this.frameBuffer.clear(cc[0], cc[1], cc[2], cc[3]); // r,g,b,a);
+    }
+
+    /**
+     * Binds the stencil buffer.
+     *
+     */
+
+  }, {
+    key: 'attachStencilBuffer',
+    value: function attachStencilBuffer() {
+      // TODO check if stencil is done?
+      /**
+       * The stencil buffer is used for masking in pixi
+       * lets create one and then add attach it to the framebuffer..
+       */
+      if (!this.root) {
+        this.frameBuffer.enableStencil();
+      }
+    }
+
+    /**
+     * Sets the frame of the render target.
+     *
+     * @param {Rectangle} destinationFrame - The destination frame.
+     * @param {Rectangle} sourceFrame - The source frame.
+     */
+
+  }, {
+    key: 'setFrame',
+    value: function setFrame(destinationFrame, sourceFrame) {
+      this.destinationFrame = destinationFrame || this.destinationFrame || this.defaultFrame;
+      this.sourceFrame = sourceFrame || this.sourceFrame || destinationFrame;
+    }
+
+    /**
+     * Binds the buffers and initialises the viewport.
+     *
+     */
+
+  }, {
+    key: 'activate',
+    value: function activate() {
+      // TOOD refactor usage of frame..
+      var gl = this.gl;
+
+      // make sure the texture is unbound!
+      this.frameBuffer.bind();
+
+      this.calculateProjection(this.destinationFrame, this.sourceFrame);
+
+      if (this.transform) {
+        this.projectionMatrix.append(this.transform);
+      }
+
+      // TODO add a check as them may be the same!
+      if (this.destinationFrame !== this.sourceFrame) {
+        gl.enable(gl.SCISSOR_TEST);
+        gl.scissor(this.destinationFrame.x | 0, this.destinationFrame.y | 0, this.destinationFrame.width * this.resolution | 0, this.destinationFrame.height * this.resolution | 0);
+      } else {
+        gl.disable(gl.SCISSOR_TEST);
+      }
+
+      // TODO - does not need to be updated all the time??
+      gl.viewport(this.destinationFrame.x | 0, this.destinationFrame.y | 0, this.destinationFrame.width * this.resolution | 0, this.destinationFrame.height * this.resolution | 0);
+    }
+
+    /**
+     * Updates the projection matrix based on a projection frame (which is a rectangle)
+     *
+     * @param {Rectangle} destinationFrame - The destination frame.
+     * @param {Rectangle} sourceFrame - The source frame.
+     */
+
+  }, {
+    key: 'calculateProjection',
+    value: function calculateProjection(destinationFrame, sourceFrame) {
+      var pm = this.projectionMatrix;
+
+      sourceFrame = sourceFrame || destinationFrame;
+
+      pm.identity();
+
+      // TODO: make dest scale source
+      if (!this.root) {
+        pm.a = 1 / destinationFrame.width * 2;
+        pm.d = 1 / destinationFrame.height * 2;
+
+        pm.tx = -1 - sourceFrame.x * pm.a;
+        pm.ty = -1 - sourceFrame.y * pm.d;
+      } else {
+        pm.a = 1 / destinationFrame.width * 2;
+        pm.d = -1 / destinationFrame.height * 2;
+
+        pm.tx = -1 - sourceFrame.x * pm.a;
+        pm.ty = 1 - sourceFrame.y * pm.d;
+      }
+    }
+
+    /**
+     * Resizes the texture to the specified width and height
+     *
+     * @param {number} width - the new width of the texture
+     * @param {number} height - the new height of the texture
+     */
+
+  }, {
+    key: 'resize',
+    value: function resize(width, height) {
+      width = width | 0;
+      height = height | 0;
+
+      if (this.size.width === width && this.size.height === height) {
+        return;
+      }
+
+      this.size.width = width;
+      this.size.height = height;
+
+      this.defaultFrame.width = width;
+      this.defaultFrame.height = height;
+
+      this.frameBuffer.resize(width * this.resolution, height * this.resolution);
+
+      var projectionFrame = this.frame || this.size;
+
+      this.calculateProjection(projectionFrame);
+    }
+
+    /**
+     * Destroys the render target.
+     *
+     */
+
+  }, {
+    key: 'destroy',
+    value: function destroy() {
+      this.frameBuffer.destroy();
+
+      this.frameBuffer = null;
+      this.texture = null;
+    }
+  }]);
+  return RenderTarget;
+}();
+
+/**
+ * @class
+ * @memberof PIXI
+ */
+var WebGLManager = function () {
+  /**
+   * @param {PIXI.WebGLRenderer} renderer - The renderer this manager works for.
+   */
+  function WebGLManager(renderer) {
+    classCallCheck(this, WebGLManager);
+
+    /**
+     * The renderer this manager works for.
+     *
+     * @member {PIXI.WebGLRenderer}
+     */
+    this.renderer = renderer;
+
+    //this.renderer.on('context', this.onContextChange, this);
+  }
+
+  /**
+   * Generic method called when there is a WebGL context change.
+   *
+   */
+
+
+  createClass(WebGLManager, [{
+    key: 'onContextChange',
+    value: function onContextChange() {}
+    // do some codes init!
+
+
+    /**
+     * Generic destroy methods to be overridden by the subclass
+     *
+     */
+
+  }, {
+    key: 'destroy',
+    value: function destroy() {
+      this.renderer.off('context', this.onContextChange, this);
+
+      this.renderer = null;
+    }
+  }]);
+  return WebGLManager;
+}();
+
+/**
+ * Base for a common object renderer that can be used as a system renderer plugin.
+ *
+ * @class
+ * @extends PIXI.WebGLManager
+ * @memberof PIXI
+ */
+
+var ObjectRenderer = function (_WebGLManager) {
+  inherits(ObjectRenderer, _WebGLManager);
+
+  function ObjectRenderer() {
+    classCallCheck(this, ObjectRenderer);
+    return possibleConstructorReturn(this, (ObjectRenderer.__proto__ || Object.getPrototypeOf(ObjectRenderer)).apply(this, arguments));
+  }
+
+  createClass(ObjectRenderer, [{
+    key: 'start',
+
+    /**
+     * Starts the renderer and sets the shader
+     *
+     */
+    value: function start() {}
+    // set the shader..
+
+
+    /**
+     * Stops the renderer
+     *
+     */
+
+  }, {
+    key: 'stop',
+    value: function stop() {
+      this.flush();
+    }
+
+    /**
+     * Stub method for rendering content and emptying the current batch.
+     *
+     */
+
+  }, {
+    key: 'flush',
+    value: function flush() {}
+    // flush!
+
+
+    /**
+     * Renders an object
+     *
+     * @param {PIXI.DisplayObject} object - The object to render.
+     */
+
+  }, {
+    key: 'render',
+    value: function render(object) // eslint-disable-line no-unused-vars
+    {
+      // render the object
+    }
+  }]);
+  return ObjectRenderer;
+}(WebGLManager);
+
+var DEPTH_TEST = 1;
+var FRONT_FACE = 2;
+var CULL_FACE = 3;
+
+/**
+ * A WebGL state machines
+ *
+ * @memberof PIXI
+ * @class
+ */
+
+var WebGLState = function () {
+    /**
+     * @param {WebGLRenderingContext} gl - The current WebGL rendering context
+     */
+    function WebGLState(gl) {
+        classCallCheck(this, WebGLState);
+
+        /**
+         * The current active state
+         *
+         * @member {Uint8Array}
+         */
+        this.activeState = new Uint8Array(16);
+
+        /**
+         * The default state
+         *
+         * @member {Uint8Array}
+         */
+        this.defaultState = new Uint8Array(16);
+
+        // default blend mode..
+        this.defaultState[0] = 1;
+
+        /**
+         * The current state index in the stack
+         *
+         * @member {number}
+         * @private
+         */
+        this.stackIndex = 0;
+
+        /**
+         * The stack holding all the different states
+         *
+         * @member {Array<*>}
+         * @private
+         */
+        this.stack = [];
+
+        /**
+         * The current WebGL rendering context
+         *
+         * @member {WebGLRenderingContext}
+         */
+        this.gl = gl;
+
+        this.maxAttribs = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
+
+        this.attribState = {
+            tempAttribState: new Array(this.maxAttribs),
+            attribState: new Array(this.maxAttribs)
+        };
+
+        // check we have vao..
+        this.nativeVaoExtension = gl.getExtension('OES_vertex_array_object') || gl.getExtension('MOZ_OES_vertex_array_object') || gl.getExtension('WEBKIT_OES_vertex_array_object');
+    }
+
+    /**
+     * Pushes a new active state
+     */
+
+
+    createClass(WebGLState, [{
+        key: 'push',
+        value: function push() {
+            // next state..
+            var state = this.stack[++this.stackIndex];
+
+            if (!state) {
+                state = this.stack[this.stackIndex] = new Uint8Array(16);
+            }
+
+            // copy state..
+            // set active state so we can force overrides of gl state
+            for (var i = 0; i < this.activeState.length; i++) {
+                this.activeState[i] = state[i];
+            }
+        }
+
+        /**
+         * Pops a state out
+         */
+
+    }, {
+        key: 'pop',
+        value: function pop() {
+            var state = this.stack[--this.stackIndex];
+
+            this.setState(state);
+        }
+
+        /**
+         * Sets the current state
+         *
+         * @param {*} state - The state to set.
+         */
+
+    }, {
+        key: 'setState',
+        value: function setState(state) {
+            this.setDepthTest(state[DEPTH_TEST]);
+            this.setFrontFace(state[FRONT_FACE]);
+            this.setCullFace(state[CULL_FACE]);
+        }
+
+        /**
+         * Sets whether to enable or disable depth test.
+         *
+         * @param {boolean} value - Turn on or off webgl depth testing.
+         */
+
+    }, {
+        key: 'setDepthTest',
+        value: function setDepthTest(value) {
+            value = value ? 1 : 0;
+
+            if (this.activeState[DEPTH_TEST] === value) {
+                return;
+            }
+
+            this.activeState[DEPTH_TEST] = value;
+            this.gl[value ? 'enable' : 'disable'](this.gl.DEPTH_TEST);
+        }
+
+        /**
+         * Sets whether to enable or disable cull face.
+         *
+         * @param {boolean} value - Turn on or off webgl cull face.
+         */
+
+    }, {
+        key: 'setCullFace',
+        value: function setCullFace(value) {
+            value = value ? 1 : 0;
+
+            if (this.activeState[CULL_FACE] === value) {
+                return;
+            }
+
+            this.activeState[CULL_FACE] = value;
+            this.gl[value ? 'enable' : 'disable'](this.gl.CULL_FACE);
+        }
+
+        /**
+         * Sets the gl front face.
+         *
+         * @param {boolean} value - true is clockwise and false is counter-clockwise
+         */
+
+    }, {
+        key: 'setFrontFace',
+        value: function setFrontFace(value) {
+            value = value ? 1 : 0;
+
+            if (this.activeState[FRONT_FACE] === value) {
+                return;
+            }
+
+            this.activeState[FRONT_FACE] = value;
+            this.gl.frontFace(this.gl[value ? 'CW' : 'CCW']);
+        }
+
+        /**
+         * Disables all the vaos in use
+         *
+         */
+
+    }, {
+        key: 'resetAttributes',
+        value: function resetAttributes() {
+            for (var i = 0; i < this.attribState.tempAttribState.length; i++) {
+                this.attribState.tempAttribState[i] = 0;
+            }
+
+            for (var _i = 0; _i < this.attribState.attribState.length; _i++) {
+                this.attribState.attribState[_i] = 0;
+            }
+
+            // im going to assume one is always active for performance reasons.
+            for (var _i2 = 1; _i2 < this.maxAttribs; _i2++) {
+                this.gl.disableVertexAttribArray(_i2);
+            }
+        }
+
+        // used
+        /**
+         * Resets all the logic and disables the vaos
+         */
+
+    }, {
+        key: 'resetToDefault',
+        value: function resetToDefault() {
+            // unbind any VAO if they exist..
+            if (this.nativeVaoExtension) {
+                this.nativeVaoExtension.bindVertexArrayOES(null);
+            }
+
+            // reset all attributes..
+            this.resetAttributes();
+
+            // set active state so we can force overrides of gl state
+            for (var i = 0; i < this.activeState.length; ++i) {
+                this.activeState[i] = 32;
+            }
+
+            this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, false);
+
+            this.setState(this.defaultState);
+        }
+    }]);
+    return WebGLState;
+}();
+
+function hex2rgb(hex, out) {
+    out = out || [];
+
+    out[0] = (hex >> 16 & 0xFF) / 255;
+    out[1] = (hex >> 8 & 0xFF) / 255;
+    out[2] = (hex & 0xFF) / 255;
+
+    return out;
+}
+
+/**
+ * An object containing WebGL specific properties to be used by the WebGL renderer
+ *
+ * @class
+ * @private
+ * @memberof PIXI
+ */
+
+var WebGLGraphicsData = function () {
+  /**
+   * @param {WebGLRenderingContext} gl - The current WebGL drawing context
+   * @param {PIXI.Shader} shader - The shader
+   * @param {object} attribsState - The state for the VAO
+   */
+  function WebGLGraphicsData(gl, shader, attribsState) {
+    classCallCheck(this, WebGLGraphicsData);
+
+    /**
+     * The current WebGL drawing context
+     *
+     * @member {WebGLRenderingContext}
+     */
+    this.gl = gl;
+
+    // TODO does this need to be split before uploading??
+    /**
+     * An array of color components (r,g,b)
+     * @member {number[]}
+     */
+    this.color = [0, 0, 0]; // color split!
+
+    /**
+     * An array of points to draw
+     * @member {PIXI.Point[]}
+     */
+    this.points = [];
+
+    /**
+     * The indices of the vertices
+     * @member {number[]}
+     */
+    this.indices = [];
+    /**
+     * The main buffer
+     * @member {WebGLBuffer}
+     */
+    this.buffer = index.GLBuffer.createVertexBuffer(gl);
+
+    /**
+     * The index buffer
+     * @member {WebGLBuffer}
+     */
+    this.indexBuffer = index.GLBuffer.createIndexBuffer(gl);
+
+    /**
+     * Whether this graphics is dirty or not
+     * @member {boolean}
+     */
+    this.dirty = true;
+
+    this.glPoints = null;
+    this.glIndices = null;
+
+    /**
+     *
+     * @member {PIXI.Shader}
+     */
+    this.shader = shader;
+
+    this.vao = new index.VertexArrayObject(gl, attribsState).addIndex(this.indexBuffer).addAttribute(this.buffer, shader.attributes.aVertexPosition, gl.FLOAT, false, 4 * 6, 0).addAttribute(this.buffer, shader.attributes.aColor, gl.FLOAT, false, 4 * 6, 2 * 4);
+  }
+
+  /**
+   * Resets the vertices and the indices
+   */
+
+
+  createClass(WebGLGraphicsData, [{
+    key: 'reset',
+    value: function reset() {
+      this.points.length = 0;
+      this.indices.length = 0;
+    }
+
+    /**
+     * Binds the buffers and uploads the data
+     */
+
+  }, {
+    key: 'upload',
+    value: function upload() {
+      this.glPoints = new Float32Array(this.points);
+      this.buffer.upload(this.glPoints);
+
+      this.glIndices = new Uint16Array(this.indices);
+      this.indexBuffer.upload(this.glIndices);
+
+      this.dirty = false;
+    }
+
+    /**
+     * Empties all the data
+     */
+
+  }, {
+    key: 'destroy',
+    value: function destroy() {
+      this.color = null;
+      this.points = null;
+      this.indices = null;
+
+      this.vao.destroy();
+      this.buffer.destroy();
+      this.indexBuffer.destroy();
+
+      this.gl = null;
+
+      this.buffer = null;
+      this.indexBuffer = null;
+
+      this.glPoints = null;
+      this.glIndices = null;
+    }
+  }]);
+  return WebGLGraphicsData;
+}();
+
+var PRECISION = settings.PRECISION;
+
+var GLShader$2 = index.GLShader;
+
+function checkPrecision(src) {
+    if (src instanceof Array) {
+        if (src[0].substring(0, 9) !== 'precision') {
+            var copy = src.slice(0);
+
+            copy.unshift('precision ' + PRECISION + ' float;');
+
+            return copy;
+        }
+    } else if (src.substring(0, 9) !== 'precision') {
+        return 'precision ' + PRECISION + ' float;\n' + src;
+    }
+
+    return src;
+}
+
+/**
+ * Wrapper class, webGL Shader for Pixi.
+ * Adds precision string if vertexSrc or fragmentSrc have no mention of it.
+ *
+ * @class
+ * @extends GLShader
+ * @memberof PIXI
+ */
+
+var Shader$1 = function (_GLShader) {
+    inherits(Shader, _GLShader);
+
+    /**
+     *
+     * @param {WebGLRenderingContext} gl - The current WebGL rendering context
+     * @param {string|string[]} vertexSrc - The vertex shader source as an array of strings.
+     * @param {string|string[]} fragmentSrc - The fragment shader source as an array of strings.
+     */
+    function Shader(gl, vertexSrc, fragmentSrc) {
+        classCallCheck(this, Shader);
+        return possibleConstructorReturn(this, (Shader.__proto__ || Object.getPrototypeOf(Shader)).call(this, gl, checkPrecision(vertexSrc), checkPrecision(fragmentSrc)));
+    }
+
+    return Shader;
+}(GLShader$2);
+
+/**
+ * This shader is used to draw simple primitive shapes for {@link PIXI.Graphics}.
+ *
+ * @class
+ * @memberof PIXI
+ * @extends PIXI.Shader
+ */
+
+var PrimitiveShader = function (_Shader) {
+    inherits(PrimitiveShader, _Shader);
+
+    /**
+     * @param {WebGLRenderingContext} gl - The webgl shader manager this shader works for.
+     */
+    function PrimitiveShader(gl) {
+        classCallCheck(this, PrimitiveShader);
+        return possibleConstructorReturn(this, (PrimitiveShader.__proto__ || Object.getPrototypeOf(PrimitiveShader)).call(this, gl,
+        // vertex shader
+        ['attribute vec2 aVertexPosition;', 'attribute vec4 aColor;', 'uniform mat3 translationMatrix;', 'uniform mat3 projectionMatrix;', 'uniform float alpha;', 'uniform vec3 tint;', 'varying vec4 vColor;', 'void main(void){', '   gl_Position = vec4((projectionMatrix * translationMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);', '   vColor = aColor * vec4(tint * alpha, alpha);', '}'].join('\n'),
+        // fragment shader
+        ['varying vec4 vColor;', 'void main(void){', '   gl_FragColor = vColor;', '}'].join('\n')));
+    }
+
+    return PrimitiveShader;
+}(Shader$1);
+
+/**
+ * Builds a line to draw
+ *
+ * Ignored from docs since it is not directly exposed.
+ *
+ * @ignore
+ * @private
+ * @param {PIXI.WebGLGraphicsData} graphicsData - The graphics object containing all the necessary properties
+ * @param {object} webGLData - an object containing all the webGL-specific information to create this shape
+ */
+function buildLine(graphicsData, webGLData) {
+    // TODO OPTIMISE!
+    var points = graphicsData.points;
+
+    if (points.length === 0) {
+        return;
+    }
+    // if the line width is an odd number add 0.5 to align to a whole pixel
+    // commenting this out fixes #711 and #1620
+    // if (graphicsData.lineWidth%2)
+    // {
+    //     for (i = 0; i < points.length; i++)
+    //     {
+    //         points[i] += 0.5;
+    //     }
+    // }
+
+    // get first and last point.. figure out the middle!
+    var firstPoint = new Point$2(points[0], points[1]);
+    var lastPoint = new Point$2(points[points.length - 2], points[points.length - 1]);
+
+    // if the first point is the last point - gonna have issues :)
+    if (firstPoint.x === lastPoint.x && firstPoint.y === lastPoint.y) {
+        // need to clone as we are going to slightly modify the shape..
+        points = points.slice();
+
+        points.pop();
+        points.pop();
+
+        lastPoint = new Point$2(points[points.length - 2], points[points.length - 1]);
+
+        var midPointX = lastPoint.x + (firstPoint.x - lastPoint.x) * 0.5;
+        var midPointY = lastPoint.y + (firstPoint.y - lastPoint.y) * 0.5;
+
+        points.unshift(midPointX, midPointY);
+        points.push(midPointX, midPointY);
+    }
+
+    var verts = webGLData.points;
+    var indices = webGLData.indices;
+    var length = points.length / 2;
+    var indexCount = points.length;
+    var indexStart = verts.length / 6;
+
+    // DRAW the Line
+    var width = graphicsData.lineWidth / 2;
+
+    // sort color
+    var color = hex2rgb(graphicsData.strokeStyle);
+    var alpha = graphicsData.lineAlpha;
+    var r = color[0] * alpha;
+    var g = color[1] * alpha;
+    var b = color[2] * alpha;
+
+    var p1x = points[0];
+    var p1y = points[1];
+    var p2x = points[2];
+    var p2y = points[3];
+    var p3x = 0;
+    var p3y = 0;
+
+    var perpx = -(p1y - p2y);
+    var perpy = p1x - p2x;
+    var perp2x = 0;
+    var perp2y = 0;
+    var perp3x = 0;
+    var perp3y = 0;
+
+    var dist = Math.sqrt(perpx * perpx + perpy * perpy);
+
+    perpx /= dist;
+    perpy /= dist;
+    perpx *= width;
+    perpy *= width;
+
+    // start
+    verts.push(p1x - perpx, p1y - perpy, r, g, b, alpha);
+
+    verts.push(p1x + perpx, p1y + perpy, r, g, b, alpha);
+
+    for (var i = 1; i < length - 1; ++i) {
+        p1x = points[(i - 1) * 2];
+        p1y = points[(i - 1) * 2 + 1];
+
+        p2x = points[i * 2];
+        p2y = points[i * 2 + 1];
+
+        p3x = points[(i + 1) * 2];
+        p3y = points[(i + 1) * 2 + 1];
+
+        perpx = -(p1y - p2y);
+        perpy = p1x - p2x;
+
+        dist = Math.sqrt(perpx * perpx + perpy * perpy);
+        perpx /= dist;
+        perpy /= dist;
+        perpx *= width;
+        perpy *= width;
+
+        perp2x = -(p2y - p3y);
+        perp2y = p2x - p3x;
+
+        dist = Math.sqrt(perp2x * perp2x + perp2y * perp2y);
+        perp2x /= dist;
+        perp2y /= dist;
+        perp2x *= width;
+        perp2y *= width;
+
+        var a1 = -perpy + p1y - (-perpy + p2y);
+        var b1 = -perpx + p2x - (-perpx + p1x);
+        var c1 = (-perpx + p1x) * (-perpy + p2y) - (-perpx + p2x) * (-perpy + p1y);
+        var a2 = -perp2y + p3y - (-perp2y + p2y);
+        var b2 = -perp2x + p2x - (-perp2x + p3x);
+        var c2 = (-perp2x + p3x) * (-perp2y + p2y) - (-perp2x + p2x) * (-perp2y + p3y);
+
+        var denom = a1 * b2 - a2 * b1;
+
+        if (Math.abs(denom) < 0.1) {
+            denom += 10.1;
+            verts.push(p2x - perpx, p2y - perpy, r, g, b, alpha);
+
+            verts.push(p2x + perpx, p2y + perpy, r, g, b, alpha);
+
+            continue;
+        }
+
+        var px = (b1 * c2 - b2 * c1) / denom;
+        var py = (a2 * c1 - a1 * c2) / denom;
+        var pdist = (px - p2x) * (px - p2x) + (py - p2y) * (py - p2y);
+
+        if (pdist > 196 * width * width) {
+            perp3x = perpx - perp2x;
+            perp3y = perpy - perp2y;
+
+            dist = Math.sqrt(perp3x * perp3x + perp3y * perp3y);
+            perp3x /= dist;
+            perp3y /= dist;
+            perp3x *= width;
+            perp3y *= width;
+
+            verts.push(p2x - perp3x, p2y - perp3y);
+            verts.push(r, g, b, alpha);
+
+            verts.push(p2x + perp3x, p2y + perp3y);
+            verts.push(r, g, b, alpha);
+
+            verts.push(p2x - perp3x, p2y - perp3y);
+            verts.push(r, g, b, alpha);
+
+            indexCount++;
+        } else {
+            verts.push(px, py);
+            verts.push(r, g, b, alpha);
+
+            verts.push(p2x - (px - p2x), p2y - (py - p2y));
+            verts.push(r, g, b, alpha);
+        }
+    }
+
+    p1x = points[(length - 2) * 2];
+    p1y = points[(length - 2) * 2 + 1];
+
+    p2x = points[(length - 1) * 2];
+    p2y = points[(length - 1) * 2 + 1];
+
+    perpx = -(p1y - p2y);
+    perpy = p1x - p2x;
+
+    dist = Math.sqrt(perpx * perpx + perpy * perpy);
+    perpx /= dist;
+    perpy /= dist;
+    perpx *= width;
+    perpy *= width;
+
+    verts.push(p2x - perpx, p2y - perpy);
+    verts.push(r, g, b, alpha);
+
+    verts.push(p2x + perpx, p2y + perpy);
+    verts.push(r, g, b, alpha);
+
+    indices.push(indexStart);
+
+    for (var _i = 0; _i < indexCount; ++_i) {
+        indices.push(indexStart++);
+    }
+
+    indices.push(indexStart - 1);
+}
+
+var earcut_1 = earcut;
+
+function earcut(data, holeIndices, dim) {
+
+    dim = dim || 2;
+
+    var hasHoles = holeIndices && holeIndices.length,
+        outerLen = hasHoles ? holeIndices[0] * dim : data.length,
+        outerNode = linkedList(data, 0, outerLen, dim, true),
+        triangles = [];
+
+    if (!outerNode) return triangles;
+
+    var minX, minY, maxX, maxY, x, y, size;
+
+    if (hasHoles) outerNode = eliminateHoles(data, holeIndices, outerNode, dim);
+
+    // if the shape is not too simple, we'll use z-order curve hash later; calculate polygon bbox
+    if (data.length > 80 * dim) {
+        minX = maxX = data[0];
+        minY = maxY = data[1];
+
+        for (var i = dim; i < outerLen; i += dim) {
+            x = data[i];
+            y = data[i + 1];
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+        }
+
+        // minX, minY and size are later used to transform coords into integers for z-order calculation
+        size = Math.max(maxX - minX, maxY - minY);
+    }
+
+    earcutLinked(outerNode, triangles, dim, minX, minY, size);
+
+    return triangles;
+}
+
+// create a circular doubly linked list from polygon points in the specified winding order
+function linkedList(data, start, end, dim, clockwise) {
+    var i, last;
+
+    if (clockwise === (signedArea(data, start, end, dim) > 0)) {
+        for (i = start; i < end; i += dim) last = insertNode(i, data[i], data[i + 1], last);
+    } else {
+        for (i = end - dim; i >= start; i -= dim) last = insertNode(i, data[i], data[i + 1], last);
+    }
+
+    if (last && equals(last, last.next)) {
+        removeNode(last);
+        last = last.next;
+    }
+
+    return last;
+}
+
+// eliminate colinear or duplicate points
+function filterPoints(start, end) {
+    if (!start) return start;
+    if (!end) end = start;
+
+    var p = start,
+        again;
+    do {
+        again = false;
+
+        if (!p.steiner && (equals(p, p.next) || area(p.prev, p, p.next) === 0)) {
+            removeNode(p);
+            p = end = p.prev;
+            if (p === p.next) return null;
+            again = true;
+
+        } else {
+            p = p.next;
+        }
+    } while (again || p !== end);
+
+    return end;
+}
+
+// main ear slicing loop which triangulates a polygon (given as a linked list)
+function earcutLinked(ear, triangles, dim, minX, minY, size, pass) {
+    if (!ear) return;
+
+    // interlink polygon nodes in z-order
+    if (!pass && size) indexCurve(ear, minX, minY, size);
+
+    var stop = ear,
+        prev, next;
+
+    // iterate through ears, slicing them one by one
+    while (ear.prev !== ear.next) {
+        prev = ear.prev;
+        next = ear.next;
+
+        if (size ? isEarHashed(ear, minX, minY, size) : isEar(ear)) {
+            // cut off the triangle
+            triangles.push(prev.i / dim);
+            triangles.push(ear.i / dim);
+            triangles.push(next.i / dim);
+
+            removeNode(ear);
+
+            // skipping the next vertice leads to less sliver triangles
+            ear = next.next;
+            stop = next.next;
+
+            continue;
+        }
+
+        ear = next;
+
+        // if we looped through the whole remaining polygon and can't find any more ears
+        if (ear === stop) {
+            // try filtering points and slicing again
+            if (!pass) {
+                earcutLinked(filterPoints(ear), triangles, dim, minX, minY, size, 1);
+
+            // if this didn't work, try curing all small self-intersections locally
+            } else if (pass === 1) {
+                ear = cureLocalIntersections(ear, triangles, dim);
+                earcutLinked(ear, triangles, dim, minX, minY, size, 2);
+
+            // as a last resort, try splitting the remaining polygon into two
+            } else if (pass === 2) {
+                splitEarcut(ear, triangles, dim, minX, minY, size);
+            }
+
+            break;
+        }
+    }
+}
+
+// check whether a polygon node forms a valid ear with adjacent nodes
+function isEar(ear) {
+    var a = ear.prev,
+        b = ear,
+        c = ear.next;
+
+    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+
+    // now make sure we don't have other points inside the potential ear
+    var p = ear.next.next;
+
+    while (p !== ear.prev) {
+        if (pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.next;
+    }
+
+    return true;
+}
+
+function isEarHashed(ear, minX, minY, size) {
+    var a = ear.prev,
+        b = ear,
+        c = ear.next;
+
+    if (area(a, b, c) >= 0) return false; // reflex, can't be an ear
+
+    // triangle bbox; min & max are calculated like this for speed
+    var minTX = a.x < b.x ? (a.x < c.x ? a.x : c.x) : (b.x < c.x ? b.x : c.x),
+        minTY = a.y < b.y ? (a.y < c.y ? a.y : c.y) : (b.y < c.y ? b.y : c.y),
+        maxTX = a.x > b.x ? (a.x > c.x ? a.x : c.x) : (b.x > c.x ? b.x : c.x),
+        maxTY = a.y > b.y ? (a.y > c.y ? a.y : c.y) : (b.y > c.y ? b.y : c.y);
+
+    // z-order range for the current triangle bbox;
+    var minZ = zOrder(minTX, minTY, minX, minY, size),
+        maxZ = zOrder(maxTX, maxTY, minX, minY, size);
+
+    // first look for points inside the triangle in increasing z-order
+    var p = ear.nextZ;
+
+    while (p && p.z <= maxZ) {
+        if (p !== ear.prev && p !== ear.next &&
+            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.nextZ;
+    }
+
+    // then look for points in decreasing z-order
+    p = ear.prevZ;
+
+    while (p && p.z >= minZ) {
+        if (p !== ear.prev && p !== ear.next &&
+            pointInTriangle(a.x, a.y, b.x, b.y, c.x, c.y, p.x, p.y) &&
+            area(p.prev, p, p.next) >= 0) return false;
+        p = p.prevZ;
+    }
+
+    return true;
+}
+
+// go through all polygon nodes and cure small local self-intersections
+function cureLocalIntersections(start, triangles, dim) {
+    var p = start;
+    do {
+        var a = p.prev,
+            b = p.next.next;
+
+        if (!equals(a, b) && intersects(a, p, p.next, b) && locallyInside(a, b) && locallyInside(b, a)) {
+
+            triangles.push(a.i / dim);
+            triangles.push(p.i / dim);
+            triangles.push(b.i / dim);
+
+            // remove two nodes involved
+            removeNode(p);
+            removeNode(p.next);
+
+            p = start = b;
+        }
+        p = p.next;
+    } while (p !== start);
+
+    return p;
+}
+
+// try splitting polygon into two and triangulate them independently
+function splitEarcut(start, triangles, dim, minX, minY, size) {
+    // look for a valid diagonal that divides the polygon into two
+    var a = start;
+    do {
+        var b = a.next.next;
+        while (b !== a.prev) {
+            if (a.i !== b.i && isValidDiagonal(a, b)) {
+                // split the polygon in two by the diagonal
+                var c = splitPolygon(a, b);
+
+                // filter colinear points around the cuts
+                a = filterPoints(a, a.next);
+                c = filterPoints(c, c.next);
+
+                // run earcut on each half
+                earcutLinked(a, triangles, dim, minX, minY, size);
+                earcutLinked(c, triangles, dim, minX, minY, size);
+                return;
+            }
+            b = b.next;
+        }
+        a = a.next;
+    } while (a !== start);
+}
+
+// link every hole into the outer loop, producing a single-ring polygon without holes
+function eliminateHoles(data, holeIndices, outerNode, dim) {
+    var queue = [],
+        i, len, start, end, list;
+
+    for (i = 0, len = holeIndices.length; i < len; i++) {
+        start = holeIndices[i] * dim;
+        end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+        list = linkedList(data, start, end, dim, false);
+        if (list === list.next) list.steiner = true;
+        queue.push(getLeftmost(list));
+    }
+
+    queue.sort(compareX);
+
+    // process holes from left to right
+    for (i = 0; i < queue.length; i++) {
+        eliminateHole(queue[i], outerNode);
+        outerNode = filterPoints(outerNode, outerNode.next);
+    }
+
+    return outerNode;
+}
+
+function compareX(a, b) {
+    return a.x - b.x;
+}
+
+// find a bridge between vertices that connects hole with an outer ring and and link it
+function eliminateHole(hole, outerNode) {
+    outerNode = findHoleBridge(hole, outerNode);
+    if (outerNode) {
+        var b = splitPolygon(outerNode, hole);
+        filterPoints(b, b.next);
+    }
+}
+
+// David Eberly's algorithm for finding a bridge between hole and outer polygon
+function findHoleBridge(hole, outerNode) {
+    var p = outerNode,
+        hx = hole.x,
+        hy = hole.y,
+        qx = -Infinity,
+        m;
+
+    // find a segment intersected by a ray from the hole's leftmost point to the left;
+    // segment's endpoint with lesser x will be potential connection point
+    do {
+        if (hy <= p.y && hy >= p.next.y) {
+            var x = p.x + (hy - p.y) * (p.next.x - p.x) / (p.next.y - p.y);
+            if (x <= hx && x > qx) {
+                qx = x;
+                if (x === hx) {
+                    if (hy === p.y) return p;
+                    if (hy === p.next.y) return p.next;
+                }
+                m = p.x < p.next.x ? p : p.next;
+            }
+        }
+        p = p.next;
+    } while (p !== outerNode);
+
+    if (!m) return null;
+
+    if (hx === qx) return m.prev; // hole touches outer segment; pick lower endpoint
+
+    // look for points inside the triangle of hole point, segment intersection and endpoint;
+    // if there are no points found, we have a valid connection;
+    // otherwise choose the point of the minimum angle with the ray as connection point
+
+    var stop = m,
+        mx = m.x,
+        my = m.y,
+        tanMin = Infinity,
+        tan;
+
+    p = m.next;
+
+    while (p !== stop) {
+        if (hx >= p.x && p.x >= mx &&
+                pointInTriangle(hy < my ? hx : qx, hy, mx, my, hy < my ? qx : hx, hy, p.x, p.y)) {
+
+            tan = Math.abs(hy - p.y) / (hx - p.x); // tangential
+
+            if ((tan < tanMin || (tan === tanMin && p.x > m.x)) && locallyInside(p, hole)) {
+                m = p;
+                tanMin = tan;
+            }
+        }
+
+        p = p.next;
+    }
+
+    return m;
+}
+
+// interlink polygon nodes in z-order
+function indexCurve(start, minX, minY, size) {
+    var p = start;
+    do {
+        if (p.z === null) p.z = zOrder(p.x, p.y, minX, minY, size);
+        p.prevZ = p.prev;
+        p.nextZ = p.next;
+        p = p.next;
+    } while (p !== start);
+
+    p.prevZ.nextZ = null;
+    p.prevZ = null;
+
+    sortLinked(p);
+}
+
+// Simon Tatham's linked list merge sort algorithm
+// http://www.chiark.greenend.org.uk/~sgtatham/algorithms/listsort.html
+function sortLinked(list) {
+    var i, p, q, e, tail, numMerges, pSize, qSize,
+        inSize = 1;
+
+    do {
+        p = list;
+        list = null;
+        tail = null;
+        numMerges = 0;
+
+        while (p) {
+            numMerges++;
+            q = p;
+            pSize = 0;
+            for (i = 0; i < inSize; i++) {
+                pSize++;
+                q = q.nextZ;
+                if (!q) break;
+            }
+
+            qSize = inSize;
+
+            while (pSize > 0 || (qSize > 0 && q)) {
+
+                if (pSize === 0) {
+                    e = q;
+                    q = q.nextZ;
+                    qSize--;
+                } else if (qSize === 0 || !q) {
+                    e = p;
+                    p = p.nextZ;
+                    pSize--;
+                } else if (p.z <= q.z) {
+                    e = p;
+                    p = p.nextZ;
+                    pSize--;
+                } else {
+                    e = q;
+                    q = q.nextZ;
+                    qSize--;
+                }
+
+                if (tail) tail.nextZ = e;
+                else list = e;
+
+                e.prevZ = tail;
+                tail = e;
+            }
+
+            p = q;
+        }
+
+        tail.nextZ = null;
+        inSize *= 2;
+
+    } while (numMerges > 1);
+
+    return list;
+}
+
+// z-order of a point given coords and size of the data bounding box
+function zOrder(x, y, minX, minY, size) {
+    // coords are transformed into non-negative 15-bit integer range
+    x = 32767 * (x - minX) / size;
+    y = 32767 * (y - minY) / size;
+
+    x = (x | (x << 8)) & 0x00FF00FF;
+    x = (x | (x << 4)) & 0x0F0F0F0F;
+    x = (x | (x << 2)) & 0x33333333;
+    x = (x | (x << 1)) & 0x55555555;
+
+    y = (y | (y << 8)) & 0x00FF00FF;
+    y = (y | (y << 4)) & 0x0F0F0F0F;
+    y = (y | (y << 2)) & 0x33333333;
+    y = (y | (y << 1)) & 0x55555555;
+
+    return x | (y << 1);
+}
+
+// find the leftmost node of a polygon ring
+function getLeftmost(start) {
+    var p = start,
+        leftmost = start;
+    do {
+        if (p.x < leftmost.x) leftmost = p;
+        p = p.next;
+    } while (p !== start);
+
+    return leftmost;
+}
+
+// check if a point lies within a convex triangle
+function pointInTriangle(ax, ay, bx, by, cx, cy, px, py) {
+    return (cx - px) * (ay - py) - (ax - px) * (cy - py) >= 0 &&
+           (ax - px) * (by - py) - (bx - px) * (ay - py) >= 0 &&
+           (bx - px) * (cy - py) - (cx - px) * (by - py) >= 0;
+}
+
+// check if a diagonal between two polygon nodes is valid (lies in polygon interior)
+function isValidDiagonal(a, b) {
+    return a.next.i !== b.i && a.prev.i !== b.i && !intersectsPolygon(a, b) &&
+           locallyInside(a, b) && locallyInside(b, a) && middleInside(a, b);
+}
+
+// signed area of a triangle
+function area(p, q, r) {
+    return (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+}
+
+// check if two points are equal
+function equals(p1, p2) {
+    return p1.x === p2.x && p1.y === p2.y;
+}
+
+// check if two segments intersect
+function intersects(p1, q1, p2, q2) {
+    if ((equals(p1, q1) && equals(p2, q2)) ||
+        (equals(p1, q2) && equals(p2, q1))) return true;
+    return area(p1, q1, p2) > 0 !== area(p1, q1, q2) > 0 &&
+           area(p2, q2, p1) > 0 !== area(p2, q2, q1) > 0;
+}
+
+// check if a polygon diagonal intersects any polygon segments
+function intersectsPolygon(a, b) {
+    var p = a;
+    do {
+        if (p.i !== a.i && p.next.i !== a.i && p.i !== b.i && p.next.i !== b.i &&
+                intersects(p, p.next, a, b)) return true;
+        p = p.next;
+    } while (p !== a);
+
+    return false;
+}
+
+// check if a polygon diagonal is locally inside the polygon
+function locallyInside(a, b) {
+    return area(a.prev, a, a.next) < 0 ?
+        area(a, b, a.next) >= 0 && area(a, a.prev, b) >= 0 :
+        area(a, b, a.prev) < 0 || area(a, a.next, b) < 0;
+}
+
+// check if the middle point of a polygon diagonal is inside the polygon
+function middleInside(a, b) {
+    var p = a,
+        inside = false,
+        px = (a.x + b.x) / 2,
+        py = (a.y + b.y) / 2;
+    do {
+        if (((p.y > py) !== (p.next.y > py)) && (px < (p.next.x - p.x) * (py - p.y) / (p.next.y - p.y) + p.x))
+            inside = !inside;
+        p = p.next;
+    } while (p !== a);
+
+    return inside;
+}
+
+// link two polygon vertices with a bridge; if the vertices belong to the same ring, it splits polygon into two;
+// if one belongs to the outer ring and another to a hole, it merges it into a single ring
+function splitPolygon(a, b) {
+    var a2 = new Node(a.i, a.x, a.y),
+        b2 = new Node(b.i, b.x, b.y),
+        an = a.next,
+        bp = b.prev;
+
+    a.next = b;
+    b.prev = a;
+
+    a2.next = an;
+    an.prev = a2;
+
+    b2.next = a2;
+    a2.prev = b2;
+
+    bp.next = b2;
+    b2.prev = bp;
+
+    return b2;
+}
+
+// create a node and optionally link it with previous one (in a circular doubly linked list)
+function insertNode(i, x, y, last) {
+    var p = new Node(i, x, y);
+
+    if (!last) {
+        p.prev = p;
+        p.next = p;
+
+    } else {
+        p.next = last.next;
+        p.prev = last;
+        last.next.prev = p;
+        last.next = p;
+    }
+    return p;
+}
+
+function removeNode(p) {
+    p.next.prev = p.prev;
+    p.prev.next = p.next;
+
+    if (p.prevZ) p.prevZ.nextZ = p.nextZ;
+    if (p.nextZ) p.nextZ.prevZ = p.prevZ;
+}
+
+function Node(i, x, y) {
+    // vertice index in coordinates array
+    this.i = i;
+
+    // vertex coordinates
+    this.x = x;
+    this.y = y;
+
+    // previous and next vertice nodes in a polygon ring
+    this.prev = null;
+    this.next = null;
+
+    // z-order curve value
+    this.z = null;
+
+    // previous and next nodes in z-order
+    this.prevZ = null;
+    this.nextZ = null;
+
+    // indicates whether this is a steiner point
+    this.steiner = false;
+}
+
+// return a percentage difference between the polygon area and its triangulation area;
+// used to verify correctness of triangulation
+earcut.deviation = function (data, holeIndices, dim, triangles) {
+    var hasHoles = holeIndices && holeIndices.length;
+    var outerLen = hasHoles ? holeIndices[0] * dim : data.length;
+
+    var polygonArea = Math.abs(signedArea(data, 0, outerLen, dim));
+    if (hasHoles) {
+        for (var i = 0, len = holeIndices.length; i < len; i++) {
+            var start = holeIndices[i] * dim;
+            var end = i < len - 1 ? holeIndices[i + 1] * dim : data.length;
+            polygonArea -= Math.abs(signedArea(data, start, end, dim));
+        }
+    }
+
+    var trianglesArea = 0;
+    for (i = 0; i < triangles.length; i += 3) {
+        var a = triangles[i] * dim;
+        var b = triangles[i + 1] * dim;
+        var c = triangles[i + 2] * dim;
+        trianglesArea += Math.abs(
+            (data[a] - data[c]) * (data[b + 1] - data[a + 1]) -
+            (data[a] - data[b]) * (data[c + 1] - data[a + 1]));
+    }
+
+    return polygonArea === 0 && trianglesArea === 0 ? 0 :
+        Math.abs((trianglesArea - polygonArea) / polygonArea);
+};
+
+function signedArea(data, start, end, dim) {
+    var sum = 0;
+    for (var i = start, j = end - dim; i < end; i += dim) {
+        sum += (data[j] - data[i]) * (data[i + 1] + data[j + 1]);
+        j = i;
+    }
+    return sum;
+}
+
+// turn a polygon in a multi-dimensional array form (e.g. as in GeoJSON) into a form Earcut accepts
+earcut.flatten = function (data) {
+    var dim = data[0][0].length,
+        result = {vertices: [], holes: [], dimensions: dim},
+        holeIndex = 0;
+
+    for (var i = 0; i < data.length; i++) {
+        for (var j = 0; j < data[i].length; j++) {
+            for (var d = 0; d < dim; d++) result.vertices.push(data[i][j][d]);
+        }
+        if (i > 0) {
+            holeIndex += data[i - 1].length;
+            result.holes.push(holeIndex);
+        }
+    }
+    return result;
+};
+
+/**
+ * Builds a polygon to draw
+ *
+ * Ignored from docs since it is not directly exposed.
+ *
+ * @ignore
+ * @private
+ * @param {PIXI.WebGLGraphicsData} graphicsData - The graphics object containing all the necessary properties
+ * @param {object} webGLData - an object containing all the webGL-specific information to create this shape
+ */
+function buildPoly(graphicsData, webGLData) {
+    graphicsData.points = graphicsData.shape.points.slice();
+
+    var points = graphicsData.points;
+
+    if (graphicsData.fill && points.length >= 6) {
+        var holeArray = [];
+        // Process holes..
+        var holes = graphicsData.holes;
+
+        for (var i = 0; i < holes.length; i++) {
+            var hole = holes[i];
+
+            holeArray.push(points.length / 2);
+
+            points = points.concat(hole.points);
+        }
+
+        // get first and last point.. figure out the middle!
+        var verts = webGLData.points;
+        var indices = webGLData.indices;
+
+        var length = points.length / 2;
+
+        // sort color
+        var color = hex2rgb(graphicsData.fillStyle);
+        var alpha = graphicsData.fillAlpha;
+        var r = color[0] * alpha;
+        var g = color[1] * alpha;
+        var b = color[2] * alpha;
+
+        var triangles = earcut_1(points, holeArray, 2);
+
+        if (!triangles) {
+            return;
+        }
+
+        var vertPos = verts.length / 6;
+
+        for (var _i = 0; _i < triangles.length; _i += 3) {
+            indices.push(triangles[_i] + vertPos);
+            indices.push(triangles[_i] + vertPos);
+            indices.push(triangles[_i + 1] + vertPos);
+            indices.push(triangles[_i + 2] + vertPos);
+            indices.push(triangles[_i + 2] + vertPos);
+        }
+
+        for (var _i2 = 0; _i2 < length; _i2++) {
+            verts.push(points[_i2 * 2], points[_i2 * 2 + 1], r, g, b, alpha);
+        }
+    }
+
+    if (graphicsData.lineWidth > 0) {
+        buildLine(graphicsData, webGLData);
+    }
+}
+
+/**
+ * Builds a rectangle to draw
+ *
+ * Ignored from docs since it is not directly exposed.
+ *
+ * @ignore
+ * @private
+ * @param {PIXI.WebGLGraphicsData} graphicsData - The graphics object containing all the necessary properties
+ * @param {object} webGLData - an object containing all the webGL-specific information to create this shape
+ */
+function buildRectangle(graphicsData, webGLData) {
+    // --- //
+    // need to convert points to a nice regular data
+    //
+    var rectData = graphicsData.shape;
+    var x = rectData.x;
+    var y = rectData.y;
+    var width = rectData.width;
+    var height = rectData.height;
+
+    if (graphicsData.fill) {
+        var color = hex2rgb(graphicsData.fillStyle);
+        var alpha = graphicsData.fillAlpha;
+
+        var r = color[0] * alpha;
+        var g = color[1] * alpha;
+        var b = color[2] * alpha;
+
+        var verts = webGLData.points;
+        var indices = webGLData.indices;
+
+        var vertPos = verts.length / 6;
+
+        // start
+        verts.push(x, y);
+        verts.push(r, g, b, alpha);
+
+        verts.push(x + width, y);
+        verts.push(r, g, b, alpha);
+
+        verts.push(x, y + height);
+        verts.push(r, g, b, alpha);
+
+        verts.push(x + width, y + height);
+        verts.push(r, g, b, alpha);
+
+        // insert 2 dead triangles..
+        indices.push(vertPos, vertPos, vertPos + 1, vertPos + 2, vertPos + 3, vertPos + 3);
+    }
+
+    if (graphicsData.lineWidth) {
+        var tempPoints = graphicsData.points;
+
+        graphicsData.points = [x, y, x + width, y, x + width, y + height, x, y + height, x, y];
+
+        buildLine(graphicsData, webGLData);
+
+        graphicsData.points = tempPoints;
+    }
+}
+
+/**
+ * Builds a rounded rectangle to draw
+ *
+ * Ignored from docs since it is not directly exposed.
+ *
+ * @ignore
+ * @private
+ * @param {PIXI.WebGLGraphicsData} graphicsData - The graphics object containing all the necessary properties
+ * @param {object} webGLData - an object containing all the webGL-specific information to create this shape
+ */
+function buildRoundedRectangle(graphicsData, webGLData) {
+    var rrectData = graphicsData.shape;
+    var x = rrectData.x;
+    var y = rrectData.y;
+    var width = rrectData.width;
+    var height = rrectData.height;
+
+    var radius = rrectData.radius;
+
+    var recPoints = [];
+
+    recPoints.push(x, y + radius);
+    quadraticBezierCurve(x, y + height - radius, x, y + height, x + radius, y + height, recPoints);
+    quadraticBezierCurve(x + width - radius, y + height, x + width, y + height, x + width, y + height - radius, recPoints);
+    quadraticBezierCurve(x + width, y + radius, x + width, y, x + width - radius, y, recPoints);
+    quadraticBezierCurve(x + radius, y, x, y, x, y + radius + 0.0000000001, recPoints);
+
+    // this tiny number deals with the issue that occurs when points overlap and earcut fails to triangulate the item.
+    // TODO - fix this properly, this is not very elegant.. but it works for now.
+
+    if (graphicsData.fill) {
+        var color = hex2rgb(graphicsData.fillStyle);
+        var alpha = graphicsData.fillAlpha;
+
+        var r = color[0] * alpha;
+        var g = color[1] * alpha;
+        var b = color[2] * alpha;
+
+        var verts = webGLData.points;
+        var indices = webGLData.indices;
+
+        var vecPos = verts.length / 6;
+
+        var triangles = earcut_1(recPoints, null, 2);
+
+        for (var i = 0, j = triangles.length; i < j; i += 3) {
+            indices.push(triangles[i] + vecPos);
+            indices.push(triangles[i] + vecPos);
+            indices.push(triangles[i + 1] + vecPos);
+            indices.push(triangles[i + 2] + vecPos);
+            indices.push(triangles[i + 2] + vecPos);
+        }
+
+        for (var _i = 0, _j = recPoints.length; _i < _j; _i++) {
+            verts.push(recPoints[_i], recPoints[++_i], r, g, b, alpha);
+        }
+    }
+
+    if (graphicsData.lineWidth) {
+        var tempPoints = graphicsData.points;
+
+        graphicsData.points = recPoints;
+
+        buildLine(graphicsData, webGLData);
+
+        graphicsData.points = tempPoints;
+    }
+}
+
+/**
+ * Calculate the points for a quadratic bezier curve. (helper function..)
+ * Based on: https://stackoverflow.com/questions/785097/how-do-i-implement-a-bezier-curve-in-c
+ *
+ * Ignored from docs since it is not directly exposed.
+ *
+ * @ignore
+ * @private
+ * @param {number} fromX - Origin point x
+ * @param {number} fromY - Origin point x
+ * @param {number} cpX - Control point x
+ * @param {number} cpY - Control point y
+ * @param {number} toX - Destination point x
+ * @param {number} toY - Destination point y
+ * @param {number[]} [out=[]] - The output array to add points into. If not passed, a new array is created.
+ * @return {number[]} an array of points
+ */
+function quadraticBezierCurve(fromX, fromY, cpX, cpY, toX, toY) {
+    var out = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : [];
+
+    var n = 20;
+    var points = out;
+
+    var xa = 0;
+    var ya = 0;
+    var xb = 0;
+    var yb = 0;
+    var x = 0;
+    var y = 0;
+
+    function getPt(n1, n2, perc) {
+        var diff = n2 - n1;
+
+        return n1 + diff * perc;
+    }
+
+    for (var i = 0, j = 0; i <= n; ++i) {
+        j = i / n;
+
+        // The Green Line
+        xa = getPt(fromX, cpX, j);
+        ya = getPt(fromY, cpY, j);
+        xb = getPt(cpX, toX, j);
+        yb = getPt(cpY, toY, j);
+
+        // The Black Dot
+        x = getPt(xa, xb, j);
+        y = getPt(ya, yb, j);
+
+        points.push(x, y);
+    }
+
+    return points;
+}
+
+/**
+ * Builds a circle to draw
+ *
+ * Ignored from docs since it is not directly exposed.
+ *
+ * @ignore
+ * @private
+ * @param {PIXI.WebGLGraphicsData} graphicsData - The graphics object to draw
+ * @param {object} webGLData - an object containing all the webGL-specific information to create this shape
+ */
+function buildCircle(graphicsData, webGLData) {
+    debugger;
+    // need to convert points to a nice regular data
+    var circleData = graphicsData.shape;
+    var x = circleData.x;
+    var y = circleData.y;
+    var width = void 0;
+    var height = void 0;
+
+    // TODO - bit hacky??
+    if (graphicsData.type === SHAPES.CIRC) {
+        width = circleData.radius;
+        height = circleData.radius;
+    } else {
+        width = circleData.width;
+        height = circleData.height;
+    }
+
+    var totalSegs = Math.floor(30 * Math.sqrt(circleData.radius)) || Math.floor(15 * Math.sqrt(circleData.width + circleData.height));
+
+    var seg = Math.PI * 2 / totalSegs;
+
+    if (graphicsData.fill) {
+        var color = hex2rgb(graphicsData.fillStyle);
+        var alpha = graphicsData.fillAlpha;
+
+        var r = color[0] * alpha;
+        var g = color[1] * alpha;
+        var b = color[2] * alpha;
+
+        var verts = webGLData.points;
+        var indices = webGLData.indices;
+
+        var vecPos = verts.length / 6;
+
+        indices.push(vecPos);
+
+        for (var i = 0; i < totalSegs + 1; i++) {
+            verts.push(x, y, r, g, b, alpha);
+
+            verts.push(x + Math.sin(seg * i) * width, y + Math.cos(seg * i) * height, r, g, b, alpha);
+
+            indices.push(vecPos++, vecPos++);
+        }
+
+        indices.push(vecPos - 1);
+    }
+
+    if (graphicsData.lineWidth) {
+        var tempPoints = graphicsData.points;
+
+        graphicsData.points = [];
+
+        for (var _i = 0; _i < totalSegs + 1; _i++) {
+            graphicsData.points.push(x + Math.sin(seg * _i) * width, y + Math.cos(seg * _i) * height);
+        }
+
+        buildLine(graphicsData, webGLData);
+
+        graphicsData.points = tempPoints;
+    }
+}
+
+var GraphicsRenderer = function (_ObjectRenderer) {
+    inherits(GraphicsRenderer, _ObjectRenderer);
+
+    /**
+     * @param {PIXI.WebGLRenderer} renderer - The renderer this object renderer works for.
+     */
+    function GraphicsRenderer(renderer) {
+        classCallCheck(this, GraphicsRenderer);
+
+        var _this = possibleConstructorReturn(this, (GraphicsRenderer.__proto__ || Object.getPrototypeOf(GraphicsRenderer)).call(this, renderer));
+
+        _this.graphicsDataPool = [];
+
+        _this.primitiveShader = null;
+
+        _this.gl = renderer.gl;
+
+        // easy access!
+        _this.CONTEXT_UID = 0;
+        return _this;
+    }
+
+    /**
+     * Called when there is a WebGL context change
+     *
+     * @private
+     *
+     */
+
+
+    createClass(GraphicsRenderer, [{
+        key: 'onContextChange',
+        value: function onContextChange() {
+            this.gl = this.renderer.gl;
+            this.CONTEXT_UID = this.renderer.CONTEXT_UID;
+            this.primitiveShader = new PrimitiveShader(this.gl);
+        }
+
+        /**
+         * Destroys this renderer.
+         *
+         */
+
+    }, {
+        key: 'destroy',
+        value: function destroy() {
+            ObjectRenderer.prototype.destroy.call(this);
+
+            for (var i = 0; i < this.graphicsDataPool.length; ++i) {
+                this.graphicsDataPool[i].destroy();
+            }
+
+            this.graphicsDataPool = null;
+        }
+
+        /**
+         * Renders a graphics object.
+         *
+         * @param {PIXI.Graphics} graphics - The graphics object to render.
+         */
+
+    }, {
+        key: 'render',
+        value: function render(displayObject) {
+            var graphics = displayObject.graphics;
+            var renderer = this.renderer;
+            var gl = renderer.gl;
+
+            var webGLData = void 0;
+            var webGL = graphics._webGL[this.CONTEXT_UID];
+
+            if (!webGL || graphics.dirty !== webGL.dirty) {
+                this.updateGraphics(graphics);
+
+                webGL = graphics._webGL[this.CONTEXT_UID];
+            }
+
+            // This  could be speeded up for sure!
+            var shader = this.primitiveShader;
+
+            renderer.bindShader(shader);
+
+            for (var i = 0, n = webGL.data.length; i < n; i++) {
+                webGLData = webGL.data[i];
+                var shaderTemp = webGLData.shader;
+
+                renderer.bindShader(shaderTemp);
+
+                var globalMatrix = displayObject.getConcatenatedMatrix().toArray(true);
+                shaderTemp.uniforms.translationMatrix = globalMatrix;
+                shaderTemp.uniforms.tint = hex2rgb(graphics.tint);
+                shaderTemp.uniforms.alpha = graphics.worldAlpha;
+
+                renderer.bindVao(webGLData.vao);
+                webGLData.vao.draw(gl.TRIANGLE_STRIP, webGLData.indices.length);
+            }
+        }
+
+        /**
+         * Updates the graphics object
+         *
+         * @private
+         * @param {PIXI.Graphics} graphics - The graphics object to update
+         */
+
+    }, {
+        key: 'updateGraphics',
+        value: function updateGraphics(graphics) {
+            var gl = this.renderer.gl;
+
+            // get the contexts graphics object
+            var webGL = graphics._webGL[this.CONTEXT_UID];
+
+            // if the graphics object does not exist in the webGL context time to create it!
+            if (!webGL) {
+                webGL = graphics._webGL[this.CONTEXT_UID] = { lastIndex: 0, data: [], gl: gl, clearDirty: -1, dirty: -1 };
+            }
+
+            // flag the graphics as not dirty as we are about to update it...
+            webGL.dirty = graphics.dirty;
+
+            // if the user cleared the graphics object we will need to clear every object
+            if (graphics.clearDirty !== webGL.clearDirty) {
+                webGL.clearDirty = graphics.clearDirty;
+
+                // loop through and return all the webGLDatas to the object pool so than can be reused later on
+                for (var i = 0; i < webGL.data.length; i++) {
+                    this.graphicsDataPool.push(webGL.data[i]);
+                }
+
+                // clear the array and reset the index..
+                webGL.data.length = 0;
+                webGL.lastIndex = 0;
+            }
+
+            var webGLData = void 0;
+
+            // loop through the graphics datas and construct each one..
+            // if the object is a complex fill then the new stencil buffer technique will be used
+            // other wise graphics objects will be pushed into a batch..
+            for (var _i = webGL.lastIndex; _i < graphics.graphicsData.length; _i++) {
+                var data = graphics.graphicsData[_i];
+
+                // TODO - this can be simplified
+                webGLData = this.getWebGLData(webGL, 0);
+
+                if (data.type === SHAPES.POLY) {
+                    buildPoly(data, webGLData);
+                }
+                if (data.type === SHAPES.RECT) {
+                    buildRectangle(data, webGLData);
+                } else if (data.type === SHAPES.CIRC || data.type === SHAPES.ELIP) {
+                    buildCircle(data, webGLData);
+                } else if (data.type === SHAPES.RREC) {
+                    buildRoundedRectangle(data, webGLData);
+                }
+
+                webGL.lastIndex++;
+            }
+
+            this.renderer.bindVao(null);
+
+            // upload all the dirty data...
+            for (var _i2 = 0; _i2 < webGL.data.length; _i2++) {
+                webGLData = webGL.data[_i2];
+
+                if (webGLData.dirty) {
+                    webGLData.upload();
+                }
+            }
+        }
+
+        /**
+         *
+         * @private
+         * @param {WebGLRenderingContext} gl - the current WebGL drawing context
+         * @param {number} type - TODO @Alvin
+         * @return {*} TODO
+         */
+
+    }, {
+        key: 'getWebGLData',
+        value: function getWebGLData(gl, type) {
+            var webGLData = gl.data[gl.data.length - 1];
+
+            if (!webGLData || webGLData.points.length > 320000) {
+                webGLData = this.graphicsDataPool.pop() || new WebGLGraphicsData(this.renderer.gl, this.primitiveShader, this.renderer.state.attribsState);
+
+                webGLData.reset(type);
+                gl.data.push(webGLData);
+            }
+
+            webGLData.dirty = true;
+
+            return webGLData;
+        }
+    }]);
+    return GraphicsRenderer;
+}(ObjectRenderer);
+
+/**
+ * Generic Mask Stack data structure.
+ *
+ * @memberof PIXI
+ * @function mapWebGLDrawModesToPixi
+ * @private
+ * @param {WebGLRenderingContext} gl - The current WebGL drawing context
+ * @param {object} [object={}] - The object to map into
+ * @return {object} The mapped draw modes.
+ */
+function mapWebGLDrawModesToPixi(gl) {
+  var object = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+  object[DRAW_MODES.POINTS] = gl.POINTS;
+  object[DRAW_MODES.LINES] = gl.LINES;
+  object[DRAW_MODES.LINE_LOOP] = gl.LINE_LOOP;
+  object[DRAW_MODES.LINE_STRIP] = gl.LINE_STRIP;
+  object[DRAW_MODES.TRIANGLES] = gl.TRIANGLES;
+  object[DRAW_MODES.TRIANGLE_STRIP] = gl.TRIANGLE_STRIP;
+  object[DRAW_MODES.TRIANGLE_FAN] = gl.TRIANGLE_FAN;
+
+  return object;
+}
+
+var CONTEXT_UID = 0;
+
+var WebGLStageRenderer = function () {
+    function WebGLStageRenderer(stage, app) {
+        var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+        classCallCheck(this, WebGLStageRenderer);
+
+        this.type = RENDERER_TYPE.WEBGL;
+        this.width = app.width;
+        this.height = app.height;
+        this.canvas = stage.canvas;
+
+        /*
+        * 处理上下文丢失和恢复
+        * 你的WebGL程序必须有一个用于处理上下文丢失（Lost Context）的机制
+        * 导致上下文丢失的原因：
+        * 移动设备电力不足
+        * 其他外因导致GPU重置
+        * 当浏览器标签页处于后台时，浏览器抛弃了上下文
+        * 耗费资源过多，浏览器抛弃了上下文
+        */
+        this.handleContextLost = this.handleContextLost.bind(this);
+        this.handleContextRestored = this.handleContextRestored.bind(this);
+        this.canvas.addEventListener('webglcontextlost', this.handleContextLost, false);
+        this.canvas.addEventListener('webglcontextrestored', this.handleContextRestored, false);
+
+        this._backgroundColor = 0x000000;
+        this._backgroundColorRgba = [0, 0, 0, 0];
+        this._backgroundColorString = '#000000';
+        this.backgroundColor = options.backgroundColor || this._backgroundColor;
+
+        this._contextOptions = {
+            alpha: options.transparent,
+            antialias: options.antialias,
+            premultipliedAlpha: options.transparent && options.transparent !== 'notMultiplied',
+            stencil: true,
+            preserveDrawingBuffer: options.preserveDrawingBuffer
+        };
+
+        this.emptyRenderer = new ObjectRenderer(this);
+
+        this.currentRenderer = this.emptyRenderer;
+
+        this.gl = options.context || index.createContext(this.canvas, this._contextOptions);
+
+        this.CONTEXT_UID = CONTEXT_UID++;
+
+        this.state = new WebGLState(this.gl);
+
+        this.renderingToScreen = true;
+
+        /**
+         * Holds the current shader
+         *
+         * @member {PIXI.Shader}
+         */
+        this._activeShader = null;
+
+        this._activeVao = null;
+
+        /**
+         * Holds the current render target
+         *
+         * @member {PIXI.RenderTarget}
+         */
+        this._activeRenderTarget = null;
+
+        // map some webGL blend and drawmodes..
+        this.drawModes = mapWebGLDrawModesToPixi(this.gl);
+
+        this.webglGR = new GraphicsRenderer(this);
+
+        this._initContext();
+    }
+
+    /**
+     * Creates the WebGL context
+     *
+     * @private
+     */
+
+
+    createClass(WebGLStageRenderer, [{
+        key: '_initContext',
+        value: function _initContext() {
+            var gl = this.gl;
+
+            // restore a context if it was previously lost
+            if (gl.isContextLost() && gl.getExtension('WEBGL_lose_context')) {
+                gl.getExtension('WEBGL_lose_context').restoreContext();
+            }
+
+            this.state.resetToDefault();
+
+            this.rootRenderTarget = new RenderTarget(gl, this.width, this.height, null, settings.RESOLUTION, true);
+            this.rootRenderTarget.clearColor = this._backgroundColorRgba;
+
+            this.bindRenderTarget(this.rootRenderTarget);
+
+            this.webglGR.onContextChange();
+        }
+    }, {
+        key: 'render',
+        value: function render(displayObject) {
+            // can be handy to know!
+            this.renderingToScreen = true;
+
+            if (!this.gl || this.gl.isContextLost()) {
+                return;
+            }
+
+            this.currentRenderer.start();
+
+            this._activeRenderTarget.clear();
+
+            this.webglGR.render(displayObject);
+            //displayObject.renderWebGL(this);
+
+            // apply transform..
+            this.currentRenderer.flush();
+        }
+
+        /**
+         * Changes the current renderer to the one given in parameter
+         *
+         * @param {PIXI.ObjectRenderer} objectRenderer - The object renderer to use.
+         */
+
+    }, {
+        key: 'setObjectRenderer',
+        value: function setObjectRenderer(objectRenderer) {
+            if (this.currentRenderer === objectRenderer) {
+                return;
+            }
+
+            this.currentRenderer.stop();
+            this.currentRenderer = objectRenderer;
+            this.currentRenderer.start();
+        }
+
+        /**
+         * This should be called if you wish to do some custom rendering
+         * It will basically render anything that may be batched up such as sprites
+         *
+         */
+
+    }, {
+        key: 'flush',
+        value: function flush() {
+            this.setObjectRenderer(this.emptyRenderer);
+        }
+
+        /**
+         * Resizes the webGL view to the specified width and height.
+         *
+         * @param {number} width - the new width of the webGL view
+         * @param {number} height - the new height of the webGL view
+         */
+
+    }, {
+        key: 'resize',
+        value: function resize(width, height) {
+            //  if(width * this.resolution === this.width && height * this.resolution === this.height)return;
+
+            this.rootRenderTarget.resize(width, height);
+
+            if (this._activeRenderTarget === this.rootRenderTarget) {
+                this.rootRenderTarget.activate();
+
+                if (this._activeShader) {
+                    this._activeShader.uniforms.projectionMatrix = this.rootRenderTarget.projectionMatrix.toArray(true);
+                }
+            }
+        }
+
+        /**
+         * Erases the active render target and fills the drawing area with a colour
+         *
+         * @param {number} [clearColor] - The colour
+         */
+
+    }, {
+        key: 'clear',
+        value: function clear(clearColor) {
+            this._activeRenderTarget.clear(clearColor);
+        }
+
+        /**
+         * Sets the transform of the active render target to the given matrix
+         *
+         * @param {PIXI.Matrix} matrix - The transformation matrix
+         */
+
+    }, {
+        key: 'setTransform',
+        value: function setTransform(matrix) {
+            this._activeRenderTarget.transform = matrix;
+        }
+
+        /**
+         * Changes the current render target to the one given in parameter
+         *
+         * @param {PIXI.RenderTarget} renderTarget - the new render target
+         * @return {PIXI.WebGLRenderer} Returns itself.
+         */
+
+    }, {
+        key: 'bindRenderTarget',
+        value: function bindRenderTarget(renderTarget) {
+            if (renderTarget !== this._activeRenderTarget) {
+                this._activeRenderTarget = renderTarget;
+                renderTarget.activate();
+
+                if (this._activeShader) {
+                    this._activeShader.uniforms.projectionMatrix = renderTarget.projectionMatrix.toArray(true);
+                }
+            }
+            return this;
+        }
+
+        /**
+         * Changes the current shader to the one given in parameter
+         *
+         * @param {PIXI.Shader} shader - the new shader
+         * @return {PIXI.WebGLRenderer} Returns itself.
+         */
+
+    }, {
+        key: 'bindShader',
+        value: function bindShader(shader) {
+            // TODO cache
+            if (this._activeShader !== shader) {
+                this._activeShader = shader;
+                shader.bind();
+
+                // automatically set the projection matrix
+                shader.uniforms.projectionMatrix = this._activeRenderTarget.projectionMatrix.toArray(true);
+            }
+
+            return this;
+        }
+
+        /**
+         * Creates a new VAO from this renderer's context and state.
+         *
+         * @return {VertexArrayObject} The new VAO.
+         */
+
+    }, {
+        key: 'createVao',
+        value: function createVao() {
+            return new index.VertexArrayObject(this.gl, this.state.attribState);
+        }
+
+        /**
+         * Changes the current Vao to the one given in parameter
+         *
+         * @param {PIXI.VertexArrayObject} vao - the new Vao
+         * @return {PIXI.WebGLRenderer} Returns itself.
+         */
+
+    }, {
+        key: 'bindVao',
+        value: function bindVao(vao) {
+            if (this._activeVao === vao) {
+                return this;
+            }
+
+            if (vao) {
+                vao.bind();
+            } else if (this._activeVao) {
+                // TODO this should always be true i think?
+                this._activeVao.unbind();
+            }
+
+            this._activeVao = vao;
+
+            return this;
+        }
+
+        /**
+         * Resets the WebGL state so you can render things however you fancy!
+         *
+         * @return {PIXI.WebGLRenderer} Returns itself.
+         */
+
+    }, {
+        key: 'reset',
+        value: function reset() {
+            this.setObjectRenderer(this.emptyRenderer);
+
+            this._activeShader = null;
+            this._activeRenderTarget = this.rootRenderTarget;
+
+            // bind the main frame buffer (the screen);
+            this.rootRenderTarget.activate();
+
+            this.state.resetToDefault();
+
+            return this;
+        }
+
+        /**
+         * Handles a lost webgl context
+         *
+         * @private
+         * @param {WebGLContextEvent} event - The context lost event.
+         */
+
+    }, {
+        key: 'handleContextLost',
+        value: function handleContextLost(event) {
+            event.preventDefault();
+        }
+
+        /**
+         * Handles a restored webgl context
+         *
+         * @private
+         */
+
+    }, {
+        key: 'handleContextRestored',
+        value: function handleContextRestored() {
+            this._initContext();
+            this.textureManager.removeAll();
+        }
+
+        /**
+         * Removes everything from the renderer (event listeners, spritebatch, etc...)
+         *
+         * @param {boolean} [removeView=false] - Removes the Canvas element from the DOM.
+         *  See: https://github.com/pixijs/pixi.js/issues/2233
+         */
+
+    }, {
+        key: 'destroy',
+        value: function destroy(removeView) {
+            this.destroyPlugins();
+
+            // remove listeners
+            this.view.removeEventListener('webglcontextlost', this.handleContextLost);
+            this.view.removeEventListener('webglcontextrestored', this.handleContextRestored);
+
+            // call base destroy
+            get(WebGLStageRenderer.prototype.__proto__ || Object.getPrototypeOf(WebGLStageRenderer.prototype), 'destroy', this).call(this, removeView);
+
+            this.uid = 0;
+
+            this.currentRenderer = null;
+
+            this.handleContextLost = null;
+            this.handleContextRestored = null;
+
+            this._contextOptions = null;
+            this.gl.useProgram(null);
+
+            if (this.gl.getExtension('WEBGL_lose_context')) {
+                this.gl.getExtension('WEBGL_lose_context').loseContext();
+            }
+
+            this.gl = null;
+        }
+    }]);
+    return WebGLStageRenderer;
+}();
+
+var WebGLRenderer = function (_SystemRenderer) {
+    inherits(WebGLRenderer, _SystemRenderer);
+
+    function WebGLRenderer(app) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+        classCallCheck(this, WebGLRenderer);
+        return possibleConstructorReturn(this, (WebGLRenderer.__proto__ || Object.getPrototypeOf(WebGLRenderer)).call(this, RENDERER_TYPE.CANVAS, app, options));
+    }
+
+    createClass(WebGLRenderer, [{
+        key: 'render',
+        value: function render(app) {
+            var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+            var me = this;
+
+            me.app = app;
+            _$1.extend(this.options, options);
+
+            _$1.each(_$1.values(app.convertStages), function (convertStage) {
+                me.renderStage(convertStage.stage);
+            });
+
+            app.convertStages = {};
+        }
+    }, {
+        key: 'renderStage',
+        value: function renderStage(stage) {
+            if (!stage.webGLStageRenderer) {
+                stage.webGLStageRenderer = new WebGLStageRenderer(stage, app, this.options);
+            }
+            stage.stageRending = true;
+            this._clear(stage);
+            this._render(stage);
+            stage.stageRending = false;
+        }
+    }, {
+        key: '_render',
+        value: function _render(stage, displayObject) {
+            if (!displayObject) {
+                displayObject = stage;
+            }
+
+            if (!displayObject.context.visible || displayObject.context.globalAlpha <= 0) {
+                return;
+            }
+
+            //if( displayObject.graphics ){
+            //    stage.webGLRenderer.render( displayObject );
+            //};
+            if (displayObject.graphics) {
+                stage.webGLStageRenderer.render(displayObject);
+            }
+
+            if (displayObject.children) {
+                for (var i = 0, len = displayObject.children.length; i < len; i++) {
+                    this._render(stage, displayObject.children[i]);
+                }
+            }
+        }
+    }, {
+        key: '_clear',
+        value: function _clear(stage) {
+            //TODO:这里有点 奇怪， 之前的版本clearRect的时候，不需要 *RESOLUTION（分辨率）
+            stage.webGLStageRenderer.clear();
+        }
+    }]);
+    return WebGLRenderer;
+}(SystemRenderer);
+
+function autoRenderer(app, options) {
+    if (!app.noWebGL && Utils.isWebGLSupported()) {
+        return new WebGLRenderer(app, options);
+    }
+
+    return new CanvasRenderer(app, options);
+}
+
+/**
+ * Application {{PKG_VERSION}}
+ *
+ * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
+ *
+ * 主引擎 类
+ *
+ * 负责所有canvas的层级管理，和心跳机制的实现,捕获到心跳包后 
+ * 分发到对应的stage(canvas)来绘制对应的改动
+ * 然后 默认有实现了shape的 mouseover  mouseout  drag 事件
+ *
+ **/
+
+//utils
+var Application = function Application(opt) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+    this.type = "canvax";
+    this._cid = new Date().getTime() + "_" + Math.floor(Math.random() * 100);
+
+    this.el = $.query(opt.el);
+
+    this.width = parseInt("width" in opt || this.el.offsetWidth, 10);
+    this.height = parseInt("height" in opt || this.el.offsetHeight, 10);
+
+    var viewObj = $.createView(this.width, this.height, this._cid);
+    this.view = viewObj.view;
+    this.stage_c = viewObj.stage_c;
+    this.dom_c = viewObj.dom_c;
+
+    this.el.innerHTML = "";
+    this.el.appendChild(this.view);
+
+    this.viewOffset = $.offset(this.view);
+    this.lastGetRO = 0; //最后一次获取 viewOffset 的时间
+
+    this.noWebGL = opt.noWebGL;
+    this.renderer = autoRenderer(this, options);
+
+    this.event = null;
+
+    this._bufferStage = null;
+
+    //是否阻止浏览器默认事件的执行
+    this.preventDefault = true;
+    if (opt.preventDefault === false) {
+        this.preventDefault = false;
+    }
+
+    //该属性在systenRender里面操作，每帧由心跳上报的 需要重绘的stages 列表
+    this.convertStages = {};
+
+    Application.superclass.constructor.apply(this, arguments);
+};
+
+Utils.creatClass(Application, DisplayObjectContainer, {
+    init: function init() {
+        this.context.width = this.width;
+        this.context.height = this.height;
+
+        //然后创建一个用于绘制激活 shape 的 stage 到activation
+        this._creatHoverStage();
+
+        //创建一个如果要用像素检测的时候的容器
+        this._createPixelContext();
+    },
+    registEvent: function registEvent(opt) {
+        //初始化事件委托到root元素上面
+        this.event = new EventHandler(this, opt);
+        this.event.init();
+        return this.event;
+    },
+    resize: function resize(opt) {
+        //重新设置坐标系统 高宽 等。
+        this.width = parseInt(opt && "width" in opt || this.el.offsetWidth, 10);
+        this.height = parseInt(opt && "height" in opt || this.el.offsetHeight, 10);
+
+        this.view.style.width = this.width + "px";
+        this.view.style.height = this.height + "px";
+
+        this.viewOffset = $.offset(this.view);
+        this._notWatch = true;
+        this.context.width = this.width;
+        this.context.height = this.height;
+        this._notWatch = false;
+
+        var me = this;
+        var reSizeCanvas = function reSizeCanvas(ctx) {
+            var canvas = ctx.canvas;
+            canvas.style.width = me.width + "px";
+            canvas.style.height = me.height + "px";
+            canvas.setAttribute("width", me.width * Utils._devicePixelRatio);
+            canvas.setAttribute("height", me.height * Utils._devicePixelRatio);
+
+            //如果是swf的话就还要调用这个方法。
+            if (ctx.resize) {
+                ctx.resize(me.width, me.height);
+            }
+        };
+        _$1.each(this.children, function (s, i) {
+            s._notWatch = true;
+            s.context.width = me.width;
+            s.context.height = me.height;
+            reSizeCanvas(s.canvas);
+            s._notWatch = false;
+        });
+
+        this.dom_c.style.width = this.width + "px";
+        this.dom_c.style.height = this.height + "px";
+
+        this.heartBeat();
+    },
+    getHoverStage: function getHoverStage() {
+        return this._bufferStage;
+    },
+    _creatHoverStage: function _creatHoverStage() {
+        //TODO:创建stage的时候一定要传入width height  两个参数
+        this._bufferStage = new Stage({
+            id: "activCanvas" + new Date().getTime(),
+            context: {
+                width: this.context.width,
+                height: this.context.height
+            }
+        });
+        //该stage不参与事件检测
+        this._bufferStage._eventEnabled = false;
+        this.addChild(this._bufferStage);
+    },
+    /**
+     * 用来检测文本width height 
+     * @return {Object} 上下文
+    */
+    _createPixelContext: function _createPixelContext() {
+        var _pixelCanvas = $.query("_pixelCanvas");
+        if (!_pixelCanvas) {
+            _pixelCanvas = $.createCanvas(0, 0, "_pixelCanvas");
+        } else {
+            //如果又的话 就不需要在创建了
+            return;
+        }
+        document.body.appendChild(_pixelCanvas);
+        Utils.initElement(_pixelCanvas);
+        if (Utils.canvasSupport()) {
+            //canvas的话，哪怕是display:none的页可以用来左像素检测和measureText文本width检测
+            _pixelCanvas.style.display = "none";
+        } else {
+            //flashCanvas 的话，swf如果display:none了。就做不了measureText 文本宽度 检测了
+            _pixelCanvas.style.zIndex = -1;
+            _pixelCanvas.style.position = "absolute";
+            _pixelCanvas.style.left = -this.context.width + "px";
+            _pixelCanvas.style.top = -this.context.height + "px";
+            _pixelCanvas.style.visibility = "hidden";
+        }
+        Utils._pixelCtx = _pixelCanvas.getContext('2d');
+    },
+
+    updateViewOffset: function updateViewOffset() {
+        var now = new Date().getTime();
+        if (now - this.lastGetRO > 1000) {
+            this.viewOffset = $.offset(this.view);
+            this.lastGetRO = now;
+        }
+    },
+
+    _afterAddChild: function _afterAddChild(stage, index) {
+        var canvas;
+
+        if (!stage.canvas) {
+            canvas = $.createCanvas(this.context.width, this.context.height, stage.id);
+        } else {
+            canvas = stage.canvas;
+        }
+
+        if (this.children.length == 1) {
+            this.stage_c.appendChild(canvas);
+        } else if (this.children.length > 1) {
+            if (index == undefined) {
+                //如果没有指定位置，那么就放到_bufferStage的下面。
+                this.stage_c.insertBefore(canvas, this._bufferStage.canvas);
+            } else {
+                //如果有指定的位置，那么就指定的位置来
+                if (index >= this.children.length - 1) {
+                    this.stage_c.appendChild(canvas);
+                } else {
+                    this.stage_c.insertBefore(canvas, this.children[index].canvas);
+                }
+            }
+        }
+
+        Utils.initElement(canvas);
+        stage.initStage(canvas, this.context.width, this.context.height);
+    },
+    _afterDelChild: function _afterDelChild(stage) {
+        this.stage_c.removeChild(stage.canvas);
+    },
+
+    heartBeat: function heartBeat(opt) {
+        this.renderer.heartBeat(opt);
+    }
+});
+
+/**
+ * Canvax
+ *
+ * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
+ *
+ * 模拟as3 中 的sprite类，目前还只是个简单的容易。
+ */
+var Sprite = function Sprite() {
+    this.type = "sprite";
+    Sprite.superclass.constructor.apply(this, arguments);
+};
+
+Utils.creatClass(Sprite, DisplayObjectContainer, {
+    init: function init() {}
+});
+
+var GraphicsData = function () {
+    function GraphicsData(lineWidth, strokeStyle, lineAlpha, fillStyle, fillAlpha, shape) {
+        classCallCheck(this, GraphicsData);
+
+        this.lineWidth = lineWidth;
+        this.strokeStyle = strokeStyle;
+        this.lineAlpha = lineAlpha;
+
+        this.fillStyle = fillStyle;
+        this.fillAlpha = fillAlpha;
+
+        this.shape = shape;
+        this.type = shape.type;
+
+        this.holes = [];
+
+        //这两个可以被后续修改， 具有一票否决权
+        //比如polygon的 虚线描边。必须在fill的poly上面设置line为false
+        this.fill = true;
+        this.line = true;
+    }
+
+    createClass(GraphicsData, [{
+        key: "clone",
+        value: function clone() {
+            return new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, this.shape);
+        }
+    }, {
+        key: "addHole",
+        value: function addHole(shape) {
+            this.holes.push(shape);
+        }
+
+        //从宿主graphics中同步最新的style属性
+
+    }, {
+        key: "synsStyle",
+        value: function synsStyle(graphics) {
+            //从shape中把绘图需要的style属性同步过来
+            this.lineWidth = graphics.lineWidth;
+            this.strokeStyle = graphics.strokeStyle;
+            this.lineAlpha = graphics.lineAlpha;
+
+            this.fillStyle = graphics.fillStyle;
+            this.fillAlpha = graphics.fillAlpha;
+        }
+    }, {
+        key: "hasFill",
+        value: function hasFill() {
+            return this.fillStyle && this.fill && this.shape.closed !== undefined && this.shape.closed && this.fillAlpha;
+        }
+    }, {
+        key: "hasLine",
+        value: function hasLine() {
+            return this.strokeStyle && this.lineWidth && this.lineAlpha && this.line;
+        }
+    }, {
+        key: "destroy",
+        value: function destroy() {
+            this.shape = null;
+            this.holes = null;
+        }
+    }]);
+    return GraphicsData;
+}();
+
 /**
  * Calculate the points for a bezier curve and then draws it.
  *
@@ -5653,6 +10215,9 @@ var Graphics = function () {
         this.synsStyle();
 
         this.dirty = 0; //脏数据
+        this._webGL = {};
+        this.worldAlpha = 1;
+        this.tint = 0xFFFFFF; //目标对象附加颜色
     }
 
     createClass(Graphics, [{
@@ -6138,9 +10703,15 @@ var Graphics = function () {
             for (var i = 0; i < this.graphicsData.length; ++i) {
                 this.graphicsData[i].destroy();
             }
+            for (var id in this._webgl) {
+                for (var j = 0; j < this._webgl[id].data.length; ++j) {
+                    this._webgl[id].data[j].destroy();
+                }
+            }
 
             this.graphicsData = null;
             this.currentPath = null;
+            this._webgl = null;
         }
     }]);
     return Graphics;
