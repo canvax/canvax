@@ -4,8 +4,15 @@
  *
  * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
  *
+ * | a | c | tx|
+ * | b | d | ty|
+ * | 0 | 0 | 1 |
+ *
+ * @class
+ * @memberof PIXI
+ *
+ *
  * Matrix 矩阵库 用于整个系统的几何变换计算
- * code from http://evanw.github.io/lightgl.js/docs/matrix.html
  */
 
 var Matrix = function(a, b, c, d, tx, ty){
@@ -15,6 +22,7 @@ var Matrix = function(a, b, c, d, tx, ty){
     this.d = d != undefined ? d : 1;
     this.tx = tx != undefined ? tx : 0;
     this.ty = ty != undefined ? ty : 0;
+    this.array = null;
 };
 
 Matrix.prototype = {

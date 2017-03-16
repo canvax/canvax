@@ -2,10 +2,9 @@ import RenderTarget from './utils/RenderTarget';
 import ObjectRenderer from './utils/ObjectRenderer';
 import WebGLState from './WebGLState';
 import glCore from 'pixi-gl-core';
-import { RENDERER_TYPE } from '../../const';
+import { RENDERER_TYPE , DRAW_MODES} from '../../const';
 import settings from '../../settings';
 import GraphicsRenderer from '../../graphics/webgl/GraphicsRenderer';
-import mapWebGLDrawModesToPixi from './utils/mapWebGLDrawModesToPixi';
 
 let CONTEXT_UID = 0;
 
@@ -79,7 +78,7 @@ export default class WebGLStageRenderer
         
 
         // map some webGL blend and drawmodes..
-        this.drawModes = mapWebGLDrawModesToPixi(this.gl);
+        this.drawModes = this.mapWebGLDrawModes();
 
         this.webglGR = new GraphicsRenderer(this);
 
@@ -196,16 +195,6 @@ export default class WebGLStageRenderer
     }
 
     /**
-     * Sets the transform of the active render target to the given matrix
-     *
-     * @param {PIXI.Matrix} matrix - The transformation matrix
-     */
-    setTransform(matrix)
-    {
-        this._activeRenderTarget.transform = matrix;
-    }
-
-    /**
      * Changes the current render target to the one given in parameter
      *
      * @param {PIXI.RenderTarget} renderTarget - the new render target
@@ -239,7 +228,6 @@ export default class WebGLStageRenderer
         {
             this._activeShader = shader;
             shader.bind();
-
             // automatically set the projection matrix
             shader.uniforms.projectionMatrix = this._activeRenderTarget.projectionMatrix.toArray(true);
         }
@@ -326,6 +314,20 @@ export default class WebGLStageRenderer
         this._initContext();
         this.textureManager.removeAll();
     }
+
+    mapWebGLDrawModes( object={} )
+    {
+        object[DRAW_MODES.POINTS] = this.gl.POINTS;
+        object[DRAW_MODES.LINES] = this.gl.LINES;
+        object[DRAW_MODES.LINE_LOOP] = this.gl.LINE_LOOP;
+        object[DRAW_MODES.LINE_STRIP] = this.gl.LINE_STRIP;
+        object[DRAW_MODES.TRIANGLES] = this.gl.TRIANGLES;
+        object[DRAW_MODES.TRIANGLE_STRIP] = this.gl.TRIANGLE_STRIP;
+        object[DRAW_MODES.TRIANGLE_FAN] = this.gl.TRIANGLE_FAN;
+
+        return object;
+    }
+
 
     /**
      * Removes everything from the renderer (event listeners, spritebatch, etc...)

@@ -1,48 +1,35 @@
-import WebGLManager from '../managers/WebGLManager';
 
-/**
- * Base for a common object renderer that can be used as a system renderer plugin.
- *
- * @class
- * @extends PIXI.WebGLManager
- * @memberof PIXI
- */
-export default class ObjectRenderer extends WebGLManager
+export default class ObjectRenderer
 {
-    /**
-     * Starts the renderer and sets the shader
-     *
-     */
-    start()
+    constructor(renderer)
     {
-        // set the shader..
+        this.renderer = renderer;
     }
 
-    /**
-     * Stops the renderer
-     *
-     */
+    start()
+    {
+        
+    }
+
     stop()
     {
         this.flush();
     }
 
-    /**
-     * Stub method for rendering content and emptying the current batch.
-     *
-     */
     flush()
     {
-        // flush!
+        
     }
 
-    /**
-     * Renders an object
-     *
-     * @param {PIXI.DisplayObject} object - The object to render.
-     */
-    render(object) // eslint-disable-line no-unused-vars
+    destroy()
     {
-        // render the object
+        this.renderer.off('context', this.onContextChange, this);
+
+        this.renderer = null;
+    }
+
+    render(object) 
+    {
+
     }
 }

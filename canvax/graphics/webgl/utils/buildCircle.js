@@ -14,7 +14,7 @@ import { hex2rgb } from '../../../utils/color';
  */
 export default function buildCircle(graphicsData, webGLData)
 {
-    debugger
+    
     // need to convert points to a nice regular data
     const circleData = graphicsData.shape;
     const x = circleData.x;

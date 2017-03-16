@@ -46,9 +46,6 @@ export default class WebGLRenderer extends SystemRenderer
             return;
         };
 
-        //if( displayObject.graphics ){
-        //    stage.webGLRenderer.render( displayObject );
-        //};
         if( displayObject.graphics ){
             stage.webGLStageRenderer.render( displayObject );
         };
@@ -62,7 +59,6 @@ export default class WebGLRenderer extends SystemRenderer
 
     _clear( stage )
     {
-        //TODO:这里有点 奇怪， 之前的版本clearRect的时候，不需要 *RESOLUTION（分辨率）
         stage.webGLStageRenderer.clear();
     }
 }

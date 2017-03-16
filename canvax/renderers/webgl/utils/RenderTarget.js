@@ -1,118 +1,41 @@
-import { Rectangle, Matrix } from '../../../math/index';
+import { Rectangle } from '../../../math/index';
+import Matrix from '../../../geom/Matrix'
 import { SCALE_MODES } from '../../../const';
 import settings from '../../../settings';
 import glCore from 'pixi-gl-core';
 
 const GLFramebuffer = glCore.GLFramebuffer;
 
-/**
- * @class
- * @memberof PIXI
- */
 export default class RenderTarget
 {
-    /**
-     * @param {WebGLRenderingContext} gl - The current WebGL drawing context
-     * @param {number} [width=0] - the horizontal range of the filter
-     * @param {number} [height=0] - the vertical range of the filter
-     * @param {number} [scaleMode=PIXI.settings.SCALE_MODE] - See {@link PIXI.SCALE_MODES} for possible values
-     * @param {number} [resolution=1] - The current resolution / device pixel ratio
-     * @param {boolean} [root=false] - Whether this object is the root element or not
-     */
+
     constructor(gl, width, height, scaleMode, resolution, root)
     {
-        // TODO Resolution could go here ( eg low res blurs )
 
-        /**
-         * The current WebGL drawing context.
-         *
-         * @member {WebGLRenderingContext}
-         */
         this.gl = gl;
 
-        // next time to create a frame buffer and texture
-
-        /**
-         * A frame buffer
-         *
-         * @member {PIXI.glCore.GLFramebuffer}
-         */
+        //framebuffer是WebGL渲染的终点。当你看屏幕时，其他就是在看framebuffer中的内容。
         this.frameBuffer = null;
 
-
-        /**
-         * The background colour of this render target, as an array of [r,g,b,a] values
-         *
-         * @member {number[]}
-         */
         this.clearColor = [0, 0, 0, 0];
 
-        /**
-         * The size of the object as a rectangle
-         *
-         * @member {PIXI.Rectangle}
-         */
         this.size = new Rectangle(0, 0, 1, 1);
 
         /**
-         * The current resolution / device pixel ratio
-         *
-         * @member {number}
-         * @default 1
+         * 设备分辨率
          */
         this.resolution = resolution || settings.RESOLUTION;
 
-        /**
-         * The projection matrix
-         *
-         * @member {PIXI.Matrix}
-         */
+        //投影矩阵，把所有的顶点投射到webgl的[-1,1]的坐标系内
         this.projectionMatrix = new Matrix();
 
-        /**
-         * The object's transform
-         *
-         * @member {PIXI.Matrix}
-         */
-        this.transform = null;
-
-        /**
-         * The frame.
-         *
-         * @member {PIXI.Rectangle}
-         */
         this.frame = null;
 
-        /**
-         * The stencil buffer stores masking data for the render target
-         *
-         * @member {glCore.GLBuffer}
-         */
         this.defaultFrame = new Rectangle();
         this.destinationFrame = null;
         this.sourceFrame = null;
 
-        /**
-         * The stencil buffer stores masking data for the render target
-         *
-         * @member {glCore.GLBuffer}
-         */
-        this.stencilBuffer = null;
-
-        /**
-         * The data structure for the stencil masks
-         *
-         * @member {PIXI.Graphics[]}
-         */
-        this.stencilMaskStack = [];
-
-        /**
-         * Stores filter data for the render target
-         *
-         * @member {object[]}
-         */
-        this.filterData = null;
-
+debugger
         /**
          * The scale mode.
          *
@@ -141,13 +64,7 @@ export default class RenderTarget
             {
                 this.frameBuffer.texture.enableLinearScaling();
             }
-            /*
-                A frame buffer needs a target to render to..
-                create a texture and bind it attach it to the framebuffer..
-             */
 
-            // this is used by the base texture
-            this.texture = this.frameBuffer.texture;
         }
         else
         {
@@ -215,11 +132,6 @@ export default class RenderTarget
         this.frameBuffer.bind();
 
         this.calculateProjection(this.destinationFrame, this.sourceFrame);
-
-        if (this.transform)
-        {
-            this.projectionMatrix.append(this.transform);
-        }
 
         // TODO add a check as them may be the same!
         if (this.destinationFrame !== this.sourceFrame)
@@ -315,8 +227,6 @@ export default class RenderTarget
     destroy()
     {
         this.frameBuffer.destroy();
-
         this.frameBuffer = null;
-        this.texture = null;
     }
 }
