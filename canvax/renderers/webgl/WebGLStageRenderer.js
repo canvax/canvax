@@ -57,22 +57,11 @@ export default class WebGLStageRenderer
 
         this.state = new WebGLState(this.gl);
 
-        this.renderingToScreen = true;
-
-        /**
-         * Holds the current shader
-         *
-         * @member {PIXI.Shader}
-         */
         this._activeShader = null;
 
         this._activeVao = null;
 
-        /**
-         * Holds the current render target
-         *
-         * @member {PIXI.RenderTarget}
-         */
+
         this._activeRenderTarget = null;
 
         
@@ -103,7 +92,7 @@ export default class WebGLStageRenderer
 
         this.state.resetToDefault();
 
-        this.rootRenderTarget = new RenderTarget(gl, this.width, this.height, null, settings.RESOLUTION, true);
+        this.rootRenderTarget = new RenderTarget(gl, this.width, this.height, settings.RESOLUTION, true);
         this.rootRenderTarget.clearColor = this._backgroundColorRgba;
 
         this.bindRenderTarget(this.rootRenderTarget);
@@ -114,8 +103,6 @@ export default class WebGLStageRenderer
 
     render(displayObject)
     {
-        // can be handy to know!
-        this.renderingToScreen = true;
 
         if (!this.gl || this.gl.isContextLost())
         {

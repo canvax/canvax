@@ -4,8 +4,6 @@
  * @lends PIXI
  */
 export { default as Point } from './Point';
-export { default as Matrix } from './Matrix';
-export { default as GroupD8 } from './GroupD8';
 export { default as Arc } from './Arc';
 
 export { default as Circle } from './shapes/Circle';
