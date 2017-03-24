@@ -1,20 +1,3 @@
-/**
- * Calculate the points for a bezier curve and then draws it.
- *
- * Ignored from docs since it is not directly exposed.
- *
- * @ignore
- * @param {number} fromX - Starting point x
- * @param {number} fromY - Starting point y
- * @param {number} cpX - Control point x
- * @param {number} cpY - Control point y
- * @param {number} cpX2 - Second Control point x
- * @param {number} cpY2 - Second Control point y
- * @param {number} toX - Destination point x
- * @param {number} toY - Destination point y
- * @param {number[]} [path=[]] - Path array to push points into
- * @return {number[]} Array of points of the curve
- */
 export default function bezierCurveTo(fromX, fromY, cpX, cpY, cpX2, cpY2, toX, toY, path = [])
 {
     const n = 20;

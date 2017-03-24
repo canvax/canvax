@@ -16,6 +16,7 @@ import EventHandler from "./event/EventHandler";
 import DisplayObjectContainer from "./display/DisplayObjectContainer";
 import Stage from "./display/Stage";
 import autoRenderer from "./renderers/autoRenderer";
+import Matrix from "./geom/Matrix";
 
 
 //utils
@@ -43,7 +44,7 @@ var Application = function( opt , options = {}){
     this.viewOffset = $.offset(this.view);
     this.lastGetRO = 0;//最后一次获取 viewOffset 的时间
 
-    this.noWebGL  = opt.noWebGL;
+    this.webGL  = opt.webGL;
     this.renderer = autoRenderer(this , options);
 
     this.event = null;
@@ -72,6 +73,9 @@ Utils.creatClass(Application , DisplayObjectContainer , {
 
         //创建一个如果要用像素检测的时候的容器
         this._createPixelContext();
+
+        //设置一个默认的matrix做为app的世界根节点坐标
+        this.worldTransform = new Matrix().identity();
         
     },
     registEvent : function(opt){
@@ -206,7 +210,9 @@ Utils.creatClass(Application , DisplayObjectContainer , {
     },
     
     heartBeat : function(opt){
-        this.renderer.heartBeat(opt);
+        if( this.children.length > 0 ){
+            this.renderer.heartBeat(opt);
+        }
     }
 } );
 

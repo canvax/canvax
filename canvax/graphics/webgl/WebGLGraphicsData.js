@@ -1,39 +1,14 @@
 import glCore from 'pixi-gl-core';
 
-/**
- * An object containing WebGL specific properties to be used by the WebGL renderer
- *
- * @class
- * @private
- * @memberof PIXI
- */
 export default class WebGLGraphicsData
 {
-    /**
-     * @param {WebGLRenderingContext} gl - The current WebGL drawing context
-     * @param {PIXI.Shader} shader - The shader
-     * @param {object} attribsState - The state for the VAO
-     */
     constructor(gl, shader, attribsState)
     {
-        /**
-         * The current WebGL drawing context
-         *
-         * @member {WebGLRenderingContext}
-         */
         this.gl = gl;
 
-        // TODO does this need to be split before uploading??
-        /**
-         * An array of color components (r,g,b)
-         * @member {number[]}
-         */
         this.color = [0, 0, 0]; // color split!
 
-        /**
-         * An array of points to draw
-         * @member {PIXI.Point[]}
-         */
+
         this.points = [];
 
         /**

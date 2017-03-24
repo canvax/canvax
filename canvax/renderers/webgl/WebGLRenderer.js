@@ -2,6 +2,7 @@ import SystemRenderer from '../SystemRenderer';
 import { RENDERER_TYPE } from '../../const';
 import Settings from '../../settings';
 import WebGLStageRenderer from "./WebGLStageRenderer";
+import Graphics from "../../graphics/Graphics";
 import _ from "../../utils/underscore";
 
 export default class WebGLRenderer extends SystemRenderer
@@ -9,6 +10,7 @@ export default class WebGLRenderer extends SystemRenderer
     constructor(app , options = {})
     {
         super(RENDERER_TYPE.CANVAS, app, options);
+        this.graphics = new Graphics();
     }
 
     render( app , options = {} )
@@ -46,8 +48,9 @@ export default class WebGLRenderer extends SystemRenderer
             return;
         };
 
-        if( displayObject.graphics ){
-            stage.webGLStageRenderer.render( displayObject );
+        if( displayObject.graphicsData ){
+            displayObject.draw( stage, this );
+            stage.webGLStageRenderer.render( displayObject, stage , this.graphics);
         };
 
         if( displayObject.children ){

@@ -37,15 +37,15 @@ export default class Isogon extends Polygon
         this.id = Utils.createId(this.type);
     }
 
-    $watch(name, value, preValue)
+    watch(name, value, preValue)
     {
         if (name == "r" || name == "n"){ //如果path有变动，需要自动计算新的pointList
             this.context.pointList = _Math.getIsgonPointList( style.n , style.r );
         }
 
         if (name == "pointList" || name == "smooth" || name == "lineType") {
-            this.setGraphics();
-            this.graphics.closePath();
+            this.clearGraphicsData();
         }
+
     }
 };

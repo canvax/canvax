@@ -23,7 +23,7 @@ var DisplayObjectContainer = function(opt){
 };
 
 Utils.creatClass( DisplayObjectContainer , DisplayObject , {
-    addChild : function(child){
+    addChild : function(child , index){
         if( !child ) {
             return;
         };
@@ -35,8 +35,15 @@ Utils.creatClass( DisplayObjectContainer , DisplayObject , {
         if(child.parent) {
             child.parent.removeChild(child);
         };
-        this.children.push( child );
+        
+        if( index === undefined ){
+            index = this.children.length
+        };
+
+        this.children.splice(index, 0, child);
+
         child.parent = this;
+
         if(this.heartBeat){
            this.heartBeat({
              convertType : "children",
@@ -49,33 +56,15 @@ Utils.creatClass( DisplayObjectContainer , DisplayObject , {
            this._afterAddChild(child);
         };
 
-        return child;
-    },
-    addChildAt : function(child, index) {
-        if(this.getChildIndex(child) != -1) {
-            child.parent = this;
-            return child;
-        };
-        if(child.parent) {
-            child.parent.removeChild(child);
-        };
-        this.children.splice(index, 0, child);
-        child.parent = this;
-        
-        //上报children心跳
-        if(this.heartBeat){
-           this.heartBeat({
-             convertType : "children",
-             target       : child,
-             src      : this
-           });
-        };
-        
-        if(this._afterAddChild){
-           this._afterAddChild(child,index);
+        if( this.worldTransform ){
+            //如果过自己已经有了世界坐标了，那么要把新添加进来的所有节点包括其子节点都设置好世界坐标
+            this.updateChildWorldTransform();
         };
 
         return child;
+    },
+    addChildAt : function(child, index) {
+        return this.addChild( child , index );
     },
     removeChild : function(child) {
         return this.removeChildAt(_.indexOf( this.children , child ));
@@ -200,6 +189,15 @@ Utils.creatClass( DisplayObjectContainer , DisplayObject , {
             }
         }
         return result;
+    },
+    //更新所有子节点的世界坐标
+    updateChildWorldTransform: function(){
+        _.each( this.children , function( obj ){
+            obj.getWorldTransform();
+            if( obj.children ){
+                obj.updateChildWorldTransform();
+            } 
+        } );
     }
 });
 export default DisplayObjectContainer;

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="user-scalable=no, width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1, maximum-scale=1" />
+    <title>一万个圆测试</title>
+
+    <style type="text/css">
+        body{margin:0;padding:0;font-size:12px;background-color:#eee;padding:10px 100px 100px;}
+        //canvas {background:#999}
+    </style>
+
+    <!--
+    <script type="text/javascript" src="http://seajs.github.io/examples/sea-modules/seajs/seajs/2.1.1/sea.js"></script>
+    -->
+
+    <script type="text/javascript" src="../build/canvax.js"></script>
+    <script src="./js/jquery-1.11.1.min.js"></script>
+    <script src="./js/color.js"></script>
+    <script src="./js/underscore.js"></script>
+
+</head>
+
+<body onload="pageload()">
+    <div id="ready"></div>
+    <script>
+
+    var pageload = function(){
+        var Shapes = Canvax.Shapes;
+        var colorInd=1;
+
+
+        var box = $("#canvasTest");
+        app = new Canvax.App({
+            id : "canvax",
+            el : box,
+            noWebGL: false
+        });
+        app.registEvent();
+
+        stage = new Canvax.Display.Stage({
+            id : "chart0"
+        });
+
+        for( var i=0,l = 10000; i<l ; i++ ){
+            var circle = new Shapes.Circle({
+                id : "c2",               
+                context : {
+
+                    x:0 + Math.ceil(Math.random()*app.width),
+                    y:0 + Math.ceil(Math.random()*app.height),
+
+                    r : 10,
+                    fillStyle : colors.getColor(colorInd++),          // rgba supported
+                    strokeStyle : colors.getColor(colorInd++),  // getColor from default palette
+                    lineWidth : 2
+                    //lineType  : "dashed"
+                }
+            });
+
+            stage.addChild( circle );
+        }
+
+        app.addChild(stage); 
+
+    }
+
+
+
+
+
+
+</script>
+
+
+
+<div id="canvasTest" style='background:#f3f5f4;width:1200px;height:800px;'></div>
+<input type="button" value="平滑贝塞尔曲线运动" />
+</body>
+</html>
+
+
+

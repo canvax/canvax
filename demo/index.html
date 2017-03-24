@@ -27,13 +27,14 @@
 
     var pageload = function(){
         var Shapes = Canvax.Shapes;
-        var colorInd=0;
+        var colorInd=1;
 
 
         var box = $("#canvasTest");
         app = new Canvax.App({
             id : "canvax",
-            el : box
+            el : box,
+            webGL:false
         });
         app.registEvent();
 
@@ -72,7 +73,7 @@
                 y:0,
 
                 r : 50,
-                fillStyle : 'rgba(220, 20, 60, 0.8)',          // rgba supported
+                fillStyle : colors.getColor(colorInd++),          // rgba supported
                 strokeStyle : colors.getColor(colorInd++),  // getColor from default palette
                 lineWidth : 5
                 //lineType  : "dashed"
@@ -91,29 +92,25 @@
         circle3.context.x = 500;
         circle3.context.y = 200;
 
-
-
-
         //折线
         var brokenLine = new Shapes.BrokenLine({
             id : "brokenline",
             context : {
                 x:300,
                 pointList : [[10, 10], [60, 100], [148, 130], [250, 40], [446, 100]],
-                strokeStyle : "red",//colors.getColor(colorInd++),
+                strokeStyle : colors.getColor(colorInd++),//colors.getColor(colorInd++),
                 lineWidth : 1,
-                smooth    : true ,
+                smooth    : true,
                 lineType  : "dashed"
             }
         });
 
         brokenLine.on("mouseover" , function(){
-            this.context.strokeStyle = "red";
+            this.context.strokeStyle = colors.getColor(colorInd++);
         });
 
         brokenLine.on("mouseout" , function(){
-            this.context.strokeStyle = "yellow";
-
+            this.context.strokeStyle =colors.getColor(colorInd++);
         });
 
         var droplet = new Shapes.Droplet({
@@ -137,14 +134,14 @@
         });
 
         setTimeout(function() {
-
+            return;
             _.each(droplet.context.pointList, function(p) {
                 //debugger
                 _.each(p, function(point) {
                     console.log(point[0]+"|"+point[1])
                     stage.addChild(new Shapes.Circle( {
                         context: {
-                            r: 1, x:point[0]+380, y:point[1]+380, fillStyle:"blue"
+                            r: 1, x:point[0]+380, y:point[1]+380, fillStyle:colors.getColor(colorInd++)
                         }
                     }
                     ));
@@ -198,13 +195,9 @@
                 endAngle : 60,
                 fillStyle:colors.getColor(colorInd++),
                 strokeStyle:colors.getColor(colorInd++),
-                lineWidth : 0
+                lineWidth : 1
                 //lineJoin : "round"
             }
-        });
-
-        sector.on("mousemove" , function( e ){
-
         });
 
         var srect = sector.getRect();
@@ -214,20 +207,19 @@
                 y           : srect.y,
                 width       : srect.width,
                 height      : srect.height,
-                strokeStyle : "red",
+                strokeStyle : colors.getColor(colorInd++),
                 lineWidth   : 1
             }
         })
 
         sector.on("mouseover" , function(){
+            console.log(this.graphicsData)
             this.context.lineWidth = 2;
         })
 
         sector.on("mouseout" , function(){
             this.context.lineWidth = 1;
         })
-
-
 
         //不规则多变形
         var polygon = new Shapes.Polygon({
@@ -254,13 +246,14 @@
             this.context.lineWidth = 2
         });
 
+        var c1 = colors.getColor(colorInd++)
         _.each( polygon.context.pointList , function(point , i){
-
+            return
             setTimeout(function(){
                 stage.addChild(
                     new Shapes.Circle( {
                         context: {
-                            r: 1, x:point[0]+480, y:point[1]+150, fillStyle:"blue"
+                            r: 2, x:point[0]+480, y:point[1]+150, fillStyle:c1
                         }
                     }) 
                     )
@@ -315,15 +308,16 @@
         });
         isogon.on("mouseout"  , function(){
             this.context.lineWidth = 2
-        })
+        });
 
+        var c2 = colors.getColor(colorInd++);
         _.each( isogon.context.pointList , function(point , i){
-
+            return
             setTimeout(function(){
                 stage.addChild(
                     new Shapes.Circle( {
                         context: {
-                            r: 1, x:point[0]+150, y:point[1]+420, fillStyle:"green"
+                            r: 2, x:point[0]+150, y:point[1]+420, fillStyle:c2
                         }
                     }) 
                     )
@@ -421,10 +415,7 @@
 
 
         //stage.addChild(rect);
-        sprite.addChild(sector);
-
-        sprite.addChild(sector_rect);
-        sprite.addChild(rect);
+        
 
 
 
@@ -453,12 +444,6 @@
 
 
         stage.addChild(line);
-        setTimeout(function(){
-
-            line.toBack(6);
-        },1000)
-
-
 
 
         window.stage1 = new Canvax.Display.Stage({
@@ -467,6 +452,11 @@
 
         stage1.addChild( text );
         app.addChild( stage1 );
+
+        sprite.addChild(sector);
+
+        sprite.addChild(sector_rect);
+        sprite.addChild(rect);
 
         app.addChild(stage); 
 

@@ -31,22 +31,19 @@ export default class Circle extends Shape
         
         this.type = "circle";
         this.id = Utils.createId(this.type);
-
-        this.setGraphics();
     }
     
-    $watch(name, value, preValue) 
+    watch(name, value, preValue)
     {
         if ( name == "r" ) {
-            this.setGraphics();
+            this.clearGraphicsData();
         }
     }
 
-    setGraphics() 
+    draw( graphics ) 
     {
-        this.graphics.clear();
-        //this.graphics.arc(0 , 0, this.context.r, 0, Math.PI * 2, true);
-        this.graphics.drawCircle(0, 0, this.context.r);
+        graphics.beginPath();
+        graphics.drawCircle(0, 0, this.context.r);
     }
 
 }

@@ -33,20 +33,18 @@ export default class Ellipse extends Shape
 
         this.type = "ellipse";
         this.id = Utils.createId(this.type);
-
-        this.setGraphics();
     }
 
-    $watch(name, value, preValue) 
+    watch(name, value, preValue) 
     {
         if ( name == "hr" || name == "vr" ) {
-            this.setGraphics();
+            this.clearGraphicsData();
         }
     }
 
-    setGraphics()
+    draw(graphics)
     {    
-        this.graphics.clear();
-        this.graphics.drawEllipse(0,0, this.context.hr*2 , this.context.vr*2);
+        graphics.beginPath();
+        graphics.drawEllipse(0,0, this.context.hr*2 , this.context.vr*2);
     }
 };

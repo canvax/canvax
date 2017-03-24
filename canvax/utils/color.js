@@ -1,5 +1,10 @@
 
 export function hex2rgb(hex, out){
+	//hex可能是“#ff0000” 也可能是 0xff0000
+	if( hex.replace ){
+	   hex = parseInt( hex.replace("#" , "0X") , 16 );
+    };
+
     out = out || [];
 
     out[0] = ((hex >> 16) & 0xFF) / 255;

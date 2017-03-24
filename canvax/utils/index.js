@@ -19,7 +19,7 @@ var Utils = {
     },
     createId : function(name) {
         if(!name){
-            debugger
+            
         }
         //if end with a digit, then append an undersBase before appending
         var charCode = name.charCodeAt(name.length - 1);

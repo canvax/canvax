@@ -1,21 +1,10 @@
 import Shader from '../../../Shader';
-
-/**
- * This shader is used to draw simple primitive shapes for {@link PIXI.Graphics}.
- *
- * @class
- * @memberof PIXI
- * @extends PIXI.Shader
- */
 export default class PrimitiveShader extends Shader
 {
-    /**
-     * @param {WebGLRenderingContext} gl - The webgl shader manager this shader works for.
-     */
     constructor(gl)
     {
         super(gl,
-            // vertex shader
+            //vertex shader
             [
                 'attribute vec2 aVertexPosition;',
                 'attribute vec4 aColor;',

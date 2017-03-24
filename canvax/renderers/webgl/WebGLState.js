@@ -3,57 +3,21 @@ const DEPTH_TEST = 1;
 const FRONT_FACE = 2;
 const CULL_FACE = 3;
 
-/**
- * A WebGL state machines
- *
- * @memberof PIXI
- * @class
- */
 export default class WebGLState
 {
-    /**
-     * @param {WebGLRenderingContext} gl - The current WebGL rendering context
-     */
     constructor(gl)
     {
-        /**
-         * The current active state
-         *
-         * @member {Uint8Array}
-         */
+
         this.activeState = new Uint8Array(16);
 
-        /**
-         * The default state
-         *
-         * @member {Uint8Array}
-         */
         this.defaultState = new Uint8Array(16);
 
-        // default blend mode..
         this.defaultState[0] = 1;
 
-        /**
-         * The current state index in the stack
-         *
-         * @member {number}
-         * @private
-         */
         this.stackIndex = 0;
 
-        /**
-         * The stack holding all the different states
-         *
-         * @member {Array<*>}
-         * @private
-         */
         this.stack = [];
 
-        /**
-         * The current WebGL rendering context
-         *
-         * @member {WebGLRenderingContext}
-         */
         this.gl = gl;
 
         this.maxAttribs = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
@@ -72,12 +36,8 @@ export default class WebGLState
         );
     }
 
-    /**
-     * Pushes a new active state
-     */
     push()
     {
-        // next state..
         let state = this.stack[++this.stackIndex];
 
         if (!state)
@@ -85,17 +45,12 @@ export default class WebGLState
             state = this.stack[this.stackIndex] = new Uint8Array(16);
         }
 
-        // copy state..
-        // set active state so we can force overrides of gl state
         for (let i = 0; i < this.activeState.length; i++)
         {
             this.activeState[i] = state[i];
         }
     }
 
-    /**
-     * Pops a state out
-     */
     pop()
     {
         const state = this.stack[--this.stackIndex];
@@ -103,11 +58,6 @@ export default class WebGLState
         this.setState(state);
     }
 
-    /**
-     * Sets the current state
-     *
-     * @param {*} state - The state to set.
-     */
     setState(state)
     {
         this.setDepthTest(state[DEPTH_TEST]);
@@ -115,12 +65,6 @@ export default class WebGLState
         this.setCullFace(state[CULL_FACE]);
     }
 
-
-    /**
-     * Sets whether to enable or disable depth test.
-     *
-     * @param {boolean} value - Turn on or off webgl depth testing.
-     */
     setDepthTest(value)
     {
         value = value ? 1 : 0;
@@ -134,11 +78,6 @@ export default class WebGLState
         this.gl[value ? 'enable' : 'disable'](this.gl.DEPTH_TEST);
     }
 
-    /**
-     * Sets whether to enable or disable cull face.
-     *
-     * @param {boolean} value - Turn on or off webgl cull face.
-     */
     setCullFace(value)
     {
         value = value ? 1 : 0;
@@ -152,11 +91,6 @@ export default class WebGLState
         this.gl[value ? 'enable' : 'disable'](this.gl.CULL_FACE);
     }
 
-    /**
-     * Sets the gl front face.
-     *
-     * @param {boolean} value - true is clockwise and false is counter-clockwise
-     */
     setFrontFace(value)
     {
         value = value ? 1 : 0;
@@ -170,10 +104,6 @@ export default class WebGLState
         this.gl.frontFace(this.gl[value ? 'CW' : 'CCW']);
     }
 
-    /**
-     * Disables all the vaos in use
-     *
-     */
     resetAttributes()
     {
         for (let i = 0; i < this.attribState.tempAttribState.length; i++)
@@ -186,29 +116,21 @@ export default class WebGLState
             this.attribState.attribState[i] = 0;
         }
 
-        // im going to assume one is always active for performance reasons.
         for (let i = 1; i < this.maxAttribs; i++)
         {
             this.gl.disableVertexAttribArray(i);
         }
     }
 
-    // used
-    /**
-     * Resets all the logic and disables the vaos
-     */
     resetToDefault()
     {
-        // unbind any VAO if they exist..
         if (this.nativeVaoExtension)
         {
             this.nativeVaoExtension.bindVertexArrayOES(null);
         }
 
-        // reset all attributes..
         this.resetAttributes();
 
-        // set active state so we can force overrides of gl state
         for (let i = 0; i < this.activeState.length; ++i)
         {
             this.activeState[i] = 32;

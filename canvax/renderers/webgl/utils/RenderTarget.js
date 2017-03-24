@@ -8,10 +8,8 @@ const GLFramebuffer = glCore.GLFramebuffer;
 
 export default class RenderTarget
 {
-
     constructor(gl, width, height, resolution, root)
     {
-
         this.gl = gl;
 
         // framebuffer 是WebGL渲染的终点。当你看屏幕时，其他就是在看 framebuffer 中的内容。

@@ -31,21 +31,19 @@ export default class Rect extends Shape
 
         this.type = "rect";
         this.id = Utils.createId(this.type);
-
-        this.setGraphics();
     }
 
-    $watch(name, value, preValue) 
+    watch(name, value, preValue) 
     {
         if ( name == "width" || name == "height" || name == "radius" ) {
-            this.setGraphics();
+            this.clearGraphicsData();
         }
     }
 
     /**
      * 绘制圆角矩形
      */
-    _buildRadiusPath()
+    _buildRadiusPath( graphics )
     {
         var context = this.context;
         //左上、右上、右下、左下角的半径依次为r1、r2、r3、r4
@@ -59,7 +57,7 @@ export default class Rect extends Shape
         var height = this.context.height;
     
         var r = Utils.getCssOrderArr(context.radius);
-        var G = this.graphics;
+        var G = graphics;
      
         G.moveTo( parseInt(x + r[0]), parseInt(y));
         G.lineTo( parseInt(x + width - r[1]), parseInt(y));
@@ -82,15 +80,15 @@ export default class Rect extends Shape
      * @param {Context2D} ctx Canvas 2D上下文
      * @param {Object} context 样式
      */
-    setGraphics() 
+    draw( graphics ) 
     {
-        this.graphics.clear();
+        graphics.beginPath();
         if(!this.context.radius.length) {
-            this.graphics.drawRect(0,0,this.context.width , this.context.height);
+            graphics.drawRect(0,0,this.context.width , this.context.height);
         } else {
-            this._buildRadiusPath();
+            this._buildRadiusPath( graphics );
         }
-        this.graphics.closePath();
+        graphics.closePath();
         return;
     }
 }

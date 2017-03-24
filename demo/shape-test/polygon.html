@@ -32,7 +32,8 @@
         var box = $("#canvasTest");
         app = new Canvax.App({
             id : "canvax",
-            el : box
+            el : box,
+            noWebGL:true
         });
         app.registEvent();
 
@@ -58,15 +59,16 @@
         });
 
         polygon.on("mouseover",function(){
-            this.context.lineWidth=3
+            this.context.lineWidth=2
+            this.context.strokeStyle = "blue"
         });
 
         polygon.on("mouseout",function(){
-            this.context.lineWidth = 2
+            this.context.lineWidth = 1
+            this.context.strokeStyle = "red"
         });
 
         _.each( polygon.context.pointList , function(point , i){
-
             setTimeout(function(){
                 stage.addChild(
                     new Shapes.Circle( {

@@ -12,7 +12,8 @@ import Point from "./Point";
 import Utils from "../utils/index";
 import AnimationFrame from "../animation/AnimationFrame";
 import Observe from "../utils/observe";
-import {CONTEXT_DEFAULT} from "../const"
+import {CONTEXT_DEFAULT, TRANSFORM_PROPS} from "../const";
+import InsideLine from '../geom/InsideLine';
 
 var DisplayObject = function(opt){
     DisplayObject.superclass.constructor.apply(this, arguments);
@@ -22,6 +23,7 @@ var DisplayObject = function(opt){
 
     //相对父级元素的矩阵
     this._transform      = null;
+    this.worldTransform  = null; //webgl 渲染器中专用
 
     //心跳次数
     this._heartBeatNum   = 0;
@@ -43,7 +45,7 @@ var DisplayObject = function(opt){
     //创建好context
     this._createContext( opt );
 
-    this.id = Utils.createId(this.type || "displayObject");
+    this.id = opt.id || Utils.createId(this.type || "displayObject");
 
     this.init.apply(this , arguments);
 
@@ -69,25 +71,35 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
 
         _contextATTRS.$owner = self;
         _contextATTRS.$watch = function(name , value , preValue){
-
             //下面的这些属性变化，都会需要重新组织矩阵属性 _transform 
-            var transFormProps = [ "x" , "y" , "scaleX" , "scaleY" , "rotation" , "scaleOrigin" , "rotateOrigin, lineWidth" ];
-
-            if( _.indexOf( transFormProps , name ) >= 0 ) {
-                this.$owner._updateTransform();
+            var obj = this.$owner;
+            
+            if( _.indexOf( TRANSFORM_PROPS , name ) > -1 ) {
+                obj._updateTransform();
+                
+                //stage本身就是世界坐标，所以其worldTransform不需要动态修改
+                if( obj.parent && obj.type != "stage" && obj.parent.worldTransform ){
+                    obj.worldTransform = null;
+                    //只有parent有worldTransform，就可以算出自己对应的世界坐标
+                    obj.getWorldTransform();
+                    if( obj.children ){
+                        //如果自己还有子元素，那么子元素的世界坐标也都要对应的调整
+                        obj.updateChildWorldTransform();
+                    }
+                }
             };
 
-            if( this.$owner._notWatch ){
+            if( obj._notWatch ){
                 return;
             };
 
-            if( this.$owner.$watch ){
-                this.$owner.$watch( name , value , preValue );
+            if( obj.$watch ){
+                obj.$watch( name , value , preValue );
             };
 
-            this.$owner.heartBeat( {
+            obj.heartBeat( {
                 convertType:"context",
-                shape      : this.$owner,
+                shape      : obj,
                 name       : name,
                 value      : value,
                 preValue   : preValue
@@ -97,6 +109,7 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
 
         //执行init之前，应该就根据参数，把context组织好线
         self.context = Observe( _contextATTRS );
+        //self.context = _contextATTRS
     },
     /* @myself 是否生成自己的镜像 
      * 克隆又两种，一种是镜像，另外一种是绝对意义上面的新个体
@@ -327,6 +340,18 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         this._transform = _transform;
         return _transform;
     },
+    //获取全局的世界坐标系内的矩阵
+    //世界坐标是从上而下的，所以只要和parent的直接坐标相乘就好了
+    getWorldTransform: function(){
+        var cm;
+        if( !this.worldTransform ){
+            cm = new Matrix();
+            cm.concat( this._transform );
+            cm.concat( this.parent.worldTransform );
+            this.worldTransform = cm;
+        };
+        return this.worldTransform;
+    },
     //显示对象的选取检测处理函数
     getChildInPoint : function( point ){
 
@@ -350,11 +375,42 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
             y = originPos[1];
         };
 
-        if( this.graphics ){
-            result = this.graphics.containsPoint( {x: x , y: y} );
+        if( this.graphicsData ){
+            result = this.containsPoint( {x: x , y: y} , this.graphicsData );
         }
 
         return result;
+    },
+    containsPoint: function(point , _graphicsData){
+        const graphicsData = _graphicsData || this.graphicsData;
+        let inside = false;
+        for (let i = 0; i < graphicsData.length; ++i)
+        {
+            const data = graphicsData[i];
+            if (data.shape)
+            {
+                //先检测fill， fill的检测概率大些。
+                //像circle,ellipse这样的shape 就直接把lineWidth算在fill里面计算就好了，所以他们是没有insideLine的
+                if ( data.hasFill() && data.shape.contains(point.x, point.y) )
+                {
+                    inside = true;
+                    if( inside ){
+                        break;
+                    }
+                }
+
+                //circle,ellipse等就没有points
+                if( data.hasLine() && data.shape.points )
+                {
+                    //然后检测是否和描边碰撞
+                    inside = InsideLine( data , point.x , point.y );
+                    if( inside ){
+                        break;
+                    }
+                }
+            }   
+        }
+        return inside;
     },
     /*
     * animate
@@ -398,46 +454,6 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         };
         tween = AnimationFrame.registTween( options );
         return tween;
-    },
-
-
-    //渲染相关部分，迁移到renderers中去
-    _render : function( ctx ){	
-        if( !this.context.visible || this.context.globalAlpha <= 0 ){
-            return;
-        }
-        ctx.save();
-        
-
-        var transForm = this._transform;
-        if( !transForm ) {
-            transForm = this._updateTransform();
-        };
-        //运用矩阵开始变形
-        ctx.transform.apply( ctx , transForm.toArray() );
-
-        //设置样式，文本有自己的设置样式方式
-        if( this.type != "text" ) {
-            var style = this.context.$model;
-            for(var p in style){
-                if( p != "textBaseline" && ( p in ctx ) ){
-                    if ( style[p] || _.isNumber( style[p] ) ) {
-                        if( p == "globalAlpha" ){
-                            //透明度要从父节点继承
-                            ctx[p] *= style[p];
-                        } else {
-                            ctx[p] = style[p];
-                        }
-                    }
-                }
-            };
-        }
-
-        this.render( ctx );
-        ctx.restore();
-    },
-    render : function( ctx ) {
-        //基类不提供render的具体实现，由后续具体的派生类各自实现
     },
     //从树中删除
     remove : function(){

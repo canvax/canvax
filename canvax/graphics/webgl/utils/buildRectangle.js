@@ -1,28 +1,16 @@
 import buildLine from './buildLine';
 import { hex2rgb } from '../../../utils/color';
 
-/**
- * Builds a rectangle to draw
- *
- * Ignored from docs since it is not directly exposed.
- *
- * @ignore
- * @private
- * @param {PIXI.WebGLGraphicsData} graphicsData - The graphics object containing all the necessary properties
- * @param {object} webGLData - an object containing all the webGL-specific information to create this shape
- */
 export default function buildRectangle(graphicsData, webGLData)
 {
-    // --- //
-    // need to convert points to a nice regular data
-    //
+
     const rectData = graphicsData.shape;
     const x = rectData.x;
     const y = rectData.y;
     const width = rectData.width;
     const height = rectData.height;
 
-    if (graphicsData.fill)
+    if (graphicsData.hasFill() && graphicsData.fillAlpha)
     {
         const color = hex2rgb(graphicsData.fillStyle);
         const alpha = graphicsData.fillAlpha;
@@ -53,7 +41,7 @@ export default function buildRectangle(graphicsData, webGLData)
         indices.push(vertPos, vertPos, vertPos + 1, vertPos + 2, vertPos + 3, vertPos + 3);
     }
 
-    if (graphicsData.lineWidth)
+    if (graphicsData.hasLine() && graphicsData.lineAlpha)
     {
         const tempPoints = graphicsData.points;
 

@@ -7,9 +7,8 @@
  */
 import DisplayObject from "./DisplayObject";
 import Utils from "../utils/index";
-import Graphics from "../graphics/Graphics";
 import _ from "../utils/underscore";
-import {SHAPE_CONTEXT_DEFAULT} from "../const"
+import {SHAPE_CONTEXT_DEFAULT, STYLE_PROPS} from "../const"
 
 export default class Shape extends DisplayObject
 {
@@ -21,7 +20,7 @@ export default class Shape extends DisplayObject
 
         super( opt );
 
-        this.graphics = new Graphics( this );
+        this.graphicsData = [];
 
         //元素是否有hover事件 和 chick事件，由addEvenetLister和remiveEventLister来触发修改
         this._hoverable  = false;
@@ -39,7 +38,7 @@ export default class Shape extends DisplayObject
         //self.draggable = opt.draggable || false;
 
         this.type = this.type || "shape" ;
-        opt.draw && (this.draw=opt.draw);
+        opt.draw && (this.draw = opt.draw);
         
         //处理所有的图形一些共有的属性配置,把除开id,context之外的所有属性，全部挂载到this上面
         this.initCompProperty(opt);
@@ -47,11 +46,34 @@ export default class Shape extends DisplayObject
         this._rect = null;
     }
 
-    init()
-    {}
+    _draw(stage , renderer)
+    {
+        if(this.graphicsData.length == 0){
+            //先设置好当前graphics的style
+            renderer.graphics.setStyle( this.context );
+            
+            var lastGDind = renderer.graphics.graphicsData.length;
+            this.draw( renderer.graphics );
+            this.graphicsData = renderer.graphics.graphicsData.slice( lastGDind );
+            var me = this;
+            _.each( this.graphicsData , function( gd ){
+                gd.displayObject = me;
+            } );
+        }
+    }
 
-    draw()
-    {}
+    clearGraphicsData()
+    {
+        _.each( this.graphicsData , function(d){
+            d.destroy();
+        } );
+        this.graphicsData.length = 0;
+    }
+
+    $watch(name, value, preValue) 
+    {
+        this.watch( name, value, preValue );
+    }
 
     initCompProperty(opt)
     {
@@ -65,7 +87,7 @@ export default class Shape extends DisplayObject
    /*
     * 画虚线
     */
-   dashedLineTo( x1, y1, x2, y2, dashLength ) 
+   dashedLineTo(graphics, x1, y1, x2, y2, dashLength ) 
    {
          dashLength = typeof dashLength == 'undefined'
                       ? 3 : dashLength;
@@ -78,9 +100,9 @@ export default class Shape extends DisplayObject
          for (var i = 0; i < numDashes; ++i) {
              var x = parseInt(x1 + (deltaX / numDashes) * i);
              var y = parseInt(y1 + (deltaY / numDashes) * i);
-             this.graphics[i % 2 === 0 ? 'moveTo' : 'lineTo']( x , y );
+             graphics[i % 2 === 0 ? 'moveTo' : 'lineTo']( x , y );
              if( i == (numDashes-1) && i%2 === 0){
-                 this.graphics.lineTo( x2 , y2 );
+                 graphics.lineTo( x2 , y2 );
              }
          }
    }
@@ -111,7 +133,7 @@ export default class Shape extends DisplayObject
            if (cpl[i][1] > maxY) {
                maxY = cpl[i][1];
            }
-       }
+       };
 
        var lineWidth;
        if (context.strokeStyle || context.fillStyle  ) {

@@ -1,43 +1,20 @@
 import { Point } from '../../../math/index';
 import { hex2rgb } from '../../../utils/color';
 
-/**
- * Builds a line to draw
- *
- * Ignored from docs since it is not directly exposed.
- *
- * @ignore
- * @private
- * @param {PIXI.WebGLGraphicsData} graphicsData - The graphics object containing all the necessary properties
- * @param {object} webGLData - an object containing all the webGL-specific information to create this shape
- */
 export default function buildLine(graphicsData, webGLData)
 {
-    // TODO OPTIMISE!
     let points = graphicsData.points;
 
     if (points.length === 0)
     {
         return;
     }
-    // if the line width is an odd number add 0.5 to align to a whole pixel
-    // commenting this out fixes #711 and #1620
-    // if (graphicsData.lineWidth%2)
-    // {
-    //     for (i = 0; i < points.length; i++)
-    //     {
-    //         points[i] += 0.5;
-    //     }
-    // }
 
-    // get first and last point.. figure out the middle!
     const firstPoint = new Point(points[0], points[1]);
     let lastPoint = new Point(points[points.length - 2], points[points.length - 1]);
 
-    // if the first point is the last point - gonna have issues :)
     if (firstPoint.x === lastPoint.x && firstPoint.y === lastPoint.y)
     {
-        // need to clone as we are going to slightly modify the shape..
         points = points.slice();
 
         points.pop();
@@ -58,10 +35,8 @@ export default function buildLine(graphicsData, webGLData)
     let indexCount = points.length;
     let indexStart = verts.length / 6;
 
-    // DRAW the Line
     const width = graphicsData.lineWidth / 2;
 
-    // sort color
     const color = hex2rgb(graphicsData.strokeStyle);
     const alpha = graphicsData.lineAlpha;
     const r = color[0] * alpha;

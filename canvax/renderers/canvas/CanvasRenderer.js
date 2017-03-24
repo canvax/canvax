@@ -2,6 +2,7 @@ import SystemRenderer from '../SystemRenderer';
 import { RENDERER_TYPE } from '../../const';
 import Settings from '../../settings';
 import CGR from "../../graphics/canvas/GraphicsRenderer";
+import Graphics from "../../graphics/Graphics";
 import _ from "../../utils/underscore";
 
 export default class CanvasRenderer extends SystemRenderer
@@ -10,6 +11,8 @@ export default class CanvasRenderer extends SystemRenderer
     {
         super(RENDERER_TYPE.CANVAS, app, options);
         this.CGR = new CGR(this);
+        //一个stage用一个graphics来绘制所有的shape
+        this.graphics = new Graphics();
     }
 
     render( app )
@@ -44,19 +47,12 @@ export default class CanvasRenderer extends SystemRenderer
         };
 
         var ctx = stage.ctx;
-
-        ctx.save();
         
-        var transForm = displayObject._transform;
-        if( !transForm ) {
-            transForm = displayObject._updateTransform();
-        };
-        //运用矩阵开始变形
-        ctx.transform.apply( ctx , transForm.toArray() );
-
-
-        if( displayObject.graphics ){
-            this.CGR.render( displayObject , stage );
+        if( displayObject.graphicsData ){
+            //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
+            ctx.setTransform.apply( ctx , displayObject.worldTransform.toArray() );
+            displayObject._draw( stage, this );//_draw会完成绘制准备好 graphicsData
+            this.CGR.render( displayObject , stage, this );
         };
 
         if( displayObject.children ){
@@ -65,13 +61,13 @@ export default class CanvasRenderer extends SystemRenderer
 	        }
 	    };
 
-        ctx.restore();
     }
 
     _clear( stage )
     {
-        //TODO:这里有点 奇怪， 之前的版本clearRect的时候，不需要 *RESOLUTION（分辨率）
-        stage.ctx.clearRect( 0, 0, this.app.width*Settings.RESOLUTION , this.app.height*Settings.RESOLUTION );
+        var ctx = stage.ctx;
+        ctx.setTransform.apply( ctx , stage.worldTransform.toArray() );
+        ctx.clearRect( 0, 0, this.app.width , this.app.height );
     }
 }
 

@@ -28,7 +28,6 @@ export const SHAPES = {
     RECT: 1,
     CIRC: 2,
     ELIP: 3,
-    RREC: 4,
 };
 
 export const SCALE_MODES = {
@@ -104,6 +103,28 @@ export const SHAPE_CONTEXT_DEFAULT = {
     lineType      : "solid", //context2d里没有，自定义线条的type，默认为实线
     lineWidth     : null
 }
+
+//会影响到transform改变的context属性
+export const TRANSFORM_PROPS = [ 
+    "x" , 
+    "y" , 
+    "scaleX" , 
+    "scaleY" , 
+    "rotation" , 
+    "scaleOrigin" , 
+    "rotateOrigin" 
+]
+
+//所有和样式相关的属性
+export const STYLE_PROPS = [
+    "lineWidth" ,
+    "lineAlpha",
+    "strokeStyle",
+    "fillStyle",
+    "fillAlpha",
+    "globalAlpha"
+]
+
 
 
 

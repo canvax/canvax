@@ -4,10 +4,9 @@ import WebGLRenderer from './webgl/WebGLRenderer';
 
 export default function autoRenderer( app , options)
 {
-    if (!app.noWebGL && utils.isWebGLSupported())
+    if (app.webGL && utils.isWebGLSupported())
     {
         return new WebGLRenderer( app , options);
-    }
-
+    };
     return new CanvasRenderer( app , options);
 }

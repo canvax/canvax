@@ -12,7 +12,6 @@ import Shape from "../display/Shape";
 import Utils from "../utils/index";
 import _ from "../utils/underscore";
 import Matrix from "../geom/Matrix";
-import Bezier from "../geom/bezier";
 import { Arc } from '../math/index';
 
 export default class Path extends Shape
@@ -36,7 +35,6 @@ export default class Path extends Shape
         opt.context = _context;
 
         super( opt );
-
         
         if ("drawTypeOnly" in opt) {
             this.drawTypeOnly = opt.drawTypeOnly;
@@ -44,20 +42,17 @@ export default class Path extends Shape
 
         this.__parsePathData = null;
         
-
         this.type = "path";
         this.id = Utils.createId(this.type);
-
-        this.setGraphics();
-        
     }
 
-    $watch(name, value, preValue) 
+    watch(name, value, preValue) 
     {
         if (name == "path") { //如果path有变动，需要自动计算新的pointList
-            this.setGraphics();
+            this.clearGraphicsData();
         }
     }
+
     _parsePathData(data) 
     {
         if (this.__parsePathData) {
@@ -314,11 +309,10 @@ export default class Path extends Shape
         return ca;
     }
 
-    //重新根的path绘制graphics
-    setGraphics()
+    //重新根的path绘制 graphics
+    draw( graphics )
     {
-        
-        this.graphics.clear();
+        graphics.beginPath();
         this.__parsePathData = null;
         this.context.pointList = [];
 
@@ -329,23 +323,23 @@ export default class Path extends Shape
                 var c = pathArray[g][i].command, p = pathArray[g][i].points;
                 switch (c) {
                     case 'L':
-                        this.graphics.lineTo(p[0], p[1]);
+                        graphics.lineTo(p[0], p[1]);
                         break;
                     case 'M':
-                        this.graphics.moveTo(p[0], p[1]);
+                        graphics.moveTo(p[0], p[1]);
                         break;
                     case 'C':
-                        this.graphics.bezierCurveTo(p[0], p[1], p[2], p[3], p[4], p[5]);
+                        graphics.bezierCurveTo(p[0], p[1], p[2], p[3], p[4], p[5]);
                         break;
                     case 'Q':
-                        this.graphics.quadraticCurveTo(p[0], p[1], p[2], p[3]);
+                        graphics.quadraticCurveTo(p[0], p[1], p[2], p[3]);
                         break;
                     case 'A':
                         //前面6个元素用来放path的A 6个参数，path A命令详见
-                        Arc.drawArc( this.graphics , p[7] , p[8] , p );
+                        Arc.drawArc( graphics , p[7] , p[8] , p );
                         break;
                     case 'z':
-                        this.graphics.closePath();
+                        graphics.closePath();
                         break;
                 }
             }

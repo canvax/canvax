@@ -341,9 +341,7 @@ var Utils = {
         return this._UID++;
     },
     createId: function createId(name) {
-        if (!name) {
-            debugger;
-        }
+        if (!name) {}
         //if end with a digit, then append an undersBase before appending
         var charCode = name.charCodeAt(name.length - 1);
         if (charCode >= 48 && charCode <= 57) name += "_";
@@ -2896,8 +2894,7 @@ var SHAPES = {
     POLY: 0,
     RECT: 1,
     CIRC: 2,
-    ELIP: 3,
-    RREC: 4
+    ELIP: 3
 };
 
 
@@ -2938,6 +2935,53 @@ var SHAPE_CONTEXT_DEFAULT = {
     lineWidth: null
 };
 
+//会影响到transform改变的context属性
+var TRANSFORM_PROPS = ["x", "y", "scaleX", "scaleY", "rotation", "scaleOrigin", "rotateOrigin"];
+
+//所有和样式相关的属性
+
+/**
+ * 线段包含判断
+ * @points [0,0,0,0]
+ */
+var _isInsideLine = function _isInsideLine(points, x, y, lineWidth) {
+    var x0 = points[0];
+    var y0 = points[1];
+    var x1 = points[2];
+    var y1 = points[3];
+    var _l = Math.max(lineWidth, 3);
+    var _a = 0;
+    var _b = x0;
+
+    if (y > y0 + _l && y > y1 + _l || y < y0 - _l && y < y1 - _l || x > x0 + _l && x > x1 + _l || x < x0 - _l && x < x1 - _l) {
+        return false;
+    }
+
+    if (x0 !== x1) {
+        _a = (y0 - y1) / (x0 - x1);
+        _b = (x0 * y1 - x1 * y0) / (x0 - x1);
+    } else {
+        return Math.abs(x - x0) <= _l / 2;
+    }
+
+    var _s = (_a * x - y + _b) * (_a * x - y + _b) / (_a * _a + 1);
+    return _s <= _l / 2 * _l / 2;
+};
+
+function insideLine(data, x, y, line) {
+    var points = data.shape.points;
+    var lineWidth = data.lineWidth;
+    var insideCatch = false;
+    for (var i = 0; i < points.length; ++i) {
+        insideCatch = _isInsideLine(points.slice(i, i + 4), x, y, lineWidth);
+        if (insideCatch) {
+            break;
+        }
+        i += 1;
+    }
+    return insideCatch;
+}
+
 /**
  * Canvax
  *
@@ -2953,6 +2997,7 @@ var DisplayObject = function DisplayObject(opt) {
 
     //相对父级元素的矩阵
     this._transform = null;
+    this.worldTransform = null; //webgl 渲染器中专用
 
     //心跳次数
     this._heartBeatNum = 0;
@@ -2974,7 +3019,7 @@ var DisplayObject = function DisplayObject(opt) {
     //创建好context
     this._createContext(opt);
 
-    this.id = Utils.createId(this.type || "displayObject");
+    this.id = opt.id || Utils.createId(this.type || "displayObject");
 
     this.init.apply(this, arguments);
 
@@ -3000,25 +3045,35 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
 
         _contextATTRS.$owner = self;
         _contextATTRS.$watch = function (name, value, preValue) {
-
             //下面的这些属性变化，都会需要重新组织矩阵属性 _transform 
-            var transFormProps = ["x", "y", "scaleX", "scaleY", "rotation", "scaleOrigin", "rotateOrigin, lineWidth"];
+            var obj = this.$owner;
 
-            if (_$1.indexOf(transFormProps, name) >= 0) {
-                this.$owner._updateTransform();
+            if (_$1.indexOf(TRANSFORM_PROPS, name) > -1) {
+                obj._updateTransform();
+
+                //stage本身就是世界坐标，所以其worldTransform不需要动态修改
+                if (obj.parent && obj.type != "stage" && obj.parent.worldTransform) {
+                    obj.worldTransform = null;
+                    //只有parent有worldTransform，就可以算出自己对应的世界坐标
+                    obj.getWorldTransform();
+                    if (obj.children) {
+                        //如果自己还有子元素，那么子元素的世界坐标也都要对应的调整
+                        obj.updateChildWorldTransform();
+                    }
+                }
             }
 
-            if (this.$owner._notWatch) {
+            if (obj._notWatch) {
                 return;
             }
 
-            if (this.$owner.$watch) {
-                this.$owner.$watch(name, value, preValue);
+            if (obj.$watch) {
+                obj.$watch(name, value, preValue);
             }
 
-            this.$owner.heartBeat({
+            obj.heartBeat({
                 convertType: "context",
-                shape: this.$owner,
+                shape: obj,
                 name: name,
                 value: value,
                 preValue: preValue
@@ -3027,6 +3082,7 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
 
         //执行init之前，应该就根据参数，把context组织好线
         self.context = Observe(_contextATTRS);
+        //self.context = _contextATTRS
     },
     /* @myself 是否生成自己的镜像 
      * 克隆又两种，一种是镜像，另外一种是绝对意义上面的新个体
@@ -3257,6 +3313,18 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
         this._transform = _transform;
         return _transform;
     },
+    //获取全局的世界坐标系内的矩阵
+    //世界坐标是从上而下的，所以只要和parent的直接坐标相乘就好了
+    getWorldTransform: function getWorldTransform() {
+        var cm;
+        if (!this.worldTransform) {
+            cm = new Matrix();
+            cm.concat(this._transform);
+            cm.concat(this.parent.worldTransform);
+            this.worldTransform = cm;
+        }
+        return this.worldTransform;
+    },
     //显示对象的选取检测处理函数
     getChildInPoint: function getChildInPoint(point) {
 
@@ -3280,11 +3348,38 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
             y = originPos[1];
         }
 
-        if (this.graphics) {
-            result = this.graphics.containsPoint({ x: x, y: y });
+        if (this.graphicsData) {
+            result = this.containsPoint({ x: x, y: y }, this.graphicsData);
         }
 
         return result;
+    },
+    containsPoint: function containsPoint(point, _graphicsData) {
+        var graphicsData = _graphicsData || this.graphicsData;
+        var inside = false;
+        for (var i = 0; i < graphicsData.length; ++i) {
+            var data = graphicsData[i];
+            if (data.shape) {
+                //先检测fill， fill的检测概率大些。
+                //像circle,ellipse这样的shape 就直接把lineWidth算在fill里面计算就好了，所以他们是没有insideLine的
+                if (data.hasFill() && data.shape.contains(point.x, point.y)) {
+                    inside = true;
+                    if (inside) {
+                        break;
+                    }
+                }
+
+                //circle,ellipse等就没有points
+                if (data.hasLine() && data.shape.points) {
+                    //然后检测是否和描边碰撞
+                    inside = insideLine(data, point.x, point.y);
+                    if (inside) {
+                        break;
+                    }
+                }
+            }
+        }
+        return inside;
     },
     /*
     * animate
@@ -3329,44 +3424,6 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
         tween = AnimationFrame.registTween(options);
         return tween;
     },
-
-    //渲染相关部分，迁移到renderers中去
-    _render: function _render(ctx) {
-        if (!this.context.visible || this.context.globalAlpha <= 0) {
-            return;
-        }
-        ctx.save();
-
-        var transForm = this._transform;
-        if (!transForm) {
-            transForm = this._updateTransform();
-        }
-        //运用矩阵开始变形
-        ctx.transform.apply(ctx, transForm.toArray());
-
-        //设置样式，文本有自己的设置样式方式
-        if (this.type != "text") {
-            var style = this.context.$model;
-            for (var p in style) {
-                if (p != "textBaseline" && p in ctx) {
-                    if (style[p] || _$1.isNumber(style[p])) {
-                        if (p == "globalAlpha") {
-                            //透明度要从父节点继承
-                            ctx[p] *= style[p];
-                        } else {
-                            ctx[p] = style[p];
-                        }
-                    }
-                }
-            }
-        }
-
-        this.render(ctx);
-        ctx.restore();
-    },
-    render: function render(ctx) {
-        //基类不提供render的具体实现，由后续具体的派生类各自实现
-    },
     //从树中删除
     remove: function remove() {
         if (this.parent) {
@@ -3404,7 +3461,7 @@ var DisplayObjectContainer = function DisplayObjectContainer(opt) {
 };
 
 Utils.creatClass(DisplayObjectContainer, DisplayObject, {
-    addChild: function addChild(child) {
+    addChild: function addChild(child, index) {
         if (!child) {
             return;
         }
@@ -3416,8 +3473,15 @@ Utils.creatClass(DisplayObjectContainer, DisplayObject, {
         if (child.parent) {
             child.parent.removeChild(child);
         }
-        this.children.push(child);
+
+        if (index === undefined) {
+            index = this.children.length;
+        }
+
+        this.children.splice(index, 0, child);
+
         child.parent = this;
+
         if (this.heartBeat) {
             this.heartBeat({
                 convertType: "children",
@@ -3430,33 +3494,15 @@ Utils.creatClass(DisplayObjectContainer, DisplayObject, {
             this._afterAddChild(child);
         }
 
+        if (this.worldTransform) {
+            //如果过自己已经有了世界坐标了，那么要把新添加进来的所有节点包括其子节点都设置好世界坐标
+            this.updateChildWorldTransform();
+        }
+
         return child;
     },
     addChildAt: function addChildAt(child, index) {
-        if (this.getChildIndex(child) != -1) {
-            child.parent = this;
-            return child;
-        }
-        if (child.parent) {
-            child.parent.removeChild(child);
-        }
-        this.children.splice(index, 0, child);
-        child.parent = this;
-
-        //上报children心跳
-        if (this.heartBeat) {
-            this.heartBeat({
-                convertType: "children",
-                target: child,
-                src: this
-            });
-        }
-
-        if (this._afterAddChild) {
-            this._afterAddChild(child, index);
-        }
-
-        return child;
+        return this.addChild(child, index);
     },
     removeChild: function removeChild(child) {
         return this.removeChildAt(_$1.indexOf(this.children, child));
@@ -3578,6 +3624,15 @@ Utils.creatClass(DisplayObjectContainer, DisplayObject, {
             }
         }
         return result;
+    },
+    //更新所有子节点的世界坐标
+    updateChildWorldTransform: function updateChildWorldTransform() {
+        _$1.each(this.children, function (obj) {
+            obj.getWorldTransform();
+            if (obj.children) {
+                obj.updateChildWorldTransform();
+            }
+        });
     }
 });
 
@@ -3590,7 +3645,7 @@ Utils.creatClass(DisplayObjectContainer, DisplayObject, {
  * 但是再canvax中，因为分层设计的需要。stage 舞台 同样代表一个canvas元素，但是不是再整个引擎设计
  * 里面， 不是唯一的根节点。而是会交由canvax类来统一管理其层级
  */
-var Stage = function Stage() {
+var Stage = function Stage(opt) {
     var self = this;
     self.type = "stage";
     self.canvas = null;
@@ -3598,6 +3653,7 @@ var Stage = function Stage() {
     //stage正在渲染中
     self.stageRending = false;
     self._isReady = false;
+
     Stage.superclass.constructor.apply(this, arguments);
 };
 Utils.creatClass(Stage, DisplayObjectContainer, {
@@ -3637,7 +3693,7 @@ var SystemRenderer = function () {
         this.type = type; //2canvas,1webgl
         this.app = app;
 
-        // prepare options
+        //prepare options
         if (options) {
             for (var i in settings.RENDER_OPTIONS) {
                 if (typeof options[i] === 'undefined') {
@@ -3803,9 +3859,8 @@ var CanvasGraphicsRenderer = function () {
     createClass(CanvasGraphicsRenderer, [{
         key: 'render',
         value: function render(displayObject, stage) {
-
-            var graphics = displayObject.graphics;
             var renderer = this.renderer;
+            var graphicsData = displayObject.graphicsData;
             var ctx = stage.ctx;
             var context = displayObject.context;
 
@@ -3813,12 +3868,15 @@ var CanvasGraphicsRenderer = function () {
                 context.globalAlpha *= displayObject.parent.context.globalAlpha;
             }
 
-            for (var i = 0; i < graphics.graphicsData.length; i++) {
-                var data = graphics.graphicsData[i];
+            for (var i = 0; i < graphicsData.length; i++) {
+                var data = graphicsData[i];
                 var shape = data.shape;
 
                 var fillStyle = data.fillStyle;
                 var strokeStyle = data.strokeStyle;
+
+                var fill = data.hasFill() && data.fillAlpha;
+                var line = data.hasLine() && data.lineAlpha;
 
                 ctx.lineWidth = data.lineWidth;
 
@@ -3827,23 +3885,23 @@ var CanvasGraphicsRenderer = function () {
 
                     this.renderPolygon(shape.points, shape.closed, ctx);
 
-                    if (data.hasFill()) {
+                    if (fill) {
                         ctx.globalAlpha = data.fillAlpha;
                         ctx.fillStyle = fillStyle;
                         ctx.fill();
                     }
-                    if (data.hasLine()) {
+                    if (line) {
                         ctx.globalAlpha = data.lineAlpha;
                         ctx.strokeStyle = strokeStyle;
                         ctx.stroke();
                     }
                 } else if (data.type === SHAPES.RECT) {
-                    if (data.hasFill()) {
+                    if (fill) {
                         ctx.globalAlpha = data.fillAlpha;
                         ctx.fillStyle = fillStyle;
                         ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
                     }
-                    if (data.hasLine()) {
+                    if (line) {
                         ctx.globalAlpha = data.lineAlpha;
                         ctx.strokeStyle = strokeStyle;
                         ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
@@ -3855,12 +3913,12 @@ var CanvasGraphicsRenderer = function () {
                     ctx.arc(shape.x, shape.y, shape.radius, 0, 2 * Math.PI);
                     ctx.closePath();
 
-                    if (data.hasFill()) {
+                    if (fill) {
                         ctx.globalAlpha = data.fillAlpha;
                         ctx.fillStyle = fillStyle;
                         ctx.fill();
                     }
-                    if (data.hasLine()) {
+                    if (line) {
                         ctx.globalAlpha = data.lineAlpha;
                         ctx.strokeStyle = strokeStyle;
                         ctx.stroke();
@@ -3890,12 +3948,12 @@ var CanvasGraphicsRenderer = function () {
 
                     ctx.closePath();
 
-                    if (data.hasFill()) {
+                    if (fill) {
                         ctx.globalAlpha = data.fillAlpha;
                         ctx.fillStyle = fillStyle;
                         ctx.fill();
                     }
-                    if (data.hasLine()) {
+                    if (line) {
                         ctx.globalAlpha = data.lineAlpha;
                         ctx.strokeStyle = strokeStyle;
                         ctx.stroke();
@@ -3920,83 +3978,76 @@ var CanvasGraphicsRenderer = function () {
     return CanvasGraphicsRenderer;
 }();
 
-var CanvasRenderer = function (_SystemRenderer) {
-    inherits(CanvasRenderer, _SystemRenderer);
+var GraphicsData = function () {
+    function GraphicsData(lineWidth, strokeStyle, lineAlpha, fillStyle, fillAlpha, shape, displayObject) {
+        classCallCheck(this, GraphicsData);
 
-    function CanvasRenderer(app) {
-        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-        classCallCheck(this, CanvasRenderer);
+        this.lineWidth = lineWidth;
+        this.strokeStyle = strokeStyle;
+        this.lineAlpha = lineAlpha;
 
-        var _this = possibleConstructorReturn(this, (CanvasRenderer.__proto__ || Object.getPrototypeOf(CanvasRenderer)).call(this, RENDERER_TYPE.CANVAS, app, options));
+        this.fillStyle = fillStyle;
+        this.fillAlpha = fillAlpha;
 
-        _this.CGR = new CanvasGraphicsRenderer(_this);
-        return _this;
+        this.shape = shape;
+        this.type = shape.type;
+
+        //在graphicsData中保持一份对displayObject的引用，后续可以从这里那全局矩阵等
+        //其在Dispaly.Shape.addCurrentPath2GD中进行设置
+        this.displayObject = displayObject;
+
+        this.holes = [];
+
+        //这两个可以被后续修改， 具有一票否决权
+        //比如polygon的 虚线描边。必须在fill的poly上面设置line为false
+        this.fill = true;
+        this.line = true;
     }
 
-    createClass(CanvasRenderer, [{
-        key: 'render',
-        value: function render(app) {
-            var me = this;
-            me.app = app;
-            _$1.each(_$1.values(app.convertStages), function (convertStage) {
-                me.renderStage(convertStage.stage);
-            });
-            app.convertStages = {};
+    createClass(GraphicsData, [{
+        key: "clone",
+        value: function clone() {
+            return new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, this.shape, this.displayObject);
         }
     }, {
-        key: 'renderStage',
-        value: function renderStage(stage) {
-            if (!stage.ctx) {
-                stage.ctx = stage.canvas.getContext("2d");
-            }
-            stage.stageRending = true;
-            this._clear(stage);
-            this._render(stage);
-            stage.stageRending = false;
+        key: "addHole",
+        value: function addHole(shape) {
+            this.holes.push(shape);
+        }
+
+        //从宿主graphics中同步最新的style属性
+
+    }, {
+        key: "synsStyle",
+        value: function synsStyle(graphics) {
+            //从shape中把绘图需要的style属性同步过来
+            this.lineWidth = graphics.lineWidth;
+            this.strokeStyle = graphics.strokeStyle;
+            this.lineAlpha = graphics.lineAlpha;
+
+            this.fillStyle = graphics.fillStyle;
+            this.fillAlpha = graphics.fillAlpha;
         }
     }, {
-        key: '_render',
-        value: function _render(stage, displayObject) {
-            if (!displayObject) {
-                displayObject = stage;
-            }
-
-            if (!displayObject.context.visible || displayObject.context.globalAlpha <= 0) {
-                return;
-            }
-
-            var ctx = stage.ctx;
-
-            ctx.save();
-
-            var transForm = displayObject._transform;
-            if (!transForm) {
-                transForm = displayObject._updateTransform();
-            }
-            //运用矩阵开始变形
-            ctx.transform.apply(ctx, transForm.toArray());
-
-            if (displayObject.graphics) {
-                this.CGR.render(displayObject, stage);
-            }
-
-            if (displayObject.children) {
-                for (var i = 0, len = displayObject.children.length; i < len; i++) {
-                    this._render(stage, displayObject.children[i]);
-                }
-            }
-
-            ctx.restore();
+        key: "hasFill",
+        value: function hasFill() {
+            return this.fillStyle && this.fill && this.shape.closed !== undefined && this.shape.closed;
         }
     }, {
-        key: '_clear',
-        value: function _clear(stage) {
-            //TODO:这里有点 奇怪， 之前的版本clearRect的时候，不需要 *RESOLUTION（分辨率）
-            stage.ctx.clearRect(0, 0, this.app.width * settings.RESOLUTION, this.app.height * settings.RESOLUTION);
+        key: "hasLine",
+        value: function hasLine() {
+            return this.strokeStyle && this.lineWidth && this.line;
+        }
+    }, {
+        key: "destroy",
+        value: function destroy() {
+            this.shape = null;
+            this.holes = null;
+            this.displayObject = null;
         }
     }]);
-    return CanvasRenderer;
-}(SystemRenderer);
+    return GraphicsData;
+}();
 
 /**
  * The Point object represents a location in a two-dimensional coordinate system, where x represents
@@ -4944,6 +4995,592 @@ var Polygon = function () {
  *
  * @lends PIXI
  */
+
+function bezierCurveTo(fromX, fromY, cpX, cpY, cpX2, cpY2, toX, toY) {
+    var path = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : [];
+
+    var n = 20;
+    var dt = 0;
+    var dt2 = 0;
+    var dt3 = 0;
+    var t2 = 0;
+    var t3 = 0;
+
+    path.push(fromX, fromY);
+
+    for (var i = 1, j = 0; i <= n; ++i) {
+        j = i / n;
+
+        dt = 1 - j;
+        dt2 = dt * dt;
+        dt3 = dt2 * dt;
+
+        t2 = j * j;
+        t3 = t2 * j;
+
+        path.push(dt3 * fromX + 3 * dt2 * j * cpX + 3 * dt * t2 * cpX2 + t3 * toX, dt3 * fromY + 3 * dt2 * j * cpY + 3 * dt * t2 * cpY2 + t3 * toY);
+    }
+
+    return path;
+}
+
+/*
+* Graphics绘图法则
+* 单个grahics实例里的fill line 样式属性，都从对应shape.context中获取
+* 
+*/
+
+var Graphics = function () {
+    function Graphics(shape) {
+        classCallCheck(this, Graphics);
+
+        this.lineWidth = 1;
+        this.strokeStyle = null;
+        this.lineAlpha = 1;
+        this.fillStyle = null;
+        this.fillAlpha = 1;
+
+        this.graphicsData = [];
+        this.currentPath = null;
+
+        this.dirty = 0; //用于检测图形对象是否已更改。 如果这是设置为true，那么图形对象将被重新计算。
+        this.clearDirty = 0; //用于检测我们是否清除了图形webGL数据
+
+        this._webGL = {};
+        this.worldAlpha = 1;
+        this.tint = 0xFFFFFF; //目标对象附加颜色
+    }
+
+    createClass(Graphics, [{
+        key: 'setStyle',
+        value: function setStyle(context) {
+            //从 shape 中把绘图需要的style属性同步过来
+            this.lineWidth = context.lineWidth;
+            this.strokeStyle = context.strokeStyle;
+            this.lineAlpha = context.lineAlpha * context.globalAlpha;
+
+            this.fillStyle = context.fillStyle;
+            this.fillAlpha = context.fillAlpha * context.globalAlpha;
+        }
+    }, {
+        key: 'clone',
+        value: function clone() {
+            var clone = new Graphics();
+
+            clone.dirty = 0;
+
+            // copy graphics data
+            for (var i = 0; i < this.graphicsData.length; ++i) {
+                clone.graphicsData.push(this.graphicsData[i].clone());
+            }
+
+            clone.currentPath = clone.graphicsData[clone.graphicsData.length - 1];
+            return clone;
+        }
+    }, {
+        key: 'moveTo',
+        value: function moveTo(x, y) {
+            var shape = new Polygon([x, y]);
+
+            shape.closed = false;
+            this.drawShape(shape);
+
+            return this;
+        }
+    }, {
+        key: 'lineTo',
+        value: function lineTo(x, y) {
+            if (this.currentPath) {
+                this.currentPath.shape.points.push(x, y);
+                this.dirty++;
+            } else {
+                this.moveTo(0, 0);
+            }
+            return this;
+        }
+    }, {
+        key: 'quadraticCurveTo',
+        value: function quadraticCurveTo(cpX, cpY, toX, toY) {
+            if (this.currentPath) {
+                if (this.currentPath.shape.points.length === 0) {
+                    this.currentPath.shape.points = [0, 0];
+                }
+            } else {
+                this.moveTo(0, 0);
+            }
+
+            var n = 20;
+            var points = this.currentPath.shape.points;
+            var xa = 0;
+            var ya = 0;
+
+            if (points.length === 0) {
+                this.moveTo(0, 0);
+            }
+
+            var fromX = points[points.length - 2];
+            var fromY = points[points.length - 1];
+
+            for (var i = 1; i <= n; ++i) {
+                var j = i / n;
+
+                xa = fromX + (cpX - fromX) * j;
+                ya = fromY + (cpY - fromY) * j;
+
+                points.push(xa + (cpX + (toX - cpX) * j - xa) * j, ya + (cpY + (toY - cpY) * j - ya) * j);
+            }
+
+            this.dirty++;
+
+            return this;
+        }
+    }, {
+        key: 'bezierCurveTo',
+        value: function bezierCurveTo$$1(cpX, cpY, cpX2, cpY2, toX, toY) {
+            if (this.currentPath) {
+                if (this.currentPath.shape.points.length === 0) {
+                    this.currentPath.shape.points = [0, 0];
+                }
+            } else {
+                this.moveTo(0, 0);
+            }
+
+            var points = this.currentPath.shape.points;
+
+            var fromX = points[points.length - 2];
+            var fromY = points[points.length - 1];
+
+            points.length -= 2;
+
+            bezierCurveTo(fromX, fromY, cpX, cpY, cpX2, cpY2, toX, toY, points);
+
+            this.dirty++;
+
+            return this;
+        }
+    }, {
+        key: 'arcTo',
+        value: function arcTo(x1, y1, x2, y2, radius) {
+            if (this.currentPath) {
+                if (this.currentPath.shape.points.length === 0) {
+                    this.currentPath.shape.points.push(x1, y1);
+                }
+            } else {
+                this.moveTo(x1, y1);
+            }
+
+            var points = this.currentPath.shape.points;
+            var fromX = points[points.length - 2];
+            var fromY = points[points.length - 1];
+            var a1 = fromY - y1;
+            var b1 = fromX - x1;
+            var a2 = y2 - y1;
+            var b2 = x2 - x1;
+            var mm = Math.abs(a1 * b2 - b1 * a2);
+
+            if (mm < 1.0e-8 || radius === 0) {
+                if (points[points.length - 2] !== x1 || points[points.length - 1] !== y1) {
+                    points.push(x1, y1);
+                }
+            } else {
+                var dd = a1 * a1 + b1 * b1;
+                var cc = a2 * a2 + b2 * b2;
+                var tt = a1 * a2 + b1 * b2;
+                var k1 = radius * Math.sqrt(dd) / mm;
+                var k2 = radius * Math.sqrt(cc) / mm;
+                var j1 = k1 * tt / dd;
+                var j2 = k2 * tt / cc;
+                var cx = k1 * b2 + k2 * b1;
+                var cy = k1 * a2 + k2 * a1;
+                var px = b1 * (k2 + j1);
+                var py = a1 * (k2 + j1);
+                var qx = b2 * (k1 + j2);
+                var qy = a2 * (k1 + j2);
+                var startAngle = Math.atan2(py - cy, px - cx);
+                var endAngle = Math.atan2(qy - cy, qx - cx);
+
+                this.arc(cx + x1, cy + y1, radius, startAngle, endAngle, b1 * a2 > b2 * a1);
+            }
+
+            this.dirty++;
+
+            return this;
+        }
+    }, {
+        key: 'arc',
+        value: function arc(cx, cy, radius, startAngle, endAngle) {
+            var anticlockwise = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
+
+            if (startAngle === endAngle) {
+                return this;
+            }
+
+            if (!anticlockwise && endAngle <= startAngle) {
+                endAngle += Math.PI * 2;
+            } else if (anticlockwise && startAngle <= endAngle) {
+                startAngle += Math.PI * 2;
+            }
+
+            var sweep = endAngle - startAngle;
+            var segs = Math.ceil(Math.abs(sweep) / (Math.PI * 2)) * 40;
+
+            if (sweep === 0) {
+                return this;
+            }
+
+            var startX = cx + Math.cos(startAngle) * radius;
+            var startY = cy + Math.sin(startAngle) * radius;
+
+            // If the currentPath exists, take its points. Otherwise call `moveTo` to start a path.
+            var points = this.currentPath ? this.currentPath.shape.points : null;
+
+            if (points) {
+                if (points[points.length - 2] !== startX || points[points.length - 1] !== startY) {
+                    points.push(startX, startY);
+                }
+            } else {
+                this.moveTo(startX, startY);
+                points = this.currentPath.shape.points;
+            }
+
+            var theta = sweep / (segs * 2);
+            var theta2 = theta * 2;
+
+            var cTheta = Math.cos(theta);
+            var sTheta = Math.sin(theta);
+
+            var segMinus = segs - 1;
+
+            var remainder = segMinus % 1 / segMinus;
+
+            for (var i = 0; i <= segMinus; ++i) {
+                var real = i + remainder * i;
+
+                var angle = theta + startAngle + theta2 * real;
+
+                var c = Math.cos(angle);
+                var s = -Math.sin(angle);
+
+                points.push((cTheta * c + sTheta * s) * radius + cx, (cTheta * -s + sTheta * c) * radius + cy);
+            }
+
+            this.dirty++;
+
+            return this;
+        }
+    }, {
+        key: 'drawRect',
+        value: function drawRect(x, y, width, height) {
+            this.drawShape(new Rectangle(x, y, width, height));
+            return this;
+        }
+    }, {
+        key: 'drawCircle',
+        value: function drawCircle(x, y, radius) {
+            this.drawShape(new Circle(x, y, radius));
+
+            return this;
+        }
+    }, {
+        key: 'drawEllipse',
+        value: function drawEllipse(x, y, width, height) {
+            this.drawShape(new Ellipse(x, y, width, height));
+
+            return this;
+        }
+    }, {
+        key: 'drawPolygon',
+        value: function drawPolygon(path) {
+            // prevents an argument assignment deopt
+            // see section 3.1: https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
+            var points = path;
+
+            var closed = true;
+
+            if (points instanceof Polygon) {
+                closed = points.closed;
+                points = points.points;
+            }
+
+            if (!Array.isArray(points)) {
+                // prevents an argument leak deopt
+                // see section 3.2: https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
+                points = new Array(arguments.length);
+
+                for (var i = 0; i < points.length; ++i) {
+                    points[i] = arguments[i]; // eslint-disable-line prefer-rest-params
+                }
+            }
+
+            var shape = new Polygon(points);
+
+            shape.closed = closed;
+
+            this.drawShape(shape);
+
+            return this;
+        }
+    }, {
+        key: 'clear',
+        value: function clear() {
+            if (this.graphicsData.length > 0) {
+                this.dirty++;
+                this.clearDirty++;
+                this.graphicsData.length = 0;
+            }
+
+            this.currentPath = null;
+
+            return this;
+        }
+    }, {
+        key: 'drawShape',
+        value: function drawShape(shape) {
+            if (this.currentPath) {
+                if (this.currentPath.shape.points.length <= 2) {
+                    this.graphicsData.pop();
+                }
+            }
+
+            this.currentPath = null;
+
+            var data = new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, shape);
+
+            this.graphicsData.push(data);
+
+            if (data.type === SHAPES.POLY) {
+                data.shape.closed = data.shape.closed;
+                this.currentPath = data;
+            }
+
+            this.dirty++;
+
+            return data;
+        }
+    }, {
+        key: 'beginPath',
+        value: function beginPath() {
+            this.currentPath = null;
+        }
+    }, {
+        key: 'closePath',
+        value: function closePath() {
+            var currentPath = this.currentPath;
+
+            if (currentPath && currentPath.shape) {
+                currentPath.shape.close();
+            }
+
+            return this;
+        }
+
+        /**
+        * Update the bounds of the object
+        *
+        */
+
+    }, {
+        key: 'updateLocalBounds',
+        value: function updateLocalBounds() {
+            var minX = Infinity;
+            var maxX = -Infinity;
+
+            var minY = Infinity;
+            var maxY = -Infinity;
+
+            if (this.graphicsData.length) {
+                var shape = 0;
+                var x = 0;
+                var y = 0;
+                var w = 0;
+                var h = 0;
+
+                for (var i = 0; i < this.graphicsData.length; i++) {
+                    var data = this.graphicsData[i];
+                    var type = data.type;
+                    var lineWidth = data.lineWidth;
+
+                    shape = data.shape;
+
+                    if (type === SHAPES.RECT || type === SHAPES.RREC) {
+                        x = shape.x - lineWidth / 2;
+                        y = shape.y - lineWidth / 2;
+                        w = shape.width + lineWidth;
+                        h = shape.height + lineWidth;
+
+                        minX = x < minX ? x : minX;
+                        maxX = x + w > maxX ? x + w : maxX;
+
+                        minY = y < minY ? y : minY;
+                        maxY = y + h > maxY ? y + h : maxY;
+                    } else if (type === SHAPES.CIRC) {
+                        x = shape.x;
+                        y = shape.y;
+                        w = shape.radius + lineWidth / 2;
+                        h = shape.radius + lineWidth / 2;
+
+                        minX = x - w < minX ? x - w : minX;
+                        maxX = x + w > maxX ? x + w : maxX;
+
+                        minY = y - h < minY ? y - h : minY;
+                        maxY = y + h > maxY ? y + h : maxY;
+                    } else if (type === SHAPES.ELIP) {
+                        x = shape.x;
+                        y = shape.y;
+                        w = shape.width + lineWidth / 2;
+                        h = shape.height + lineWidth / 2;
+
+                        minX = x - w < minX ? x - w : minX;
+                        maxX = x + w > maxX ? x + w : maxX;
+
+                        minY = y - h < minY ? y - h : minY;
+                        maxY = y + h > maxY ? y + h : maxY;
+                    } else {
+                        // POLY
+                        var points = shape.points;
+                        var x2 = 0;
+                        var y2 = 0;
+                        var dx = 0;
+                        var dy = 0;
+                        var rw = 0;
+                        var rh = 0;
+                        var cx = 0;
+                        var cy = 0;
+
+                        for (var j = 0; j + 2 < points.length; j += 2) {
+                            x = points[j];
+                            y = points[j + 1];
+                            x2 = points[j + 2];
+                            y2 = points[j + 3];
+                            dx = Math.abs(x2 - x);
+                            dy = Math.abs(y2 - y);
+                            h = lineWidth;
+                            w = Math.sqrt(dx * dx + dy * dy);
+
+                            if (w < 1e-9) {
+                                continue;
+                            }
+
+                            rw = (h / w * dy + dx) / 2;
+                            rh = (h / w * dx + dy) / 2;
+                            cx = (x2 + x) / 2;
+                            cy = (y2 + y) / 2;
+
+                            minX = cx - rw < minX ? cx - rw : minX;
+                            maxX = cx + rw > maxX ? cx + rw : maxX;
+
+                            minY = cy - rh < minY ? cy - rh : minY;
+                            maxY = cy + rh > maxY ? cy + rh : maxY;
+                        }
+                    }
+                }
+            } else {
+                minX = 0;
+                maxX = 0;
+                minY = 0;
+                maxY = 0;
+            }
+
+            this.Bound.minX = minX;
+            this.Bound.maxX = maxX;
+
+            this.Bound.minY = minY;
+            this.Bound.maxY = maxY;
+        }
+    }, {
+        key: 'destroy',
+        value: function destroy(options) {
+            get(Graphics.prototype.__proto__ || Object.getPrototypeOf(Graphics.prototype), 'destroy', this).call(this, options);
+
+            for (var i = 0; i < this.graphicsData.length; ++i) {
+                this.graphicsData[i].destroy();
+            }
+            for (var id in this._webGL) {
+                for (var j = 0; j < this._webGL[id].data.length; ++j) {
+                    this._webGL[id].data[j].destroy();
+                }
+            }
+
+            this.graphicsData = null;
+            this.currentPath = null;
+            this._webGL = null;
+        }
+    }]);
+    return Graphics;
+}();
+
+var CanvasRenderer = function (_SystemRenderer) {
+    inherits(CanvasRenderer, _SystemRenderer);
+
+    function CanvasRenderer(app) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+        classCallCheck(this, CanvasRenderer);
+
+        var _this = possibleConstructorReturn(this, (CanvasRenderer.__proto__ || Object.getPrototypeOf(CanvasRenderer)).call(this, RENDERER_TYPE.CANVAS, app, options));
+
+        _this.CGR = new CanvasGraphicsRenderer(_this);
+        //一个stage用一个graphics来绘制所有的shape
+        _this.graphics = new Graphics();
+        return _this;
+    }
+
+    createClass(CanvasRenderer, [{
+        key: 'render',
+        value: function render(app) {
+            var me = this;
+            me.app = app;
+            _$1.each(_$1.values(app.convertStages), function (convertStage) {
+                me.renderStage(convertStage.stage);
+            });
+            app.convertStages = {};
+        }
+    }, {
+        key: 'renderStage',
+        value: function renderStage(stage) {
+            if (!stage.ctx) {
+                stage.ctx = stage.canvas.getContext("2d");
+            }
+            stage.stageRending = true;
+            this._clear(stage);
+            this._render(stage);
+            stage.stageRending = false;
+        }
+    }, {
+        key: '_render',
+        value: function _render(stage, displayObject) {
+            if (!displayObject) {
+                displayObject = stage;
+            }
+
+            if (!displayObject.context.visible || displayObject.context.globalAlpha <= 0) {
+                return;
+            }
+
+            var ctx = stage.ctx;
+
+            if (displayObject.graphicsData) {
+                //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
+                ctx.setTransform.apply(ctx, displayObject.worldTransform.toArray());
+                displayObject._draw(stage, this); //_draw会完成绘制准备好 graphicsData
+                this.CGR.render(displayObject, stage, this);
+            }
+
+            if (displayObject.children) {
+                for (var i = 0, len = displayObject.children.length; i < len; i++) {
+                    this._render(stage, displayObject.children[i]);
+                }
+            }
+        }
+    }, {
+        key: '_clear',
+        value: function _clear(stage) {
+            var ctx = stage.ctx;
+            ctx.setTransform.apply(ctx, stage.worldTransform.toArray());
+            ctx.clearRect(0, 0, this.app.width, this.app.height);
+        }
+    }]);
+    return CanvasRenderer;
+}(SystemRenderer);
 
 function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
@@ -6572,7 +7209,6 @@ var RenderTarget = function () {
     function RenderTarget(gl, width, height, resolution, root) {
         classCallCheck(this, RenderTarget);
 
-
         this.gl = gl;
 
         // framebuffer 是WebGL渲染的终点。当你看屏幕时，其他就是在看 framebuffer 中的内容。
@@ -6693,94 +7329,25 @@ var RenderTarget = function () {
     return RenderTarget;
 }();
 
-var ObjectRenderer = function () {
-    function ObjectRenderer(renderer) {
-        classCallCheck(this, ObjectRenderer);
-
-        this.renderer = renderer;
-    }
-
-    createClass(ObjectRenderer, [{
-        key: 'start',
-        value: function start() {}
-    }, {
-        key: 'stop',
-        value: function stop() {
-            this.flush();
-        }
-    }, {
-        key: 'flush',
-        value: function flush() {}
-    }, {
-        key: 'destroy',
-        value: function destroy() {
-            this.renderer.off('context', this.onContextChange, this);
-
-            this.renderer = null;
-        }
-    }, {
-        key: 'render',
-        value: function render(object) {}
-    }]);
-    return ObjectRenderer;
-}();
-
 var DEPTH_TEST = 1;
 var FRONT_FACE = 2;
 var CULL_FACE = 3;
 
-/**
- * A WebGL state machines
- *
- * @memberof PIXI
- * @class
- */
-
 var WebGLState = function () {
-    /**
-     * @param {WebGLRenderingContext} gl - The current WebGL rendering context
-     */
     function WebGLState(gl) {
         classCallCheck(this, WebGLState);
 
-        /**
-         * The current active state
-         *
-         * @member {Uint8Array}
-         */
+
         this.activeState = new Uint8Array(16);
 
-        /**
-         * The default state
-         *
-         * @member {Uint8Array}
-         */
         this.defaultState = new Uint8Array(16);
 
-        // default blend mode..
         this.defaultState[0] = 1;
 
-        /**
-         * The current state index in the stack
-         *
-         * @member {number}
-         * @private
-         */
         this.stackIndex = 0;
 
-        /**
-         * The stack holding all the different states
-         *
-         * @member {Array<*>}
-         * @private
-         */
         this.stack = [];
 
-        /**
-         * The current WebGL rendering context
-         *
-         * @member {WebGLRenderingContext}
-         */
         this.gl = gl;
 
         this.maxAttribs = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
@@ -6794,32 +7361,19 @@ var WebGLState = function () {
         this.nativeVaoExtension = gl.getExtension('OES_vertex_array_object') || gl.getExtension('MOZ_OES_vertex_array_object') || gl.getExtension('WEBKIT_OES_vertex_array_object');
     }
 
-    /**
-     * Pushes a new active state
-     */
-
-
     createClass(WebGLState, [{
         key: 'push',
         value: function push() {
-            // next state..
             var state = this.stack[++this.stackIndex];
 
             if (!state) {
                 state = this.stack[this.stackIndex] = new Uint8Array(16);
             }
 
-            // copy state..
-            // set active state so we can force overrides of gl state
             for (var i = 0; i < this.activeState.length; i++) {
                 this.activeState[i] = state[i];
             }
         }
-
-        /**
-         * Pops a state out
-         */
-
     }, {
         key: 'pop',
         value: function pop() {
@@ -6827,13 +7381,6 @@ var WebGLState = function () {
 
             this.setState(state);
         }
-
-        /**
-         * Sets the current state
-         *
-         * @param {*} state - The state to set.
-         */
-
     }, {
         key: 'setState',
         value: function setState(state) {
@@ -6841,13 +7388,6 @@ var WebGLState = function () {
             this.setFrontFace(state[FRONT_FACE]);
             this.setCullFace(state[CULL_FACE]);
         }
-
-        /**
-         * Sets whether to enable or disable depth test.
-         *
-         * @param {boolean} value - Turn on or off webgl depth testing.
-         */
-
     }, {
         key: 'setDepthTest',
         value: function setDepthTest(value) {
@@ -6860,13 +7400,6 @@ var WebGLState = function () {
             this.activeState[DEPTH_TEST] = value;
             this.gl[value ? 'enable' : 'disable'](this.gl.DEPTH_TEST);
         }
-
-        /**
-         * Sets whether to enable or disable cull face.
-         *
-         * @param {boolean} value - Turn on or off webgl cull face.
-         */
-
     }, {
         key: 'setCullFace',
         value: function setCullFace(value) {
@@ -6879,13 +7412,6 @@ var WebGLState = function () {
             this.activeState[CULL_FACE] = value;
             this.gl[value ? 'enable' : 'disable'](this.gl.CULL_FACE);
         }
-
-        /**
-         * Sets the gl front face.
-         *
-         * @param {boolean} value - true is clockwise and false is counter-clockwise
-         */
-
     }, {
         key: 'setFrontFace',
         value: function setFrontFace(value) {
@@ -6898,12 +7424,6 @@ var WebGLState = function () {
             this.activeState[FRONT_FACE] = value;
             this.gl.frontFace(this.gl[value ? 'CW' : 'CCW']);
         }
-
-        /**
-         * Disables all the vaos in use
-         *
-         */
-
     }, {
         key: 'resetAttributes',
         value: function resetAttributes() {
@@ -6915,29 +7435,19 @@ var WebGLState = function () {
                 this.attribState.attribState[_i] = 0;
             }
 
-            // im going to assume one is always active for performance reasons.
             for (var _i2 = 1; _i2 < this.maxAttribs; _i2++) {
                 this.gl.disableVertexAttribArray(_i2);
             }
         }
-
-        // used
-        /**
-         * Resets all the logic and disables the vaos
-         */
-
     }, {
         key: 'resetToDefault',
         value: function resetToDefault() {
-            // unbind any VAO if they exist..
             if (this.nativeVaoExtension) {
                 this.nativeVaoExtension.bindVertexArrayOES(null);
             }
 
-            // reset all attributes..
             this.resetAttributes();
 
-            // set active state so we can force overrides of gl state
             for (var i = 0; i < this.activeState.length; ++i) {
                 this.activeState[i] = 32;
             }
@@ -6951,50 +7461,29 @@ var WebGLState = function () {
 }();
 
 function hex2rgb(hex, out) {
-    out = out || [];
+  //hex可能是“#ff0000” 也可能是 0xff0000
+  if (hex.replace) {
+    hex = parseInt(hex.replace("#", "0X"), 16);
+  }
 
-    out[0] = (hex >> 16 & 0xFF) / 255;
-    out[1] = (hex >> 8 & 0xFF) / 255;
-    out[2] = (hex & 0xFF) / 255;
+  out = out || [];
 
-    return out;
+  out[0] = (hex >> 16 & 0xFF) / 255;
+  out[1] = (hex >> 8 & 0xFF) / 255;
+  out[2] = (hex & 0xFF) / 255;
+
+  return out;
 }
 
-/**
- * An object containing WebGL specific properties to be used by the WebGL renderer
- *
- * @class
- * @private
- * @memberof PIXI
- */
-
 var WebGLGraphicsData = function () {
-  /**
-   * @param {WebGLRenderingContext} gl - The current WebGL drawing context
-   * @param {PIXI.Shader} shader - The shader
-   * @param {object} attribsState - The state for the VAO
-   */
   function WebGLGraphicsData(gl, shader, attribsState) {
     classCallCheck(this, WebGLGraphicsData);
 
-    /**
-     * The current WebGL drawing context
-     *
-     * @member {WebGLRenderingContext}
-     */
     this.gl = gl;
 
-    // TODO does this need to be split before uploading??
-    /**
-     * An array of color components (r,g,b)
-     * @member {number[]}
-     */
     this.color = [0, 0, 0]; // color split!
 
-    /**
-     * An array of points to draw
-     * @member {PIXI.Point[]}
-     */
+
     this.points = [];
 
     /**
@@ -7133,24 +7622,13 @@ var Shader$1 = function (_GLShader) {
     return Shader;
 }(GLShader$2);
 
-/**
- * This shader is used to draw simple primitive shapes for {@link PIXI.Graphics}.
- *
- * @class
- * @memberof PIXI
- * @extends PIXI.Shader
- */
-
 var PrimitiveShader = function (_Shader) {
     inherits(PrimitiveShader, _Shader);
 
-    /**
-     * @param {WebGLRenderingContext} gl - The webgl shader manager this shader works for.
-     */
     function PrimitiveShader(gl) {
         classCallCheck(this, PrimitiveShader);
         return possibleConstructorReturn(this, (PrimitiveShader.__proto__ || Object.getPrototypeOf(PrimitiveShader)).call(this, gl,
-        // vertex shader
+        //vertex shader
         ['attribute vec2 aVertexPosition;', 'attribute vec4 aColor;', 'uniform mat3 translationMatrix;', 'uniform mat3 projectionMatrix;', 'uniform float alpha;', 'uniform vec3 tint;', 'varying vec4 vColor;', 'void main(void){', '   gl_Position = vec4((projectionMatrix * translationMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);', '   vColor = aColor * vec4(tint * alpha, alpha);', '}'].join('\n'),
         // fragment shader
         ['varying vec4 vColor;', 'void main(void){', '   gl_FragColor = vColor;', '}'].join('\n')));
@@ -7159,40 +7637,17 @@ var PrimitiveShader = function (_Shader) {
     return PrimitiveShader;
 }(Shader$1);
 
-/**
- * Builds a line to draw
- *
- * Ignored from docs since it is not directly exposed.
- *
- * @ignore
- * @private
- * @param {PIXI.WebGLGraphicsData} graphicsData - The graphics object containing all the necessary properties
- * @param {object} webGLData - an object containing all the webGL-specific information to create this shape
- */
 function buildLine(graphicsData, webGLData) {
-    // TODO OPTIMISE!
     var points = graphicsData.points;
 
     if (points.length === 0) {
         return;
     }
-    // if the line width is an odd number add 0.5 to align to a whole pixel
-    // commenting this out fixes #711 and #1620
-    // if (graphicsData.lineWidth%2)
-    // {
-    //     for (i = 0; i < points.length; i++)
-    //     {
-    //         points[i] += 0.5;
-    //     }
-    // }
 
-    // get first and last point.. figure out the middle!
     var firstPoint = new Point$2(points[0], points[1]);
     var lastPoint = new Point$2(points[points.length - 2], points[points.length - 1]);
 
-    // if the first point is the last point - gonna have issues :)
     if (firstPoint.x === lastPoint.x && firstPoint.y === lastPoint.y) {
-        // need to clone as we are going to slightly modify the shape..
         points = points.slice();
 
         points.pop();
@@ -7213,10 +7668,8 @@ function buildLine(graphicsData, webGLData) {
     var indexCount = points.length;
     var indexStart = verts.length / 6;
 
-    // DRAW the Line
     var width = graphicsData.lineWidth / 2;
 
-    // sort color
     var color = hex2rgb(graphicsData.strokeStyle);
     var alpha = graphicsData.lineAlpha;
     var r = color[0] * alpha;
@@ -8001,24 +8454,13 @@ earcut.flatten = function (data) {
     return result;
 };
 
-/**
- * Builds a polygon to draw
- *
- * Ignored from docs since it is not directly exposed.
- *
- * @ignore
- * @private
- * @param {PIXI.WebGLGraphicsData} graphicsData - The graphics object containing all the necessary properties
- * @param {object} webGLData - an object containing all the webGL-specific information to create this shape
- */
 function buildPoly(graphicsData, webGLData) {
     graphicsData.points = graphicsData.shape.points.slice();
 
     var points = graphicsData.points;
 
-    if (graphicsData.fill && points.length >= 6) {
+    if (graphicsData.hasFill() && graphicsData.fillAlpha && points.length >= 6) {
         var holeArray = [];
-        // Process holes..
         var holes = graphicsData.holes;
 
         for (var i = 0; i < holes.length; i++) {
@@ -8029,13 +8471,11 @@ function buildPoly(graphicsData, webGLData) {
             points = points.concat(hole.points);
         }
 
-        // get first and last point.. figure out the middle!
         var verts = webGLData.points;
         var indices = webGLData.indices;
 
         var length = points.length / 2;
 
-        // sort color
         var color = hex2rgb(graphicsData.fillStyle);
         var alpha = graphicsData.fillAlpha;
         var r = color[0] * alpha;
@@ -8063,32 +8503,20 @@ function buildPoly(graphicsData, webGLData) {
         }
     }
 
-    if (graphicsData.lineWidth > 0) {
+    if (graphicsData.hasLine() && graphicsData.lineAlpha) {
         buildLine(graphicsData, webGLData);
     }
 }
 
-/**
- * Builds a rectangle to draw
- *
- * Ignored from docs since it is not directly exposed.
- *
- * @ignore
- * @private
- * @param {PIXI.WebGLGraphicsData} graphicsData - The graphics object containing all the necessary properties
- * @param {object} webGLData - an object containing all the webGL-specific information to create this shape
- */
 function buildRectangle(graphicsData, webGLData) {
-    // --- //
-    // need to convert points to a nice regular data
-    //
+
     var rectData = graphicsData.shape;
     var x = rectData.x;
     var y = rectData.y;
     var width = rectData.width;
     var height = rectData.height;
 
-    if (graphicsData.fill) {
+    if (graphicsData.hasFill() && graphicsData.fillAlpha) {
         var color = hex2rgb(graphicsData.fillStyle);
         var alpha = graphicsData.fillAlpha;
 
@@ -8118,7 +8546,7 @@ function buildRectangle(graphicsData, webGLData) {
         indices.push(vertPos, vertPos, vertPos + 1, vertPos + 2, vertPos + 3, vertPos + 3);
     }
 
-    if (graphicsData.lineWidth) {
+    if (graphicsData.hasLine() && graphicsData.lineAlpha) {
         var tempPoints = graphicsData.points;
 
         graphicsData.points = [x, y, x + width, y, x + width, y + height, x, y + height, x, y];
@@ -8129,150 +8557,14 @@ function buildRectangle(graphicsData, webGLData) {
     }
 }
 
-/**
- * Builds a rounded rectangle to draw
- *
- * Ignored from docs since it is not directly exposed.
- *
- * @ignore
- * @private
- * @param {PIXI.WebGLGraphicsData} graphicsData - The graphics object containing all the necessary properties
- * @param {object} webGLData - an object containing all the webGL-specific information to create this shape
- */
-function buildRoundedRectangle(graphicsData, webGLData) {
-    var rrectData = graphicsData.shape;
-    var x = rrectData.x;
-    var y = rrectData.y;
-    var width = rrectData.width;
-    var height = rrectData.height;
-
-    var radius = rrectData.radius;
-
-    var recPoints = [];
-
-    recPoints.push(x, y + radius);
-    quadraticBezierCurve(x, y + height - radius, x, y + height, x + radius, y + height, recPoints);
-    quadraticBezierCurve(x + width - radius, y + height, x + width, y + height, x + width, y + height - radius, recPoints);
-    quadraticBezierCurve(x + width, y + radius, x + width, y, x + width - radius, y, recPoints);
-    quadraticBezierCurve(x + radius, y, x, y, x, y + radius + 0.0000000001, recPoints);
-
-    // this tiny number deals with the issue that occurs when points overlap and earcut fails to triangulate the item.
-    // TODO - fix this properly, this is not very elegant.. but it works for now.
-
-    if (graphicsData.fill) {
-        var color = hex2rgb(graphicsData.fillStyle);
-        var alpha = graphicsData.fillAlpha;
-
-        var r = color[0] * alpha;
-        var g = color[1] * alpha;
-        var b = color[2] * alpha;
-
-        var verts = webGLData.points;
-        var indices = webGLData.indices;
-
-        var vecPos = verts.length / 6;
-
-        var triangles = earcut_1(recPoints, null, 2);
-
-        for (var i = 0, j = triangles.length; i < j; i += 3) {
-            indices.push(triangles[i] + vecPos);
-            indices.push(triangles[i] + vecPos);
-            indices.push(triangles[i + 1] + vecPos);
-            indices.push(triangles[i + 2] + vecPos);
-            indices.push(triangles[i + 2] + vecPos);
-        }
-
-        for (var _i = 0, _j = recPoints.length; _i < _j; _i++) {
-            verts.push(recPoints[_i], recPoints[++_i], r, g, b, alpha);
-        }
-    }
-
-    if (graphicsData.lineWidth) {
-        var tempPoints = graphicsData.points;
-
-        graphicsData.points = recPoints;
-
-        buildLine(graphicsData, webGLData);
-
-        graphicsData.points = tempPoints;
-    }
-}
-
-/**
- * Calculate the points for a quadratic bezier curve. (helper function..)
- * Based on: https://stackoverflow.com/questions/785097/how-do-i-implement-a-bezier-curve-in-c
- *
- * Ignored from docs since it is not directly exposed.
- *
- * @ignore
- * @private
- * @param {number} fromX - Origin point x
- * @param {number} fromY - Origin point x
- * @param {number} cpX - Control point x
- * @param {number} cpY - Control point y
- * @param {number} toX - Destination point x
- * @param {number} toY - Destination point y
- * @param {number[]} [out=[]] - The output array to add points into. If not passed, a new array is created.
- * @return {number[]} an array of points
- */
-function quadraticBezierCurve(fromX, fromY, cpX, cpY, toX, toY) {
-    var out = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : [];
-
-    var n = 20;
-    var points = out;
-
-    var xa = 0;
-    var ya = 0;
-    var xb = 0;
-    var yb = 0;
-    var x = 0;
-    var y = 0;
-
-    function getPt(n1, n2, perc) {
-        var diff = n2 - n1;
-
-        return n1 + diff * perc;
-    }
-
-    for (var i = 0, j = 0; i <= n; ++i) {
-        j = i / n;
-
-        // The Green Line
-        xa = getPt(fromX, cpX, j);
-        ya = getPt(fromY, cpY, j);
-        xb = getPt(cpX, toX, j);
-        yb = getPt(cpY, toY, j);
-
-        // The Black Dot
-        x = getPt(xa, xb, j);
-        y = getPt(ya, yb, j);
-
-        points.push(x, y);
-    }
-
-    return points;
-}
-
-/**
- * Builds a circle to draw
- *
- * Ignored from docs since it is not directly exposed.
- *
- * @ignore
- * @private
- * @param {PIXI.WebGLGraphicsData} graphicsData - The graphics object to draw
- * @param {object} webGLData - an object containing all the webGL-specific information to create this shape
- */
 function buildCircle(graphicsData, webGLData) {
 
-    // need to convert points to a nice regular data
     var circleData = graphicsData.shape;
     var x = circleData.x;
     var y = circleData.y;
     var width = void 0;
     var height = void 0;
 
-    // TODO - bit hacky??
     if (graphicsData.type === SHAPES.CIRC) {
         width = circleData.radius;
         height = circleData.radius;
@@ -8285,7 +8577,7 @@ function buildCircle(graphicsData, webGLData) {
 
     var seg = Math.PI * 2 / totalSegs;
 
-    if (graphicsData.fill) {
+    if (graphicsData.hasFill() && graphicsData.fillAlpha) {
         var color = hex2rgb(graphicsData.fillStyle);
         var alpha = graphicsData.fillAlpha;
 
@@ -8311,7 +8603,7 @@ function buildCircle(graphicsData, webGLData) {
         indices.push(vecPos - 1);
     }
 
-    if (graphicsData.lineWidth) {
+    if (graphicsData.hasLine() && graphicsData.lineAlpha) {
         var tempPoints = graphicsData.points;
 
         graphicsData.points = [];
@@ -8326,35 +8618,16 @@ function buildCircle(graphicsData, webGLData) {
     }
 }
 
-var GraphicsRenderer = function (_ObjectRenderer) {
-    inherits(GraphicsRenderer, _ObjectRenderer);
-
-    /**
-     * @param {PIXI.WebGLRenderer} renderer - The renderer this object renderer works for.
-     */
+var GraphicsRenderer = function () {
     function GraphicsRenderer(renderer) {
         classCallCheck(this, GraphicsRenderer);
 
-        var _this = possibleConstructorReturn(this, (GraphicsRenderer.__proto__ || Object.getPrototypeOf(GraphicsRenderer)).call(this, renderer));
-
-        _this.graphicsDataPool = [];
-
-        _this.primitiveShader = null;
-
-        _this.gl = renderer.gl;
-
-        // easy access!
-        _this.CONTEXT_UID = 0;
-        return _this;
+        this.renderer = renderer;
+        this.graphicsDataPool = [];
+        this.primitiveShader = null;
+        this.gl = renderer.gl;
+        this.CONTEXT_UID = 0;
     }
-
-    /**
-     * Called when there is a WebGL context change
-     *
-     * @private
-     *
-     */
-
 
     createClass(GraphicsRenderer, [{
         key: 'onContextChange',
@@ -8363,16 +8636,10 @@ var GraphicsRenderer = function (_ObjectRenderer) {
             this.CONTEXT_UID = this.renderer.CONTEXT_UID;
             this.primitiveShader = new PrimitiveShader(this.gl);
         }
-
-        /**
-         * Destroys this renderer.
-         *
-         */
-
     }, {
         key: 'destroy',
         value: function destroy() {
-            ObjectRenderer.prototype.destroy.call(this);
+            this.renderer = null;
 
             for (var i = 0; i < this.graphicsDataPool.length; ++i) {
                 this.graphicsDataPool[i].destroy();
@@ -8380,17 +8647,10 @@ var GraphicsRenderer = function (_ObjectRenderer) {
 
             this.graphicsDataPool = null;
         }
-
-        /**
-         * Renders a graphics object.
-         *
-         * @param {PIXI.Graphics} graphics - The graphics object to render.
-         */
-
     }, {
         key: 'render',
-        value: function render(displayObject) {
-            var graphics = displayObject.graphics;
+        value: function render(displayObject, stage, graphics) {
+            //const graphics = displayObject.graphics;
             var renderer = this.renderer;
             var gl = renderer.gl;
 
@@ -8398,12 +8658,11 @@ var GraphicsRenderer = function (_ObjectRenderer) {
             var webGL = graphics._webGL[this.CONTEXT_UID];
 
             if (!webGL || graphics.dirty !== webGL.dirty) {
-                this.updateGraphics(graphics);
+                this.updateGraphics(graphics, displayObject);
 
                 webGL = graphics._webGL[this.CONTEXT_UID];
             }
 
-            // This  could be speeded up for sure!
             var shader = this.primitiveShader;
 
             renderer.bindShader(shader);
@@ -8413,9 +8672,7 @@ var GraphicsRenderer = function (_ObjectRenderer) {
                 var shaderTemp = webGLData.shader;
 
                 renderer.bindShader(shaderTemp);
-
-                var globalMatrix = displayObject.getConcatenatedMatrix().toArray(true);
-                shaderTemp.uniforms.translationMatrix = globalMatrix;
+                shaderTemp.uniforms.translationMatrix = displayObject.worldTransform;
                 shaderTemp.uniforms.tint = hex2rgb(graphics.tint);
                 shaderTemp.uniforms.alpha = graphics.worldAlpha;
 
@@ -8423,53 +8680,35 @@ var GraphicsRenderer = function (_ObjectRenderer) {
                 webGLData.vao.draw(gl.TRIANGLE_STRIP, webGLData.indices.length);
             }
         }
-
-        /**
-         * Updates the graphics object
-         *
-         * @private
-         * @param {PIXI.Graphics} graphics - The graphics object to update
-         */
-
     }, {
         key: 'updateGraphics',
-        value: function updateGraphics(graphics) {
+        value: function updateGraphics(graphics, displayObject) {
             var gl = this.renderer.gl;
 
-            // get the contexts graphics object
             var webGL = graphics._webGL[this.CONTEXT_UID];
 
-            // if the graphics object does not exist in the webGL context time to create it!
             if (!webGL) {
                 webGL = graphics._webGL[this.CONTEXT_UID] = { lastIndex: 0, data: [], gl: gl, clearDirty: -1, dirty: -1 };
             }
 
-            // flag the graphics as not dirty as we are about to update it...
             webGL.dirty = graphics.dirty;
 
-            // if the user cleared the graphics object we will need to clear every object
             if (graphics.clearDirty !== webGL.clearDirty) {
                 webGL.clearDirty = graphics.clearDirty;
 
-                // loop through and return all the webGLDatas to the object pool so than can be reused later on
                 for (var i = 0; i < webGL.data.length; i++) {
                     this.graphicsDataPool.push(webGL.data[i]);
                 }
 
-                // clear the array and reset the index..
                 webGL.data.length = 0;
                 webGL.lastIndex = 0;
             }
 
             var webGLData = void 0;
 
-            // loop through the graphics datas and construct each one..
-            // if the object is a complex fill then the new stencil buffer technique will be used
-            // other wise graphics objects will be pushed into a batch..
-            for (var _i = webGL.lastIndex; _i < graphics.graphicsData.length; _i++) {
-                var data = graphics.graphicsData[_i];
+            for (var _i = webGL.lastIndex; _i < displayObject.graphicsData.length; _i++) {
+                var data = displayObject.graphicsData[_i];
 
-                // TODO - this can be simplified
                 webGLData = this.getWebGLData(webGL, 0);
 
                 if (data.type === SHAPES.POLY) {
@@ -8479,8 +8718,6 @@ var GraphicsRenderer = function (_ObjectRenderer) {
                     buildRectangle(data, webGLData);
                 } else if (data.type === SHAPES.CIRC || data.type === SHAPES.ELIP) {
                     buildCircle(data, webGLData);
-                } else if (data.type === SHAPES.RREC) {
-                    buildRoundedRectangle(data, webGLData);
                 }
 
                 webGL.lastIndex++;
@@ -8488,7 +8725,6 @@ var GraphicsRenderer = function (_ObjectRenderer) {
 
             this.renderer.bindVao(null);
 
-            // upload all the dirty data...
             for (var _i2 = 0; _i2 < webGL.data.length; _i2++) {
                 webGLData = webGL.data[_i2];
 
@@ -8497,15 +8733,6 @@ var GraphicsRenderer = function (_ObjectRenderer) {
                 }
             }
         }
-
-        /**
-         *
-         * @private
-         * @param {WebGLRenderingContext} gl - the current WebGL drawing context
-         * @param {number} type - TODO @Alvin
-         * @return {*} TODO
-         */
-
     }, {
         key: 'getWebGLData',
         value: function getWebGLData(gl, type) {
@@ -8524,7 +8751,7 @@ var GraphicsRenderer = function (_ObjectRenderer) {
         }
     }]);
     return GraphicsRenderer;
-}(ObjectRenderer);
+}();
 
 var CONTEXT_UID = 0;
 
@@ -8539,8 +8766,7 @@ var WebGLStageRenderer = function () {
         this.canvas = stage.canvas;
 
         /*
-        * 处理上下文丢失和恢复
-        * 你的WebGL程序必须有一个用于处理上下文丢失（Lost Context）的机制
+        * WebGL程序必须有一个用于处理上下文丢失（Lost Context）的机制
         * 导致上下文丢失的原因：
         * 移动设备电力不足
         * 其他外因导致GPU重置
@@ -8552,10 +8778,7 @@ var WebGLStageRenderer = function () {
         this.canvas.addEventListener('webglcontextlost', this.handleContextLost, false);
         this.canvas.addEventListener('webglcontextrestored', this.handleContextRestored, false);
 
-        this._backgroundColor = 0x000000;
         this._backgroundColorRgba = [0, 0, 0, 0];
-        this._backgroundColorString = '#000000';
-        this.backgroundColor = options.backgroundColor || this._backgroundColor;
 
         this._contextOptions = {
             alpha: options.transparent,
@@ -8564,10 +8787,6 @@ var WebGLStageRenderer = function () {
             stencil: true,
             preserveDrawingBuffer: options.preserveDrawingBuffer
         };
-
-        this.emptyRenderer = new ObjectRenderer(this);
-
-        this.currentRenderer = this.emptyRenderer;
 
         this.gl = options.context || index.createContext(this.canvas, this._contextOptions);
 
@@ -8581,20 +8800,12 @@ var WebGLStageRenderer = function () {
 
         this._activeRenderTarget = null;
 
-        // map some webGL blend and drawmodes..
         this.drawModes = this.mapWebGLDrawModes();
 
         this.webglGR = new GraphicsRenderer(this);
 
         this._initContext();
     }
-
-    /**
-     * Creates the WebGL context
-     *
-     * @private
-     */
-
 
     createClass(WebGLStageRenderer, [{
         key: '_initContext',
@@ -8617,67 +8828,16 @@ var WebGLStageRenderer = function () {
         }
     }, {
         key: 'render',
-        value: function render(displayObject) {
-
+        value: function render(displayObject, stage, graphics) {
             if (!this.gl || this.gl.isContextLost()) {
                 return;
             }
-
-            this.currentRenderer.start();
-
-            this._activeRenderTarget.clear();
-
-            this.webglGR.render(displayObject);
-            //displayObject.renderWebGL(this);
-
-            // apply transform..
-            this.currentRenderer.flush();
+            this.webglGR.render(displayObject, stage, graphics);
         }
-
-        /**
-         * Changes the current renderer to the one given in parameter
-         *
-         * @param {PIXI.ObjectRenderer} objectRenderer - The object renderer to use.
-         */
-
-    }, {
-        key: 'setObjectRenderer',
-        value: function setObjectRenderer(objectRenderer) {
-            if (this.currentRenderer === objectRenderer) {
-                return;
-            }
-
-            this.currentRenderer.stop();
-            this.currentRenderer = objectRenderer;
-            this.currentRenderer.start();
-        }
-
-        /**
-         * This should be called if you wish to do some custom rendering
-         * It will basically render anything that may be batched up such as sprites
-         *
-         */
-
-    }, {
-        key: 'flush',
-        value: function flush() {
-            this.setObjectRenderer(this.emptyRenderer);
-        }
-
-        /**
-         * Resizes the webGL view to the specified width and height.
-         *
-         * @param {number} width - the new width of the webGL view
-         * @param {number} height - the new height of the webGL view
-         */
-
     }, {
         key: 'resize',
         value: function resize(width, height) {
-            //  if(width * this.resolution === this.width && height * this.resolution === this.height)return;
-
             this.rootRenderTarget.resize(width, height);
-
             if (this._activeRenderTarget === this.rootRenderTarget) {
                 this.rootRenderTarget.activate();
 
@@ -8686,26 +8846,11 @@ var WebGLStageRenderer = function () {
                 }
             }
         }
-
-        /**
-         * Erases the active render target and fills the drawing area with a colour
-         *
-         * @param {number} [clearColor] - The colour
-         */
-
     }, {
         key: 'clear',
         value: function clear(clearColor) {
             this._activeRenderTarget.clear(clearColor);
         }
-
-        /**
-         * Changes the current render target to the one given in parameter
-         *
-         * @param {PIXI.RenderTarget} renderTarget - the new render target
-         * @return {PIXI.WebGLRenderer} Returns itself.
-         */
-
     }, {
         key: 'bindRenderTarget',
         value: function bindRenderTarget(renderTarget) {
@@ -8719,47 +8864,22 @@ var WebGLStageRenderer = function () {
             }
             return this;
         }
-
-        /**
-         * Changes the current shader to the one given in parameter
-         *
-         * @param {PIXI.Shader} shader - the new shader
-         * @return {PIXI.WebGLRenderer} Returns itself.
-         */
-
     }, {
         key: 'bindShader',
         value: function bindShader(shader) {
-            // TODO cache
             if (this._activeShader !== shader) {
                 this._activeShader = shader;
                 shader.bind();
-                // automatically set the projection matrix
                 shader.uniforms.projectionMatrix = this._activeRenderTarget.projectionMatrix.toArray(true);
             }
 
             return this;
         }
-
-        /**
-         * Creates a new VAO from this renderer's context and state.
-         *
-         * @return {VertexArrayObject} The new VAO.
-         */
-
     }, {
         key: 'createVao',
         value: function createVao() {
             return new index.VertexArrayObject(this.gl, this.state.attribState);
         }
-
-        /**
-         * Changes the current Vao to the one given in parameter
-         *
-         * @param {PIXI.VertexArrayObject} vao - the new Vao
-         * @return {PIXI.WebGLRenderer} Returns itself.
-         */
-
     }, {
         key: 'bindVao',
         value: function bindVao(vao) {
@@ -8770,7 +8890,6 @@ var WebGLStageRenderer = function () {
             if (vao) {
                 vao.bind();
             } else if (this._activeVao) {
-                // TODO this should always be true i think?
                 this._activeVao.unbind();
             }
 
@@ -8778,48 +8897,23 @@ var WebGLStageRenderer = function () {
 
             return this;
         }
-
-        /**
-         * Resets the WebGL state so you can render things however you fancy!
-         *
-         * @return {PIXI.WebGLRenderer} Returns itself.
-         */
-
     }, {
         key: 'reset',
         value: function reset() {
-            this.setObjectRenderer(this.emptyRenderer);
-
             this._activeShader = null;
             this._activeRenderTarget = this.rootRenderTarget;
 
-            // bind the main frame buffer (the screen);
             this.rootRenderTarget.activate();
 
             this.state.resetToDefault();
 
             return this;
         }
-
-        /**
-         * Handles a lost webgl context
-         *
-         * @private
-         * @param {WebGLContextEvent} event - The context lost event.
-         */
-
     }, {
         key: 'handleContextLost',
         value: function handleContextLost(event) {
             event.preventDefault();
         }
-
-        /**
-         * Handles a restored webgl context
-         *
-         * @private
-         */
-
     }, {
         key: 'handleContextRestored',
         value: function handleContextRestored() {
@@ -8841,29 +8935,17 @@ var WebGLStageRenderer = function () {
 
             return object;
         }
-
-        /**
-         * Removes everything from the renderer (event listeners, spritebatch, etc...)
-         *
-         * @param {boolean} [removeView=false] - Removes the Canvas element from the DOM.
-         *  See: https://github.com/pixijs/pixi.js/issues/2233
-         */
-
     }, {
         key: 'destroy',
         value: function destroy(removeView) {
             this.destroyPlugins();
 
-            // remove listeners
-            this.view.removeEventListener('webglcontextlost', this.handleContextLost);
-            this.view.removeEventListener('webglcontextrestored', this.handleContextRestored);
+            this.canvas.removeEventListener('webglcontextlost', this.handleContextLost);
+            this.canvas.removeEventListener('webglcontextrestored', this.handleContextRestored);
 
-            // call base destroy
             get(WebGLStageRenderer.prototype.__proto__ || Object.getPrototypeOf(WebGLStageRenderer.prototype), 'destroy', this).call(this, removeView);
 
             this.uid = 0;
-
-            this.currentRenderer = null;
 
             this.handleContextLost = null;
             this.handleContextRestored = null;
@@ -8887,7 +8969,11 @@ var WebGLRenderer = function (_SystemRenderer) {
     function WebGLRenderer(app) {
         var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         classCallCheck(this, WebGLRenderer);
-        return possibleConstructorReturn(this, (WebGLRenderer.__proto__ || Object.getPrototypeOf(WebGLRenderer)).call(this, RENDERER_TYPE.CANVAS, app, options));
+
+        var _this = possibleConstructorReturn(this, (WebGLRenderer.__proto__ || Object.getPrototypeOf(WebGLRenderer)).call(this, RENDERER_TYPE.CANVAS, app, options));
+
+        _this.graphics = new Graphics();
+        return _this;
     }
 
     createClass(WebGLRenderer, [{
@@ -8928,8 +9014,9 @@ var WebGLRenderer = function (_SystemRenderer) {
                 return;
             }
 
-            if (displayObject.graphics) {
-                stage.webGLStageRenderer.render(displayObject);
+            if (displayObject.graphicsData) {
+                displayObject.draw(stage, this);
+                stage.webGLStageRenderer.render(displayObject, stage, this.graphics);
             }
 
             if (displayObject.children) {
@@ -8948,10 +9035,9 @@ var WebGLRenderer = function (_SystemRenderer) {
 }(SystemRenderer);
 
 function autoRenderer(app, options) {
-    if (!app.noWebGL && Utils.isWebGLSupported()) {
+    if (app.webGL && Utils.isWebGLSupported()) {
         return new WebGLRenderer(app, options);
     }
-
     return new CanvasRenderer(app, options);
 }
 
@@ -8991,7 +9077,7 @@ var Application = function Application(opt) {
     this.viewOffset = $.offset(this.view);
     this.lastGetRO = 0; //最后一次获取 viewOffset 的时间
 
-    this.noWebGL = opt.noWebGL;
+    this.webGL = opt.webGL;
     this.renderer = autoRenderer(this, options);
 
     this.event = null;
@@ -9020,6 +9106,9 @@ Utils.creatClass(Application, DisplayObjectContainer, {
 
         //创建一个如果要用像素检测的时候的容器
         this._createPixelContext();
+
+        //设置一个默认的matrix做为app的世界根节点坐标
+        this.worldTransform = new Matrix().identity();
     },
     registEvent: function registEvent(opt) {
         //初始化事件委托到root元素上面
@@ -9152,7 +9241,9 @@ Utils.creatClass(Application, DisplayObjectContainer, {
     },
 
     heartBeat: function heartBeat(opt) {
-        this.renderer.heartBeat(opt);
+        if (this.children.length > 0) {
+            this.renderer.heartBeat(opt);
+        }
     }
 });
 
@@ -9171,685 +9262,6 @@ var Sprite = function Sprite() {
 Utils.creatClass(Sprite, DisplayObjectContainer, {
     init: function init() {}
 });
-
-var GraphicsData = function () {
-    function GraphicsData(lineWidth, strokeStyle, lineAlpha, fillStyle, fillAlpha, shape) {
-        classCallCheck(this, GraphicsData);
-
-        this.lineWidth = lineWidth;
-        this.strokeStyle = strokeStyle;
-        this.lineAlpha = lineAlpha;
-
-        this.fillStyle = fillStyle;
-        this.fillAlpha = fillAlpha;
-
-        this.shape = shape;
-        this.type = shape.type;
-
-        this.holes = [];
-
-        //这两个可以被后续修改， 具有一票否决权
-        //比如polygon的 虚线描边。必须在fill的poly上面设置line为false
-        this.fill = true;
-        this.line = true;
-    }
-
-    createClass(GraphicsData, [{
-        key: "clone",
-        value: function clone() {
-            return new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, this.shape);
-        }
-    }, {
-        key: "addHole",
-        value: function addHole(shape) {
-            this.holes.push(shape);
-        }
-
-        //从宿主graphics中同步最新的style属性
-
-    }, {
-        key: "synsStyle",
-        value: function synsStyle(graphics) {
-            //从shape中把绘图需要的style属性同步过来
-            this.lineWidth = graphics.lineWidth;
-            this.strokeStyle = graphics.strokeStyle;
-            this.lineAlpha = graphics.lineAlpha;
-
-            this.fillStyle = graphics.fillStyle;
-            this.fillAlpha = graphics.fillAlpha;
-        }
-    }, {
-        key: "hasFill",
-        value: function hasFill() {
-            return this.fillStyle && this.fill && this.shape.closed !== undefined && this.shape.closed && this.fillAlpha;
-        }
-    }, {
-        key: "hasLine",
-        value: function hasLine() {
-            return this.strokeStyle && this.lineWidth && this.lineAlpha && this.line;
-        }
-    }, {
-        key: "destroy",
-        value: function destroy() {
-            this.shape = null;
-            this.holes = null;
-        }
-    }]);
-    return GraphicsData;
-}();
-
-/**
- * Calculate the points for a bezier curve and then draws it.
- *
- * Ignored from docs since it is not directly exposed.
- *
- * @ignore
- * @param {number} fromX - Starting point x
- * @param {number} fromY - Starting point y
- * @param {number} cpX - Control point x
- * @param {number} cpY - Control point y
- * @param {number} cpX2 - Second Control point x
- * @param {number} cpY2 - Second Control point y
- * @param {number} toX - Destination point x
- * @param {number} toY - Destination point y
- * @param {number[]} [path=[]] - Path array to push points into
- * @return {number[]} Array of points of the curve
- */
-function bezierCurveTo(fromX, fromY, cpX, cpY, cpX2, cpY2, toX, toY) {
-    var path = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : [];
-
-    var n = 20;
-    var dt = 0;
-    var dt2 = 0;
-    var dt3 = 0;
-    var t2 = 0;
-    var t3 = 0;
-
-    path.push(fromX, fromY);
-
-    for (var i = 1, j = 0; i <= n; ++i) {
-        j = i / n;
-
-        dt = 1 - j;
-        dt2 = dt * dt;
-        dt3 = dt2 * dt;
-
-        t2 = j * j;
-        t3 = t2 * j;
-
-        path.push(dt3 * fromX + 3 * dt2 * j * cpX + 3 * dt * t2 * cpX2 + t3 * toX, dt3 * fromY + 3 * dt2 * j * cpY + 3 * dt * t2 * cpY2 + t3 * toY);
-    }
-
-    return path;
-}
-
-/**
- * 线段包含判断
- * @points [0,0,0,0]
- */
-var _isInsideLine = function _isInsideLine(points, x, y, lineWidth) {
-    var x0 = points[0];
-    var y0 = points[1];
-    var x1 = points[2];
-    var y1 = points[3];
-    var _l = Math.max(lineWidth, 3);
-    var _a = 0;
-    var _b = x0;
-
-    if (y > y0 + _l && y > y1 + _l || y < y0 - _l && y < y1 - _l || x > x0 + _l && x > x1 + _l || x < x0 - _l && x < x1 - _l) {
-        return false;
-    }
-
-    if (x0 !== x1) {
-        _a = (y0 - y1) / (x0 - x1);
-        _b = (x0 * y1 - x1 * y0) / (x0 - x1);
-    } else {
-        return Math.abs(x - x0) <= _l / 2;
-    }
-
-    var _s = (_a * x - y + _b) * (_a * x - y + _b) / (_a * _a + 1);
-    return _s <= _l / 2 * _l / 2;
-};
-
-function insideLine(data, x, y, line) {
-    var points = data.shape.points;
-    var lineWidth = data.lineWidth;
-    var insideCatch = false;
-    for (var i = 0; i < points.length; ++i) {
-        insideCatch = _isInsideLine(points.slice(i, i + 4), x, y, lineWidth);
-        if (insideCatch) {
-            break;
-        }
-        i += 1;
-    }
-    return insideCatch;
-}
-
-/*
-* Graphics绘图法则
-* 单个grahics实例里的fill line 样式属性，都从对应shape.context中获取
-* 
-*/
-
-var Graphics = function () {
-    function Graphics(shape) {
-        classCallCheck(this, Graphics);
-
-        this.shape = shape;
-
-        this.lineWidth = 1;
-        this.strokeStyle = null;
-        this.lineAlpha = 1;
-        this.fillStyle = null;
-        this.fillAlpha = 1;
-
-        this.graphicsData = [];
-        this.currentPath = null;
-
-        this.synsStyle();
-
-        this.dirty = 0; //脏数据
-        this._webGL = {};
-        this.worldAlpha = 1;
-        this.tint = 0xFFFFFF; //目标对象附加颜色
-    }
-
-    createClass(Graphics, [{
-        key: 'synsStyle',
-        value: function synsStyle() {
-            //从shape中把绘图需要的style属性同步过来
-            var sctx = this.shape.context;
-            this.lineWidth = sctx.lineWidth;
-            this.strokeStyle = sctx.strokeStyle;
-            this.lineAlpha = sctx.lineAlpha * sctx.globalAlpha;
-
-            this.fillStyle = sctx.fillStyle;
-            this.fillAlpha = sctx.fillAlpha * sctx.globalAlpha;
-
-            //如果graphicsData有多分组的情况下，如果以为shape的 style 属性改变调用的synsStyle
-            //则会覆盖全部的 graphicsData 元素
-            for (var i = 0; i < this.graphicsData.length; ++i) {
-                this.graphicsData[i].synsStyle(this);
-            }
-        }
-    }, {
-        key: 'clone',
-        value: function clone() {
-            var clone = new Graphics();
-
-            clone.dirty = 0;
-
-            // copy graphics data
-            for (var i = 0; i < this.graphicsData.length; ++i) {
-                clone.graphicsData.push(this.graphicsData[i].clone());
-            }
-
-            clone.currentPath = clone.graphicsData[clone.graphicsData.length - 1];
-            return clone;
-        }
-    }, {
-        key: 'moveTo',
-        value: function moveTo(x, y) {
-            var shape = new Polygon([x, y]);
-
-            shape.closed = false;
-            this.drawShape(shape);
-
-            return this;
-        }
-    }, {
-        key: 'lineTo',
-        value: function lineTo(x, y) {
-            if (this.currentPath) {
-                this.currentPath.shape.points.push(x, y);
-                this.dirty++;
-            } else {
-                this.moveTo(0, 0);
-            }
-            return this;
-        }
-    }, {
-        key: 'quadraticCurveTo',
-        value: function quadraticCurveTo(cpX, cpY, toX, toY) {
-            if (this.currentPath) {
-                if (this.currentPath.shape.points.length === 0) {
-                    this.currentPath.shape.points = [0, 0];
-                }
-            } else {
-                this.moveTo(0, 0);
-            }
-
-            var n = 20;
-            var points = this.currentPath.shape.points;
-            var xa = 0;
-            var ya = 0;
-
-            if (points.length === 0) {
-                this.moveTo(0, 0);
-            }
-
-            var fromX = points[points.length - 2];
-            var fromY = points[points.length - 1];
-
-            for (var i = 1; i <= n; ++i) {
-                var j = i / n;
-
-                xa = fromX + (cpX - fromX) * j;
-                ya = fromY + (cpY - fromY) * j;
-
-                points.push(xa + (cpX + (toX - cpX) * j - xa) * j, ya + (cpY + (toY - cpY) * j - ya) * j);
-            }
-
-            this.dirty++;
-
-            return this;
-        }
-    }, {
-        key: 'bezierCurveTo',
-        value: function bezierCurveTo$$1(cpX, cpY, cpX2, cpY2, toX, toY) {
-            if (this.currentPath) {
-                if (this.currentPath.shape.points.length === 0) {
-                    this.currentPath.shape.points = [0, 0];
-                }
-            } else {
-                this.moveTo(0, 0);
-            }
-
-            var points = this.currentPath.shape.points;
-
-            var fromX = points[points.length - 2];
-            var fromY = points[points.length - 1];
-
-            points.length -= 2;
-
-            bezierCurveTo(fromX, fromY, cpX, cpY, cpX2, cpY2, toX, toY, points);
-
-            this.dirty++;
-
-            return this;
-        }
-    }, {
-        key: 'arcTo',
-        value: function arcTo(x1, y1, x2, y2, radius) {
-            if (this.currentPath) {
-                if (this.currentPath.shape.points.length === 0) {
-                    this.currentPath.shape.points.push(x1, y1);
-                }
-            } else {
-                this.moveTo(x1, y1);
-            }
-
-            var points = this.currentPath.shape.points;
-            var fromX = points[points.length - 2];
-            var fromY = points[points.length - 1];
-            var a1 = fromY - y1;
-            var b1 = fromX - x1;
-            var a2 = y2 - y1;
-            var b2 = x2 - x1;
-            var mm = Math.abs(a1 * b2 - b1 * a2);
-
-            if (mm < 1.0e-8 || radius === 0) {
-                if (points[points.length - 2] !== x1 || points[points.length - 1] !== y1) {
-                    points.push(x1, y1);
-                }
-            } else {
-                var dd = a1 * a1 + b1 * b1;
-                var cc = a2 * a2 + b2 * b2;
-                var tt = a1 * a2 + b1 * b2;
-                var k1 = radius * Math.sqrt(dd) / mm;
-                var k2 = radius * Math.sqrt(cc) / mm;
-                var j1 = k1 * tt / dd;
-                var j2 = k2 * tt / cc;
-                var cx = k1 * b2 + k2 * b1;
-                var cy = k1 * a2 + k2 * a1;
-                var px = b1 * (k2 + j1);
-                var py = a1 * (k2 + j1);
-                var qx = b2 * (k1 + j2);
-                var qy = a2 * (k1 + j2);
-                var startAngle = Math.atan2(py - cy, px - cx);
-                var endAngle = Math.atan2(qy - cy, qx - cx);
-
-                this.arc(cx + x1, cy + y1, radius, startAngle, endAngle, b1 * a2 > b2 * a1);
-            }
-
-            this.dirty++;
-
-            return this;
-        }
-    }, {
-        key: 'arc',
-        value: function arc(cx, cy, radius, startAngle, endAngle) {
-            var anticlockwise = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
-
-            if (startAngle === endAngle) {
-                return this;
-            }
-
-            if (!anticlockwise && endAngle <= startAngle) {
-                endAngle += Math.PI * 2;
-            } else if (anticlockwise && startAngle <= endAngle) {
-                startAngle += Math.PI * 2;
-            }
-
-            var sweep = endAngle - startAngle;
-            var segs = Math.ceil(Math.abs(sweep) / (Math.PI * 2)) * 40;
-
-            if (sweep === 0) {
-                return this;
-            }
-
-            var startX = cx + Math.cos(startAngle) * radius;
-            var startY = cy + Math.sin(startAngle) * radius;
-
-            // If the currentPath exists, take its points. Otherwise call `moveTo` to start a path.
-            var points = this.currentPath ? this.currentPath.shape.points : null;
-
-            if (points) {
-                if (points[points.length - 2] !== startX || points[points.length - 1] !== startY) {
-                    points.push(startX, startY);
-                }
-            } else {
-                this.moveTo(startX, startY);
-                points = this.currentPath.shape.points;
-            }
-
-            var theta = sweep / (segs * 2);
-            var theta2 = theta * 2;
-
-            var cTheta = Math.cos(theta);
-            var sTheta = Math.sin(theta);
-
-            var segMinus = segs - 1;
-
-            var remainder = segMinus % 1 / segMinus;
-
-            for (var i = 0; i <= segMinus; ++i) {
-                var real = i + remainder * i;
-
-                var angle = theta + startAngle + theta2 * real;
-
-                var c = Math.cos(angle);
-                var s = -Math.sin(angle);
-
-                points.push((cTheta * c + sTheta * s) * radius + cx, (cTheta * -s + sTheta * c) * radius + cy);
-            }
-
-            this.dirty++;
-
-            return this;
-        }
-    }, {
-        key: 'drawRect',
-        value: function drawRect(x, y, width, height) {
-            this.drawShape(new Rectangle(x, y, width, height));
-            return this;
-        }
-    }, {
-        key: 'drawCircle',
-        value: function drawCircle(x, y, radius) {
-            this.drawShape(new Circle(x, y, radius));
-
-            return this;
-        }
-    }, {
-        key: 'drawEllipse',
-        value: function drawEllipse(x, y, width, height) {
-            this.drawShape(new Ellipse(x, y, width, height));
-
-            return this;
-        }
-    }, {
-        key: 'drawPolygon',
-        value: function drawPolygon(path) {
-            // prevents an argument assignment deopt
-            // see section 3.1: https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
-            var points = path;
-
-            var closed = true;
-
-            if (points instanceof Polygon) {
-                closed = points.closed;
-                points = points.points;
-            }
-
-            if (!Array.isArray(points)) {
-                // prevents an argument leak deopt
-                // see section 3.2: https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
-                points = new Array(arguments.length);
-
-                for (var i = 0; i < points.length; ++i) {
-                    points[i] = arguments[i]; // eslint-disable-line prefer-rest-params
-                }
-            }
-
-            var shape = new Polygon(points);
-
-            shape.closed = closed;
-
-            this.drawShape(shape);
-
-            return this;
-        }
-    }, {
-        key: 'clear',
-        value: function clear() {
-            if (this.graphicsData.length > 0) {
-                this.dirty++;
-                this.graphicsData.length = 0;
-            }
-
-            this.currentPath = null;
-
-            return this;
-        }
-    }, {
-        key: 'drawShape',
-        value: function drawShape(shape) {
-            if (this.currentPath) {
-                if (this.currentPath.shape.points.length <= 2) {
-                    this.graphicsData.pop();
-                }
-            }
-
-            this.currentPath = null;
-
-            var data = new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, shape);
-
-            this.graphicsData.push(data);
-
-            if (data.type === SHAPES.POLY) {
-                data.shape.closed = data.shape.closed;
-                this.currentPath = data;
-            }
-
-            this.dirty++;
-
-            return data;
-        }
-    }, {
-        key: 'closePath',
-        value: function closePath() {
-            var currentPath = this.currentPath;
-
-            if (currentPath && currentPath.shape) {
-                currentPath.shape.close();
-            }
-
-            return this;
-        }
-
-        /**
-         * Tests if a point is inside this graphics object
-         *
-         * @param {PIXI.Point} point - the point to test
-         * @return {boolean} the result of the test
-         */
-
-    }, {
-        key: 'containsPoint',
-        value: function containsPoint(point) {
-            var graphicsData = this.graphicsData;
-            var inside = false;
-            for (var i = 0; i < graphicsData.length; ++i) {
-                var data = graphicsData[i];
-                if (data.shape) {
-                    //先检测fill， fill的检测概率大些。
-                    //像circle,ellipse这样的shape 就直接把lineWidth算在fill里面计算就好了，所以他们是没有insideLine的
-                    if (data.hasFill() && data.shape.contains(point.x, point.y)) {
-                        inside = true;
-                        if (inside) {
-                            break;
-                        }
-                    }
-
-                    //circle,ellipse等就没有points
-                    if (data.hasLine() && data.shape.points) {
-                        //然后检测是否和描边碰撞
-                        inside = insideLine(data, point.x, point.y);
-                        if (inside) {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return inside;
-        }
-
-        /**
-        * Update the bounds of the object
-        *
-        */
-
-    }, {
-        key: 'updateLocalBounds',
-        value: function updateLocalBounds() {
-            var minX = Infinity;
-            var maxX = -Infinity;
-
-            var minY = Infinity;
-            var maxY = -Infinity;
-
-            if (this.graphicsData.length) {
-                var shape = 0;
-                var x = 0;
-                var y = 0;
-                var w = 0;
-                var h = 0;
-
-                for (var i = 0; i < this.graphicsData.length; i++) {
-                    var data = this.graphicsData[i];
-                    var type = data.type;
-                    var lineWidth = data.lineWidth;
-
-                    shape = data.shape;
-
-                    if (type === SHAPES.RECT || type === SHAPES.RREC) {
-                        x = shape.x - lineWidth / 2;
-                        y = shape.y - lineWidth / 2;
-                        w = shape.width + lineWidth;
-                        h = shape.height + lineWidth;
-
-                        minX = x < minX ? x : minX;
-                        maxX = x + w > maxX ? x + w : maxX;
-
-                        minY = y < minY ? y : minY;
-                        maxY = y + h > maxY ? y + h : maxY;
-                    } else if (type === SHAPES.CIRC) {
-                        x = shape.x;
-                        y = shape.y;
-                        w = shape.radius + lineWidth / 2;
-                        h = shape.radius + lineWidth / 2;
-
-                        minX = x - w < minX ? x - w : minX;
-                        maxX = x + w > maxX ? x + w : maxX;
-
-                        minY = y - h < minY ? y - h : minY;
-                        maxY = y + h > maxY ? y + h : maxY;
-                    } else if (type === SHAPES.ELIP) {
-                        x = shape.x;
-                        y = shape.y;
-                        w = shape.width + lineWidth / 2;
-                        h = shape.height + lineWidth / 2;
-
-                        minX = x - w < minX ? x - w : minX;
-                        maxX = x + w > maxX ? x + w : maxX;
-
-                        minY = y - h < minY ? y - h : minY;
-                        maxY = y + h > maxY ? y + h : maxY;
-                    } else {
-                        // POLY
-                        var points = shape.points;
-                        var x2 = 0;
-                        var y2 = 0;
-                        var dx = 0;
-                        var dy = 0;
-                        var rw = 0;
-                        var rh = 0;
-                        var cx = 0;
-                        var cy = 0;
-
-                        for (var j = 0; j + 2 < points.length; j += 2) {
-                            x = points[j];
-                            y = points[j + 1];
-                            x2 = points[j + 2];
-                            y2 = points[j + 3];
-                            dx = Math.abs(x2 - x);
-                            dy = Math.abs(y2 - y);
-                            h = lineWidth;
-                            w = Math.sqrt(dx * dx + dy * dy);
-
-                            if (w < 1e-9) {
-                                continue;
-                            }
-
-                            rw = (h / w * dy + dx) / 2;
-                            rh = (h / w * dx + dy) / 2;
-                            cx = (x2 + x) / 2;
-                            cy = (y2 + y) / 2;
-
-                            minX = cx - rw < minX ? cx - rw : minX;
-                            maxX = cx + rw > maxX ? cx + rw : maxX;
-
-                            minY = cy - rh < minY ? cy - rh : minY;
-                            maxY = cy + rh > maxY ? cy + rh : maxY;
-                        }
-                    }
-                }
-            } else {
-                minX = 0;
-                maxX = 0;
-                minY = 0;
-                maxY = 0;
-            }
-
-            this.Bound.minX = minX;
-            this.Bound.maxX = maxX;
-
-            this.Bound.minY = minY;
-            this.Bound.maxY = maxY;
-        }
-    }, {
-        key: 'destroy',
-        value: function destroy(options) {
-            get(Graphics.prototype.__proto__ || Object.getPrototypeOf(Graphics.prototype), 'destroy', this).call(this, options);
-
-            for (var i = 0; i < this.graphicsData.length; ++i) {
-                this.graphicsData[i].destroy();
-            }
-            for (var id in this._webgl) {
-                for (var j = 0; j < this._webgl[id].data.length; ++j) {
-                    this._webgl[id].data[j].destroy();
-                }
-            }
-
-            this.graphicsData = null;
-            this.currentPath = null;
-            this._webgl = null;
-        }
-    }]);
-    return Graphics;
-}();
 
 /**
  * Canvax
@@ -9871,7 +9283,7 @@ var Shape = function (_DisplayObject) {
 
         var _this = possibleConstructorReturn(this, (Shape.__proto__ || Object.getPrototypeOf(Shape)).call(this, opt));
 
-        _this.graphics = new Graphics(_this);
+        _this.graphicsData = [];
 
         //元素是否有hover事件 和 chick事件，由addEvenetLister和remiveEventLister来触发修改
         _this._hoverable = false;
@@ -9899,11 +9311,34 @@ var Shape = function (_DisplayObject) {
     }
 
     createClass(Shape, [{
-        key: "init",
-        value: function init() {}
+        key: "_draw",
+        value: function _draw(stage, renderer) {
+            if (this.graphicsData.length == 0) {
+                //先设置好当前graphics的style
+                renderer.graphics.setStyle(this.context);
+
+                var lastGDind = renderer.graphics.graphicsData.length;
+                this.draw(renderer.graphics);
+                this.graphicsData = renderer.graphics.graphicsData.slice(lastGDind);
+                var me = this;
+                _$1.each(this.graphicsData, function (gd) {
+                    gd.displayObject = me;
+                });
+            }
+        }
     }, {
-        key: "draw",
-        value: function draw() {}
+        key: "clearGraphicsData",
+        value: function clearGraphicsData() {
+            _$1.each(this.graphicsData, function (d) {
+                d.destroy();
+            });
+            this.graphicsData.length = 0;
+        }
+    }, {
+        key: "$watch",
+        value: function $watch(name, value, preValue) {
+            this.watch(name, value, preValue);
+        }
     }, {
         key: "initCompProperty",
         value: function initCompProperty(opt) {
@@ -9920,7 +9355,7 @@ var Shape = function (_DisplayObject) {
 
     }, {
         key: "dashedLineTo",
-        value: function dashedLineTo(x1, y1, x2, y2, dashLength) {
+        value: function dashedLineTo(graphics, x1, y1, x2, y2, dashLength) {
             dashLength = typeof dashLength == 'undefined' ? 3 : dashLength;
             dashLength = Math.max(dashLength, this.context.lineWidth);
             var deltaX = x2 - x1;
@@ -9929,9 +9364,9 @@ var Shape = function (_DisplayObject) {
             for (var i = 0; i < numDashes; ++i) {
                 var x = parseInt(x1 + deltaX / numDashes * i);
                 var y = parseInt(y1 + deltaY / numDashes * i);
-                this.graphics[i % 2 === 0 ? 'moveTo' : 'lineTo'](x, y);
+                graphics[i % 2 === 0 ? 'moveTo' : 'lineTo'](x, y);
                 if (i == numDashes - 1 && i % 2 === 0) {
-                    this.graphics.lineTo(x2, y2);
+                    graphics.lineTo(x2, y2);
                 }
             }
         }
@@ -10464,23 +9899,19 @@ var BrokenLine = function (_Shape) {
 
         _this.type = "brokenline";
         _this.id = Utils.createId(_this.type);
-
-        _this.setGraphics();
         return _this;
     }
 
     createClass(BrokenLine, [{
-        key: "$watch",
-        value: function $watch(name, value, preValue) {
+        key: "watch",
+        value: function watch(name, value, preValue) {
             if (name == "pointList" || name == "smooth" || name == "lineType") {
-                this.setGraphics();
+                this.clearGraphicsData();
             }
         }
     }, {
-        key: "setGraphics",
-        value: function setGraphics() {
-            this.graphics.clear();
-
+        key: "draw",
+        value: function draw(graphics) {
             var context = this.context;
             var pointList = context.pointList;
             if (pointList.length < 2) {
@@ -10490,9 +9921,9 @@ var BrokenLine = function (_Shape) {
             if (!context.lineType || context.lineType == 'solid') {
                 //默认为实线
                 //TODO:目前如果 有设置smooth 的情况下是不支持虚线的
-                this.graphics.moveTo(pointList[0][0], pointList[0][1]);
+                graphics.moveTo(pointList[0][0], pointList[0][1]);
                 for (var i = 1, l = pointList.length; i < l; i++) {
-                    this.graphics.lineTo(pointList[i][0], pointList[i][1]);
+                    graphics.lineTo(pointList[i][0], pointList[i][1]);
                 }
             } else if (context.lineType == 'dashed' || context.lineType == 'dotted') {
                 if (context.smooth) {
@@ -10500,19 +9931,18 @@ var BrokenLine = function (_Shape) {
                         if (si == sl - 1) {
                             break;
                         }
-                        this.graphics.moveTo(pointList[si][0], pointList[si][1]);
-                        this.graphics.lineTo(pointList[si + 1][0], pointList[si + 1][1]);
+                        graphics.moveTo(pointList[si][0], pointList[si][1]);
+                        graphics.lineTo(pointList[si + 1][0], pointList[si + 1][1]);
                         si += 1;
                     }
                 } else {
                     //画虚线的方法  
-                    this.graphics.moveTo(pointList[0][0], pointList[0][1]);
                     for (var i = 1, l = pointList.length; i < l; i++) {
                         var fromX = pointList[i - 1][0];
                         var toX = pointList[i][0];
                         var fromY = pointList[i - 1][1];
                         var toY = pointList[i][1];
-                        this.dashedLineTo(fromX, fromY, toX, toY, 5);
+                        this.dashedLineTo(graphics, fromX, fromY, toX, toY, 5);
                     }
                 }
             }
@@ -10553,24 +9983,21 @@ var Circle$2 = function (_Shape) {
 
         _this.type = "circle";
         _this.id = Utils.createId(_this.type);
-
-        _this.setGraphics();
         return _this;
     }
 
     createClass(Circle, [{
-        key: "$watch",
-        value: function $watch(name, value, preValue) {
+        key: "watch",
+        value: function watch(name, value, preValue) {
             if (name == "r") {
-                this.setGraphics();
+                this.clearGraphicsData();
             }
         }
     }, {
-        key: "setGraphics",
-        value: function setGraphics() {
-            this.graphics.clear();
-            //this.graphics.arc(0 , 0, this.context.r, 0, Math.PI * 2, true);
-            this.graphics.drawCircle(0, 0, this.context.r);
+        key: "draw",
+        value: function draw(graphics) {
+            graphics.beginPath();
+            graphics.drawCircle(0, 0, this.context.r);
         }
     }]);
     return Circle;
@@ -10619,18 +10046,15 @@ var Path = function (_Shape) {
 
         _this.type = "path";
         _this.id = Utils.createId(_this.type);
-
-        _this.setGraphics();
-
         return _this;
     }
 
     createClass(Path, [{
-        key: "$watch",
-        value: function $watch(name, value, preValue) {
+        key: "watch",
+        value: function watch(name, value, preValue) {
             if (name == "path") {
                 //如果path有变动，需要自动计算新的pointList
-                this.setGraphics();
+                this.clearGraphicsData();
             }
         }
     }, {
@@ -10881,13 +10305,12 @@ var Path = function (_Shape) {
             return ca;
         }
 
-        //重新根的path绘制graphics
+        //重新根的path绘制 graphics
 
     }, {
-        key: "setGraphics",
-        value: function setGraphics() {
-
-            this.graphics.clear();
+        key: "draw",
+        value: function draw(graphics) {
+            graphics.beginPath();
             this.__parsePathData = null;
             this.context.pointList = [];
 
@@ -10899,23 +10322,23 @@ var Path = function (_Shape) {
                         p = pathArray[g][i].points;
                     switch (c) {
                         case 'L':
-                            this.graphics.lineTo(p[0], p[1]);
+                            graphics.lineTo(p[0], p[1]);
                             break;
                         case 'M':
-                            this.graphics.moveTo(p[0], p[1]);
+                            graphics.moveTo(p[0], p[1]);
                             break;
                         case 'C':
-                            this.graphics.bezierCurveTo(p[0], p[1], p[2], p[3], p[4], p[5]);
+                            graphics.bezierCurveTo(p[0], p[1], p[2], p[3], p[4], p[5]);
                             break;
                         case 'Q':
-                            this.graphics.quadraticCurveTo(p[0], p[1], p[2], p[3]);
+                            graphics.quadraticCurveTo(p[0], p[1], p[2], p[3]);
                             break;
                         case 'A':
                             //前面6个元素用来放path的A 6个参数，path A命令详见
-                            Arc.drawArc(this.graphics, p[7], p[8], p);
+                            Arc.drawArc(graphics, p[7], p[8], p);
                             break;
                         case 'z':
-                            this.graphics.closePath();
+                            graphics.closePath();
                             break;
                     }
                 }
@@ -10958,24 +10381,20 @@ var Droplet = function (_Path) {
         _this.type = "droplet";
         _this.id = Utils.createId(_this.type);
 
-        _this.context.path = _this._createPath();
+        _this.context.path = _this.createPath();
         return _this;
     }
 
     createClass(Droplet, [{
-        key: "$watch",
-        value: function $watch(name, value, preValue) {
+        key: "watch",
+        value: function watch(name, value, preValue) {
             if (name == "hr" || name == "vr") {
-                this.context.path = this._createPath();
-            }
-
-            if (name == "path") {
-                this.setGraphics();
+                this.context.path = this.createPath();
             }
         }
     }, {
-        key: "_createPath",
-        value: function _createPath() {
+        key: "createPath",
+        value: function createPath() {
             var context = this.context;
             var ps = "M 0 " + context.hr + " C " + context.hr + " " + context.hr + " " + context.hr * 3 / 2 + " " + -context.hr / 3 + " 0 " + -context.vr;
             ps += " C " + -context.hr * 3 / 2 + " " + -context.hr / 3 + " " + -context.hr + " " + context.hr + " 0 " + context.hr + "z";
@@ -11017,23 +10436,21 @@ var Ellipse$2 = function (_Shape) {
 
         _this.type = "ellipse";
         _this.id = Utils.createId(_this.type);
-
-        _this.setGraphics();
         return _this;
     }
 
     createClass(Ellipse, [{
-        key: "$watch",
-        value: function $watch(name, value, preValue) {
+        key: "watch",
+        value: function watch(name, value, preValue) {
             if (name == "hr" || name == "vr") {
-                this.setGraphics();
+                this.clearGraphicsData();
             }
         }
     }, {
-        key: "setGraphics",
-        value: function setGraphics() {
-            this.graphics.clear();
-            this.graphics.drawEllipse(0, 0, this.context.hr * 2, this.context.vr * 2);
+        key: "draw",
+        value: function draw(graphics) {
+            graphics.beginPath();
+            graphics.drawEllipse(0, 0, this.context.hr * 2, this.context.vr * 2);
         }
     }]);
     return Ellipse;
@@ -11082,24 +10499,21 @@ var Polygon$2 = function (_Shape) {
         _this._drawTypeOnly = null;
         _this.type = "polygon";
         _this.id = Utils.createId(_this.type);
-
-        _this.setGraphics();
         return _this;
     }
 
     createClass(Polygon, [{
-        key: "$watch",
-        value: function $watch(name, value, preValue) {
+        key: "watch",
+        value: function watch(name, value, preValue) {
             //调用parent的setGraphics
             if (name == "pointList" || name == "smooth" || name == "lineType") {
-                this.setGraphics();
+                this.clearGraphicsData();
             }
         }
     }, {
-        key: "setGraphics",
-        value: function setGraphics() {
-            this.graphics.clear();
-
+        key: "draw",
+        value: function draw(graphics) {
+            graphics.beginPath();
             var context = this.context;
             var pointList = context.pointList;
             if (pointList.length < 2) {
@@ -11107,17 +10521,17 @@ var Polygon$2 = function (_Shape) {
                 return;
             }
 
-            this.graphics.moveTo(pointList[0][0], pointList[0][1]);
+            graphics.moveTo(pointList[0][0], pointList[0][1]);
             for (var i = 1, l = pointList.length; i < l; i++) {
-                this.graphics.lineTo(pointList[i][0], pointList[i][1]);
+                graphics.lineTo(pointList[i][0], pointList[i][1]);
             }
-            this.graphics.closePath();
+            graphics.closePath();
 
             //如果为虚线
             if (context.lineType == 'dashed' || context.lineType == 'dotted') {
                 //首先把前面的draphicsData设置为fill only
                 //也就是把line强制设置为false，这点很重要，否则你虚线画不出来，会和这个实现重叠了
-                this.graphics.currentPath.line = false;
+                graphics.currentPath.line = false;
 
                 if (context.smooth) {
                     //如果是smooth，本身已经被用曲率打散过了，不需要采用间隔法
@@ -11125,22 +10539,24 @@ var Polygon$2 = function (_Shape) {
                         if (si == sl - 1) {
                             break;
                         }
-                        this.graphics.moveTo(pointList[si][0], pointList[si][1]);
-                        this.graphics.lineTo(pointList[si + 1][0], pointList[si + 1][1]);
+                        graphics.moveTo(pointList[si][0], pointList[si][1]);
+                        graphics.lineTo(pointList[si + 1][0], pointList[si + 1][1]);
                         si += 1;
                     }
                 } else {
                     //画虚线的方法  
-                    this.graphics.moveTo(pointList[0][0], pointList[0][1]);
+                    graphics.moveTo(pointList[0][0], pointList[0][1]);
                     for (var i = 1, l = pointList.length; i < l; i++) {
                         var fromX = pointList[i - 1][0];
                         var toX = pointList[i][0];
                         var fromY = pointList[i - 1][1];
                         var toY = pointList[i][1];
-                        this.dashedLineTo(fromX, fromY, toX, toY, 5);
+                        this.dashedLineTo(graphics, fromX, fromY, toX, toY, 5);
                     }
                 }
             }
+
+            graphics.closePath();
             return;
         }
     }]);
@@ -11185,16 +10601,15 @@ var Isogon = function (_Polygon) {
     }
 
     createClass(Isogon, [{
-        key: "$watch",
-        value: function $watch(name, value, preValue) {
+        key: "watch",
+        value: function watch(name, value, preValue) {
             if (name == "r" || name == "n") {
                 //如果path有变动，需要自动计算新的pointList
                 this.context.pointList = myMath.getIsgonPointList(style.n, style.r);
             }
 
             if (name == "pointList" || name == "smooth" || name == "lineType") {
-                this.setGraphics();
-                this.graphics.closePath();
+                this.clearGraphicsData();
             }
         }
     }]);
@@ -11239,31 +10654,29 @@ var Line = function (_Shape) {
 
         var _this = possibleConstructorReturn(this, (Line.__proto__ || Object.getPrototypeOf(Line)).call(this, opt));
 
-        _this.setGraphics();
-
         _this.type = "line";
         _this.id = Utils.createId(_this.type);
         return _this;
     }
 
     createClass(Line, [{
-        key: "$watch",
-        value: function $watch(name, value, preValue) {
+        key: "watch",
+        value: function watch(name, value, preValue) {
             //并不清楚是start.x 还是end.x， 当然，这并不重要
             if (name == "x" || name == "y") {
-                this.setGraphics();
+                this.clearGraphicsData();
             }
         }
     }, {
-        key: "setGraphics",
-        value: function setGraphics() {
-            this.graphics.clear();
+        key: "draw",
+        value: function draw(graphics) {
+            graphics.beginPath();
             var context = this.context;
             if (!context.lineType || context.lineType == 'solid') {
-                this.graphics.moveTo(context.start.x, context.start.y);
-                this.graphics.lineTo(context.end.x, context.end.y);
+                graphics.moveTo(context.start.x, context.start.y);
+                graphics.lineTo(context.end.x, context.end.y);
             } else if (context.lineType == 'dashed' || context.lineType == 'dotted') {
-                this.dashedLineTo(context.start.x, context.start.y, context.end.x, context.end.y, this.context.dashLength);
+                this.dashedLineTo(graphics, context.start.x, context.start.y, context.end.x, context.end.y, this.context.dashLength);
             }
             return this;
         }
@@ -11302,16 +10715,14 @@ var Rect = function (_Shape) {
 
         _this.type = "rect";
         _this.id = Utils.createId(_this.type);
-
-        _this.setGraphics();
         return _this;
     }
 
     createClass(Rect, [{
-        key: "$watch",
-        value: function $watch(name, value, preValue) {
+        key: "watch",
+        value: function watch(name, value, preValue) {
             if (name == "width" || name == "height" || name == "radius") {
-                this.setGraphics();
+                this.clearGraphicsData();
             }
         }
 
@@ -11321,7 +10732,7 @@ var Rect = function (_Shape) {
 
     }, {
         key: "_buildRadiusPath",
-        value: function _buildRadiusPath() {
+        value: function _buildRadiusPath(graphics) {
             var context = this.context;
             //左上、右上、右下、左下角的半径依次为r1、r2、r3、r4
             //r缩写为1         相当于 [1, 1, 1, 1]
@@ -11334,7 +10745,7 @@ var Rect = function (_Shape) {
             var height = this.context.height;
 
             var r = Utils.getCssOrderArr(context.radius);
-            var G = this.graphics;
+            var G = graphics;
 
             G.moveTo(parseInt(x + r[0]), parseInt(y));
             G.lineTo(parseInt(x + width - r[1]), parseInt(y));
@@ -11353,15 +10764,15 @@ var Rect = function (_Shape) {
          */
 
     }, {
-        key: "setGraphics",
-        value: function setGraphics() {
-            this.graphics.clear();
+        key: "draw",
+        value: function draw(graphics) {
+            graphics.beginPath();
             if (!this.context.radius.length) {
-                this.graphics.drawRect(0, 0, this.context.width, this.context.height);
+                graphics.drawRect(0, 0, this.context.width, this.context.height);
             } else {
-                this._buildRadiusPath();
+                this._buildRadiusPath(graphics);
             }
-            this.graphics.closePath();
+            graphics.closePath();
             return;
         }
     }]);
@@ -11407,21 +10818,20 @@ var Sector = function (_Shape) {
         _this.isRing = false; //是否为一个圆环
         _this.type = "sector";
         _this.id = Utils.createId(_this.type);
-
-        _this.setGraphics();
         return _this;
     }
 
     createClass(Sector, [{
-        key: "$watch",
-        value: function $watch(name, value, preValue) {
+        key: "watch",
+        value: function watch(name, value, preValue) {
             if (name == "r0" || name == "r" || name == "startAngle" || name == "endAngle" || name == "clockwise") {
-                this.setGraphics();
+                this.clearGraphicsData();
             }
         }
     }, {
-        key: "setGraphics",
-        value: function setGraphics() {
+        key: "draw",
+        value: function draw(graphics) {
+            graphics.beginPath();
             var context = this.context;
             // 形内半径[0,r)
             var r0 = typeof context.r0 == 'undefined' ? 0 : context.r0;
@@ -11447,7 +10857,7 @@ var Sector = function (_Shape) {
                 startAngle -= 0.003;
             }
 
-            var G = this.graphics;
+            var G = graphics;
 
             G.arc(0, 0, r, startAngle, endAngle, this.context.clockwise);
             if (r0 !== 0) {
@@ -11466,20 +10876,6 @@ var Sector = function (_Shape) {
             }
 
             G.closePath();
-        }
-    }, {
-        key: "getRegAngle",
-        value: function getRegAngle() {
-            this.regIn = true; //如果在start和end的数值中，end大于start而且是顺时针则regIn为true
-            var c = this.context;
-            var startAngle = myMath.degreeTo360(c.startAngle); // 起始角度[0,360)
-            var endAngle = myMath.degreeTo360(c.endAngle); // 结束角度(0,360]
-
-            if (startAngle > endAngle && !c.clockwise || startAngle < endAngle && c.clockwise) {
-                this.regIn = false; //out
-            }
-            //度的范围，从小到大
-            this.regAngle = [Math.min(startAngle, endAngle), Math.max(startAngle, endAngle)];
         }
     }, {
         key: "getRect",
@@ -11525,6 +10921,20 @@ var Sector = function (_Shape) {
 
             context.pointList = pointList;
             return this.getRectFormPointList(context);
+        }
+    }, {
+        key: "getRegAngle",
+        value: function getRegAngle() {
+            this.regIn = true; //如果在start和end的数值中，end大于start而且是顺时针则regIn为true
+            var c = this.context;
+            var startAngle = myMath.degreeTo360(c.startAngle); // 起始角度[0,360)
+            var endAngle = myMath.degreeTo360(c.endAngle); // 结束角度(0,360]
+
+            if (startAngle > endAngle && !c.clockwise || startAngle < endAngle && c.clockwise) {
+                this.regIn = false; //out
+            }
+            //度的范围，从小到大
+            this.regAngle = [Math.min(startAngle, endAngle), Math.max(startAngle, endAngle)];
         }
     }]);
     return Sector;

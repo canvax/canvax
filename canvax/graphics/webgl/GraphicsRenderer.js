@@ -1,41 +1,25 @@
 import { hex2rgb } from '../../utils/color';
 import { SHAPES } from '../../const';
-import ObjectRenderer from '../../renderers/webgl/utils/ObjectRenderer';
 import WebGLRenderer from '../../renderers/webgl/WebGLRenderer';
 import WebGLGraphicsData from './WebGLGraphicsData';
 import PrimitiveShader from './shaders/PrimitiveShader';
 
 import buildPoly from './utils/buildPoly';
 import buildRectangle from './utils/buildRectangle';
-import buildRoundedRectangle from './utils/buildRoundedRectangle';
 import buildCircle from './utils/buildCircle';
 
 
-export default class GraphicsRenderer extends ObjectRenderer
+export default class GraphicsRenderer
 {
-    /**
-     * @param {PIXI.WebGLRenderer} renderer - The renderer this object renderer works for.
-     */
     constructor(renderer)
     {
-        super(renderer);
-
+        this.renderer = renderer;
         this.graphicsDataPool = [];
-
         this.primitiveShader = null;
-
         this.gl = renderer.gl;
-
-        // easy access!
         this.CONTEXT_UID = 0;
     }
 
-    /**
-     * Called when there is a WebGL context change
-     *
-     * @private
-     *
-     */
     onContextChange()
     {
         this.gl = this.renderer.gl;
@@ -43,13 +27,9 @@ export default class GraphicsRenderer extends ObjectRenderer
         this.primitiveShader = new PrimitiveShader(this.gl);
     }
 
-    /**
-     * Destroys this renderer.
-     *
-     */
     destroy()
     {
-        ObjectRenderer.prototype.destroy.call(this);
+        this.renderer = null;
 
         for (let i = 0; i < this.graphicsDataPool.length; ++i)
         {
@@ -59,14 +39,9 @@ export default class GraphicsRenderer extends ObjectRenderer
         this.graphicsDataPool = null;
     }
 
-    /**
-     * Renders a graphics object.
-     *
-     * @param {PIXI.Graphics} graphics - The graphics object to render.
-     */
-    render( displayObject )
+    render( displayObject, stage , graphics )
     {
-        const graphics = displayObject.graphics;
+        //const graphics = displayObject.graphics;
         const renderer = this.renderer;
         const gl = renderer.gl;
 
@@ -75,12 +50,11 @@ export default class GraphicsRenderer extends ObjectRenderer
 
         if (!webGL || graphics.dirty !== webGL.dirty)
         {
-            this.updateGraphics(graphics);
+            this.updateGraphics(graphics , displayObject);
 
             webGL = graphics._webGL[this.CONTEXT_UID];
         }
 
-        // This  could be speeded up for sure!
         const shader = this.primitiveShader;
 
         renderer.bindShader(shader);
@@ -91,9 +65,7 @@ export default class GraphicsRenderer extends ObjectRenderer
             const shaderTemp = webGLData.shader;
 
             renderer.bindShader(shaderTemp);
-
-            var globalMatrix = displayObject.getConcatenatedMatrix().toArray(true);
-            shaderTemp.uniforms.translationMatrix = globalMatrix;
+            shaderTemp.uniforms.translationMatrix = displayObject.worldTransform;
             shaderTemp.uniforms.tint = hex2rgb(graphics.tint);
             shaderTemp.uniforms.alpha = graphics.worldAlpha;
 
@@ -102,54 +74,38 @@ export default class GraphicsRenderer extends ObjectRenderer
         }
     }
 
-    /**
-     * Updates the graphics object
-     *
-     * @private
-     * @param {PIXI.Graphics} graphics - The graphics object to update
-     */
-    updateGraphics(graphics)
+    updateGraphics(graphics , displayObject)
     {
         const gl = this.renderer.gl;
 
-         // get the contexts graphics object
         let webGL = graphics._webGL[this.CONTEXT_UID];
 
-        // if the graphics object does not exist in the webGL context time to create it!
         if (!webGL)
         {
             webGL = graphics._webGL[this.CONTEXT_UID] = { lastIndex: 0, data: [], gl, clearDirty: -1, dirty: -1 };
         }
 
-        // flag the graphics as not dirty as we are about to update it...
         webGL.dirty = graphics.dirty;
 
-        // if the user cleared the graphics object we will need to clear every object
         if (graphics.clearDirty !== webGL.clearDirty)
         {
             webGL.clearDirty = graphics.clearDirty;
 
-            // loop through and return all the webGLDatas to the object pool so than can be reused later on
             for (let i = 0; i < webGL.data.length; i++)
             {
                 this.graphicsDataPool.push(webGL.data[i]);
             }
 
-            // clear the array and reset the index..
             webGL.data.length = 0;
             webGL.lastIndex = 0;
         }
 
         let webGLData;
 
-        // loop through the graphics datas and construct each one..
-        // if the object is a complex fill then the new stencil buffer technique will be used
-        // other wise graphics objects will be pushed into a batch..
-        for (let i = webGL.lastIndex; i < graphics.graphicsData.length; i++)
+        for (let i = webGL.lastIndex; i < displayObject.graphicsData.length; i++)
         {
-            const data = graphics.graphicsData[i];
+            const data = displayObject.graphicsData[i];
 
-            // TODO - this can be simplified
             webGLData = this.getWebGLData(webGL, 0);
 
             if (data.type === SHAPES.POLY)
@@ -159,14 +115,10 @@ export default class GraphicsRenderer extends ObjectRenderer
             if (data.type === SHAPES.RECT)
             {
                 buildRectangle(data, webGLData);
-            }
+            } 
             else if (data.type === SHAPES.CIRC || data.type === SHAPES.ELIP)
             {
                 buildCircle(data, webGLData);
-            }
-            else if (data.type === SHAPES.RREC)
-            {
-                buildRoundedRectangle(data, webGLData);
             }
 
             webGL.lastIndex++;
@@ -174,7 +126,6 @@ export default class GraphicsRenderer extends ObjectRenderer
 
         this.renderer.bindVao(null);
 
-        // upload all the dirty data...
         for (let i = 0; i < webGL.data.length; i++)
         {
             webGLData = webGL.data[i];
@@ -186,13 +137,6 @@ export default class GraphicsRenderer extends ObjectRenderer
         }
     }
 
-    /**
-     *
-     * @private
-     * @param {WebGLRenderingContext} gl - the current WebGL drawing context
-     * @param {number} type - TODO @Alvin
-     * @return {*} TODO
-     */
     getWebGLData(gl, type)
     {
         let webGLData = gl.data[gl.data.length - 1];

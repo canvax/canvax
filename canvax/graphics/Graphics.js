@@ -9,14 +9,11 @@ import { Rectangle, Ellipse, Polygon, Circle } from '../math/index';
 import { SHAPES } from '../const';
 import bezierCurveTo from './utils/bezierCurveTo';
 import _ from "../utils/underscore";
-import InsideLine from '../geom/InsideLine'
 
 export default class Graphics 
 {
     constructor( shape )
     {
-        this.shape = shape;
-
         this.lineWidth = 1;
         this.strokeStyle = null;
         this.lineAlpha = 1;
@@ -26,34 +23,23 @@ export default class Graphics
         this.graphicsData = [];
         this.currentPath = null;
 
-        this.synsStyle();
+        this.dirty = 0; //用于检测图形对象是否已更改。 如果这是设置为true，那么图形对象将被重新计算。
+        this.clearDirty = 0; //用于检测我们是否清除了图形webGL数据
 
-        this.dirty = 0; //脏数据
         this._webGL = {};
         this.worldAlpha = 1;
         this.tint = 0xFFFFFF; //目标对象附加颜色
     }
 
-    synsStyle()
+    setStyle( context )
     {
-        //从shape中把绘图需要的style属性同步过来
-        var sctx = this.shape.context;
-        this.lineWidth = sctx.lineWidth;
-        this.strokeStyle = sctx.strokeStyle;
-        this.lineAlpha = sctx.lineAlpha * sctx.globalAlpha;
+        //从 shape 中把绘图需要的style属性同步过来
+        this.lineWidth = context.lineWidth;
+        this.strokeStyle = context.strokeStyle;
+        this.lineAlpha = context.lineAlpha * context.globalAlpha;
 
-        this.fillStyle = sctx.fillStyle;
-        this.fillAlpha = sctx.fillAlpha * sctx.globalAlpha;
-
-
-
-
-        //如果graphicsData有多分组的情况下，如果以为shape的 style 属性改变调用的synsStyle
-        //则会覆盖全部的 graphicsData 元素
-        for (let i = 0; i < this.graphicsData.length; ++i)
-        {
-            this.graphicsData[i].synsStyle(this);
-        }
+        this.fillStyle = context.fillStyle;
+        this.fillAlpha = context.fillAlpha * context.globalAlpha;
     }
 
     clone()
@@ -354,6 +340,7 @@ export default class Graphics
         if (this.graphicsData.length > 0)
         {
             this.dirty++;
+            this.clearDirty++;
             this.graphicsData.length = 0;
         }
 
@@ -396,6 +383,10 @@ export default class Graphics
         return data;
     }
 
+    beginPath()
+    {
+        this.currentPath = null;
+    }
 
     closePath()
     {
@@ -408,49 +399,6 @@ export default class Graphics
 
         return this;
     }
-
-    /**
-     * Tests if a point is inside this graphics object
-     *
-     * @param {PIXI.Point} point - the point to test
-     * @return {boolean} the result of the test
-     */
-    containsPoint(point)
-    {
-        const graphicsData = this.graphicsData;
-        let inside = false;
-        for (let i = 0; i < graphicsData.length; ++i)
-        {
-            const data = graphicsData[i];
-            if (data.shape)
-            {
-                //先检测fill， fill的检测概率大些。
-                //像circle,ellipse这样的shape 就直接把lineWidth算在fill里面计算就好了，所以他们是没有insideLine的
-                if ( data.hasFill() && data.shape.contains(point.x, point.y) )
-                {
-                    inside = true;
-                    if( inside ){
-                        break;
-                    }
-                }
-
-                //circle,ellipse等就没有points
-                if( data.hasLine() && data.shape.points )
-                {
-                    //然后检测是否和描边碰撞
-                    inside = InsideLine( data , point.x , point.y );
-                    if( inside ){
-                        break;
-                    }
-                }
-            }
-            
-        }
-
-        return inside;
-    }
-
-    
 
      /**
      * Update the bounds of the object
@@ -586,17 +534,17 @@ export default class Graphics
         {
             this.graphicsData[i].destroy();
         }
-        for (const id in this._webgl)
+        for (const id in this._webGL)
         {
-            for (let j = 0; j < this._webgl[id].data.length; ++j)
+            for (let j = 0; j < this._webGL[id].data.length; ++j)
             {
-                this._webgl[id].data[j].destroy();
+                this._webGL[id].data[j].destroy();
             }
         }
 
         this.graphicsData = null;
         this.currentPath = null;
-        this._webgl = null;
+        this._webGL = null;
     }
 
 }

@@ -2,27 +2,15 @@ import buildLine from './buildLine';
 import { SHAPES } from '../../../const';
 import { hex2rgb } from '../../../utils/color';
 
-/**
- * Builds a circle to draw
- *
- * Ignored from docs since it is not directly exposed.
- *
- * @ignore
- * @private
- * @param {PIXI.WebGLGraphicsData} graphicsData - The graphics object to draw
- * @param {object} webGLData - an object containing all the webGL-specific information to create this shape
- */
 export default function buildCircle(graphicsData, webGLData)
 {
     
-    // need to convert points to a nice regular data
     const circleData = graphicsData.shape;
     const x = circleData.x;
     const y = circleData.y;
     let width;
     let height;
 
-    // TODO - bit hacky??
     if (graphicsData.type === SHAPES.CIRC)
     {
         width = circleData.radius;
@@ -39,7 +27,7 @@ export default function buildCircle(graphicsData, webGLData)
 
     const seg = (Math.PI * 2) / totalSegs;
 
-    if (graphicsData.fill)
+    if (graphicsData.hasFill() && graphicsData.fillAlpha)
     {
         const color = hex2rgb(graphicsData.fillStyle);
         const alpha = graphicsData.fillAlpha;
@@ -71,7 +59,7 @@ export default function buildCircle(graphicsData, webGLData)
         indices.push(vecPos - 1);
     }
 
-    if (graphicsData.lineWidth)
+    if (graphicsData.hasLine() && graphicsData.lineAlpha)
     {
         const tempPoints = graphicsData.points;
 

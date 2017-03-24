@@ -14,9 +14,8 @@ export default class CanvasGraphicsRenderer
      */
     render(displayObject , stage)
     {
-
-        const graphics = displayObject.graphics;
         const renderer = this.renderer;
+        const graphicsData = displayObject.graphicsData;
         const ctx = stage.ctx;
         const context = displayObject.context;
 
@@ -24,13 +23,16 @@ export default class CanvasGraphicsRenderer
             context.globalAlpha *= displayObject.parent.context.globalAlpha;
         };
 
-        for (let i = 0; i < graphics.graphicsData.length; i++)
+        for (let i = 0; i < graphicsData.length; i++)
         {
-            const data = graphics.graphicsData[i];
+            const data = graphicsData[i];
             const shape = data.shape;
 
             const fillStyle = data.fillStyle;
             const strokeStyle = data.strokeStyle;
+
+            const fill = data.hasFill() && data.fillAlpha;
+            const line = data.hasLine() && data.lineAlpha;
 
             ctx.lineWidth = data.lineWidth;
 
@@ -40,13 +42,13 @@ export default class CanvasGraphicsRenderer
 
                 this.renderPolygon(shape.points, shape.closed, ctx);
 
-                if (data.hasFill())
+                if ( fill )
                 {
                     ctx.globalAlpha = data.fillAlpha;
                     ctx.fillStyle = fillStyle;
                     ctx.fill();
                 }
-                if (data.hasLine())
+                if ( line )
                 {
                     ctx.globalAlpha = data.lineAlpha;
                     ctx.strokeStyle = strokeStyle;
@@ -55,13 +57,13 @@ export default class CanvasGraphicsRenderer
             }
             else if (data.type === SHAPES.RECT)
             {
-                if ( data.hasFill() )
+                if ( fill )
                 {
                     ctx.globalAlpha = data.fillAlpha;
                     ctx.fillStyle = fillStyle;
                     ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
                 }
-                if (data.hasLine())
+                if ( line ) 
                 {
                     ctx.globalAlpha = data.lineAlpha;
                     ctx.strokeStyle = strokeStyle;
@@ -76,13 +78,13 @@ export default class CanvasGraphicsRenderer
                 ctx.arc(shape.x, shape.y, shape.radius, 0, 2 * Math.PI);
                 ctx.closePath();
 
-                if (data.hasFill())
+                if ( fill )
                 {
                     ctx.globalAlpha = data.fillAlpha;
                     ctx.fillStyle = fillStyle;
                     ctx.fill();
                 }
-                if (data.hasLine())
+                if ( line )
                 {
                     ctx.globalAlpha = data.lineAlpha;
                     ctx.strokeStyle = strokeStyle;
@@ -115,13 +117,13 @@ export default class CanvasGraphicsRenderer
 
                 ctx.closePath();
 
-                if (data.hasFill())
+                if ( fill )
                 {
                     ctx.globalAlpha = data.fillAlpha;
                     ctx.fillStyle = fillStyle;
                     ctx.fill();
                 }
-                if (data.hasLine())
+                if ( line )
                 {
                     ctx.globalAlpha = data.lineAlpha;
                     ctx.strokeStyle = strokeStyle;

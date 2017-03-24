@@ -10,7 +10,7 @@
 import DisplayObjectContainer from "./DisplayObjectContainer";
 import Utils from "../utils/index";
 
-var Stage = function( ){
+var Stage = function( opt ){
     var self = this;
     self.type = "stage";
     self.canvas = null;
@@ -18,19 +18,23 @@ var Stage = function( ){
     //stage正在渲染中
     self.stageRending = false;
     self._isReady = false;
+    
     Stage.superclass.constructor.apply(this, arguments);
+
 };
 Utils.creatClass( Stage , DisplayObjectContainer , {
-    init : function(){},
+    init : function(){
+  
+    },
     //由canvax的afterAddChild 回调
     initStage : function( canvas , width , height ){
-       var self = this;
-       self.canvas = canvas;
-       self.context.width  = width;
-       self.context.height = height;
-       self.context.scaleX = Utils._devicePixelRatio;
-       self.context.scaleY = Utils._devicePixelRatio;
-       self._isReady = true;
+        var self = this;
+        self.canvas = canvas;
+        self.context.width  = width;
+        self.context.height = height;
+        self.context.scaleX = Utils._devicePixelRatio;
+        self.context.scaleY = Utils._devicePixelRatio;
+        self._isReady = true;
     },
     heartBeat : function( opt ){
         //shape , name , value , preValue 

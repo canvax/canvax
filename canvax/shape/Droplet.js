@@ -30,25 +30,21 @@ export default class Droplet extends Path
         this.type = "droplet";
         this.id = Utils.createId(this.type);
 
-        this.context.path = this._createPath();
+        this.context.path = this.createPath();
     }
 
-    $watch(name, value, preValue) 
+    watch(name, value, preValue) 
     {
         if ( name == "hr" || name == "vr" ) {
-            this.context.path = this._createPath();
-        }
-
-        if (name == "path") {
-            this.setGraphics();
+            this.context.path = this.createPath();
         }
     }
     
-    _createPath() 
+    createPath() 
     {
-       var context = this.context;
-       var ps = "M 0 "+context.hr+" C "+context.hr+" "+context.hr+" "+( context.hr*3/2 ) +" "+(-context.hr/3)+" 0 "+(-context.vr);
-       ps += " C "+(-context.hr * 3/ 2)+" "+(-context.hr / 3)+" "+(-context.hr)+" "+context.hr+" 0 "+ context.hr+ "z";
-       return ps;
+        var context = this.context;
+        var ps = "M 0 "+context.hr+" C "+context.hr+" "+context.hr+" "+( context.hr*3/2 ) +" "+(-context.hr/3)+" 0 "+(-context.vr);
+        ps += " C "+(-context.hr * 3/ 2)+" "+(-context.hr / 3)+" "+(-context.hr)+" "+context.hr+" 0 "+ context.hr+ "z";
+        return ps;
     }
 }

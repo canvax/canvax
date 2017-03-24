@@ -2,26 +2,15 @@ import buildLine from './buildLine';
 import { hex2rgb } from '../../../utils/color';
 import earcut from 'earcut';
 
-/**
- * Builds a polygon to draw
- *
- * Ignored from docs since it is not directly exposed.
- *
- * @ignore
- * @private
- * @param {PIXI.WebGLGraphicsData} graphicsData - The graphics object containing all the necessary properties
- * @param {object} webGLData - an object containing all the webGL-specific information to create this shape
- */
 export default function buildPoly(graphicsData, webGLData)
 {
     graphicsData.points = graphicsData.shape.points.slice();
 
     let points = graphicsData.points;
 
-    if (graphicsData.fill && points.length >= 6)
+    if (graphicsData.hasFill() && graphicsData.fillAlpha && points.length >= 6)
     {
         const holeArray = [];
-        // Process holes..
         const holes = graphicsData.holes;
 
         for (let i = 0; i < holes.length; i++)
@@ -33,13 +22,11 @@ export default function buildPoly(graphicsData, webGLData)
             points = points.concat(hole.points);
         }
 
-        // get first and last point.. figure out the middle!
         const verts = webGLData.points;
         const indices = webGLData.indices;
 
         const length = points.length / 2;
 
-        // sort color
         const color = hex2rgb(graphicsData.fillStyle);
         const alpha = graphicsData.fillAlpha;
         const r = color[0] * alpha;
@@ -71,7 +58,7 @@ export default function buildPoly(graphicsData, webGLData)
         }
     }
 
-    if (graphicsData.lineWidth > 0)
+    if (graphicsData.hasLine() && graphicsData.lineAlpha )
     {
         buildLine(graphicsData, webGLData);
     }

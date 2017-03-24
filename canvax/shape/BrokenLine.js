@@ -34,22 +34,18 @@ export default class BrokenLine extends Shape
 
         this.type = "brokenline";
         this.id = Utils.createId(this.type);
-
-        this.setGraphics();
     }
 
-    $watch(name, value, preValue) 
+    watch(name, value, preValue) 
     {
         if (name == "pointList" || name == "smooth" || name == "lineType") {
-            this.setGraphics();
+            this.clearGraphicsData();
         }
     }
 
 
-    setGraphics() 
+    draw( graphics ) 
     {
-        this.graphics.clear();
-
         const context = this.context;
         const pointList = context.pointList;
         if (pointList.length < 2) {
@@ -59,33 +55,36 @@ export default class BrokenLine extends Shape
         if (!context.lineType || context.lineType == 'solid') {
             //默认为实线
             //TODO:目前如果 有设置smooth 的情况下是不支持虚线的
-            this.graphics.moveTo(pointList[0][0], pointList[0][1]);
+            graphics.moveTo(pointList[0][0], pointList[0][1]);
             for (var i = 1, l = pointList.length; i < l; i++) {
-                this.graphics.lineTo(pointList[i][0], pointList[i][1]);
+                graphics.lineTo(pointList[i][0], pointList[i][1]);
             };
+
         } else if (context.lineType == 'dashed' || context.lineType == 'dotted') {
             if (context.smooth) {
                 for (var si = 0, sl = pointList.length; si < sl; si++) {
                     if (si == sl-1) {
                         break;
                     };
-                    this.graphics.moveTo( pointList[si][0] , pointList[si][1] );
-                    this.graphics.lineTo( pointList[si+1][0] , pointList[si+1][1] );
+                    graphics.moveTo( pointList[si][0] , pointList[si][1] );
+                    graphics.lineTo( pointList[si+1][0] , pointList[si+1][1] );
                     si+=1;
+
                 };
             } else {
                 //画虚线的方法  
-                this.graphics.moveTo(pointList[0][0], pointList[0][1]);
                 for (var i = 1, l = pointList.length; i < l; i++) {
                     var fromX = pointList[i - 1][0];
                     var toX = pointList[i][0];
                     var fromY = pointList[i - 1][1];
                     var toY = pointList[i][1];
-                    this.dashedLineTo(fromX, fromY, toX, toY, 5);
+                    this.dashedLineTo(graphics, fromX, fromY, toX, toY, 5);
                 };
             }
         };
         return this;
     }
+
+
 
 }

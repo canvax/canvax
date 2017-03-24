@@ -36,3 +36,6 @@ change log
 
 1， line.xStart line.yStart line.xEnd line.yEnd --》 line.start:{x,y} line.start:{x,y}
 
+2,  去掉ctx.save ctx.resolve ctx.transform
+    该用ctx.setTransform
+

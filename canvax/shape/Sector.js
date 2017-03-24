@@ -41,19 +41,18 @@ export default class Sector extends Shape
         this.isRing    = false;//是否为一个圆环
         this.type = "sector";
         this.id = Utils.createId(this.type);
-
-        this.setGraphics();
     }
 
-    $watch(name, value, preValue) 
+    watch(name, value, preValue) 
     {
         if ( name == "r0" || name == "r" || name == "startAngle" || name =="endAngle" || name =="clockwise" ) {
-            this.setGraphics();
-        }
+            this.clearGraphicsData();
+        };
     }
 
-    setGraphics() 
+    draw( graphics )
     {
+        graphics.beginPath();
         var context = this.context;
         // 形内半径[0,r)
         var r0 = typeof context.r0 == 'undefined' ? 0 : context.r0;
@@ -66,9 +65,9 @@ export default class Sector extends Shape
         //if( startAngle != endAngle && Math.abs(startAngle - endAngle) % 360 == 0 ) {
         if( startAngle == endAngle && context.startAngle != context.endAngle ) {
             //如果两个角度相等，那么就认为是个圆环了
-            this.isRing     = true;
-            startAngle = 0 ;
-            endAngle   = 360;
+            this.isRing = true;
+            startAngle  = 0 ;
+            endAngle    = 360;
         }
 
         startAngle = myMath.degreeToRadian(startAngle);
@@ -79,7 +78,7 @@ export default class Sector extends Shape
             startAngle -= 0.003
         }
 
-        var G = this.graphics;
+        var G = graphics;
 
         G.arc( 0 , 0 , r, startAngle, endAngle, this.context.clockwise);
         if (r0 !== 0) {
@@ -98,23 +97,6 @@ export default class Sector extends Shape
         };
         
         G.closePath();
-     }
-
-     getRegAngle()
-     {
-         this.regIn      = true;  //如果在start和end的数值中，end大于start而且是顺时针则regIn为true
-         var c           = this.context;
-         var startAngle = myMath.degreeTo360(c.startAngle);          // 起始角度[0,360)
-         var endAngle   = myMath.degreeTo360(c.endAngle);            // 结束角度(0,360]
-
-         if ( ( startAngle > endAngle && !c.clockwise ) || ( startAngle < endAngle && c.clockwise ) ) {
-             this.regIn  = false; //out
-         };
-         //度的范围，从小到大
-         this.regAngle   = [ 
-             Math.min( startAngle , endAngle ) , 
-             Math.max( startAngle , endAngle ) 
-         ];
      }
 
      getRect(context)
@@ -150,23 +132,40 @@ export default class Sector extends Shape
              endAngle   = myMath.degreeToRadian( endAngle   );
 
              pointList.push([
-                     myMath.cos(startAngle) * r0 , myMath.sin(startAngle) * r0
-                     ]);
+                 myMath.cos(startAngle) * r0 , myMath.sin(startAngle) * r0
+                 ]);
 
              pointList.push([
-                     myMath.cos(startAngle) * r  , myMath.sin(startAngle) * r
-                     ]);
+                 myMath.cos(startAngle) * r  , myMath.sin(startAngle) * r
+                 ]);
 
              pointList.push([
-                     myMath.cos(endAngle)   * r  ,  myMath.sin(endAngle)  * r
-                     ]);
+                 myMath.cos(endAngle)   * r  ,  myMath.sin(endAngle)  * r
+                 ]);
 
              pointList.push([
-                     myMath.cos(endAngle)   * r0 ,  myMath.sin(endAngle)  * r0
-                     ]);
+                 myMath.cos(endAngle)   * r0 ,  myMath.sin(endAngle)  * r0
+                 ]);
          }
 
          context.pointList = pointList;
          return this.getRectFormPointList( context );
+     }
+
+     getRegAngle()
+     {
+         this.regIn      = true;  //如果在start和end的数值中，end大于start而且是顺时针则regIn为true
+         var c           = this.context;
+         var startAngle = myMath.degreeTo360(c.startAngle);          // 起始角度[0,360)
+         var endAngle   = myMath.degreeTo360(c.endAngle);            // 结束角度(0,360]
+
+         if ( ( startAngle > endAngle && !c.clockwise ) || ( startAngle < endAngle && c.clockwise ) ) {
+             this.regIn  = false; //out
+         };
+         //度的范围，从小到大
+         this.regAngle   = [ 
+             Math.min( startAngle , endAngle ) , 
+             Math.max( startAngle , endAngle ) 
+         ];
      }
 }
