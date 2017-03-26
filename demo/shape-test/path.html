@@ -34,7 +34,7 @@
         app = new Canvax.App({
             id : "canvax",
             el : box,
-            webGL: false
+            webGL: true
         });
         
         app.registEvent();
@@ -48,7 +48,7 @@
         
         mapPath = "M10 10 H 100 H 150 M10 315 L 110 215 A 30 50 0 0 1 162.55 162.45 L 172.55 152.45 A 30 50 -45 0 1 215.1 109.9 L 315 10 v 60 Q 350 100 350 130 C 350 230 450 130 450 230 z";
 
-
+        mapPath111 = "M100 100 H 150"
 
         var map = new Shapes.Path({
             id:"map1",
@@ -64,7 +64,7 @@
                 //    y : 200
                 //},
                 rotation: 45,
-                rotateOrigin  :  {
+                rotateOrigin : {
                     x : 200,
                     y : 200
                 },

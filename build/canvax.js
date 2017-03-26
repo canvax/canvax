@@ -3320,7 +3320,9 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
         if (!this.worldTransform) {
             cm = new Matrix();
             cm.concat(this._transform);
+            //if(this.parent.type!="stage"){
             cm.concat(this.parent.worldTransform);
+            //}
             this.worldTransform = cm;
         }
         return this.worldTransform;
@@ -5558,10 +5560,11 @@ var CanvasRenderer = function (_SystemRenderer) {
 
             var ctx = stage.ctx;
 
+            ctx.setTransform.apply(ctx, displayObject.worldTransform.toArray());
+
             if (displayObject.graphicsData) {
                 //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
-                ctx.setTransform.apply(ctx, displayObject.worldTransform.toArray());
-                displayObject._draw(stage, this); //_draw会完成绘制准备好 graphicsData
+                displayObject._draw(stage, this.graphics); //_draw会完成绘制准备好 graphicsData
                 this.CGR.render(displayObject, stage, this);
             }
 
@@ -7288,8 +7291,8 @@ var RenderTarget = function () {
 
             pm.identity();
 
-            pm.a = 1 / destinationFrame.width * 2;
-            pm.d = -1 / destinationFrame.height * 2;
+            pm.a = 1 / destinationFrame.width;
+            pm.d = -1 / destinationFrame.height;
 
             pm.tx = -1 - sourceFrame.x * pm.a;
             pm.ty = 1 - sourceFrame.y * pm.d;
@@ -8649,8 +8652,7 @@ var GraphicsRenderer = function () {
         }
     }, {
         key: 'render',
-        value: function render(displayObject, stage, graphics) {
-            //const graphics = displayObject.graphics;
+        value: function render(stage, graphics) {
             var renderer = this.renderer;
             var gl = renderer.gl;
 
@@ -8658,7 +8660,7 @@ var GraphicsRenderer = function () {
             var webGL = graphics._webGL[this.CONTEXT_UID];
 
             if (!webGL || graphics.dirty !== webGL.dirty) {
-                this.updateGraphics(graphics, displayObject);
+                this.updateGraphics(graphics);
 
                 webGL = graphics._webGL[this.CONTEXT_UID];
             }
@@ -8666,13 +8668,14 @@ var GraphicsRenderer = function () {
             var shader = this.primitiveShader;
 
             renderer.bindShader(shader);
-
+            debugger;
             for (var i = 0, n = webGL.data.length; i < n; i++) {
                 webGLData = webGL.data[i];
                 var shaderTemp = webGLData.shader;
 
                 renderer.bindShader(shaderTemp);
-                shaderTemp.uniforms.translationMatrix = displayObject.worldTransform;
+
+                shaderTemp.uniforms.translationMatrix = webGL.displayObject.worldTransform.toArray(true);
                 shaderTemp.uniforms.tint = hex2rgb(graphics.tint);
                 shaderTemp.uniforms.alpha = graphics.worldAlpha;
 
@@ -8682,7 +8685,7 @@ var GraphicsRenderer = function () {
         }
     }, {
         key: 'updateGraphics',
-        value: function updateGraphics(graphics, displayObject) {
+        value: function updateGraphics(graphics) {
             var gl = this.renderer.gl;
 
             var webGL = graphics._webGL[this.CONTEXT_UID];
@@ -8706,8 +8709,8 @@ var GraphicsRenderer = function () {
 
             var webGLData = void 0;
 
-            for (var _i = webGL.lastIndex; _i < displayObject.graphicsData.length; _i++) {
-                var data = displayObject.graphicsData[_i];
+            for (var _i = webGL.lastIndex; _i < graphics.graphicsData.length; _i++) {
+                var data = graphics.graphicsData[_i];
 
                 webGLData = this.getWebGLData(webGL, 0);
 
@@ -8719,6 +8722,9 @@ var GraphicsRenderer = function () {
                 } else if (data.type === SHAPES.CIRC || data.type === SHAPES.ELIP) {
                     buildCircle(data, webGLData);
                 }
+
+                //这个对象隶属于那个displayObject，可以方便的从这个displayObject上面去获取世界矩阵和style等
+                webGL.displayObject = data.displayObject;
 
                 webGL.lastIndex++;
             }
@@ -8828,11 +8834,11 @@ var WebGLStageRenderer = function () {
         }
     }, {
         key: 'render',
-        value: function render(displayObject, stage, graphics) {
+        value: function render(stage, graphics) {
             if (!this.gl || this.gl.isContextLost()) {
                 return;
             }
-            this.webglGR.render(displayObject, stage, graphics);
+            this.webglGR.render(stage, graphics);
         }
     }, {
         key: 'resize',
@@ -9000,12 +9006,15 @@ var WebGLRenderer = function (_SystemRenderer) {
             }
             stage.stageRending = true;
             this._clear(stage);
-            this._render(stage);
+            this._setGraphicsData(stage);
+            if (this.graphics.graphicsData.length > 0) {
+                stage.webGLStageRenderer.render(stage, this.graphics);
+            }
             stage.stageRending = false;
         }
     }, {
-        key: '_render',
-        value: function _render(stage, displayObject) {
+        key: '_setGraphicsData',
+        value: function _setGraphicsData(stage, displayObject) {
             if (!displayObject) {
                 displayObject = stage;
             }
@@ -9015,13 +9024,13 @@ var WebGLRenderer = function (_SystemRenderer) {
             }
 
             if (displayObject.graphicsData) {
-                displayObject.draw(stage, this);
-                stage.webGLStageRenderer.render(displayObject, stage, this.graphics);
+                displayObject._draw(stage, this.graphics); //_draw会完成绘制准备好 graphicsData
+                //stage.webGLStageRenderer.render( displayObject, stage , this.graphics);
             }
 
             if (displayObject.children) {
                 for (var i = 0, len = displayObject.children.length; i < len; i++) {
-                    this._render(stage, displayObject.children[i]);
+                    this._setGraphicsData(stage, displayObject.children[i]);
                 }
             }
         }
@@ -9312,14 +9321,15 @@ var Shape = function (_DisplayObject) {
 
     createClass(Shape, [{
         key: "_draw",
-        value: function _draw(stage, renderer) {
+        value: function _draw(stage, graphics) {
             if (this.graphicsData.length == 0) {
-                //先设置好当前graphics的style
-                renderer.graphics.setStyle(this.context);
 
-                var lastGDind = renderer.graphics.graphicsData.length;
-                this.draw(renderer.graphics);
-                this.graphicsData = renderer.graphics.graphicsData.slice(lastGDind);
+                //先设置好当前graphics的style
+                graphics.setStyle(this.context);
+
+                var lastGDind = graphics.graphicsData.length;
+                this.draw(graphics);
+                this.graphicsData = graphics.graphicsData.slice(lastGDind);
                 var me = this;
                 _$1.each(this.graphicsData, function (gd) {
                     gd.displayObject = me;

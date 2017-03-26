@@ -46,19 +46,21 @@ export default class Shape extends DisplayObject
         this._rect = null;
     }
 
-    _draw(stage , renderer)
+    _draw(stage , graphics)
     {
         if(this.graphicsData.length == 0){
+
             //先设置好当前graphics的style
-            renderer.graphics.setStyle( this.context );
-            
-            var lastGDind = renderer.graphics.graphicsData.length;
-            this.draw( renderer.graphics );
-            this.graphicsData = renderer.graphics.graphicsData.slice( lastGDind );
+            graphics.setStyle( this.context );
+
+            var lastGDind = graphics.graphicsData.length;
+            this.draw( graphics );
+            this.graphicsData = graphics.graphicsData.slice( lastGDind );
             var me = this;
             _.each( this.graphicsData , function( gd ){
                 gd.displayObject = me;
             } );
+            
         }
     }
 

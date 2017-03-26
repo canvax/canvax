@@ -39,9 +39,8 @@ export default class GraphicsRenderer
         this.graphicsDataPool = null;
     }
 
-    render( displayObject, stage , graphics )
+    render( stage , graphics )
     {
-        //const graphics = displayObject.graphics;
         const renderer = this.renderer;
         const gl = renderer.gl;
 
@@ -50,7 +49,7 @@ export default class GraphicsRenderer
 
         if (!webGL || graphics.dirty !== webGL.dirty)
         {
-            this.updateGraphics(graphics , displayObject);
+            this.updateGraphics(graphics);
 
             webGL = graphics._webGL[this.CONTEXT_UID];
         }
@@ -58,14 +57,15 @@ export default class GraphicsRenderer
         const shader = this.primitiveShader;
 
         renderer.bindShader(shader);
-
+debugger
         for (let i = 0, n = webGL.data.length; i < n; i++)
         {
             webGLData = webGL.data[i];
             const shaderTemp = webGLData.shader;
 
             renderer.bindShader(shaderTemp);
-            shaderTemp.uniforms.translationMatrix = displayObject.worldTransform;
+
+            shaderTemp.uniforms.translationMatrix = webGL.displayObject.worldTransform.toArray(true);
             shaderTemp.uniforms.tint = hex2rgb(graphics.tint);
             shaderTemp.uniforms.alpha = graphics.worldAlpha;
 
@@ -74,7 +74,7 @@ export default class GraphicsRenderer
         }
     }
 
-    updateGraphics(graphics , displayObject)
+    updateGraphics(graphics)
     {
         const gl = this.renderer.gl;
 
@@ -102,9 +102,9 @@ export default class GraphicsRenderer
 
         let webGLData;
 
-        for (let i = webGL.lastIndex; i < displayObject.graphicsData.length; i++)
+        for (let i = webGL.lastIndex; i < graphics.graphicsData.length; i++)
         {
-            const data = displayObject.graphicsData[i];
+            const data = graphics.graphicsData[i];
 
             webGLData = this.getWebGLData(webGL, 0);
 
@@ -120,6 +120,9 @@ export default class GraphicsRenderer
             {
                 buildCircle(data, webGLData);
             }
+
+            //这个对象隶属于那个displayObject，可以方便的从这个displayObject上面去获取世界矩阵和style等
+            webGL.displayObject = data.displayObject;
 
             webGL.lastIndex++;
         }

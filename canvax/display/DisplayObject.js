@@ -73,7 +73,7 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         _contextATTRS.$watch = function(name , value , preValue){
             //下面的这些属性变化，都会需要重新组织矩阵属性 _transform 
             var obj = this.$owner;
-            
+
             if( _.indexOf( TRANSFORM_PROPS , name ) > -1 ) {
                 obj._updateTransform();
                 
@@ -347,7 +347,9 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         if( !this.worldTransform ){
             cm = new Matrix();
             cm.concat( this._transform );
-            cm.concat( this.parent.worldTransform );
+            //if(this.parent.type!="stage"){
+                cm.concat( this.parent.worldTransform );
+            //}
             this.worldTransform = cm;
         };
         return this.worldTransform;

@@ -97,8 +97,8 @@ export default class RenderTarget
 
         pm.identity();
 
-        pm.a = 1 / destinationFrame.width * 2;
-        pm.d = -1 / destinationFrame.height * 2;
+        pm.a = 1 / destinationFrame.width;
+        pm.d = -1 / destinationFrame.height;
 
         pm.tx = -1 - (sourceFrame.x * pm.a);
         pm.ty = 1 - (sourceFrame.y * pm.d);
