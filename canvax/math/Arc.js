@@ -1,4 +1,3 @@
-
 var arcToSegmentsCache = { },
     segmentToBezierCache = { },
     boundsOfCurveCache = { },

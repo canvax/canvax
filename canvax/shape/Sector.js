@@ -52,7 +52,7 @@ export default class Sector extends Shape
 
     draw( graphics )
     {
-        graphics.beginPath();
+        //graphics.beginPath();
         var context = this.context;
         // 形内半径[0,r)
         var r0 = typeof context.r0 == 'undefined' ? 0 : context.r0;

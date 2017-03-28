@@ -52,7 +52,7 @@ export default class Line extends Shape
 
     draw( graphics ) 
     {
-        graphics.beginPath();
+        //graphics.beginPath();
         const context = this.context;
         if (!context.lineType || context.lineType == 'solid') {
             graphics.moveTo( context.start.x , context.start.y ); 

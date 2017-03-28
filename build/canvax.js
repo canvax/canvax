@@ -3320,9 +3320,7 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
         if (!this.worldTransform) {
             cm = new Matrix();
             cm.concat(this._transform);
-            //if(this.parent.type!="stage"){
             cm.concat(this.parent.worldTransform);
-            //}
             this.worldTransform = cm;
         }
         return this.worldTransform;
@@ -3333,34 +3331,37 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
         var result = false; //检测的结果
 
         //第一步，吧glob的point转换到对应的obj的层级内的坐标系统
-        if (this.type != "stage" && this.parent && this.parent.type != "stage") {
-            point = this.parent.globalToLocal(point);
-        }
+        //if( this.type != "stage" && this.parent && this.parent.type != "stage" ) {
+        //    point = this.parent.globalToLocal( point );
+        //};
+        //var m = new Matrix( Settings.RESOLUTION, 0, 0, Settings.RESOLUTION, point.x , point.y);
+        //m.concat( this.worldTransform );
 
         var x = point.x;
         var y = point.y;
 
         //对鼠标的坐标也做相同的变换
-        if (this._transform) {
-            var inverseMatrix = this._transform.clone().invert();
-            var originPos = [x, y];
+        if (this.worldTransform) {
+
+            var inverseMatrix = this.worldTransform.clone().invert();
+            var originPos = [x * settings.RESOLUTION, y * settings.RESOLUTION];
+
             originPos = inverseMatrix.mulVector(originPos);
 
             x = originPos[0];
             y = originPos[1];
         }
 
-        if (this.graphicsData) {
-            result = this.containsPoint({ x: x, y: y }, this.graphicsData);
+        if (this.graphics) {
+            result = this.containsPoint({ x: x, y: y });
         }
 
         return result;
     },
-    containsPoint: function containsPoint(point, _graphicsData) {
-        var graphicsData = _graphicsData || this.graphicsData;
+    containsPoint: function containsPoint(point) {
         var inside = false;
-        for (var i = 0; i < graphicsData.length; ++i) {
-            var data = graphicsData[i];
+        for (var i = 0; i < this.graphics.graphicsData.length; ++i) {
+            var data = this.graphics.graphicsData[i];
             if (data.shape) {
                 //先检测fill， fill的检测概率大些。
                 //像circle,ellipse这样的shape 就直接把lineWidth算在fill里面计算就好了，所以他们是没有insideLine的
@@ -3862,7 +3863,7 @@ var CanvasGraphicsRenderer = function () {
         key: 'render',
         value: function render(displayObject, stage) {
             var renderer = this.renderer;
-            var graphicsData = displayObject.graphicsData;
+            var graphicsData = displayObject.graphics.graphicsData;
             var ctx = stage.ctx;
             var context = displayObject.context;
 
@@ -3910,7 +3911,7 @@ var CanvasGraphicsRenderer = function () {
                     }
                 } else if (data.type === SHAPES.CIRC) {
 
-                    // TODO - need to be Undefined!
+                    // TODO - 这里应该可以不需要走graphics，而直接设置好radius
                     ctx.beginPath();
                     ctx.arc(shape.x, shape.y, shape.radius, 0, 2 * Math.PI);
                     ctx.closePath();
@@ -3980,162 +3981,81 @@ var CanvasGraphicsRenderer = function () {
     return CanvasGraphicsRenderer;
 }();
 
-var GraphicsData = function () {
-    function GraphicsData(lineWidth, strokeStyle, lineAlpha, fillStyle, fillAlpha, shape, displayObject) {
-        classCallCheck(this, GraphicsData);
+var CanvasRenderer = function (_SystemRenderer) {
+    inherits(CanvasRenderer, _SystemRenderer);
 
-        this.lineWidth = lineWidth;
-        this.strokeStyle = strokeStyle;
-        this.lineAlpha = lineAlpha;
+    function CanvasRenderer(app) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+        classCallCheck(this, CanvasRenderer);
 
-        this.fillStyle = fillStyle;
-        this.fillAlpha = fillAlpha;
+        var _this = possibleConstructorReturn(this, (CanvasRenderer.__proto__ || Object.getPrototypeOf(CanvasRenderer)).call(this, RENDERER_TYPE.CANVAS, app, options));
 
-        this.shape = shape;
-        this.type = shape.type;
-
-        //在graphicsData中保持一份对displayObject的引用，后续可以从这里那全局矩阵等
-        //其在Dispaly.Shape.addCurrentPath2GD中进行设置
-        this.displayObject = displayObject;
-
-        this.holes = [];
-
-        //这两个可以被后续修改， 具有一票否决权
-        //比如polygon的 虚线描边。必须在fill的poly上面设置line为false
-        this.fill = true;
-        this.line = true;
+        _this.CGR = new CanvasGraphicsRenderer(_this);
+        return _this;
     }
 
-    createClass(GraphicsData, [{
-        key: "clone",
-        value: function clone() {
-            return new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, this.shape, this.displayObject);
+    createClass(CanvasRenderer, [{
+        key: 'render',
+        value: function render(app) {
+            var me = this;
+            me.app = app;
+            _$1.each(_$1.values(app.convertStages), function (convertStage) {
+                me.renderStage(convertStage.stage);
+            });
+            app.convertStages = {};
         }
     }, {
-        key: "addHole",
-        value: function addHole(shape) {
-            this.holes.push(shape);
+        key: 'renderStage',
+        value: function renderStage(stage) {
+            if (!stage.ctx) {
+                stage.ctx = stage.canvas.getContext("2d");
+            }
+            stage.stageRending = true;
+            this._clear(stage);
+            this._render(stage);
+            stage.stageRending = false;
         }
+    }, {
+        key: '_render',
+        value: function _render(stage, displayObject) {
+            if (!displayObject) {
+                displayObject = stage;
+            }
 
-        //从宿主graphics中同步最新的style属性
+            //因为已经采用了setTransform了， 非shape元素已经不需要执行transform 和 render
+            if (displayObject.graphics) {
+                if (!displayObject.context.visible || displayObject.context.globalAlpha <= 0) {
+                    return;
+                }
 
-    }, {
-        key: "synsStyle",
-        value: function synsStyle(graphics) {
-            //从shape中把绘图需要的style属性同步过来
-            this.lineWidth = graphics.lineWidth;
-            this.strokeStyle = graphics.strokeStyle;
-            this.lineAlpha = graphics.lineAlpha;
+                var ctx = stage.ctx;
 
-            this.fillStyle = graphics.fillStyle;
-            this.fillAlpha = graphics.fillAlpha;
+                ctx.setTransform.apply(ctx, displayObject.worldTransform.toArray());
+
+                if (!displayObject.graphics.graphicsData.length) {
+                    //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
+                    displayObject._draw(stage, displayObject.graphics); //_draw会完成绘制准备好 graphicsData
+                }
+
+                this.CGR.render(displayObject, stage, this);
+            }
+
+            if (displayObject.children) {
+                for (var i = 0, len = displayObject.children.length; i < len; i++) {
+                    this._render(stage, displayObject.children[i]);
+                }
+            }
         }
     }, {
-        key: "hasFill",
-        value: function hasFill() {
-            return this.fillStyle && this.fill && this.shape.closed !== undefined && this.shape.closed;
-        }
-    }, {
-        key: "hasLine",
-        value: function hasLine() {
-            return this.strokeStyle && this.lineWidth && this.line;
-        }
-    }, {
-        key: "destroy",
-        value: function destroy() {
-            this.shape = null;
-            this.holes = null;
-            this.displayObject = null;
+        key: '_clear',
+        value: function _clear(stage) {
+            var ctx = stage.ctx;
+            ctx.setTransform.apply(ctx, stage.worldTransform.toArray());
+            ctx.clearRect(0, 0, this.app.width, this.app.height);
         }
     }]);
-    return GraphicsData;
-}();
-
-/**
- * The Point object represents a location in a two-dimensional coordinate system, where x represents
- * the horizontal axis and y represents the vertical axis.
- *
- * @class
- * @memberof PIXI
- */
-var Point$2 = function () {
-  /**
-   * @param {number} [x=0] - position of the point on the x axis
-   * @param {number} [y=0] - position of the point on the y axis
-   */
-  function Point() {
-    var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-    var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-    classCallCheck(this, Point);
-
-    /**
-     * @member {number}
-     * @default 0
-     */
-    this.x = x;
-
-    /**
-     * @member {number}
-     * @default 0
-     */
-    this.y = y;
-  }
-
-  /**
-   * Creates a clone of this point
-   *
-   * @return {PIXI.Point} a copy of the point
-   */
-
-
-  createClass(Point, [{
-    key: "clone",
-    value: function clone() {
-      return new Point(this.x, this.y);
-    }
-
-    /**
-     * Copies x and y from the given point
-     *
-     * @param {PIXI.Point} p - The point to copy.
-     */
-
-  }, {
-    key: "copy",
-    value: function copy(p) {
-      this.set(p.x, p.y);
-    }
-
-    /**
-     * Returns true if the given point is equal to this point
-     *
-     * @param {PIXI.Point} p - The point to check
-     * @returns {boolean} Whether the given point equal to this point
-     */
-
-  }, {
-    key: "equals",
-    value: function equals(p) {
-      return p.x === this.x && p.y === this.y;
-    }
-
-    /**
-     * Sets the point to a new x and y position.
-     * If y is omitted, both x and y will be set to x.
-     *
-     * @param {number} [x=0] - position of the point on the x axis
-     * @param {number} [y=0] - position of the point on the y axis
-     */
-
-  }, {
-    key: "set",
-    value: function set$$1(x, y) {
-      this.x = x || 0;
-      this.y = y || (y !== 0 ? this.x : 0);
-    }
-  }]);
-  return Point;
-}();
+    return CanvasRenderer;
+}(SystemRenderer);
 
 var arcToSegmentsCache = {};
 var segmentToBezierCache = {};
@@ -4408,21 +4328,7 @@ var Arc = {
   getBoundsOfArc: getBoundsOfArc
 };
 
-/**
- * Rectangle object is an area defined by its position, as indicated by its top-left corner
- * point (x, y) and by its width and its height.
- *
- * @class
- * @memberof PIXI
- */
-
 var Rectangle = function () {
-    /**
-     * @param {number} [x=0] - The X coordinate of the upper-left corner of the rectangle
-     * @param {number} [y=0] - The Y coordinate of the upper-left corner of the rectangle
-     * @param {number} [width=0] - The overall width of this rectangle
-     * @param {number} [height=0] - The overall height of this rectangle
-     */
     function Rectangle() {
         var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
         var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
@@ -4430,68 +4336,18 @@ var Rectangle = function () {
         var height = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
         classCallCheck(this, Rectangle);
 
-        /**
-         * @member {number}
-         * @default 0
-         */
         this.x = x;
-
-        /**
-         * @member {number}
-         * @default 0
-         */
         this.y = y;
-
-        /**
-         * @member {number}
-         * @default 0
-         */
         this.width = width;
-
-        /**
-         * @member {number}
-         * @default 0
-         */
         this.height = height;
-
-        /**
-         * The type of the object, mainly used to avoid `instanceof` checks
-         *
-         * @member {number}
-         * @readOnly
-         * @default PIXI.SHAPES.RECT
-         * @see PIXI.SHAPES
-         */
         this.type = SHAPES.RECT;
     }
 
-    /**
-     * returns the left edge of the rectangle
-     *
-     * @member {number}
-     */
-
-
     createClass(Rectangle, [{
         key: 'clone',
-
-
-        /**
-         * Creates a clone of this Rectangle
-         *
-         * @return {PIXI.Rectangle} a copy of the rectangle
-         */
         value: function clone() {
             return new Rectangle(this.x, this.y, this.width, this.height);
         }
-
-        /**
-         * Copies another rectangle to this one.
-         *
-         * @param {PIXI.Rectangle} rectangle - The rectangle to copy.
-         * @return {PIXI.Rectangle} Returns itself.
-         */
-
     }, {
         key: 'copy',
         value: function copy(rectangle) {
@@ -4502,15 +4358,6 @@ var Rectangle = function () {
 
             return this;
         }
-
-        /**
-         * Checks whether the x and y coordinates given are contained within this Rectangle
-         *
-         * @param {number} x - The X coordinate of the point to test
-         * @param {number} y - The Y coordinate of the point to test
-         * @return {boolean} Whether the x/y coordinates are within this Rectangle
-         */
-
     }, {
         key: 'contains',
         value: function contains(x, y) {
@@ -4526,372 +4373,109 @@ var Rectangle = function () {
 
             return false;
         }
-
-        /**
-         * Pads the rectangle making it grow in all directions.
-         *
-         * @param {number} paddingX - The horizontal padding amount.
-         * @param {number} paddingY - The vertical padding amount.
-         */
-
-    }, {
-        key: 'pad',
-        value: function pad(paddingX, paddingY) {
-            paddingX = paddingX || 0;
-            paddingY = paddingY || (paddingY !== 0 ? paddingX : 0);
-
-            this.x -= paddingX;
-            this.y -= paddingY;
-
-            this.width += paddingX * 2;
-            this.height += paddingY * 2;
-        }
-
-        /**
-         * Fits this rectangle around the passed one.
-         *
-         * @param {PIXI.Rectangle} rectangle - The rectangle to fit.
-         */
-
-    }, {
-        key: 'fit',
-        value: function fit(rectangle) {
-            if (this.x < rectangle.x) {
-                this.width += this.x;
-                if (this.width < 0) {
-                    this.width = 0;
-                }
-
-                this.x = rectangle.x;
-            }
-
-            if (this.y < rectangle.y) {
-                this.height += this.y;
-                if (this.height < 0) {
-                    this.height = 0;
-                }
-                this.y = rectangle.y;
-            }
-
-            if (this.x + this.width > rectangle.x + rectangle.width) {
-                this.width = rectangle.width - this.x;
-                if (this.width < 0) {
-                    this.width = 0;
-                }
-            }
-
-            if (this.y + this.height > rectangle.y + rectangle.height) {
-                this.height = rectangle.height - this.y;
-                if (this.height < 0) {
-                    this.height = 0;
-                }
-            }
-        }
-
-        /**
-         * Enlarges this rectangle to include the passed rectangle.
-         *
-         * @param {PIXI.Rectangle} rectangle - The rectangle to include.
-         */
-
-    }, {
-        key: 'enlarge',
-        value: function enlarge(rectangle) {
-            var x1 = Math.min(this.x, rectangle.x);
-            var x2 = Math.max(this.x + this.width, rectangle.x + rectangle.width);
-            var y1 = Math.min(this.y, rectangle.y);
-            var y2 = Math.max(this.y + this.height, rectangle.y + rectangle.height);
-
-            this.x = x1;
-            this.width = x2 - x1;
-            this.y = y1;
-            this.height = y2 - y1;
-        }
-    }, {
-        key: 'left',
-        get: function get$$1() {
-            return this.x;
-        }
-
-        /**
-         * returns the right edge of the rectangle
-         *
-         * @member {number}
-         */
-
-    }, {
-        key: 'right',
-        get: function get$$1() {
-            return this.x + this.width;
-        }
-
-        /**
-         * returns the top edge of the rectangle
-         *
-         * @member {number}
-         */
-
-    }, {
-        key: 'top',
-        get: function get$$1() {
-            return this.y;
-        }
-
-        /**
-         * returns the bottom edge of the rectangle
-         *
-         * @member {number}
-         */
-
-    }, {
-        key: 'bottom',
-        get: function get$$1() {
-            return this.y + this.height;
-        }
-
-        /**
-         * A constant empty rectangle.
-         *
-         * @static
-         * @constant
-         */
-
-    }], [{
-        key: 'EMPTY',
-        get: function get$$1() {
-            return new Rectangle(0, 0, 0, 0);
-        }
     }]);
     return Rectangle;
 }();
 
-/**
- * The Circle object can be used to specify a hit area for displayObjects
- *
- * @class
- * @memberof PIXI
- */
-
 var Circle = function () {
-  /**
-   * @param {number} [x=0] - The X coordinate of the center of this circle
-   * @param {number} [y=0] - The Y coordinate of the center of this circle
-   * @param {number} [radius=0] - The radius of the circle
-   */
-  function Circle() {
-    var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-    var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-    var radius = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
-    classCallCheck(this, Circle);
+    function Circle() {
+        var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+        var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+        var radius = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+        classCallCheck(this, Circle);
 
-    /**
-     * @member {number}
-     * @default 0
-     */
-    this.x = x;
+        this.x = x;
 
-    /**
-     * @member {number}
-     * @default 0
-     */
-    this.y = y;
+        this.y = y;
 
-    /**
-     * @member {number}
-     * @default 0
-     */
-    this.radius = radius;
+        this.radius = radius;
 
-    /**
-     * The type of the object, mainly used to avoid `instanceof` checks
-     *
-     * @member {number}
-     * @readOnly
-     * @default PIXI.SHAPES.CIRC
-     * @see PIXI.SHAPES
-     */
-    this.type = SHAPES.CIRC;
+        this.type = SHAPES.CIRC;
 
-    this.closed = true;
-  }
-
-  /**
-   * Creates a clone of this Circle instance
-   *
-   * @return {PIXI.Circle} a copy of the Circle
-   */
-
-
-  createClass(Circle, [{
-    key: 'clone',
-    value: function clone() {
-      return new Circle(this.x, this.y, this.radius);
+        this.closed = true;
     }
 
-    /**
-     * Checks whether the x and y coordinates given are contained within this circle
-     *
-     * @param {number} x - The X coordinate of the point to test
-     * @param {number} y - The Y coordinate of the point to test
-     * @return {boolean} Whether the x/y coordinates are within this Circle
-     */
+    createClass(Circle, [{
+        key: 'clone',
+        value: function clone() {
+            return new Circle(this.x, this.y, this.radius);
+        }
+    }, {
+        key: 'contains',
+        value: function contains(x, y) {
+            if (this.radius <= 0) {
+                return false;
+            }
 
-  }, {
-    key: 'contains',
-    value: function contains(x, y) {
-      if (this.radius <= 0) {
-        return false;
-      }
+            var r2 = this.radius * this.radius;
+            var dx = this.x - x;
+            var dy = this.y - y;
 
-      var r2 = this.radius * this.radius;
-      var dx = this.x - x;
-      var dy = this.y - y;
+            dx *= dx;
+            dy *= dy;
 
-      dx *= dx;
-      dy *= dy;
-
-      return dx + dy <= r2;
-    }
-
-    /**
-    * Returns the framing rectangle of the circle as a Rectangle object
-    *
-    * @return {PIXI.Rectangle} the framing rectangle
-    */
-
-  }, {
-    key: 'getBounds',
-    value: function getBounds() {
-      return new Rectangle(this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
-    }
-  }]);
-  return Circle;
+            return dx + dy <= r2;
+        }
+    }, {
+        key: 'getBounds',
+        value: function getBounds() {
+            return new Rectangle(this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+        }
+    }]);
+    return Circle;
 }();
-
-/**
- * The Ellipse object can be used to specify a hit area for displayObjects
- *
- * @class
- * @memberof PIXI
- */
 
 var Ellipse = function () {
-  /**
-   * @param {number} [x=0] - The X coordinate of the center of this circle
-   * @param {number} [y=0] - The Y coordinate of the center of this circle
-   * @param {number} [width=0] - The half width of this ellipse
-   * @param {number} [height=0] - The half height of this ellipse
-   */
-  function Ellipse() {
-    var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-    var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-    var width = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
-    var height = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
-    classCallCheck(this, Ellipse);
+    function Ellipse() {
+        var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+        var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+        var width = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+        var height = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+        classCallCheck(this, Ellipse);
 
-    /**
-     * @member {number}
-     * @default 0
-     */
-    this.x = x;
+        this.x = x;
 
-    /**
-     * @member {number}
-     * @default 0
-     */
-    this.y = y;
+        this.y = y;
 
-    /**
-     * @member {number}
-     * @default 0
-     */
-    this.width = width;
+        this.width = width;
 
-    /**
-     * @member {number}
-     * @default 0
-     */
-    this.height = height;
+        this.height = height;
 
-    /**
-     * The type of the object, mainly used to avoid `instanceof` checks
-     *
-     * @member {number}
-     * @readOnly
-     * @default PIXI.SHAPES.ELIP
-     * @see PIXI.SHAPES
-     */
-    this.type = SHAPES.ELIP;
+        this.type = SHAPES.ELIP;
 
-    this.closed = true;
-  }
-
-  /**
-   * Creates a clone of this Ellipse instance
-   *
-   * @return {PIXI.Ellipse} a copy of the ellipse
-   */
-
-
-  createClass(Ellipse, [{
-    key: 'clone',
-    value: function clone() {
-      return new Ellipse(this.x, this.y, this.width, this.height);
+        this.closed = true;
     }
 
-    /**
-     * Checks whether the x and y coordinates given are contained within this ellipse
-     *
-     * @param {number} x - The X coordinate of the point to test
-     * @param {number} y - The Y coordinate of the point to test
-     * @return {boolean} Whether the x/y coords are within this ellipse
-     */
+    createClass(Ellipse, [{
+        key: 'clone',
+        value: function clone() {
+            return new Ellipse(this.x, this.y, this.width, this.height);
+        }
+    }, {
+        key: 'contains',
+        value: function contains(x, y) {
+            if (this.width <= 0 || this.height <= 0) {
+                return false;
+            }
 
-  }, {
-    key: 'contains',
-    value: function contains(x, y) {
-      if (this.width <= 0 || this.height <= 0) {
-        return false;
-      }
+            var normx = (x - this.x) / this.width;
+            var normy = (y - this.y) / this.height;
 
-      // normalize the coords to an ellipse with center 0,0
-      var normx = (x - this.x) / this.width;
-      var normy = (y - this.y) / this.height;
+            normx *= normx;
+            normy *= normy;
 
-      normx *= normx;
-      normy *= normy;
-
-      return normx + normy <= 1;
-    }
-
-    /**
-     * Returns the framing rectangle of the ellipse as a Rectangle object
-     *
-     * @return {PIXI.Rectangle} the framing rectangle
-     */
-
-  }, {
-    key: 'getBounds',
-    value: function getBounds() {
-      return new Rectangle(this.x - this.width, this.y - this.height, this.width, this.height);
-    }
-  }]);
-  return Ellipse;
+            return normx + normy <= 1;
+        }
+    }, {
+        key: 'getBounds',
+        value: function getBounds() {
+            return new Rectangle(this.x - this.width, this.y - this.height, this.width, this.height);
+        }
+    }]);
+    return Ellipse;
 }();
 
-/**
- * @class
- * @memberof PIXI
- */
-
 var Polygon = function () {
-    /**
-     * @param {PIXI.Point[]|number[]} points - This can be an array of Points
-     *  that form the polygon, a flat array of numbers that will be interpreted as [x,y, x,y, ...], or
-     *  the arguments passed can be all the points of the polygon e.g.
-     *  `new PIXI.Polygon(new PIXI.Point(), new PIXI.Point(), ...)`, or the arguments passed can be flat
-     *  x,y values e.g. `new Polygon(x,y, x,y, x,y, ...)` where `x` and `y` are Numbers.
-     */
     function Polygon() {
         for (var _len = arguments.length, points = Array(_len), _key = 0; _key < _len; _key++) {
             points[_key] = arguments[_key];
@@ -4899,12 +4483,12 @@ var Polygon = function () {
 
         classCallCheck(this, Polygon);
 
-        if (Array.isArray(points[0])) {
-            points = points[0];
+        var point_0 = points[0];
+        if (Array.isArray(point_0)) {
+            points = point_0;
         }
 
-        // if this is an array of points, convert it to a flat array of numbers
-        if (points[0] instanceof Point$2) {
+        if (point_0 && "x" in point_0 && "y" in point_0) {
             var p = [];
 
             for (var i = 0, il = points.length; i < il; i++) {
@@ -4916,44 +4500,18 @@ var Polygon = function () {
 
         this.closed = true;
 
-        /**
-         * An array of the points of this polygon
-         *
-         * @member {number[]}
-         */
         this.points = points;
 
-        /**
-         * The type of the object, mainly used to avoid `instanceof` checks
-         *
-         * @member {number}
-         * @readOnly
-         * @default PIXI.SHAPES.POLY
-         * @see PIXI.SHAPES
-         */
         this.type = SHAPES.POLY;
     }
 
-    /**
-     * Creates a clone of this polygon
-     *
-     * @return {PIXI.Polygon} a copy of the polygon
-     */
-
-
     createClass(Polygon, [{
-        key: 'clone',
+        key: "clone",
         value: function clone() {
             return new Polygon(this.points.slice());
         }
-
-        /**
-         * Closes the polygon, adding points if necessary.
-         *
-         */
-
     }, {
-        key: 'close',
+        key: "close",
         value: function close() {
             var points = this.points;
             if (points[0] !== points[points.length - 2] || points[1] !== points[points.length - 1]) {
@@ -4962,7 +4520,7 @@ var Polygon = function () {
             this.closed = true;
         }
     }, {
-        key: 'contains',
+        key: "contains",
         value: function contains(x, y) {
             return this._isInsidePolygon_WindingNumber(x, y);
         }
@@ -4972,7 +4530,7 @@ var Polygon = function () {
          */
 
     }, {
-        key: '_isInsidePolygon_WindingNumber',
+        key: "_isInsidePolygon_WindingNumber",
         value: function _isInsidePolygon_WindingNumber(x, y) {
             var points = this.points;
             var wn = 0;
@@ -4991,599 +4549,6 @@ var Polygon = function () {
     }]);
     return Polygon;
 }();
-
-/**
- * Math classes and utilities mixed into PIXI namespace.
- *
- * @lends PIXI
- */
-
-function bezierCurveTo(fromX, fromY, cpX, cpY, cpX2, cpY2, toX, toY) {
-    var path = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : [];
-
-    var n = 20;
-    var dt = 0;
-    var dt2 = 0;
-    var dt3 = 0;
-    var t2 = 0;
-    var t3 = 0;
-
-    path.push(fromX, fromY);
-
-    for (var i = 1, j = 0; i <= n; ++i) {
-        j = i / n;
-
-        dt = 1 - j;
-        dt2 = dt * dt;
-        dt3 = dt2 * dt;
-
-        t2 = j * j;
-        t3 = t2 * j;
-
-        path.push(dt3 * fromX + 3 * dt2 * j * cpX + 3 * dt * t2 * cpX2 + t3 * toX, dt3 * fromY + 3 * dt2 * j * cpY + 3 * dt * t2 * cpY2 + t3 * toY);
-    }
-
-    return path;
-}
-
-/*
-* Graphics绘图法则
-* 单个grahics实例里的fill line 样式属性，都从对应shape.context中获取
-* 
-*/
-
-var Graphics = function () {
-    function Graphics(shape) {
-        classCallCheck(this, Graphics);
-
-        this.lineWidth = 1;
-        this.strokeStyle = null;
-        this.lineAlpha = 1;
-        this.fillStyle = null;
-        this.fillAlpha = 1;
-
-        this.graphicsData = [];
-        this.currentPath = null;
-
-        this.dirty = 0; //用于检测图形对象是否已更改。 如果这是设置为true，那么图形对象将被重新计算。
-        this.clearDirty = 0; //用于检测我们是否清除了图形webGL数据
-
-        this._webGL = {};
-        this.worldAlpha = 1;
-        this.tint = 0xFFFFFF; //目标对象附加颜色
-    }
-
-    createClass(Graphics, [{
-        key: 'setStyle',
-        value: function setStyle(context) {
-            //从 shape 中把绘图需要的style属性同步过来
-            this.lineWidth = context.lineWidth;
-            this.strokeStyle = context.strokeStyle;
-            this.lineAlpha = context.lineAlpha * context.globalAlpha;
-
-            this.fillStyle = context.fillStyle;
-            this.fillAlpha = context.fillAlpha * context.globalAlpha;
-        }
-    }, {
-        key: 'clone',
-        value: function clone() {
-            var clone = new Graphics();
-
-            clone.dirty = 0;
-
-            // copy graphics data
-            for (var i = 0; i < this.graphicsData.length; ++i) {
-                clone.graphicsData.push(this.graphicsData[i].clone());
-            }
-
-            clone.currentPath = clone.graphicsData[clone.graphicsData.length - 1];
-            return clone;
-        }
-    }, {
-        key: 'moveTo',
-        value: function moveTo(x, y) {
-            var shape = new Polygon([x, y]);
-
-            shape.closed = false;
-            this.drawShape(shape);
-
-            return this;
-        }
-    }, {
-        key: 'lineTo',
-        value: function lineTo(x, y) {
-            if (this.currentPath) {
-                this.currentPath.shape.points.push(x, y);
-                this.dirty++;
-            } else {
-                this.moveTo(0, 0);
-            }
-            return this;
-        }
-    }, {
-        key: 'quadraticCurveTo',
-        value: function quadraticCurveTo(cpX, cpY, toX, toY) {
-            if (this.currentPath) {
-                if (this.currentPath.shape.points.length === 0) {
-                    this.currentPath.shape.points = [0, 0];
-                }
-            } else {
-                this.moveTo(0, 0);
-            }
-
-            var n = 20;
-            var points = this.currentPath.shape.points;
-            var xa = 0;
-            var ya = 0;
-
-            if (points.length === 0) {
-                this.moveTo(0, 0);
-            }
-
-            var fromX = points[points.length - 2];
-            var fromY = points[points.length - 1];
-
-            for (var i = 1; i <= n; ++i) {
-                var j = i / n;
-
-                xa = fromX + (cpX - fromX) * j;
-                ya = fromY + (cpY - fromY) * j;
-
-                points.push(xa + (cpX + (toX - cpX) * j - xa) * j, ya + (cpY + (toY - cpY) * j - ya) * j);
-            }
-
-            this.dirty++;
-
-            return this;
-        }
-    }, {
-        key: 'bezierCurveTo',
-        value: function bezierCurveTo$$1(cpX, cpY, cpX2, cpY2, toX, toY) {
-            if (this.currentPath) {
-                if (this.currentPath.shape.points.length === 0) {
-                    this.currentPath.shape.points = [0, 0];
-                }
-            } else {
-                this.moveTo(0, 0);
-            }
-
-            var points = this.currentPath.shape.points;
-
-            var fromX = points[points.length - 2];
-            var fromY = points[points.length - 1];
-
-            points.length -= 2;
-
-            bezierCurveTo(fromX, fromY, cpX, cpY, cpX2, cpY2, toX, toY, points);
-
-            this.dirty++;
-
-            return this;
-        }
-    }, {
-        key: 'arcTo',
-        value: function arcTo(x1, y1, x2, y2, radius) {
-            if (this.currentPath) {
-                if (this.currentPath.shape.points.length === 0) {
-                    this.currentPath.shape.points.push(x1, y1);
-                }
-            } else {
-                this.moveTo(x1, y1);
-            }
-
-            var points = this.currentPath.shape.points;
-            var fromX = points[points.length - 2];
-            var fromY = points[points.length - 1];
-            var a1 = fromY - y1;
-            var b1 = fromX - x1;
-            var a2 = y2 - y1;
-            var b2 = x2 - x1;
-            var mm = Math.abs(a1 * b2 - b1 * a2);
-
-            if (mm < 1.0e-8 || radius === 0) {
-                if (points[points.length - 2] !== x1 || points[points.length - 1] !== y1) {
-                    points.push(x1, y1);
-                }
-            } else {
-                var dd = a1 * a1 + b1 * b1;
-                var cc = a2 * a2 + b2 * b2;
-                var tt = a1 * a2 + b1 * b2;
-                var k1 = radius * Math.sqrt(dd) / mm;
-                var k2 = radius * Math.sqrt(cc) / mm;
-                var j1 = k1 * tt / dd;
-                var j2 = k2 * tt / cc;
-                var cx = k1 * b2 + k2 * b1;
-                var cy = k1 * a2 + k2 * a1;
-                var px = b1 * (k2 + j1);
-                var py = a1 * (k2 + j1);
-                var qx = b2 * (k1 + j2);
-                var qy = a2 * (k1 + j2);
-                var startAngle = Math.atan2(py - cy, px - cx);
-                var endAngle = Math.atan2(qy - cy, qx - cx);
-
-                this.arc(cx + x1, cy + y1, radius, startAngle, endAngle, b1 * a2 > b2 * a1);
-            }
-
-            this.dirty++;
-
-            return this;
-        }
-    }, {
-        key: 'arc',
-        value: function arc(cx, cy, radius, startAngle, endAngle) {
-            var anticlockwise = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
-
-            if (startAngle === endAngle) {
-                return this;
-            }
-
-            if (!anticlockwise && endAngle <= startAngle) {
-                endAngle += Math.PI * 2;
-            } else if (anticlockwise && startAngle <= endAngle) {
-                startAngle += Math.PI * 2;
-            }
-
-            var sweep = endAngle - startAngle;
-            var segs = Math.ceil(Math.abs(sweep) / (Math.PI * 2)) * 40;
-
-            if (sweep === 0) {
-                return this;
-            }
-
-            var startX = cx + Math.cos(startAngle) * radius;
-            var startY = cy + Math.sin(startAngle) * radius;
-
-            // If the currentPath exists, take its points. Otherwise call `moveTo` to start a path.
-            var points = this.currentPath ? this.currentPath.shape.points : null;
-
-            if (points) {
-                if (points[points.length - 2] !== startX || points[points.length - 1] !== startY) {
-                    points.push(startX, startY);
-                }
-            } else {
-                this.moveTo(startX, startY);
-                points = this.currentPath.shape.points;
-            }
-
-            var theta = sweep / (segs * 2);
-            var theta2 = theta * 2;
-
-            var cTheta = Math.cos(theta);
-            var sTheta = Math.sin(theta);
-
-            var segMinus = segs - 1;
-
-            var remainder = segMinus % 1 / segMinus;
-
-            for (var i = 0; i <= segMinus; ++i) {
-                var real = i + remainder * i;
-
-                var angle = theta + startAngle + theta2 * real;
-
-                var c = Math.cos(angle);
-                var s = -Math.sin(angle);
-
-                points.push((cTheta * c + sTheta * s) * radius + cx, (cTheta * -s + sTheta * c) * radius + cy);
-            }
-
-            this.dirty++;
-
-            return this;
-        }
-    }, {
-        key: 'drawRect',
-        value: function drawRect(x, y, width, height) {
-            this.drawShape(new Rectangle(x, y, width, height));
-            return this;
-        }
-    }, {
-        key: 'drawCircle',
-        value: function drawCircle(x, y, radius) {
-            this.drawShape(new Circle(x, y, radius));
-
-            return this;
-        }
-    }, {
-        key: 'drawEllipse',
-        value: function drawEllipse(x, y, width, height) {
-            this.drawShape(new Ellipse(x, y, width, height));
-
-            return this;
-        }
-    }, {
-        key: 'drawPolygon',
-        value: function drawPolygon(path) {
-            // prevents an argument assignment deopt
-            // see section 3.1: https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
-            var points = path;
-
-            var closed = true;
-
-            if (points instanceof Polygon) {
-                closed = points.closed;
-                points = points.points;
-            }
-
-            if (!Array.isArray(points)) {
-                // prevents an argument leak deopt
-                // see section 3.2: https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
-                points = new Array(arguments.length);
-
-                for (var i = 0; i < points.length; ++i) {
-                    points[i] = arguments[i]; // eslint-disable-line prefer-rest-params
-                }
-            }
-
-            var shape = new Polygon(points);
-
-            shape.closed = closed;
-
-            this.drawShape(shape);
-
-            return this;
-        }
-    }, {
-        key: 'clear',
-        value: function clear() {
-            if (this.graphicsData.length > 0) {
-                this.dirty++;
-                this.clearDirty++;
-                this.graphicsData.length = 0;
-            }
-
-            this.currentPath = null;
-
-            return this;
-        }
-    }, {
-        key: 'drawShape',
-        value: function drawShape(shape) {
-            if (this.currentPath) {
-                if (this.currentPath.shape.points.length <= 2) {
-                    this.graphicsData.pop();
-                }
-            }
-
-            this.currentPath = null;
-
-            var data = new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, shape);
-
-            this.graphicsData.push(data);
-
-            if (data.type === SHAPES.POLY) {
-                data.shape.closed = data.shape.closed;
-                this.currentPath = data;
-            }
-
-            this.dirty++;
-
-            return data;
-        }
-    }, {
-        key: 'beginPath',
-        value: function beginPath() {
-            this.currentPath = null;
-        }
-    }, {
-        key: 'closePath',
-        value: function closePath() {
-            var currentPath = this.currentPath;
-
-            if (currentPath && currentPath.shape) {
-                currentPath.shape.close();
-            }
-
-            return this;
-        }
-
-        /**
-        * Update the bounds of the object
-        *
-        */
-
-    }, {
-        key: 'updateLocalBounds',
-        value: function updateLocalBounds() {
-            var minX = Infinity;
-            var maxX = -Infinity;
-
-            var minY = Infinity;
-            var maxY = -Infinity;
-
-            if (this.graphicsData.length) {
-                var shape = 0;
-                var x = 0;
-                var y = 0;
-                var w = 0;
-                var h = 0;
-
-                for (var i = 0; i < this.graphicsData.length; i++) {
-                    var data = this.graphicsData[i];
-                    var type = data.type;
-                    var lineWidth = data.lineWidth;
-
-                    shape = data.shape;
-
-                    if (type === SHAPES.RECT || type === SHAPES.RREC) {
-                        x = shape.x - lineWidth / 2;
-                        y = shape.y - lineWidth / 2;
-                        w = shape.width + lineWidth;
-                        h = shape.height + lineWidth;
-
-                        minX = x < minX ? x : minX;
-                        maxX = x + w > maxX ? x + w : maxX;
-
-                        minY = y < minY ? y : minY;
-                        maxY = y + h > maxY ? y + h : maxY;
-                    } else if (type === SHAPES.CIRC) {
-                        x = shape.x;
-                        y = shape.y;
-                        w = shape.radius + lineWidth / 2;
-                        h = shape.radius + lineWidth / 2;
-
-                        minX = x - w < minX ? x - w : minX;
-                        maxX = x + w > maxX ? x + w : maxX;
-
-                        minY = y - h < minY ? y - h : minY;
-                        maxY = y + h > maxY ? y + h : maxY;
-                    } else if (type === SHAPES.ELIP) {
-                        x = shape.x;
-                        y = shape.y;
-                        w = shape.width + lineWidth / 2;
-                        h = shape.height + lineWidth / 2;
-
-                        minX = x - w < minX ? x - w : minX;
-                        maxX = x + w > maxX ? x + w : maxX;
-
-                        minY = y - h < minY ? y - h : minY;
-                        maxY = y + h > maxY ? y + h : maxY;
-                    } else {
-                        // POLY
-                        var points = shape.points;
-                        var x2 = 0;
-                        var y2 = 0;
-                        var dx = 0;
-                        var dy = 0;
-                        var rw = 0;
-                        var rh = 0;
-                        var cx = 0;
-                        var cy = 0;
-
-                        for (var j = 0; j + 2 < points.length; j += 2) {
-                            x = points[j];
-                            y = points[j + 1];
-                            x2 = points[j + 2];
-                            y2 = points[j + 3];
-                            dx = Math.abs(x2 - x);
-                            dy = Math.abs(y2 - y);
-                            h = lineWidth;
-                            w = Math.sqrt(dx * dx + dy * dy);
-
-                            if (w < 1e-9) {
-                                continue;
-                            }
-
-                            rw = (h / w * dy + dx) / 2;
-                            rh = (h / w * dx + dy) / 2;
-                            cx = (x2 + x) / 2;
-                            cy = (y2 + y) / 2;
-
-                            minX = cx - rw < minX ? cx - rw : minX;
-                            maxX = cx + rw > maxX ? cx + rw : maxX;
-
-                            minY = cy - rh < minY ? cy - rh : minY;
-                            maxY = cy + rh > maxY ? cy + rh : maxY;
-                        }
-                    }
-                }
-            } else {
-                minX = 0;
-                maxX = 0;
-                minY = 0;
-                maxY = 0;
-            }
-
-            this.Bound.minX = minX;
-            this.Bound.maxX = maxX;
-
-            this.Bound.minY = minY;
-            this.Bound.maxY = maxY;
-        }
-    }, {
-        key: 'destroy',
-        value: function destroy(options) {
-            get(Graphics.prototype.__proto__ || Object.getPrototypeOf(Graphics.prototype), 'destroy', this).call(this, options);
-
-            for (var i = 0; i < this.graphicsData.length; ++i) {
-                this.graphicsData[i].destroy();
-            }
-            for (var id in this._webGL) {
-                for (var j = 0; j < this._webGL[id].data.length; ++j) {
-                    this._webGL[id].data[j].destroy();
-                }
-            }
-
-            this.graphicsData = null;
-            this.currentPath = null;
-            this._webGL = null;
-        }
-    }]);
-    return Graphics;
-}();
-
-var CanvasRenderer = function (_SystemRenderer) {
-    inherits(CanvasRenderer, _SystemRenderer);
-
-    function CanvasRenderer(app) {
-        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-        classCallCheck(this, CanvasRenderer);
-
-        var _this = possibleConstructorReturn(this, (CanvasRenderer.__proto__ || Object.getPrototypeOf(CanvasRenderer)).call(this, RENDERER_TYPE.CANVAS, app, options));
-
-        _this.CGR = new CanvasGraphicsRenderer(_this);
-        //一个stage用一个graphics来绘制所有的shape
-        _this.graphics = new Graphics();
-        return _this;
-    }
-
-    createClass(CanvasRenderer, [{
-        key: 'render',
-        value: function render(app) {
-            var me = this;
-            me.app = app;
-            _$1.each(_$1.values(app.convertStages), function (convertStage) {
-                me.renderStage(convertStage.stage);
-            });
-            app.convertStages = {};
-        }
-    }, {
-        key: 'renderStage',
-        value: function renderStage(stage) {
-            if (!stage.ctx) {
-                stage.ctx = stage.canvas.getContext("2d");
-            }
-            stage.stageRending = true;
-            this._clear(stage);
-            this._render(stage);
-            stage.stageRending = false;
-        }
-    }, {
-        key: '_render',
-        value: function _render(stage, displayObject) {
-            if (!displayObject) {
-                displayObject = stage;
-            }
-
-            if (!displayObject.context.visible || displayObject.context.globalAlpha <= 0) {
-                return;
-            }
-
-            var ctx = stage.ctx;
-
-            ctx.setTransform.apply(ctx, displayObject.worldTransform.toArray());
-
-            if (displayObject.graphicsData) {
-                //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
-                displayObject._draw(stage, this.graphics); //_draw会完成绘制准备好 graphicsData
-                this.CGR.render(displayObject, stage, this);
-            }
-
-            if (displayObject.children) {
-                for (var i = 0, len = displayObject.children.length; i < len; i++) {
-                    this._render(stage, displayObject.children[i]);
-                }
-            }
-        }
-    }, {
-        key: '_clear',
-        value: function _clear(stage) {
-            var ctx = stage.ctx;
-            ctx.setTransform.apply(ctx, stage.worldTransform.toArray());
-            ctx.clearRect(0, 0, this.app.width, this.app.height);
-        }
-    }]);
-    return CanvasRenderer;
-}(SystemRenderer);
 
 function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
@@ -7647,8 +6612,8 @@ function buildLine(graphicsData, webGLData) {
         return;
     }
 
-    var firstPoint = new Point$2(points[0], points[1]);
-    var lastPoint = new Point$2(points[points.length - 2], points[points.length - 1]);
+    var firstPoint = { x: points[0], y: points[1] };
+    var lastPoint = { x: points[points.length - 2], y: points[points.length - 1] };
 
     if (firstPoint.x === lastPoint.x && firstPoint.y === lastPoint.y) {
         points = points.slice();
@@ -7656,7 +6621,7 @@ function buildLine(graphicsData, webGLData) {
         points.pop();
         points.pop();
 
-        lastPoint = new Point$2(points[points.length - 2], points[points.length - 1]);
+        lastPoint = { x: points[points.length - 2], y: points[points.length - 1] };
 
         var midPointX = lastPoint.x + (firstPoint.x - lastPoint.x) * 0.5;
         var midPointY = lastPoint.y + (firstPoint.y - lastPoint.y) * 0.5;
@@ -8975,11 +7940,7 @@ var WebGLRenderer = function (_SystemRenderer) {
     function WebGLRenderer(app) {
         var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         classCallCheck(this, WebGLRenderer);
-
-        var _this = possibleConstructorReturn(this, (WebGLRenderer.__proto__ || Object.getPrototypeOf(WebGLRenderer)).call(this, RENDERER_TYPE.CANVAS, app, options));
-
-        _this.graphics = new Graphics();
-        return _this;
+        return possibleConstructorReturn(this, (WebGLRenderer.__proto__ || Object.getPrototypeOf(WebGLRenderer)).call(this, RENDERER_TYPE.CANVAS, app, options));
     }
 
     createClass(WebGLRenderer, [{
@@ -9006,15 +7967,15 @@ var WebGLRenderer = function (_SystemRenderer) {
             }
             stage.stageRending = true;
             this._clear(stage);
-            this._setGraphicsData(stage);
+            this._render(stage);
             if (this.graphics.graphicsData.length > 0) {
                 stage.webGLStageRenderer.render(stage, this.graphics);
             }
             stage.stageRending = false;
         }
     }, {
-        key: '_setGraphicsData',
-        value: function _setGraphicsData(stage, displayObject) {
+        key: '_render',
+        value: function _render(stage, displayObject) {
             if (!displayObject) {
                 displayObject = stage;
             }
@@ -9023,14 +7984,15 @@ var WebGLRenderer = function (_SystemRenderer) {
                 return;
             }
 
-            if (displayObject.graphicsData) {
-                displayObject._draw(stage, this.graphics); //_draw会完成绘制准备好 graphicsData
-                //stage.webGLStageRenderer.render( displayObject, stage , this.graphics);
+            if (displayObject.graphics.graphicsData.length > 0) {
+                displayObject._draw(stage, this.graphics);
             }
+
+            stage.webGLStageRenderer.render(displayObject, stage, this.graphics);
 
             if (displayObject.children) {
                 for (var i = 0, len = displayObject.children.length; i < len; i++) {
-                    this._setGraphicsData(stage, displayObject.children[i]);
+                    this._render(stage, displayObject.children[i]);
                 }
             }
         }
@@ -9272,6 +8234,597 @@ Utils.creatClass(Sprite, DisplayObjectContainer, {
     init: function init() {}
 });
 
+var GraphicsData = function () {
+    function GraphicsData(lineWidth, strokeStyle, lineAlpha, fillStyle, fillAlpha, shape) {
+        classCallCheck(this, GraphicsData);
+
+        this.lineWidth = lineWidth;
+        this.strokeStyle = strokeStyle;
+        this.lineAlpha = lineAlpha;
+
+        this.fillStyle = fillStyle;
+        this.fillAlpha = fillAlpha;
+
+        this.shape = shape;
+        this.type = shape.type;
+
+        this.holes = [];
+
+        //这两个可以被后续修改， 具有一票否决权
+        //比如polygon的 虚线描边。必须在fill的poly上面设置line为false
+        this.fill = true;
+        this.line = true;
+    }
+
+    createClass(GraphicsData, [{
+        key: "clone",
+        value: function clone() {
+            return new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, this.shape);
+        }
+    }, {
+        key: "addHole",
+        value: function addHole(shape) {
+            this.holes.push(shape);
+        }
+
+        //从宿主graphics中同步最新的style属性
+
+    }, {
+        key: "synsStyle",
+        value: function synsStyle(graphics) {
+            //从shape中把绘图需要的style属性同步过来
+            this.lineWidth = graphics.lineWidth;
+            this.strokeStyle = graphics.strokeStyle;
+            this.lineAlpha = graphics.lineAlpha;
+
+            this.fillStyle = graphics.fillStyle;
+            this.fillAlpha = graphics.fillAlpha;
+        }
+    }, {
+        key: "hasFill",
+        value: function hasFill() {
+            return this.fillStyle && this.fill && this.shape.closed !== undefined && this.shape.closed;
+        }
+    }, {
+        key: "hasLine",
+        value: function hasLine() {
+            return this.strokeStyle && this.lineWidth && this.line;
+        }
+    }, {
+        key: "destroy",
+        value: function destroy() {
+            this.shape = null;
+            this.holes = null;
+        }
+    }]);
+    return GraphicsData;
+}();
+
+function bezierCurveTo(fromX, fromY, cpX, cpY, cpX2, cpY2, toX, toY) {
+    var path = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : [];
+
+    var n = 20;
+    var dt = 0;
+    var dt2 = 0;
+    var dt3 = 0;
+    var t2 = 0;
+    var t3 = 0;
+
+    path.push(fromX, fromY);
+
+    for (var i = 1, j = 0; i <= n; ++i) {
+        j = i / n;
+
+        dt = 1 - j;
+        dt2 = dt * dt;
+        dt3 = dt2 * dt;
+
+        t2 = j * j;
+        t3 = t2 * j;
+
+        path.push(dt3 * fromX + 3 * dt2 * j * cpX + 3 * dt * t2 * cpX2 + t3 * toX, dt3 * fromY + 3 * dt2 * j * cpY + 3 * dt * t2 * cpY2 + t3 * toY);
+    }
+
+    return path;
+}
+
+/*
+* Graphics绘图法则
+* 单个grahics实例里的fill line 样式属性，都从对应shape.context中获取
+* 
+*/
+
+var Graphics = function () {
+    function Graphics(shape) {
+        classCallCheck(this, Graphics);
+
+        this.lineWidth = 1;
+        this.strokeStyle = null;
+        this.lineAlpha = 1;
+        this.fillStyle = null;
+        this.fillAlpha = 1;
+
+        //比如path m 0 0 l 0 0 m 1 1 l 1 1
+        //就会有两条graphicsData数据产生
+        this.graphicsData = [];
+        this.currentPath = null;
+
+        this.dirty = 0; //用于检测图形对象是否已更改。 如果这是设置为true，那么图形对象将被重新计算。
+        this.clearDirty = 0; //用于检测我们是否清除了图形webGL数据
+
+        this._webGL = {};
+        this.worldAlpha = 1;
+        this.tint = 0xFFFFFF; //目标对象附加颜色
+    }
+
+    createClass(Graphics, [{
+        key: 'setStyle',
+        value: function setStyle(context) {
+            //从 shape 中把绘图需要的style属性同步过来
+            this.lineWidth = context.lineWidth;
+            this.strokeStyle = context.strokeStyle;
+            this.lineAlpha = context.lineAlpha * context.globalAlpha;
+
+            this.fillStyle = context.fillStyle;
+            this.fillAlpha = context.fillAlpha * context.globalAlpha;
+
+            var g = this;
+
+            //一般都是先设置好style的，所以 ， 当后面再次设置新的style的时候
+            //会把所有的data都修改
+            //TODO: 后面需要修改, 能精准的确定是修改graphicsData中的哪个data
+            if (this.graphicsData.length) {
+                _$1.each(this.graphicsData, function (gd, i) {
+                    gd.synsStyle(g);
+                });
+            }
+        }
+    }, {
+        key: 'clone',
+        value: function clone() {
+            var clone = new Graphics();
+
+            clone.dirty = 0;
+
+            // copy graphics data
+            for (var i = 0; i < this.graphicsData.length; ++i) {
+                clone.graphicsData.push(this.graphicsData[i].clone());
+            }
+
+            clone.currentPath = clone.graphicsData[clone.graphicsData.length - 1];
+            return clone;
+        }
+    }, {
+        key: 'moveTo',
+        value: function moveTo(x, y) {
+            var shape = new Polygon([x, y]);
+
+            shape.closed = false;
+            this.drawShape(shape);
+
+            return this;
+        }
+    }, {
+        key: 'lineTo',
+        value: function lineTo(x, y) {
+            if (this.currentPath) {
+                this.currentPath.shape.points.push(x, y);
+                this.dirty++;
+            } else {
+                this.moveTo(0, 0);
+            }
+            return this;
+        }
+    }, {
+        key: 'quadraticCurveTo',
+        value: function quadraticCurveTo(cpX, cpY, toX, toY) {
+            if (this.currentPath) {
+                if (this.currentPath.shape.points.length === 0) {
+                    this.currentPath.shape.points = [0, 0];
+                }
+            } else {
+                this.moveTo(0, 0);
+            }
+
+            var n = 20;
+            var points = this.currentPath.shape.points;
+            var xa = 0;
+            var ya = 0;
+
+            if (points.length === 0) {
+                this.moveTo(0, 0);
+            }
+
+            var fromX = points[points.length - 2];
+            var fromY = points[points.length - 1];
+
+            for (var i = 1; i <= n; ++i) {
+                var j = i / n;
+
+                xa = fromX + (cpX - fromX) * j;
+                ya = fromY + (cpY - fromY) * j;
+
+                points.push(xa + (cpX + (toX - cpX) * j - xa) * j, ya + (cpY + (toY - cpY) * j - ya) * j);
+            }
+
+            this.dirty++;
+
+            return this;
+        }
+    }, {
+        key: 'bezierCurveTo',
+        value: function bezierCurveTo$$1(cpX, cpY, cpX2, cpY2, toX, toY) {
+            if (this.currentPath) {
+                if (this.currentPath.shape.points.length === 0) {
+                    this.currentPath.shape.points = [0, 0];
+                }
+            } else {
+                this.moveTo(0, 0);
+            }
+
+            var points = this.currentPath.shape.points;
+
+            var fromX = points[points.length - 2];
+            var fromY = points[points.length - 1];
+
+            points.length -= 2;
+
+            bezierCurveTo(fromX, fromY, cpX, cpY, cpX2, cpY2, toX, toY, points);
+
+            this.dirty++;
+
+            return this;
+        }
+    }, {
+        key: 'arcTo',
+        value: function arcTo(x1, y1, x2, y2, radius) {
+            if (this.currentPath) {
+                if (this.currentPath.shape.points.length === 0) {
+                    this.currentPath.shape.points.push(x1, y1);
+                }
+            } else {
+                this.moveTo(x1, y1);
+            }
+
+            var points = this.currentPath.shape.points;
+            var fromX = points[points.length - 2];
+            var fromY = points[points.length - 1];
+            var a1 = fromY - y1;
+            var b1 = fromX - x1;
+            var a2 = y2 - y1;
+            var b2 = x2 - x1;
+            var mm = Math.abs(a1 * b2 - b1 * a2);
+
+            if (mm < 1.0e-8 || radius === 0) {
+                if (points[points.length - 2] !== x1 || points[points.length - 1] !== y1) {
+                    points.push(x1, y1);
+                }
+            } else {
+                var dd = a1 * a1 + b1 * b1;
+                var cc = a2 * a2 + b2 * b2;
+                var tt = a1 * a2 + b1 * b2;
+                var k1 = radius * Math.sqrt(dd) / mm;
+                var k2 = radius * Math.sqrt(cc) / mm;
+                var j1 = k1 * tt / dd;
+                var j2 = k2 * tt / cc;
+                var cx = k1 * b2 + k2 * b1;
+                var cy = k1 * a2 + k2 * a1;
+                var px = b1 * (k2 + j1);
+                var py = a1 * (k2 + j1);
+                var qx = b2 * (k1 + j2);
+                var qy = a2 * (k1 + j2);
+                var startAngle = Math.atan2(py - cy, px - cx);
+                var endAngle = Math.atan2(qy - cy, qx - cx);
+
+                this.arc(cx + x1, cy + y1, radius, startAngle, endAngle, b1 * a2 > b2 * a1);
+            }
+
+            this.dirty++;
+
+            return this;
+        }
+    }, {
+        key: 'arc',
+        value: function arc(cx, cy, radius, startAngle, endAngle) {
+            var anticlockwise = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
+
+            if (startAngle === endAngle) {
+                return this;
+            }
+
+            if (!anticlockwise && endAngle <= startAngle) {
+                endAngle += Math.PI * 2;
+            } else if (anticlockwise && startAngle <= endAngle) {
+                startAngle += Math.PI * 2;
+            }
+
+            var sweep = endAngle - startAngle;
+            var segs = Math.ceil(Math.abs(sweep) / (Math.PI * 2)) * 40;
+
+            if (sweep === 0) {
+                return this;
+            }
+
+            var startX = cx + Math.cos(startAngle) * radius;
+            var startY = cy + Math.sin(startAngle) * radius;
+
+            // If the currentPath exists, take its points. Otherwise call `moveTo` to start a path.
+            var points = this.currentPath ? this.currentPath.shape.points : null;
+
+            if (points) {
+                if (points[points.length - 2] !== startX || points[points.length - 1] !== startY) {
+                    points.push(startX, startY);
+                }
+            } else {
+                this.moveTo(startX, startY);
+                points = this.currentPath.shape.points;
+            }
+
+            var theta = sweep / (segs * 2);
+            var theta2 = theta * 2;
+
+            var cTheta = Math.cos(theta);
+            var sTheta = Math.sin(theta);
+
+            var segMinus = segs - 1;
+
+            var remainder = segMinus % 1 / segMinus;
+
+            for (var i = 0; i <= segMinus; ++i) {
+                var real = i + remainder * i;
+
+                var angle = theta + startAngle + theta2 * real;
+
+                var c = Math.cos(angle);
+                var s = -Math.sin(angle);
+
+                points.push((cTheta * c + sTheta * s) * radius + cx, (cTheta * -s + sTheta * c) * radius + cy);
+            }
+
+            this.dirty++;
+
+            return this;
+        }
+    }, {
+        key: 'drawRect',
+        value: function drawRect(x, y, width, height) {
+            this.drawShape(new Rectangle(x, y, width, height));
+            return this;
+        }
+    }, {
+        key: 'drawCircle',
+        value: function drawCircle(x, y, radius) {
+            this.drawShape(new Circle(x, y, radius));
+
+            return this;
+        }
+    }, {
+        key: 'drawEllipse',
+        value: function drawEllipse(x, y, width, height) {
+            this.drawShape(new Ellipse(x, y, width, height));
+
+            return this;
+        }
+    }, {
+        key: 'drawPolygon',
+        value: function drawPolygon(path) {
+            // prevents an argument assignment deopt
+            // see section 3.1: https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
+            var points = path;
+
+            var closed = true;
+
+            if (points instanceof Polygon) {
+                closed = points.closed;
+                points = points.points;
+            }
+
+            if (!Array.isArray(points)) {
+                // prevents an argument leak deopt
+                // see section 3.2: https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
+                points = new Array(arguments.length);
+
+                for (var i = 0; i < points.length; ++i) {
+                    points[i] = arguments[i]; // eslint-disable-line prefer-rest-params
+                }
+            }
+
+            var shape = new Polygon(points);
+
+            shape.closed = closed;
+
+            this.drawShape(shape);
+
+            return this;
+        }
+    }, {
+        key: 'clear',
+        value: function clear() {
+            if (this.graphicsData.length > 0) {
+                this.dirty++;
+                this.clearDirty++;
+                this.graphicsData.length = 0;
+            }
+
+            this.currentPath = null;
+
+            return this;
+        }
+    }, {
+        key: 'drawShape',
+        value: function drawShape(shape) {
+            if (this.currentPath) {
+                if (this.currentPath.shape.points.length <= 2) {
+                    this.graphicsData.pop();
+                }
+            }
+
+            this.currentPath = null;
+
+            var data = new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, shape);
+
+            this.graphicsData.push(data);
+
+            if (data.type === SHAPES.POLY) {
+                data.shape.closed = data.shape.closed;
+                this.currentPath = data;
+            }
+
+            this.dirty++;
+
+            return data;
+        }
+    }, {
+        key: 'beginPath',
+        value: function beginPath() {
+            this.currentPath = null;
+        }
+    }, {
+        key: 'closePath',
+        value: function closePath() {
+            var currentPath = this.currentPath;
+
+            if (currentPath && currentPath.shape) {
+                currentPath.shape.close();
+            }
+
+            return this;
+        }
+
+        /**
+        * Update the bounds of the object
+        *
+        */
+
+    }, {
+        key: 'updateLocalBounds',
+        value: function updateLocalBounds() {
+            var minX = Infinity;
+            var maxX = -Infinity;
+
+            var minY = Infinity;
+            var maxY = -Infinity;
+
+            if (this.graphicsData.length) {
+                var shape = 0;
+                var x = 0;
+                var y = 0;
+                var w = 0;
+                var h = 0;
+
+                for (var i = 0; i < this.graphicsData.length; i++) {
+                    var data = this.graphicsData[i];
+                    var type = data.type;
+                    var lineWidth = data.lineWidth;
+
+                    shape = data.shape;
+
+                    if (type === SHAPES.RECT || type === SHAPES.RREC) {
+                        x = shape.x - lineWidth / 2;
+                        y = shape.y - lineWidth / 2;
+                        w = shape.width + lineWidth;
+                        h = shape.height + lineWidth;
+
+                        minX = x < minX ? x : minX;
+                        maxX = x + w > maxX ? x + w : maxX;
+
+                        minY = y < minY ? y : minY;
+                        maxY = y + h > maxY ? y + h : maxY;
+                    } else if (type === SHAPES.CIRC) {
+                        x = shape.x;
+                        y = shape.y;
+                        w = shape.radius + lineWidth / 2;
+                        h = shape.radius + lineWidth / 2;
+
+                        minX = x - w < minX ? x - w : minX;
+                        maxX = x + w > maxX ? x + w : maxX;
+
+                        minY = y - h < minY ? y - h : minY;
+                        maxY = y + h > maxY ? y + h : maxY;
+                    } else if (type === SHAPES.ELIP) {
+                        x = shape.x;
+                        y = shape.y;
+                        w = shape.width + lineWidth / 2;
+                        h = shape.height + lineWidth / 2;
+
+                        minX = x - w < minX ? x - w : minX;
+                        maxX = x + w > maxX ? x + w : maxX;
+
+                        minY = y - h < minY ? y - h : minY;
+                        maxY = y + h > maxY ? y + h : maxY;
+                    } else {
+                        // POLY
+                        var points = shape.points;
+                        var x2 = 0;
+                        var y2 = 0;
+                        var dx = 0;
+                        var dy = 0;
+                        var rw = 0;
+                        var rh = 0;
+                        var cx = 0;
+                        var cy = 0;
+
+                        for (var j = 0; j + 2 < points.length; j += 2) {
+                            x = points[j];
+                            y = points[j + 1];
+                            x2 = points[j + 2];
+                            y2 = points[j + 3];
+                            dx = Math.abs(x2 - x);
+                            dy = Math.abs(y2 - y);
+                            h = lineWidth;
+                            w = Math.sqrt(dx * dx + dy * dy);
+
+                            if (w < 1e-9) {
+                                continue;
+                            }
+
+                            rw = (h / w * dy + dx) / 2;
+                            rh = (h / w * dx + dy) / 2;
+                            cx = (x2 + x) / 2;
+                            cy = (y2 + y) / 2;
+
+                            minX = cx - rw < minX ? cx - rw : minX;
+                            maxX = cx + rw > maxX ? cx + rw : maxX;
+
+                            minY = cy - rh < minY ? cy - rh : minY;
+                            maxY = cy + rh > maxY ? cy + rh : maxY;
+                        }
+                    }
+                }
+            } else {
+                minX = 0;
+                maxX = 0;
+                minY = 0;
+                maxY = 0;
+            }
+
+            this.Bound.minX = minX;
+            this.Bound.maxX = maxX;
+
+            this.Bound.minY = minY;
+            this.Bound.maxY = maxY;
+        }
+    }, {
+        key: 'destroy',
+        value: function destroy(options) {
+
+            for (var i = 0; i < this.graphicsData.length; ++i) {
+                this.graphicsData[i].destroy();
+            }
+            for (var id in this._webGL) {
+                for (var j = 0; j < this._webGL[id].data.length; ++j) {
+                    this._webGL[id].data[j].destroy();
+                }
+            }
+
+            this.graphicsData = null;
+            this.currentPath = null;
+            this._webGL = null;
+        }
+    }]);
+    return Graphics;
+}();
+
 /**
  * Canvax
  *
@@ -9290,9 +8843,10 @@ var Shape = function (_DisplayObject) {
         var _context = _$1.extend(_$1.clone(SHAPE_CONTEXT_DEFAULT), opt.context);
         opt.context = _context;
 
+        //一个stage用一个graphics来绘制所有的shape
         var _this = possibleConstructorReturn(this, (Shape.__proto__ || Object.getPrototypeOf(Shape)).call(this, opt));
 
-        _this.graphicsData = [];
+        _this.graphics = new Graphics();
 
         //元素是否有hover事件 和 chick事件，由addEvenetLister和remiveEventLister来触发修改
         _this._hoverable = false;
@@ -9322,27 +8876,16 @@ var Shape = function (_DisplayObject) {
     createClass(Shape, [{
         key: "_draw",
         value: function _draw(stage, graphics) {
-            if (this.graphicsData.length == 0) {
-
+            if (graphics.graphicsData.length == 0) {
                 //先设置好当前graphics的style
                 graphics.setStyle(this.context);
-
-                var lastGDind = graphics.graphicsData.length;
                 this.draw(graphics);
-                this.graphicsData = graphics.graphicsData.slice(lastGDind);
-                var me = this;
-                _$1.each(this.graphicsData, function (gd) {
-                    gd.displayObject = me;
-                });
             }
         }
     }, {
         key: "clearGraphicsData",
         value: function clearGraphicsData() {
-            _$1.each(this.graphicsData, function (d) {
-                d.destroy();
-            });
-            this.graphicsData.length = 0;
+            this.graphics.clear();
         }
     }, {
         key: "$watch",
@@ -10006,7 +9549,7 @@ var Circle$2 = function (_Shape) {
     }, {
         key: "draw",
         value: function draw(graphics) {
-            graphics.beginPath();
+            //graphics.beginPath();
             graphics.drawCircle(0, 0, this.context.r);
         }
     }]);
@@ -10320,7 +9863,7 @@ var Path = function (_Shape) {
     }, {
         key: "draw",
         value: function draw(graphics) {
-            graphics.beginPath();
+            //graphics.beginPath();
             this.__parsePathData = null;
             this.context.pointList = [];
 
@@ -10459,7 +10002,7 @@ var Ellipse$2 = function (_Shape) {
     }, {
         key: "draw",
         value: function draw(graphics) {
-            graphics.beginPath();
+            //graphics.beginPath();
             graphics.drawEllipse(0, 0, this.context.hr * 2, this.context.vr * 2);
         }
     }]);
@@ -10523,7 +10066,7 @@ var Polygon$2 = function (_Shape) {
     }, {
         key: "draw",
         value: function draw(graphics) {
-            graphics.beginPath();
+            //graphics.beginPath();
             var context = this.context;
             var pointList = context.pointList;
             if (pointList.length < 2) {
@@ -10680,7 +10223,7 @@ var Line = function (_Shape) {
     }, {
         key: "draw",
         value: function draw(graphics) {
-            graphics.beginPath();
+            //graphics.beginPath();
             var context = this.context;
             if (!context.lineType || context.lineType == 'solid') {
                 graphics.moveTo(context.start.x, context.start.y);
@@ -10776,7 +10319,7 @@ var Rect = function (_Shape) {
     }, {
         key: "draw",
         value: function draw(graphics) {
-            graphics.beginPath();
+            //graphics.beginPath();
             if (!this.context.radius.length) {
                 graphics.drawRect(0, 0, this.context.width, this.context.height);
             } else {
@@ -10841,7 +10384,7 @@ var Sector = function (_Shape) {
     }, {
         key: "draw",
         value: function draw(graphics) {
-            graphics.beginPath();
+            //graphics.beginPath();
             var context = this.context;
             // 形内半径[0,r)
             var r0 = typeof context.r0 == 'undefined' ? 0 : context.r0;

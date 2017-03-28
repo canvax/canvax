@@ -82,7 +82,7 @@ export default class Rect extends Shape
      */
     draw( graphics ) 
     {
-        graphics.beginPath();
+        //graphics.beginPath();
         if(!this.context.radius.length) {
             graphics.drawRect(0,0,this.context.width , this.context.height);
         } else {

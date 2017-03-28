@@ -312,7 +312,7 @@ export default class Path extends Shape
     //重新根的path绘制 graphics
     draw( graphics )
     {
-        graphics.beginPath();
+        //graphics.beginPath();
         this.__parsePathData = null;
         this.context.pointList = [];
 

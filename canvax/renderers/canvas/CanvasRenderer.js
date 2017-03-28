@@ -2,7 +2,6 @@ import SystemRenderer from '../SystemRenderer';
 import { RENDERER_TYPE } from '../../const';
 import Settings from '../../settings';
 import CGR from "../../graphics/canvas/GraphicsRenderer";
-import Graphics from "../../graphics/Graphics";
 import _ from "../../utils/underscore";
 
 export default class CanvasRenderer extends SystemRenderer
@@ -11,8 +10,6 @@ export default class CanvasRenderer extends SystemRenderer
     {
         super(RENDERER_TYPE.CANVAS, app, options);
         this.CGR = new CGR(this);
-        //一个stage用一个graphics来绘制所有的shape
-        this.graphics = new Graphics();
     }
 
     render( app )
@@ -42,17 +39,21 @@ export default class CanvasRenderer extends SystemRenderer
             displayObject = stage;
         };
 
-        if( !displayObject.context.visible || displayObject.context.globalAlpha <= 0 ){
-            return;
-        };
+        //因为已经采用了setTransform了， 非shape元素已经不需要执行transform 和 render
+        if( displayObject.graphics ){
+            if( !displayObject.context.visible || displayObject.context.globalAlpha <= 0 ){
+                return;
+            };
 
-        var ctx = stage.ctx;
-        
-        ctx.setTransform.apply( ctx , displayObject.worldTransform.toArray() );
-        
-        if( displayObject.graphicsData ){
-            //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
-            displayObject._draw( stage, this.graphics );//_draw会完成绘制准备好 graphicsData
+            var ctx = stage.ctx;
+            
+            ctx.setTransform.apply( ctx , displayObject.worldTransform.toArray() );
+            
+            if( !displayObject.graphics.graphicsData.length ){
+                //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
+                displayObject._draw( stage, displayObject.graphics );//_draw会完成绘制准备好 graphicsData
+            };
+
             this.CGR.render( displayObject , stage, this );
         };
 

@@ -15,7 +15,7 @@ export default class CanvasGraphicsRenderer
     render(displayObject , stage)
     {
         const renderer = this.renderer;
-        const graphicsData = displayObject.graphicsData;
+        const graphicsData = displayObject.graphics.graphicsData;
         const ctx = stage.ctx;
         const context = displayObject.context;
 
@@ -73,7 +73,7 @@ export default class CanvasGraphicsRenderer
             else if (data.type === SHAPES.CIRC)
             {
 
-                // TODO - need to be Undefined!
+                // TODO - 这里应该可以不需要走graphics，而直接设置好radius
                 ctx.beginPath();
                 ctx.arc(shape.x, shape.y, shape.radius, 0, 2 * Math.PI);
                 ctx.closePath();

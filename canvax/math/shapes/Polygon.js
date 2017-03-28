@@ -1,28 +1,16 @@
-import Point from '../Point';
 import { SHAPES } from '../../const';
 
-/**
- * @class
- * @memberof PIXI
- */
 export default class Polygon
 {
-    /**
-     * @param {PIXI.Point[]|number[]} points - This can be an array of Points
-     *  that form the polygon, a flat array of numbers that will be interpreted as [x,y, x,y, ...], or
-     *  the arguments passed can be all the points of the polygon e.g.
-     *  `new PIXI.Polygon(new PIXI.Point(), new PIXI.Point(), ...)`, or the arguments passed can be flat
-     *  x,y values e.g. `new Polygon(x,y, x,y, x,y, ...)` where `x` and `y` are Numbers.
-     */
     constructor(...points)
     {
-        if (Array.isArray(points[0]))
+        const point_0 = points[0];
+        if (Array.isArray( point_0 ))
         {
-            points = points[0];
+            points = point_0;
         }
 
-        // if this is an array of points, convert it to a flat array of numbers
-        if (points[0] instanceof Point)
+        if ( point_0 && ("x" in point_0) && ("y" in point_0) )
         {
             const p = [];
 
@@ -36,38 +24,16 @@ export default class Polygon
 
         this.closed = true;
 
-        /**
-         * An array of the points of this polygon
-         *
-         * @member {number[]}
-         */
         this.points = points;
 
-        /**
-         * The type of the object, mainly used to avoid `instanceof` checks
-         *
-         * @member {number}
-         * @readOnly
-         * @default PIXI.SHAPES.POLY
-         * @see PIXI.SHAPES
-         */
         this.type = SHAPES.POLY;
     }
 
-    /**
-     * Creates a clone of this polygon
-     *
-     * @return {PIXI.Polygon} a copy of the polygon
-     */
     clone()
     {
         return new Polygon(this.points.slice());
     }
 
-    /**
-     * Closes the polygon, adding points if necessary.
-     *
-     */
     close()
     {
         const points = this.points;

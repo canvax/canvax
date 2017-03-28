@@ -20,6 +20,8 @@ export default class Graphics
         this.fillStyle = null;
         this.fillAlpha = 1;
 
+        //比如path m 0 0 l 0 0 m 1 1 l 1 1
+        //就会有两条graphicsData数据产生
         this.graphicsData = [];
         this.currentPath = null;
 
@@ -40,6 +42,17 @@ export default class Graphics
 
         this.fillStyle = context.fillStyle;
         this.fillAlpha = context.fillAlpha * context.globalAlpha;
+
+        var g = this;
+
+        //一般都是先设置好style的，所以 ， 当后面再次设置新的style的时候
+        //会把所有的data都修改
+        //TODO: 后面需要修改, 能精准的确定是修改graphicsData中的哪个data
+        if( this.graphicsData.length ){
+            _.each( this.graphicsData , function(gd , i){
+                gd.synsStyle( g );
+            } );
+        }
     }
 
     clone()
@@ -57,7 +70,6 @@ export default class Graphics
         clone.currentPath = clone.graphicsData[clone.graphicsData.length - 1];
         return clone;
     }
-
 
     moveTo(x, y)
     {
@@ -528,7 +540,6 @@ export default class Graphics
 
     destroy(options)
     {
-        super.destroy(options);
 
         for (let i = 0; i < this.graphicsData.length; ++i)
         {

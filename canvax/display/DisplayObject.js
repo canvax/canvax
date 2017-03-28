@@ -14,6 +14,7 @@ import AnimationFrame from "../animation/AnimationFrame";
 import Observe from "../utils/observe";
 import {CONTEXT_DEFAULT, TRANSFORM_PROPS} from "../const";
 import InsideLine from '../geom/InsideLine';
+import Settings from '../settings';
 
 var DisplayObject = function(opt){
     DisplayObject.superclass.constructor.apply(this, arguments);
@@ -347,9 +348,7 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         if( !this.worldTransform ){
             cm = new Matrix();
             cm.concat( this._transform );
-            //if(this.parent.type!="stage"){
-                cm.concat( this.parent.worldTransform );
-            //}
+            cm.concat( this.parent.worldTransform );
             this.worldTransform = cm;
         };
         return this.worldTransform;
@@ -360,35 +359,41 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         var result = false; //检测的结果
 
         //第一步，吧glob的point转换到对应的obj的层级内的坐标系统
-        if( this.type != "stage" && this.parent && this.parent.type != "stage" ) {
-            point = this.parent.globalToLocal( point );
-        };
+        //if( this.type != "stage" && this.parent && this.parent.type != "stage" ) {
+        //    point = this.parent.globalToLocal( point );
+        //};
+        //var m = new Matrix( Settings.RESOLUTION, 0, 0, Settings.RESOLUTION, point.x , point.y);
+        //m.concat( this.worldTransform );
 
         var x = point.x;
         var y = point.y;
     
         //对鼠标的坐标也做相同的变换
-        if( this._transform ){
-            var inverseMatrix = this._transform.clone().invert();
-            var originPos = [x, y];
+        if( this.worldTransform ){
+            
+            var inverseMatrix = this.worldTransform.clone().invert();
+            var originPos = [
+                x * Settings.RESOLUTION, 
+                y * Settings.RESOLUTION
+            ];
+
             originPos = inverseMatrix.mulVector( originPos );
 
             x = originPos[0];
             y = originPos[1];
         };
 
-        if( this.graphicsData ){
-            result = this.containsPoint( {x: x , y: y} , this.graphicsData );
-        }
+        if( this.graphics ){
+            result = this.containsPoint( {x: x , y: y} );
+        };
 
         return result;
     },
-    containsPoint: function(point , _graphicsData){
-        const graphicsData = _graphicsData || this.graphicsData;
+    containsPoint: function(point){
         let inside = false;
-        for (let i = 0; i < graphicsData.length; ++i)
+        for (let i = 0; i < this.graphics.graphicsData.length; ++i)
         {
-            const data = graphicsData[i];
+            const data = this.graphics.graphicsData[i];
             if (data.shape)
             {
                 //先检测fill， fill的检测概率大些。

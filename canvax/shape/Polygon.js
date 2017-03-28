@@ -56,7 +56,7 @@ export default class Polygon extends Shape
 
     draw( graphics ) 
     {
-        graphics.beginPath();
+        //graphics.beginPath();
         const context = this.context;
         const pointList = context.pointList;
         if (pointList.length < 2) {

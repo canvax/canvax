@@ -2,7 +2,6 @@ import SystemRenderer from '../SystemRenderer';
 import { RENDERER_TYPE } from '../../const';
 import Settings from '../../settings';
 import WebGLStageRenderer from "./WebGLStageRenderer";
-import Graphics from "../../graphics/Graphics";
 import _ from "../../utils/underscore";
 
 export default class WebGLRenderer extends SystemRenderer
@@ -10,7 +9,6 @@ export default class WebGLRenderer extends SystemRenderer
     constructor(app , options = {})
     {
         super(RENDERER_TYPE.CANVAS, app, options);
-        this.graphics = new Graphics();
     }
 
     render( app , options = {} )
@@ -34,14 +32,14 @@ export default class WebGLRenderer extends SystemRenderer
         };
         stage.stageRending = true;
         this._clear( stage );
-        this._setGraphicsData( stage );
+        this._render( stage );
         if( this.graphics.graphicsData.length > 0 ){
             stage.webGLStageRenderer.render( stage , this.graphics);
         }
         stage.stageRending = false;
     }
 
-    _setGraphicsData( stage , displayObject )
+    _render( stage , displayObject )
     {
         if( !displayObject ){
             displayObject = stage;
@@ -51,14 +49,15 @@ export default class WebGLRenderer extends SystemRenderer
             return;
         };
 
-        if( displayObject.graphicsData ){
-            displayObject._draw( stage, this.graphics );//_draw会完成绘制准备好 graphicsData
-            //stage.webGLStageRenderer.render( displayObject, stage , this.graphics);
+        if( displayObject.graphics.graphicsData.length > 0 ){
+            displayObject._draw( stage, this.graphics );
         };
+
+        stage.webGLStageRenderer.render( displayObject, stage , this.graphics);
 
         if( displayObject.children ){
             for(var i = 0, len = displayObject.children.length; i < len; i++) {
-                this._setGraphicsData( stage , displayObject.children[i] );
+                this._render( stage , displayObject.children[i] );
             }
         };
     }

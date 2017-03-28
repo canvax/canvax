@@ -44,7 +44,7 @@ export default class Ellipse extends Shape
 
     draw(graphics)
     {    
-        graphics.beginPath();
+        //graphics.beginPath();
         graphics.drawEllipse(0,0, this.context.hr*2 , this.context.vr*2);
     }
 };

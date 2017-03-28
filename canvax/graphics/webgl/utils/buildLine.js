@@ -1,4 +1,3 @@
-import { Point } from '../../../math/index';
 import { hex2rgb } from '../../../utils/color';
 
 export default function buildLine(graphicsData, webGLData)
@@ -10,8 +9,8 @@ export default function buildLine(graphicsData, webGLData)
         return;
     }
 
-    const firstPoint = new Point(points[0], points[1]);
-    let lastPoint = new Point(points[points.length - 2], points[points.length - 1]);
+    const firstPoint = {x:points[0], y:points[1]};
+    let lastPoint = {x:points[points.length - 2], y:points[points.length - 1]};
 
     if (firstPoint.x === lastPoint.x && firstPoint.y === lastPoint.y)
     {
@@ -20,7 +19,7 @@ export default function buildLine(graphicsData, webGLData)
         points.pop();
         points.pop();
 
-        lastPoint = new Point(points[points.length - 2], points[points.length - 1]);
+        lastPoint = {x: points[points.length - 2], y: points[points.length - 1]};
 
         const midPointX = lastPoint.x + ((firstPoint.x - lastPoint.x) * 0.5);
         const midPointY = lastPoint.y + ((firstPoint.y - lastPoint.y) * 0.5);

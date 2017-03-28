@@ -1,6 +1,6 @@
 export default class GraphicsData
 {
-    constructor(lineWidth, strokeStyle, lineAlpha, fillStyle, fillAlpha, shape, displayObject)
+    constructor(lineWidth, strokeStyle, lineAlpha, fillStyle, fillAlpha, shape)
     {
         this.lineWidth = lineWidth;
         this.strokeStyle = strokeStyle;
@@ -11,10 +11,6 @@ export default class GraphicsData
         
         this.shape = shape;
         this.type = shape.type;
-
-        //在graphicsData中保持一份对displayObject的引用，后续可以从这里那全局矩阵等
-        //其在Dispaly.Shape.addCurrentPath2GD中进行设置
-        this.displayObject = displayObject;
 
         this.holes = [];
 
@@ -33,8 +29,7 @@ export default class GraphicsData
             this.lineAlpha,
             this.fillStyle,
             this.fillAlpha,
-            this.shape,
-            this.displayObject
+            this.shape
         );
     }
 
@@ -53,7 +48,6 @@ export default class GraphicsData
 
         this.fillStyle = graphics.fillStyle;
         this.fillAlpha = graphics.fillAlpha;
-
     }
 
     hasFill()
@@ -72,7 +66,6 @@ export default class GraphicsData
     {
         this.shape = null;
         this.holes = null;
-        this.displayObject = null;
     }
     
 }

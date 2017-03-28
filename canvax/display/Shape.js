@@ -8,7 +8,8 @@
 import DisplayObject from "./DisplayObject";
 import Utils from "../utils/index";
 import _ from "../utils/underscore";
-import {SHAPE_CONTEXT_DEFAULT, STYLE_PROPS} from "../const"
+import {SHAPE_CONTEXT_DEFAULT, STYLE_PROPS} from "../const";
+import Graphics from "../graphics/Graphics";
 
 export default class Shape extends DisplayObject
 {
@@ -20,7 +21,8 @@ export default class Shape extends DisplayObject
 
         super( opt );
 
-        this.graphicsData = [];
+        //一个stage用一个graphics来绘制所有的shape
+        this.graphics = new Graphics();
 
         //元素是否有hover事件 和 chick事件，由addEvenetLister和remiveEventLister来触发修改
         this._hoverable  = false;
@@ -48,28 +50,16 @@ export default class Shape extends DisplayObject
 
     _draw(stage , graphics)
     {
-        if(this.graphicsData.length == 0){
-
+        if(graphics.graphicsData.length == 0){
             //先设置好当前graphics的style
             graphics.setStyle( this.context );
-
-            var lastGDind = graphics.graphicsData.length;
             this.draw( graphics );
-            this.graphicsData = graphics.graphicsData.slice( lastGDind );
-            var me = this;
-            _.each( this.graphicsData , function( gd ){
-                gd.displayObject = me;
-            } );
-            
         }
     }
 
     clearGraphicsData()
     {
-        _.each( this.graphicsData , function(d){
-            d.destroy();
-        } );
-        this.graphicsData.length = 0;
+        this.graphics.clear();
     }
 
     $watch(name, value, preValue) 
