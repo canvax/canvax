@@ -958,6 +958,7 @@ EventHandler.prototype = {
             if (me._touching && e.type == "mousemove" && curMouseTarget) {
                 //说明正在拖动啊
                 if (!me._draging) {
+
                     //begin drag
                     curMouseTarget.fire("dragstart");
                     //先把本尊给隐藏了
@@ -1219,11 +1220,14 @@ EventHandler.prototype = {
         //这里只能直接修改_transform 。 不能用下面的修改x，y的方式。
         var _dragDuplicate = root._bufferStage.getChildById(target.id);
         _dragDuplicate._transform = target.getConcatenatedMatrix();
+        _dragDuplicate.worldTransform = null;
+        _dragDuplicate.getWorldTransform();
         //以为直接修改的_transform不会出发心跳上报， 渲染引擎不制动这个stage需要绘制。
         //所以要手动出发心跳包
         _dragDuplicate.heartBeat();
     },
     //drag结束的处理函数
+    //TODO: dragend的还需要处理end的点是否还在元素上面，要恢复hover状态
     _dragEnd: function _dragEnd(e, target, i) {
         var me = this;
         var root = me.canvax;
@@ -2649,50 +2653,46 @@ var AnimationFrame = {
  * 属性工厂，ie下面用VBS提供支持
  * 来给整个引擎提供心跳包的触发机制
  */
-//定义封装好的兼容大部分浏览器的defineProperties 的 属性工厂
-var unwatchOne = {
-    "$skipArray": 0,
-    "$watch": 1,
-    "$fire": 2, //主要是get set 显性设置的 触发
-    "$model": 3,
-    "$accessor": 4,
-    "$owner": 5,
-    //"path"       : 6, //这个应该是唯一一个不用watch的不带$的成员了吧，因为地图等的path是在太大
-    "$parent": 7 //用于建立数据的关系链
-};
 
-function Observe(scope, model, watchMore) {
+//    "$skipArray" : true,  //属性中要忽略的属性列表
+//    "$watch"     : true,  //有了任何写操作后反馈这个动作给到displayObject
+//    "$model"     : true,  //原始数据
+//    "$accessor"  : true,
+//    "$owner"     : true   //对应的displayObject
+
+
+function Observe(scope) {
 
     var stopRepeatAssign = true;
 
-    var skipArray = scope.$skipArray,
-        //要忽略监控的属性名列表
-    pmodel = {},
+    var pmodel = {},
         //要返回的对象
     accessores = {},
         //内部用于转换的对象
-    VBPublics = _$1.keys(unwatchOne); //用于IE6-8
+    _VBPublics = ["$skipArray", "$watch", "$model", "$accessor", "$owner"],
+        //公共属性，不需要get set 化的
+    model = {}; //这是pmodel上的$model属性
 
-    model = model || {}; //这是pmodel上的$model属性
-    watchMore = watchMore || {}; //以$开头但要强制监听的属性
-    skipArray = _$1.isArray(skipArray) ? skipArray.concat(VBPublics) : VBPublics;
+    var VBPublics = _VBPublics.concat(scope.$skipArray || []);
 
     function loop(name, val) {
-        if (!unwatchOne[name] || unwatchOne[name] && name.charAt(0) !== "$") {
+        if (_$1.indexOf(_VBPublics, name) === -1) {
+            //非_VBPublics中的值，都要先设置好对应的val到model上
             model[name] = val;
         }
+
         var valueType = typeof val === "undefined" ? "undefined" : _typeof(val);
+
+        if (_$1.indexOf(VBPublics, name) > -1) {
+            return;
+        }
+
         if (valueType === "function") {
-            if (!unwatchOne[name]) {
-                VBPublics.push(name); //函数无需要转换
-            }
+            VBPublics.push(name); //函数无需要转换，也可以做为公共属性存在
         } else {
-            if (_$1.indexOf(skipArray, name) !== -1 || name.charAt(0) === "$" && !watchMore[name]) {
-                return VBPublics.push(name);
-            }
             var accessor = function accessor(neo) {
                 //创建监控属性或数组，自变量，由用户触发其改变
-                var value = accessor.value,
+                var value = model[name].value,
                     preValue = value,
                     complexValue;
 
@@ -2704,6 +2704,7 @@ function Observe(scope, model, watchMore) {
                     if (stopRepeatAssign) {
                         return; //阻止重复赋值
                     }
+
                     if (value !== neo) {
                         if (neo && neoType === "object" && !(neo instanceof Array) && !neo.addColorStop // neo instanceof CanvasGradient
                         ) {
@@ -2711,31 +2712,19 @@ function Observe(scope, model, watchMore) {
                                 complexValue = value.$model;
                             } else {
                             //如果是其他数据类型
-                            //if( neoType === "array" ){
-                            //    value = _.clone(neo);
-                            //} else {
                             value = neo;
-                            //}
                         }
-                        accessor.value = value;
+
                         model[name] = complexValue ? complexValue : value; //更新$model中的值
-                        if (!complexValue) {
-                            pmodel.$fire && pmodel.$fire(name, value, preValue);
-                        }
+
                         if (valueType != neoType) {
                             //如果set的值类型已经改变，
                             //那么也要把对应的valueType修改为对应的neoType
                             valueType = neoType;
                         }
-                        var hasWatchModel = pmodel;
-                        //所有的赋值都要触发watch的监听事件
-                        if (!pmodel.$watch) {
-                            while (hasWatchModel.$parent) {
-                                hasWatchModel = hasWatchModel.$parent;
-                            }
-                        }
-                        if (hasWatchModel.$watch) {
-                            hasWatchModel.$watch.call(hasWatchModel, name, value, preValue);
+
+                        if (pmodel.$watch) {
+                            pmodel.$watch.call(pmodel, name, value, preValue);
                         }
                     }
                 } else {
@@ -2743,17 +2732,13 @@ function Observe(scope, model, watchMore) {
                     //读的时候，发现value是个obj，而且还没有defineProperty
                     //那么就临时defineProperty一次
                     if (value && valueType === "object" && !(value instanceof Array) && !value.$model && !value.addColorStop) {
-                        //建立和父数据节点的关系
-                        value.$parent = pmodel;
-                        value = Observe(value, value);
 
-                        //accessor.value 重新复制为defineProperty过后的对象
-                        accessor.value = value;
+                        value = Observe(value, value);
+                        model[name].value = value;
                     }
                     return value;
                 }
             };
-            accessor.value = val;
 
             accessores[name] = {
                 set: accessor,
@@ -2771,7 +2756,7 @@ function Observe(scope, model, watchMore) {
 
     _$1.forEach(VBPublics, function (name) {
         if (scope[name]) {
-            //先为函数等不被监控的属性赋值
+            //然后为函数等不被监控的属性赋值
             if (typeof scope[name] == "function") {
                 pmodel[name] = function () {
                     scope[name].apply(this, arguments);
@@ -2783,7 +2768,6 @@ function Observe(scope, model, watchMore) {
     });
 
     pmodel.$model = model;
-    pmodel.$accessor = accessores;
 
     pmodel.hasOwnProperty = function (name) {
         return name in pmodel.$model;
@@ -2852,7 +2836,7 @@ if (!defineProperties && window.VBArray) {
                 //添加公共属性,如果此时不加以后就没机会了
                 if (owner[name] !== true) {
                     owner[name] = true; //因为VBScript对象不能像JS那样随意增删属性
-                    buffer.push("\tPublic [" + name + "]"); //你可以预先放到skipArray中
+                    buffer.push("\tPublic [" + name + "]"); //你可以预先放到  skipArray 中
                 }
             });
             for (var name in description) {
@@ -3866,9 +3850,11 @@ var CanvasGraphicsRenderer = function () {
             var graphicsData = displayObject.graphics.graphicsData;
             var ctx = stage.ctx;
             var context = displayObject.context;
+            var $MC = context.$model;
+            var $PMC = displayObject.parent.context.$model;
 
             if (displayObject.parent) {
-                context.globalAlpha *= displayObject.parent.context.globalAlpha;
+                context.globalAlpha = $MC.globalAlpha * $PMC.globalAlpha;
             }
 
             for (var i = 0; i < graphicsData.length; i++) {
@@ -4022,6 +4008,8 @@ var CanvasRenderer = function (_SystemRenderer) {
                 displayObject = stage;
             }
 
+            displayObject._notWatch = true;
+
             //因为已经采用了setTransform了， 非shape元素已经不需要执行transform 和 render
             if (displayObject.graphics) {
                 if (!displayObject.context.visible || displayObject.context.globalAlpha <= 0) {
@@ -4045,6 +4033,7 @@ var CanvasRenderer = function (_SystemRenderer) {
                     this._render(stage, displayObject.children[i]);
                 }
             }
+            displayObject._notWatch = false;
         }
     }, {
         key: '_clear',
@@ -7804,7 +7793,7 @@ var WebGLStageRenderer = function () {
             if (!this.gl || this.gl.isContextLost()) {
                 return;
             }
-            debugger;
+
             this.webglGR.render(displayObject, stage);
         }
     }, {
@@ -7979,6 +7968,8 @@ var WebGLRenderer = function (_SystemRenderer) {
                 displayObject = stage;
             }
 
+            displayObject._notWatch = true;
+
             if (displayObject.graphics) {
                 if (!displayObject.context.visible || displayObject.context.globalAlpha <= 0) {
                     return;
@@ -7996,6 +7987,8 @@ var WebGLRenderer = function (_SystemRenderer) {
                     this._render(stage, displayObject.children[i]);
                 }
             }
+
+            displayObject._notWatch = false;
         }
     }, {
         key: '_clear',

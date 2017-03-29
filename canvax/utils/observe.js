@@ -6,48 +6,44 @@
  * 属性工厂，ie下面用VBS提供支持
  * 来给整个引擎提供心跳包的触发机制
  */
+
+//    "$skipArray" : true,  //属性中要忽略的属性列表
+//    "$watch"     : true,  //有了任何写操作后反馈这个动作给到displayObject
+//    "$model"     : true,  //原始数据
+//    "$accessor"  : true,
+//    "$owner"     : true   //对应的displayObject
+
+
 import _ from "../utils/underscore";
 
-//定义封装好的兼容大部分浏览器的defineProperties 的 属性工厂
-var unwatchOne = {
-    "$skipArray" : 0,
-    "$watch"     : 1,
-    "$fire"      : 2,//主要是get set 显性设置的 触发
-    "$model"     : 3,
-    "$accessor"  : 4,
-    "$owner"     : 5,
-    //"path"       : 6, //这个应该是唯一一个不用watch的不带$的成员了吧，因为地图等的path是在太大
-    "$parent"    : 7  //用于建立数据的关系链
-}
-
-function Observe(scope, model, watchMore) {
+function Observe(scope) {
 
     var stopRepeatAssign=true;
 
-    var skipArray = scope.$skipArray, //要忽略监控的属性名列表
-        pmodel = {}, //要返回的对象
+    var pmodel = {}, //要返回的对象
         accessores = {}, //内部用于转换的对象
-        VBPublics = _.keys( unwatchOne ); //用于IE6-8
+        _VBPublics = ["$skipArray","$watch","$model","$accessor","$owner"] , //公共属性，不需要get set 化的
+        model = {};//这是pmodel上的$model属性
 
-        model = model || {};//这是pmodel上的$model属性
-        watchMore = watchMore || {};//以$开头但要强制监听的属性
-        skipArray = _.isArray(skipArray) ? skipArray.concat(VBPublics) : VBPublics;
-
+    var VBPublics = _VBPublics.concat( scope.$skipArray || [] );
+        
     function loop(name, val) {
-        if ( !unwatchOne[name] || (unwatchOne[name] && name.charAt(0) !== "$") ) {
+        if ( _.indexOf( _VBPublics , name ) === -1 ) {
+            //非_VBPublics中的值，都要先设置好对应的val到model上
             model[name] = val
         };
+        
         var valueType = typeof val;
+
+        if( _.indexOf(VBPublics,name) > -1 ){
+            return;
+        };
+
         if (valueType === "function") {
-            if(!unwatchOne[name]){
-              VBPublics.push(name) //函数无需要转换
-            }
+            VBPublics.push(name) //函数无需要转换，也可以做为公共属性存在
         } else {
-            if (_.indexOf(skipArray,name) !== -1 || (name.charAt(0) === "$" && !watchMore[name])) {
-                return VBPublics.push(name)
-            }
             var accessor = function(neo) { //创建监控属性或数组，自变量，由用户触发其改变
-                var value = accessor.value, preValue = value, complexValue;
+                var value = model[name].value, preValue = value, complexValue;
                 
                 if (arguments.length) {
                     //写操作
@@ -56,7 +52,8 @@ function Observe(scope, model, watchMore) {
 
                     if (stopRepeatAssign) {
                         return //阻止重复赋值
-                    }
+                    };
+
                     if (value !== neo) {
                         if( neo && neoType === "object" && 
                             !(neo instanceof Array) &&
@@ -65,31 +62,19 @@ function Observe(scope, model, watchMore) {
                             value = neo.$model ? neo : Observe(neo , neo);
                             complexValue = value.$model;
                         } else {//如果是其他数据类型
-                            //if( neoType === "array" ){
-                            //    value = _.clone(neo);
-                            //} else {
-                                value = neo
-                            //}
-                        }
-                        accessor.value = value;
+                            value = neo;
+                        };
+
                         model[name] = complexValue ? complexValue : value;//更新$model中的值
-                        if (!complexValue) {
-                            pmodel.$fire && pmodel.$fire(name, value, preValue)
-                        }
+
                         if(valueType != neoType){
                             //如果set的值类型已经改变，
                             //那么也要把对应的valueType修改为对应的neoType
                             valueType = neoType;
                         }
-                        var hasWatchModel = pmodel;
-                        //所有的赋值都要触发watch的监听事件
-                        if ( !pmodel.$watch ) {
-                          while( hasWatchModel.$parent ){
-                             hasWatchModel = hasWatchModel.$parent;
-                          }
-                        }
-                        if ( hasWatchModel.$watch ) {
-                          hasWatchModel.$watch.call(hasWatchModel , name, value, preValue);
+
+                        if ( pmodel.$watch ) {
+                          pmodel.$watch.call(pmodel , name, value, preValue);
                         }
                     }
                 } else {
@@ -100,17 +85,13 @@ function Observe(scope, model, watchMore) {
                        && !(value instanceof Array) 
                        && !value.$model
                        && !value.addColorStop) {
-                        //建立和父数据节点的关系
-                        value.$parent = pmodel;
-                        value = Observe(value , value);
 
-                        //accessor.value 重新复制为defineProperty过后的对象
-                        accessor.value = value;
-                    }
+                        value = Observe(value , value);
+                        model[name].value = value;
+                    };
                     return value;
                 }
             };
-            accessor.value = val;
             
             accessores[name] = {
                 set: accessor,
@@ -127,7 +108,7 @@ function Observe(scope, model, watchMore) {
     pmodel = defineProperties(pmodel, accessores, VBPublics);//生成一个空的ViewModel
 
     _.forEach(VBPublics,function(name) {
-        if (scope[name]) {//先为函数等不被监控的属性赋值
+        if (scope[name]) {//然后为函数等不被监控的属性赋值
             if(typeof scope[name] == "function" ){
                pmodel[name] = function(){
                   scope[name].apply(this , arguments);
@@ -139,7 +120,6 @@ function Observe(scope, model, watchMore) {
     });
 
     pmodel.$model = model;
-    pmodel.$accessor = accessores;
 
     pmodel.hasOwnProperty = function(name) {
         return name in pmodel.$model
@@ -211,7 +191,7 @@ if (!defineProperties && window.VBArray) {
         _.forEach(publics,function(name) { //添加公共属性,如果此时不加以后就没机会了
             if (owner[name] !== true) {
                 owner[name] = true //因为VBScript对象不能像JS那样随意增删属性
-            buffer.push("\tPublic [" + name + "]") //你可以预先放到skipArray中
+            buffer.push("\tPublic [" + name + "]") //你可以预先放到  skipArray 中
             }
         });
         for (var name in description) {

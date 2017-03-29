@@ -85,7 +85,7 @@ export default class WebGLStageRenderer
         {
             return;
         }
-        debugger
+        
         this.webglGR.render( displayObject , stage );
     }
 

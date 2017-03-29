@@ -18,9 +18,11 @@ export default class CanvasGraphicsRenderer
         const graphicsData = displayObject.graphics.graphicsData;
         const ctx = stage.ctx;
         const context = displayObject.context;
+        const $MC = context.$model;
+        const $PMC = displayObject.parent.context.$model;
 
         if( displayObject.parent ){
-            context.globalAlpha *= displayObject.parent.context.globalAlpha;
+            context.globalAlpha = $MC.globalAlpha * $PMC.globalAlpha;
         };
 
         for (let i = 0; i < graphicsData.length; i++)

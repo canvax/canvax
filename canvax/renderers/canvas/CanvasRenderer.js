@@ -39,6 +39,8 @@ export default class CanvasRenderer extends SystemRenderer
             displayObject = stage;
         };
 
+        displayObject._notWatch = true;
+
         //因为已经采用了setTransform了， 非shape元素已经不需要执行transform 和 render
         if( displayObject.graphics ){
             if( !displayObject.context.visible || displayObject.context.globalAlpha <= 0 ){
@@ -62,6 +64,7 @@ export default class CanvasRenderer extends SystemRenderer
 	        	this._render( stage , displayObject.children[i] );
 	        }
 	    };
+        displayObject._notWatch = false;
     }
 
     _clear( stage )

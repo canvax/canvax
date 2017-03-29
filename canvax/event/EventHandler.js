@@ -147,6 +147,7 @@ EventHandler.prototype = {
             if(me._touching && e.type == "mousemove" && curMouseTarget){
                 //说明正在拖动啊
                 if(!me._draging){
+
                     //begin drag
                     curMouseTarget.fire("dragstart");
                     //先把本尊给隐藏了
@@ -411,11 +412,14 @@ EventHandler.prototype = {
         //这里只能直接修改_transform 。 不能用下面的修改x，y的方式。
         var _dragDuplicate = root._bufferStage.getChildById(target.id);
         _dragDuplicate._transform = target.getConcatenatedMatrix();
+        _dragDuplicate.worldTransform = null;
+        _dragDuplicate.getWorldTransform();
         //以为直接修改的_transform不会出发心跳上报， 渲染引擎不制动这个stage需要绘制。
         //所以要手动出发心跳包
         _dragDuplicate.heartBeat();
     },
     //drag结束的处理函数
+    //TODO: dragend的还需要处理end的点是否还在元素上面，要恢复hover状态
     _dragEnd: function(e, target, i) {
         var me = this;
         var root = me.canvax;

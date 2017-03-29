@@ -42,6 +42,8 @@ export default class WebGLRenderer extends SystemRenderer
             displayObject = stage;
         };
 
+        displayObject._notWatch = true;
+
         if( displayObject.graphics ){
             if( !displayObject.context.visible || displayObject.context.globalAlpha <= 0 ){
                 return;
@@ -59,6 +61,8 @@ export default class WebGLRenderer extends SystemRenderer
                 this._render( stage , displayObject.children[i] );
             }
         };
+
+        displayObject._notWatch = false;
     }
 
     _clear( stage )
