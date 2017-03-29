@@ -150,6 +150,11 @@ EventHandler.prototype = {
 
                     //begin drag
                     curMouseTarget.fire("dragstart");
+                    //有可能该child没有hover style
+                    if( !curMouseTarget._globalAlpha ){
+                        curMouseTarget._globalAlpha = curMouseTarget.context.$model.globalAlpha;
+                    };
+
                     //先把本尊给隐藏了
                     curMouseTarget.context.globalAlpha = 0;
                     //然后克隆一个副本到activeStage
@@ -243,7 +248,7 @@ EventHandler.prototype = {
             this._setCursor("default");
         }
         if(obj && oldObj != obj && obj.context){
-            this._setCursor(obj.context.cursor);
+            this._setCursor(obj.context.$model.cursor);
         }
     },
     _setCursor : function(cursor) {
@@ -282,8 +287,15 @@ EventHandler.prototype = {
                     if( child && child.dragEnabled ){
                        //只要有一个元素就认为正在准备drag了
                        me._draging = true;
+
+                       //有可能该child没有hover style
+                       if( !child._globalAlpha ){
+                           child._globalAlpha = child.context.$model.globalAlpha;
+                       };
+
                        //然后克隆一个副本到activeStage
                        me._clone2hoverStage( child , i );
+
                        //先把本尊给隐藏了
                        child.context.globalAlpha = 0;
 
@@ -394,19 +406,20 @@ EventHandler.prototype = {
     },
     //drag 中 的处理函数
     _dragMoveHander: function(e, target, i) {
+        
         var me = this;
         var root = me.canvax;
         var _point = target.globalToLocal( me.curPoints[i] );
 
         //要对应的修改本尊的位置，但是要告诉引擎不要watch这个时候的变化
-        target._notWatch = true;
+        target._noHeart = true;
         var _moveStage = target.moveing;
         target.moveing = true;
         target.context.x += (_point.x - target._dragPoint.x);
         target.context.y += (_point.y - target._dragPoint.y);
         target.fire("dragmove");
         target.moveing = _moveStage;
-        target._notWatch = false;
+        target._noHeart = false;
         //同步完毕本尊的位置
 
         //这里只能直接修改_transform 。 不能用下面的修改x，y的方式。
@@ -414,7 +427,8 @@ EventHandler.prototype = {
         _dragDuplicate._transform = target.getConcatenatedMatrix();
         _dragDuplicate.worldTransform = null;
         _dragDuplicate.getWorldTransform();
-        //以为直接修改的_transform不会出发心跳上报， 渲染引擎不制动这个stage需要绘制。
+
+        //直接修改的_transform不会出发心跳上报， 渲染引擎不制动这个stage需要绘制。
         //所以要手动出发心跳包
         _dragDuplicate.heartBeat();
     },

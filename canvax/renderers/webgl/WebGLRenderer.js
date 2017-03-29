@@ -42,10 +42,9 @@ export default class WebGLRenderer extends SystemRenderer
             displayObject = stage;
         };
 
-        displayObject._notWatch = true;
 
         if( displayObject.graphics ){
-            if( !displayObject.context.visible || displayObject.context.globalAlpha <= 0 ){
+            if( !displayObject.context.$model.visible || displayObject.context.$model.globalAlpha <= 0 ){
                 return;
             };
 
@@ -62,7 +61,6 @@ export default class WebGLRenderer extends SystemRenderer
             }
         };
 
-        displayObject._notWatch = false;
     }
 
     _clear( stage )

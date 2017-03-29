@@ -45,10 +45,10 @@ Utils.creatClass(Text, DisplayObject, {
             this._context[name] = value;
             //如果修改的是font的某个内容，就重新组装一遍font的值，
             //然后通知引擎这次对context的修改不需要上报心跳
-            this._notWatch = false;
-            this.context.font = this._getFontDeclaration();
-            this.context.width = this.getTextWidth();
-            this.context.height = this.getTextHeight();
+            var model = this.context.$model;
+            model.font = this._getFontDeclaration();
+            model.width = this.getTextWidth();
+            model.height = this.getTextHeight();
         }
     },
     init: function(text, opt) {
@@ -58,10 +58,11 @@ Utils.creatClass(Text, DisplayObject, {
         c.height = this.getTextHeight();
     },
     render: function(ctx) {
-        for (var p in this.context.$model) {
+        var model = this.context.$model;
+        for (var p in model) {
             if (p in ctx) {
-                if (p != "textBaseline" && this.context.$model[p]) {
-                    ctx[p] = this.context.$model[p];
+                if (p != "textBaseline" && model[p]) {
+                    ctx[p] = model[p];
                 };
             };
         };
@@ -74,7 +75,7 @@ Utils.creatClass(Text, DisplayObject, {
     getTextWidth: function() {
         var width = 0;
         Utils._pixelCtx.save();
-        Utils._pixelCtx.font = this.context.font;
+        Utils._pixelCtx.font = this.context.$model.font;
         width = this._getTextWidth(Utils._pixelCtx, this._getTextLines());
         Utils._pixelCtx.restore();
         return width;
@@ -107,7 +108,7 @@ Utils.creatClass(Text, DisplayObject, {
 
     },
     _renderTextFill: function(ctx, textLines) {
-        if (!this.context.fillStyle) return;
+        if (!this.context.$model.fillStyle) return;
 
         this._boundaries = [];
         var lineHeights = 0;
@@ -127,7 +128,7 @@ Utils.creatClass(Text, DisplayObject, {
         }
     },
     _renderTextStroke: function(ctx, textLines) {
-        if (!this.context.strokeStyle || !this.context.lineWidth) return;
+        if (!this.context.$model.strokeStyle || !this.context.$model.lineWidth) return;
 
         var lineHeights = 0;
 
@@ -158,12 +159,12 @@ Utils.creatClass(Text, DisplayObject, {
     },
     _renderTextLine: function(method, ctx, line, left, top, lineIndex) {
         top -= this._getHeightOfLine() / 4;
-        if (this.context.textAlign !== 'justify') {
+        if (this.context.$model.textAlign !== 'justify') {
             this._renderChars(method, ctx, line, left, top, lineIndex);
             return;
         };
         var lineWidth = ctx.measureText(line).width;
-        var totalWidth = this.context.width;
+        var totalWidth = this.context.$model.width;
 
         if (totalWidth > lineWidth) {
             var words = line.split(/\s+/);
@@ -185,7 +186,7 @@ Utils.creatClass(Text, DisplayObject, {
         ctx[method](chars, 0, top);
     },
     _getHeightOfLine: function() {
-        return this.context.fontSize * this.context.lineHeight;
+        return this.context.$model.fontSize * this.context.$model.lineHeight;
     },
     _getTextWidth: function(ctx, textLines) {
         var maxWidth = ctx.measureText(textLines[0] || '|').width;
@@ -198,7 +199,7 @@ Utils.creatClass(Text, DisplayObject, {
         return maxWidth;
     },
     _getTextHeight: function(ctx, textLines) {
-        return this.context.fontSize * textLines.length * this.context.lineHeight;
+        return this.context.$model.fontSize * textLines.length * this.context.$model.lineHeight;
     },
 
     /**
@@ -207,15 +208,15 @@ Utils.creatClass(Text, DisplayObject, {
      */
     _getTopOffset: function() {
         var t = 0;
-        switch (this.context.textBaseline) {
+        switch (this.context.$model.textBaseline) {
             case "top":
                 t = 0;
                 break;
             case "middle":
-                t = -this.context.height / 2;
+                t = -this.context.$model.height / 2;
                 break;
             case "bottom":
-                t = -this.context.height;
+                t = -this.context.$model.height;
                 break;
         }
         return t;

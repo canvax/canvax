@@ -53,16 +53,16 @@ export default class Line extends Shape
     draw( graphics ) 
     {
         //graphics.beginPath();
-        const context = this.context;
-        if (!context.lineType || context.lineType == 'solid') {
-            graphics.moveTo( context.start.x , context.start.y ); 
-            graphics.lineTo( context.end.x   , context.end.y );
-        } else if (context.lineType == 'dashed' || context.lineType == 'dotted') {
+        const model = this.context.$model;
+        if (!model.lineType || model.lineType == 'solid') {
+            graphics.moveTo( model.start.x , model.start.y ); 
+            graphics.lineTo( model.end.x   , model.end.y );
+        } else if (model.lineType == 'dashed' || model.lineType == 'dotted') {
             this.dashedLineTo(
                 graphics,
-                context.start.x, context.start.y,
-                context.end.x  , context.end.y, 
-                this.context.dashLength
+                model.start.x, model.start.y,
+                model.end.x  , model.end.y, 
+                model.dashLength
             );
         };
         return this;

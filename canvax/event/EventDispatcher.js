@@ -78,7 +78,7 @@ Utils.creatClass(EventDispatcher , EventManager , {
         if(this.context && event.type == "mouseover"){
             //记录dispatchEvent之前的心跳
             var preHeartBeat = this._heartBeatNum;
-            var pregAlpha    = this.context.globalAlpha;
+            var pregAlpha    = this.context.$model.globalAlpha;
             this._dispatchEvent( event );
             if( preHeartBeat != this._heartBeatNum ){
                 this._hoverClass = true;
@@ -89,6 +89,8 @@ Utils.creatClass(EventDispatcher , EventManager , {
                     activShape._transform = this.getConcatenatedMatrix();
                     canvax._bufferStage.addChildAt( activShape , 0 ); 
                     //然后把自己隐藏了
+
+                    //用一个临时变量_globalAlpha 来存储自己之前的alpha
                     this._globalAlpha = pregAlpha;
                     this.context.globalAlpha = 0;
                 }

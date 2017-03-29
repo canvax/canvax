@@ -30,10 +30,11 @@ Utils.creatClass( Stage , DisplayObjectContainer , {
     initStage : function( canvas , width , height ){
         var self = this;
         self.canvas = canvas;
-        self.context.width  = width;
-        self.context.height = height;
-        self.context.scaleX = Utils._devicePixelRatio;
-        self.context.scaleY = Utils._devicePixelRatio;
+        var model = self.context;
+        model.width  = width;
+        model.height = height;
+        model.scaleX = Utils._devicePixelRatio;
+        model.scaleY = Utils._devicePixelRatio;
         self._isReady = true;
     },
     heartBeat : function( opt ){

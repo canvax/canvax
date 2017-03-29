@@ -40,7 +40,7 @@ export default class Isogon extends Polygon
     watch(name, value, preValue)
     {
         if (name == "r" || name == "n"){ //如果path有变动，需要自动计算新的pointList
-            this.context.pointList = _Math.getIsgonPointList( style.n , style.r );
+            this.context.$model.pointList = _Math.getIsgonPointList( this.context.$model.n , this.context.$model.r );
         }
 
         if (name == "pointList" || name == "smooth" || name == "lineType") {

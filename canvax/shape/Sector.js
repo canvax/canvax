@@ -53,17 +53,17 @@ export default class Sector extends Shape
     draw( graphics )
     {
         //graphics.beginPath();
-        var context = this.context;
+        var model = this.context.$model;
         // 形内半径[0,r)
-        var r0 = typeof context.r0 == 'undefined' ? 0 : context.r0;
-        var r  = context.r;                            // 扇形外半径(0,r]
-        var startAngle = myMath.degreeTo360(context.startAngle);          // 起始角度[0,360)
-        var endAngle   = myMath.degreeTo360(context.endAngle);              // 结束角度(0,360]
+        var r0 = typeof model.r0 == 'undefined' ? 0 : model.r0;
+        var r  = model.r;                            // 扇形外半径(0,r]
+        var startAngle = myMath.degreeTo360(model.startAngle);          // 起始角度[0,360)
+        var endAngle   = myMath.degreeTo360(model.endAngle);              // 结束角度(0,360]
 
         //var isRing     = false;                       //是否为圆环
 
         //if( startAngle != endAngle && Math.abs(startAngle - endAngle) % 360 == 0 ) {
-        if( startAngle == endAngle && context.startAngle != context.endAngle ) {
+        if( startAngle == endAngle && model.startAngle != model.endAngle ) {
             //如果两个角度相等，那么就认为是个圆环了
             this.isRing = true;
             startAngle  = 0 ;
@@ -80,19 +80,17 @@ export default class Sector extends Shape
 
         var G = graphics;
 
-        G.arc( 0 , 0 , r, startAngle, endAngle, this.context.clockwise);
+        G.arc( 0 , 0 , r, startAngle, endAngle, model.clockwise);
         if (r0 !== 0) {
             if( this.isRing ){
                 //加上这个isRing的逻辑是为了兼容flashcanvas下绘制圆环的的问题
                 //不加这个逻辑flashcanvas会绘制一个大圆 ， 而不是圆环
                 G.moveTo( r0 , 0 );
-                G.arc( 0 , 0 , r0 , startAngle , endAngle , !this.context.clockwise);
+                G.arc( 0 , 0 , r0 , startAngle , endAngle , !model.clockwise);
             } else {
-                G.arc( 0 , 0 , r0 , endAngle , startAngle , !this.context.clockwise);
+                G.arc( 0 , 0 , r0 , endAngle , startAngle , !model.clockwise);
             }
         } else {
-            //TODO:在r0为0的时候，如果不加lineTo(0,0)来把路径闭合，会出现有搞笑的一个bug
-            //整个圆会出现一个以每个扇形两端为节点的镂空，我可能描述不清楚，反正这个加上就好了
             G.lineTo(0,0);
         };
         
@@ -102,14 +100,16 @@ export default class Sector extends Shape
      getRect(context)
      {
          var context = context ? context : this.context;
-         var r0 = typeof context.r0 == 'undefined'     // 形内半径[0,r)
-             ? 0 : context.r0;
-         var r = context.r;                            // 扇形外半径(0,r]
+         var model = context.$model;
+
+         var r0 = typeof model.r0 == 'undefined'     // 形内半径[0,r)
+             ? 0 : model.r0;
+         var r = model.r;                            // 扇形外半径(0,r]
          
          this.getRegAngle();
 
-         var startAngle = myMath.degreeTo360(context.startAngle);          // 起始角度[0,360)
-         var endAngle   = myMath.degreeTo360(context.endAngle);            // 结束角度(0,360]
+         var startAngle = myMath.degreeTo360(model.startAngle);          // 起始角度[0,360)
+         var endAngle   = myMath.degreeTo360(model.endAngle);            // 结束角度(0,360]
 
          var pointList  = [];
 
@@ -148,18 +148,18 @@ export default class Sector extends Shape
                  ]);
          }
 
-         context.pointList = pointList;
+         model.pointList = pointList;
          return this.getRectFormPointList( context );
      }
 
      getRegAngle()
      {
          this.regIn      = true;  //如果在start和end的数值中，end大于start而且是顺时针则regIn为true
-         var c           = this.context;
-         var startAngle = myMath.degreeTo360(c.startAngle);          // 起始角度[0,360)
-         var endAngle   = myMath.degreeTo360(c.endAngle);            // 结束角度(0,360]
+         var model           = this.context.$model;
+         var startAngle = myMath.degreeTo360(model.startAngle);          // 起始角度[0,360)
+         var endAngle   = myMath.degreeTo360(model.endAngle);            // 结束角度(0,360]
 
-         if ( ( startAngle > endAngle && !c.clockwise ) || ( startAngle < endAngle && c.clockwise ) ) {
+         if ( ( startAngle > endAngle && !model.clockwise ) || ( startAngle < endAngle && model.clockwise ) ) {
              this.regIn  = false; //out
          };
          //度的范围，从小到大

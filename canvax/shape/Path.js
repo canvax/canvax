@@ -314,9 +314,9 @@ export default class Path extends Shape
     {
         //graphics.beginPath();
         this.__parsePathData = null;
-        this.context.pointList = [];
+        this.context.$model.pointList = [];
 
-        var pathArray = this._parsePathData(this.context.path);
+        var pathArray = this._parsePathData(this.context.$model.path);
 
         for (var g = 0, gl = pathArray.length; g < gl; g++) {
             for (var i = 0, l = pathArray[g].length; i < l; i++) {

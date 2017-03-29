@@ -7,12 +7,6 @@
  * 来给整个引擎提供心跳包的触发机制
  */
 
-//    "$skipArray" : true,  //属性中要忽略的属性列表
-//    "$watch"     : true,  //有了任何写操作后反馈这个动作给到displayObject
-//    "$model"     : true,  //原始数据
-//    "$accessor"  : true,
-//    "$owner"     : true   //对应的displayObject
-
 
 import _ from "../utils/underscore";
 
@@ -22,7 +16,7 @@ function Observe(scope) {
 
     var pmodel = {}, //要返回的对象
         accessores = {}, //内部用于转换的对象
-        _VBPublics = ["$skipArray","$watch","$model","$accessor","$owner"] , //公共属性，不需要get set 化的
+        _VBPublics = ["$skipArray","$watch","$model","$owner"] , //公共属性，不需要get set 化的
         model = {};//这是pmodel上的$model属性
 
     var VBPublics = _VBPublics.concat( scope.$skipArray || [] );
@@ -43,7 +37,8 @@ function Observe(scope) {
             VBPublics.push(name) //函数无需要转换，也可以做为公共属性存在
         } else {
             var accessor = function(neo) { //创建监控属性或数组，自变量，由用户触发其改变
-                var value = model[name].value, preValue = value, complexValue;
+
+                var value = model[name], preValue = value, complexValue;
                 
                 if (arguments.length) {
                     //写操作
@@ -65,6 +60,7 @@ function Observe(scope) {
                             value = neo;
                         };
 
+                        //accessor.value = value;
                         model[name] = complexValue ? complexValue : value;//更新$model中的值
 
                         if(valueType != neoType){
@@ -87,12 +83,14 @@ function Observe(scope) {
                        && !value.addColorStop) {
 
                         value = Observe(value , value);
-                        model[name].value = value;
+                        //accessor.value = value;
+                        model[name] = value;
                     };
                     return value;
                 }
             };
-            
+            //accessor.value = val;
+
             accessores[name] = {
                 set: accessor,
                 get: accessor,

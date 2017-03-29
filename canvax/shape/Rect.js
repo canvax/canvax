@@ -45,7 +45,7 @@ export default class Rect extends Shape
      */
     _buildRadiusPath( graphics )
     {
-        var context = this.context;
+        var model = this.context.$model;
         //左上、右上、右下、左下角的半径依次为r1、r2、r3、r4
         //r缩写为1         相当于 [1, 1, 1, 1]
         //r缩写为[1]       相当于 [1, 1, 1, 1]
@@ -53,10 +53,10 @@ export default class Rect extends Shape
         //r缩写为[1, 2, 3] 相当于 [1, 2, 3, 2]
         var x = 0;
         var y = 0;
-        var width = this.context.width;
-        var height = this.context.height;
+        var width = model.width;
+        var height = model.height;
     
-        var r = Utils.getCssOrderArr(context.radius);
+        var r = Utils.getCssOrderArr(model.radius);
         var G = graphics;
      
         G.moveTo( parseInt(x + r[0]), parseInt(y));
@@ -83,8 +83,9 @@ export default class Rect extends Shape
     draw( graphics ) 
     {
         //graphics.beginPath();
-        if(!this.context.radius.length) {
-            graphics.drawRect(0,0,this.context.width , this.context.height);
+        var model = this.context.$model;
+        if(!model.radius.length) {
+            graphics.drawRect(0,0,model.width , model.height);
         } else {
             this._buildRadiusPath( graphics );
         }

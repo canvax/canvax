@@ -164,7 +164,7 @@ Utils.creatClass( DisplayObjectContainer , DisplayObject , {
 
             if( child == null ||
                 (!child._eventEnabled && !child.dragEnabled) || 
-                !child.context.visible 
+                !child.context.$model.visible 
             ) {
                 continue;
             }

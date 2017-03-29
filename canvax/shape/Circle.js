@@ -43,7 +43,7 @@ export default class Circle extends Shape
     draw( graphics ) 
     {
         //graphics.beginPath();
-        graphics.drawCircle(0, 0, this.context.r);
+        graphics.drawCircle(0, 0, this.context.$model.r);
     }
 
 }

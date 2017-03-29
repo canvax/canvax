@@ -83,7 +83,7 @@ export default class Shape extends DisplayObject
    {
          dashLength = typeof dashLength == 'undefined'
                       ? 3 : dashLength;
-         dashLength = Math.max( dashLength , this.context.lineWidth );
+         dashLength = Math.max( dashLength , this.context.$model.lineWidth );
          var deltaX = x2 - x1;
          var deltaY = y2 - y1;
          var numDashes = Math.floor(

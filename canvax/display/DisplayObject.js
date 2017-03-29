@@ -70,6 +70,9 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         //有些引擎内部设置context属性的时候是不用上报心跳的，比如做热点检测的时候
         self._notWatch = false;
 
+        //不需要发心跳信息
+        self._noHeart = false;
+
         _contextATTRS.$owner = self;
         _contextATTRS.$watch = function(name , value , preValue){
             //下面的这些属性变化，都会需要重新组织矩阵属性 _transform 
@@ -96,6 +99,10 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
 
             if( obj.$watch ){
                 obj.$watch( name , value , preValue );
+            };
+
+            if( obj._noHeart ){
+                return;
             };
 
             obj.heartBeat( {
@@ -151,10 +158,10 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         }
     },
     getCurrentWidth : function(){
-       return Math.abs(this.context.width * this.context.scaleX);
+       return Math.abs(this.context.$model.width * this.context.$model.scaleX);
     },
     getCurrentHeight : function(){
-       return Math.abs(this.context.height * this.context.scaleY);
+       return Math.abs(this.context.$model.height * this.context.$model.scaleY);
     },
     getStage : function(){
         if( this.stage ) {

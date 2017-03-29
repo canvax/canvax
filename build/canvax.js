@@ -961,6 +961,11 @@ EventHandler.prototype = {
 
                     //begin drag
                     curMouseTarget.fire("dragstart");
+                    //有可能该child没有hover style
+                    if (!curMouseTarget._globalAlpha) {
+                        curMouseTarget._globalAlpha = curMouseTarget.context.$model.globalAlpha;
+                    }
+
                     //先把本尊给隐藏了
                     curMouseTarget.context.globalAlpha = 0;
                     //然后克隆一个副本到activeStage
@@ -1052,7 +1057,7 @@ EventHandler.prototype = {
             this._setCursor("default");
         }
         if (obj && oldObj != obj && obj.context) {
-            this._setCursor(obj.context.cursor);
+            this._setCursor(obj.context.$model.cursor);
         }
     },
     _setCursor: function _setCursor(cursor) {
@@ -1091,8 +1096,15 @@ EventHandler.prototype = {
                     if (child && child.dragEnabled) {
                         //只要有一个元素就认为正在准备drag了
                         me._draging = true;
+
+                        //有可能该child没有hover style
+                        if (!child._globalAlpha) {
+                            child._globalAlpha = child.context.$model.globalAlpha;
+                        }
+
                         //然后克隆一个副本到activeStage
                         me._clone2hoverStage(child, i);
+
                         //先把本尊给隐藏了
                         child.context.globalAlpha = 0;
 
@@ -1202,19 +1214,20 @@ EventHandler.prototype = {
     },
     //drag 中 的处理函数
     _dragMoveHander: function _dragMoveHander(e, target, i) {
+
         var me = this;
         var root = me.canvax;
         var _point = target.globalToLocal(me.curPoints[i]);
 
         //要对应的修改本尊的位置，但是要告诉引擎不要watch这个时候的变化
-        target._notWatch = true;
+        target._noHeart = true;
         var _moveStage = target.moveing;
         target.moveing = true;
         target.context.x += _point.x - target._dragPoint.x;
         target.context.y += _point.y - target._dragPoint.y;
         target.fire("dragmove");
         target.moveing = _moveStage;
-        target._notWatch = false;
+        target._noHeart = false;
         //同步完毕本尊的位置
 
         //这里只能直接修改_transform 。 不能用下面的修改x，y的方式。
@@ -1222,7 +1235,8 @@ EventHandler.prototype = {
         _dragDuplicate._transform = target.getConcatenatedMatrix();
         _dragDuplicate.worldTransform = null;
         _dragDuplicate.getWorldTransform();
-        //以为直接修改的_transform不会出发心跳上报， 渲染引擎不制动这个stage需要绘制。
+
+        //直接修改的_transform不会出发心跳上报， 渲染引擎不制动这个stage需要绘制。
         //所以要手动出发心跳包
         _dragDuplicate.heartBeat();
     },
@@ -1452,7 +1466,7 @@ Utils.creatClass(EventDispatcher, EventManager, {
         if (this.context && event.type == "mouseover") {
             //记录dispatchEvent之前的心跳
             var preHeartBeat = this._heartBeatNum;
-            var pregAlpha = this.context.globalAlpha;
+            var pregAlpha = this.context.$model.globalAlpha;
             this._dispatchEvent(event);
             if (preHeartBeat != this._heartBeatNum) {
                 this._hoverClass = true;
@@ -1463,6 +1477,8 @@ Utils.creatClass(EventDispatcher, EventManager, {
                     activShape._transform = this.getConcatenatedMatrix();
                     canvax._bufferStage.addChildAt(activShape, 0);
                     //然后把自己隐藏了
+
+                    //用一个临时变量_globalAlpha 来存储自己之前的alpha
                     this._globalAlpha = pregAlpha;
                     this.context.globalAlpha = 0;
                 }
@@ -2654,13 +2670,6 @@ var AnimationFrame = {
  * 来给整个引擎提供心跳包的触发机制
  */
 
-//    "$skipArray" : true,  //属性中要忽略的属性列表
-//    "$watch"     : true,  //有了任何写操作后反馈这个动作给到displayObject
-//    "$model"     : true,  //原始数据
-//    "$accessor"  : true,
-//    "$owner"     : true   //对应的displayObject
-
-
 function Observe(scope) {
 
     var stopRepeatAssign = true;
@@ -2669,7 +2678,7 @@ function Observe(scope) {
         //要返回的对象
     accessores = {},
         //内部用于转换的对象
-    _VBPublics = ["$skipArray", "$watch", "$model", "$accessor", "$owner"],
+    _VBPublics = ["$skipArray", "$watch", "$model", "$owner"],
         //公共属性，不需要get set 化的
     model = {}; //这是pmodel上的$model属性
 
@@ -2692,7 +2701,8 @@ function Observe(scope) {
         } else {
             var accessor = function accessor(neo) {
                 //创建监控属性或数组，自变量，由用户触发其改变
-                var value = model[name].value,
+
+                var value = model[name],
                     preValue = value,
                     complexValue;
 
@@ -2715,6 +2725,7 @@ function Observe(scope) {
                             value = neo;
                         }
 
+                        //accessor.value = value;
                         model[name] = complexValue ? complexValue : value; //更新$model中的值
 
                         if (valueType != neoType) {
@@ -2734,11 +2745,13 @@ function Observe(scope) {
                     if (value && valueType === "object" && !(value instanceof Array) && !value.$model && !value.addColorStop) {
 
                         value = Observe(value, value);
-                        model[name].value = value;
+                        //accessor.value = value;
+                        model[name] = value;
                     }
                     return value;
                 }
             };
+            //accessor.value = val;
 
             accessores[name] = {
                 set: accessor,
@@ -3027,6 +3040,9 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
         //有些引擎内部设置context属性的时候是不用上报心跳的，比如做热点检测的时候
         self._notWatch = false;
 
+        //不需要发心跳信息
+        self._noHeart = false;
+
         _contextATTRS.$owner = self;
         _contextATTRS.$watch = function (name, value, preValue) {
             //下面的这些属性变化，都会需要重新组织矩阵属性 _transform 
@@ -3053,6 +3069,10 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
 
             if (obj.$watch) {
                 obj.$watch(name, value, preValue);
+            }
+
+            if (obj._noHeart) {
+                return;
             }
 
             obj.heartBeat({
@@ -3107,10 +3127,10 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
         }
     },
     getCurrentWidth: function getCurrentWidth() {
-        return Math.abs(this.context.width * this.context.scaleX);
+        return Math.abs(this.context.$model.width * this.context.$model.scaleX);
     },
     getCurrentHeight: function getCurrentHeight() {
-        return Math.abs(this.context.height * this.context.scaleY);
+        return Math.abs(this.context.$model.height * this.context.$model.scaleY);
     },
     getStage: function getStage() {
         if (this.stage) {
@@ -3587,7 +3607,7 @@ Utils.creatClass(DisplayObjectContainer, DisplayObject, {
         for (var i = this.children.length - 1; i >= 0; i--) {
             var child = this.children[i];
 
-            if (child == null || !child._eventEnabled && !child.dragEnabled || !child.context.visible) {
+            if (child == null || !child._eventEnabled && !child.dragEnabled || !child.context.$model.visible) {
                 continue;
             }
             if (child instanceof DisplayObjectContainer) {
@@ -3649,10 +3669,11 @@ Utils.creatClass(Stage, DisplayObjectContainer, {
     initStage: function initStage(canvas, width, height) {
         var self = this;
         self.canvas = canvas;
-        self.context.width = width;
-        self.context.height = height;
-        self.context.scaleX = Utils._devicePixelRatio;
-        self.context.scaleY = Utils._devicePixelRatio;
+        var model = self.context;
+        model.width = width;
+        model.height = height;
+        model.scaleX = Utils._devicePixelRatio;
+        model.scaleY = Utils._devicePixelRatio;
         self._isReady = true;
     },
     heartBeat: function heartBeat(opt) {
@@ -3849,12 +3870,11 @@ var CanvasGraphicsRenderer = function () {
             var renderer = this.renderer;
             var graphicsData = displayObject.graphics.graphicsData;
             var ctx = stage.ctx;
-            var context = displayObject.context;
-            var $MC = context.$model;
+            var $MC = displayObject.context.$model;
             var $PMC = displayObject.parent.context.$model;
 
             if (displayObject.parent) {
-                context.globalAlpha = $MC.globalAlpha * $PMC.globalAlpha;
+                $MC.globalAlpha *= $PMC.globalAlpha;
             }
 
             for (var i = 0; i < graphicsData.length; i++) {
@@ -4008,11 +4028,9 @@ var CanvasRenderer = function (_SystemRenderer) {
                 displayObject = stage;
             }
 
-            displayObject._notWatch = true;
-
             //因为已经采用了setTransform了， 非shape元素已经不需要执行transform 和 render
             if (displayObject.graphics) {
-                if (!displayObject.context.visible || displayObject.context.globalAlpha <= 0) {
+                if (!displayObject.context.$model.visible || displayObject.context.$model.globalAlpha <= 0) {
                     return;
                 }
 
@@ -4033,7 +4051,6 @@ var CanvasRenderer = function (_SystemRenderer) {
                     this._render(stage, displayObject.children[i]);
                 }
             }
-            displayObject._notWatch = false;
         }
     }, {
         key: '_clear',
@@ -7968,10 +7985,8 @@ var WebGLRenderer = function (_SystemRenderer) {
                 displayObject = stage;
             }
 
-            displayObject._notWatch = true;
-
             if (displayObject.graphics) {
-                if (!displayObject.context.visible || displayObject.context.globalAlpha <= 0) {
+                if (!displayObject.context.$model.visible || displayObject.context.$model.globalAlpha <= 0) {
                     return;
                 }
 
@@ -7987,8 +8002,6 @@ var WebGLRenderer = function (_SystemRenderer) {
                     this._render(stage, displayObject.children[i]);
                 }
             }
-
-            displayObject._notWatch = false;
         }
     }, {
         key: '_clear',
@@ -8063,8 +8076,8 @@ var Application = function Application(opt) {
 
 Utils.creatClass(Application, DisplayObjectContainer, {
     init: function init() {
-        this.context.width = this.width;
-        this.context.height = this.height;
+        this.context.$model.width = this.width;
+        this.context.$model.height = this.height;
 
         //然后创建一个用于绘制激活 shape 的 stage 到activation
         this._creatHoverStage();
@@ -8090,10 +8103,8 @@ Utils.creatClass(Application, DisplayObjectContainer, {
         this.view.style.height = this.height + "px";
 
         this.viewOffset = $.offset(this.view);
-        this._notWatch = true;
-        this.context.width = this.width;
-        this.context.height = this.height;
-        this._notWatch = false;
+        this.context.$model.width = this.width;
+        this.context.$model.height = this.height;
 
         var me = this;
         var reSizeCanvas = function reSizeCanvas(ctx) {
@@ -8109,11 +8120,9 @@ Utils.creatClass(Application, DisplayObjectContainer, {
             }
         };
         _$1.each(this.children, function (s, i) {
-            s._notWatch = true;
-            s.context.width = me.width;
-            s.context.height = me.height;
+            s.context.$model.width = me.width;
+            s.context.$model.height = me.height;
             reSizeCanvas(s.canvas);
-            s._notWatch = false;
         });
 
         this.dom_c.style.width = this.width + "px";
@@ -8129,8 +8138,8 @@ Utils.creatClass(Application, DisplayObjectContainer, {
         this._bufferStage = new Stage({
             id: "activCanvas" + new Date().getTime(),
             context: {
-                width: this.context.width,
-                height: this.context.height
+                width: this.context.$model.width,
+                height: this.context.$model.height
             }
         });
         //该stage不参与事件检测
@@ -8158,8 +8167,8 @@ Utils.creatClass(Application, DisplayObjectContainer, {
             //flashCanvas 的话，swf如果display:none了。就做不了measureText 文本宽度 检测了
             _pixelCanvas.style.zIndex = -1;
             _pixelCanvas.style.position = "absolute";
-            _pixelCanvas.style.left = -this.context.width + "px";
-            _pixelCanvas.style.top = -this.context.height + "px";
+            _pixelCanvas.style.left = -this.context.$model.width + "px";
+            _pixelCanvas.style.top = -this.context.$model.height + "px";
             _pixelCanvas.style.visibility = "hidden";
         }
         Utils._pixelCtx = _pixelCanvas.getContext('2d');
@@ -8177,7 +8186,7 @@ Utils.creatClass(Application, DisplayObjectContainer, {
         var canvas;
 
         if (!stage.canvas) {
-            canvas = $.createCanvas(this.context.width, this.context.height, stage.id);
+            canvas = $.createCanvas(this.context.$model.width, this.context.$model.height, stage.id);
         } else {
             canvas = stage.canvas;
         }
@@ -8199,7 +8208,7 @@ Utils.creatClass(Application, DisplayObjectContainer, {
         }
 
         Utils.initElement(canvas);
-        stage.initStage(canvas, this.context.width, this.context.height);
+        stage.initStage(canvas, this.context.$model.width, this.context.$model.height);
     },
     _afterDelChild: function _afterDelChild(stage) {
         this.stage_c.removeChild(stage.canvas);
@@ -8904,7 +8913,7 @@ var Shape = function (_DisplayObject) {
         key: "dashedLineTo",
         value: function dashedLineTo(graphics, x1, y1, x2, y2, dashLength) {
             dashLength = typeof dashLength == 'undefined' ? 3 : dashLength;
-            dashLength = Math.max(dashLength, this.context.lineWidth);
+            dashLength = Math.max(dashLength, this.context.$model.lineWidth);
             var deltaX = x2 - x1;
             var deltaY = y2 - y1;
             var numDashes = Math.floor(Math.sqrt(deltaX * deltaX + deltaY * deltaY) / dashLength);
@@ -9008,10 +9017,10 @@ Utils.creatClass(Text, DisplayObject, {
             this._context[name] = value;
             //如果修改的是font的某个内容，就重新组装一遍font的值，
             //然后通知引擎这次对context的修改不需要上报心跳
-            this._notWatch = false;
-            this.context.font = this._getFontDeclaration();
-            this.context.width = this.getTextWidth();
-            this.context.height = this.getTextHeight();
+            var model = this.context.$model;
+            model.font = this._getFontDeclaration();
+            model.width = this.getTextWidth();
+            model.height = this.getTextHeight();
         }
     },
     init: function init(text, opt) {
@@ -9021,10 +9030,11 @@ Utils.creatClass(Text, DisplayObject, {
         c.height = this.getTextHeight();
     },
     render: function render(ctx) {
-        for (var p in this.context.$model) {
+        var model = this.context.$model;
+        for (var p in model) {
             if (p in ctx) {
-                if (p != "textBaseline" && this.context.$model[p]) {
-                    ctx[p] = this.context.$model[p];
+                if (p != "textBaseline" && model[p]) {
+                    ctx[p] = model[p];
                 }
             }
         }
@@ -9037,7 +9047,7 @@ Utils.creatClass(Text, DisplayObject, {
     getTextWidth: function getTextWidth() {
         var width = 0;
         Utils._pixelCtx.save();
-        Utils._pixelCtx.font = this.context.font;
+        Utils._pixelCtx.font = this.context.$model.font;
         width = this._getTextWidth(Utils._pixelCtx, this._getTextLines());
         Utils._pixelCtx.restore();
         return width;
@@ -9069,7 +9079,7 @@ Utils.creatClass(Text, DisplayObject, {
         return fontArr.join(' ');
     },
     _renderTextFill: function _renderTextFill(ctx, textLines) {
-        if (!this.context.fillStyle) return;
+        if (!this.context.$model.fillStyle) return;
 
         this._boundaries = [];
         var lineHeights = 0;
@@ -9083,7 +9093,7 @@ Utils.creatClass(Text, DisplayObject, {
         }
     },
     _renderTextStroke: function _renderTextStroke(ctx, textLines) {
-        if (!this.context.strokeStyle || !this.context.lineWidth) return;
+        if (!this.context.$model.strokeStyle || !this.context.$model.lineWidth) return;
 
         var lineHeights = 0;
 
@@ -9108,12 +9118,12 @@ Utils.creatClass(Text, DisplayObject, {
     },
     _renderTextLine: function _renderTextLine(method, ctx, line, left, top, lineIndex) {
         top -= this._getHeightOfLine() / 4;
-        if (this.context.textAlign !== 'justify') {
+        if (this.context.$model.textAlign !== 'justify') {
             this._renderChars(method, ctx, line, left, top, lineIndex);
             return;
         }
         var lineWidth = ctx.measureText(line).width;
-        var totalWidth = this.context.width;
+        var totalWidth = this.context.$model.width;
 
         if (totalWidth > lineWidth) {
             var words = line.split(/\s+/);
@@ -9135,7 +9145,7 @@ Utils.creatClass(Text, DisplayObject, {
         ctx[method](chars, 0, top);
     },
     _getHeightOfLine: function _getHeightOfLine() {
-        return this.context.fontSize * this.context.lineHeight;
+        return this.context.$model.fontSize * this.context.$model.lineHeight;
     },
     _getTextWidth: function _getTextWidth(ctx, textLines) {
         var maxWidth = ctx.measureText(textLines[0] || '|').width;
@@ -9148,7 +9158,7 @@ Utils.creatClass(Text, DisplayObject, {
         return maxWidth;
     },
     _getTextHeight: function _getTextHeight(ctx, textLines) {
-        return this.context.fontSize * textLines.length * this.context.lineHeight;
+        return this.context.$model.fontSize * textLines.length * this.context.$model.lineHeight;
     },
 
     /**
@@ -9157,15 +9167,15 @@ Utils.creatClass(Text, DisplayObject, {
      */
     _getTopOffset: function _getTopOffset() {
         var t = 0;
-        switch (this.context.textBaseline) {
+        switch (this.context.$model.textBaseline) {
             case "top":
                 t = 0;
                 break;
             case "middle":
-                t = -this.context.height / 2;
+                t = -this.context.$model.height / 2;
                 break;
             case "bottom":
-                t = -this.context.height;
+                t = -this.context.$model.height;
                 break;
         }
         return t;
@@ -9544,7 +9554,7 @@ var Circle$2 = function (_Shape) {
         key: "draw",
         value: function draw(graphics) {
             //graphics.beginPath();
-            graphics.drawCircle(0, 0, this.context.r);
+            graphics.drawCircle(0, 0, this.context.$model.r);
         }
     }]);
     return Circle;
@@ -9859,9 +9869,9 @@ var Path = function (_Shape) {
         value: function draw(graphics) {
             //graphics.beginPath();
             this.__parsePathData = null;
-            this.context.pointList = [];
+            this.context.$model.pointList = [];
 
-            var pathArray = this._parsePathData(this.context.path);
+            var pathArray = this._parsePathData(this.context.$model.path);
 
             for (var g = 0, gl = pathArray.length; g < gl; g++) {
                 for (var i = 0, l = pathArray[g].length; i < l; i++) {
@@ -9928,7 +9938,7 @@ var Droplet = function (_Path) {
         _this.type = "droplet";
         _this.id = Utils.createId(_this.type);
 
-        _this.context.path = _this.createPath();
+        _this.context.$model.path = _this.createPath();
         return _this;
     }
 
@@ -9936,15 +9946,15 @@ var Droplet = function (_Path) {
         key: "watch",
         value: function watch(name, value, preValue) {
             if (name == "hr" || name == "vr") {
-                this.context.path = this.createPath();
+                this.context.$model.path = this.createPath();
             }
         }
     }, {
         key: "createPath",
         value: function createPath() {
-            var context = this.context;
-            var ps = "M 0 " + context.hr + " C " + context.hr + " " + context.hr + " " + context.hr * 3 / 2 + " " + -context.hr / 3 + " 0 " + -context.vr;
-            ps += " C " + -context.hr * 3 / 2 + " " + -context.hr / 3 + " " + -context.hr + " " + context.hr + " 0 " + context.hr + "z";
+            var model = this.context.$model;
+            var ps = "M 0 " + model.hr + " C " + model.hr + " " + model.hr + " " + model.hr * 3 / 2 + " " + -model.hr / 3 + " 0 " + -model.vr;
+            ps += " C " + -model.hr * 3 / 2 + " " + -model.hr / 3 + " " + -model.hr + " " + model.hr + " 0 " + model.hr + "z";
             return ps;
         }
     }]);
@@ -9997,7 +10007,7 @@ var Ellipse$2 = function (_Shape) {
         key: "draw",
         value: function draw(graphics) {
             //graphics.beginPath();
-            graphics.drawEllipse(0, 0, this.context.hr * 2, this.context.vr * 2);
+            graphics.drawEllipse(0, 0, this.context.$model.hr * 2, this.context.$model.vr * 2);
         }
     }]);
     return Ellipse;
@@ -10152,7 +10162,7 @@ var Isogon = function (_Polygon) {
         value: function watch(name, value, preValue) {
             if (name == "r" || name == "n") {
                 //如果path有变动，需要自动计算新的pointList
-                this.context.pointList = myMath.getIsgonPointList(style.n, style.r);
+                this.context.$model.pointList = myMath.getIsgonPointList(this.context.$model.n, this.context.$model.r);
             }
 
             if (name == "pointList" || name == "smooth" || name == "lineType") {
@@ -10218,12 +10228,12 @@ var Line = function (_Shape) {
         key: "draw",
         value: function draw(graphics) {
             //graphics.beginPath();
-            var context = this.context;
-            if (!context.lineType || context.lineType == 'solid') {
-                graphics.moveTo(context.start.x, context.start.y);
-                graphics.lineTo(context.end.x, context.end.y);
-            } else if (context.lineType == 'dashed' || context.lineType == 'dotted') {
-                this.dashedLineTo(graphics, context.start.x, context.start.y, context.end.x, context.end.y, this.context.dashLength);
+            var model = this.context.$model;
+            if (!model.lineType || model.lineType == 'solid') {
+                graphics.moveTo(model.start.x, model.start.y);
+                graphics.lineTo(model.end.x, model.end.y);
+            } else if (model.lineType == 'dashed' || model.lineType == 'dotted') {
+                this.dashedLineTo(graphics, model.start.x, model.start.y, model.end.x, model.end.y, model.dashLength);
             }
             return this;
         }
@@ -10280,7 +10290,7 @@ var Rect = function (_Shape) {
     }, {
         key: "_buildRadiusPath",
         value: function _buildRadiusPath(graphics) {
-            var context = this.context;
+            var model = this.context.$model;
             //左上、右上、右下、左下角的半径依次为r1、r2、r3、r4
             //r缩写为1         相当于 [1, 1, 1, 1]
             //r缩写为[1]       相当于 [1, 1, 1, 1]
@@ -10288,10 +10298,10 @@ var Rect = function (_Shape) {
             //r缩写为[1, 2, 3] 相当于 [1, 2, 3, 2]
             var x = 0;
             var y = 0;
-            var width = this.context.width;
-            var height = this.context.height;
+            var width = model.width;
+            var height = model.height;
 
-            var r = Utils.getCssOrderArr(context.radius);
+            var r = Utils.getCssOrderArr(model.radius);
             var G = graphics;
 
             G.moveTo(parseInt(x + r[0]), parseInt(y));
@@ -10314,8 +10324,9 @@ var Rect = function (_Shape) {
         key: "draw",
         value: function draw(graphics) {
             //graphics.beginPath();
-            if (!this.context.radius.length) {
-                graphics.drawRect(0, 0, this.context.width, this.context.height);
+            var model = this.context.$model;
+            if (!model.radius.length) {
+                graphics.drawRect(0, 0, model.width, model.height);
             } else {
                 this._buildRadiusPath(graphics);
             }
@@ -10379,17 +10390,17 @@ var Sector = function (_Shape) {
         key: "draw",
         value: function draw(graphics) {
             //graphics.beginPath();
-            var context = this.context;
+            var model = this.context.$model;
             // 形内半径[0,r)
-            var r0 = typeof context.r0 == 'undefined' ? 0 : context.r0;
-            var r = context.r; // 扇形外半径(0,r]
-            var startAngle = myMath.degreeTo360(context.startAngle); // 起始角度[0,360)
-            var endAngle = myMath.degreeTo360(context.endAngle); // 结束角度(0,360]
+            var r0 = typeof model.r0 == 'undefined' ? 0 : model.r0;
+            var r = model.r; // 扇形外半径(0,r]
+            var startAngle = myMath.degreeTo360(model.startAngle); // 起始角度[0,360)
+            var endAngle = myMath.degreeTo360(model.endAngle); // 结束角度(0,360]
 
             //var isRing     = false;                       //是否为圆环
 
             //if( startAngle != endAngle && Math.abs(startAngle - endAngle) % 360 == 0 ) {
-            if (startAngle == endAngle && context.startAngle != context.endAngle) {
+            if (startAngle == endAngle && model.startAngle != model.endAngle) {
                 //如果两个角度相等，那么就认为是个圆环了
                 this.isRing = true;
                 startAngle = 0;
@@ -10406,19 +10417,17 @@ var Sector = function (_Shape) {
 
             var G = graphics;
 
-            G.arc(0, 0, r, startAngle, endAngle, this.context.clockwise);
+            G.arc(0, 0, r, startAngle, endAngle, model.clockwise);
             if (r0 !== 0) {
                 if (this.isRing) {
                     //加上这个isRing的逻辑是为了兼容flashcanvas下绘制圆环的的问题
                     //不加这个逻辑flashcanvas会绘制一个大圆 ， 而不是圆环
                     G.moveTo(r0, 0);
-                    G.arc(0, 0, r0, startAngle, endAngle, !this.context.clockwise);
+                    G.arc(0, 0, r0, startAngle, endAngle, !model.clockwise);
                 } else {
-                    G.arc(0, 0, r0, endAngle, startAngle, !this.context.clockwise);
+                    G.arc(0, 0, r0, endAngle, startAngle, !model.clockwise);
                 }
             } else {
-                //TODO:在r0为0的时候，如果不加lineTo(0,0)来把路径闭合，会出现有搞笑的一个bug
-                //整个圆会出现一个以每个扇形两端为节点的镂空，我可能描述不清楚，反正这个加上就好了
                 G.lineTo(0, 0);
             }
 
@@ -10428,14 +10437,16 @@ var Sector = function (_Shape) {
         key: "getRect",
         value: function getRect(context) {
             var context = context ? context : this.context;
-            var r0 = typeof context.r0 == 'undefined' // 形内半径[0,r)
-            ? 0 : context.r0;
-            var r = context.r; // 扇形外半径(0,r]
+            var model = context.$model;
+
+            var r0 = typeof model.r0 == 'undefined' // 形内半径[0,r)
+            ? 0 : model.r0;
+            var r = model.r; // 扇形外半径(0,r]
 
             this.getRegAngle();
 
-            var startAngle = myMath.degreeTo360(context.startAngle); // 起始角度[0,360)
-            var endAngle = myMath.degreeTo360(context.endAngle); // 结束角度(0,360]
+            var startAngle = myMath.degreeTo360(model.startAngle); // 起始角度[0,360)
+            var endAngle = myMath.degreeTo360(model.endAngle); // 结束角度(0,360]
 
             var pointList = [];
 
@@ -10466,18 +10477,18 @@ var Sector = function (_Shape) {
                 pointList.push([myMath.cos(endAngle) * r0, myMath.sin(endAngle) * r0]);
             }
 
-            context.pointList = pointList;
+            model.pointList = pointList;
             return this.getRectFormPointList(context);
         }
     }, {
         key: "getRegAngle",
         value: function getRegAngle() {
             this.regIn = true; //如果在start和end的数值中，end大于start而且是顺时针则regIn为true
-            var c = this.context;
-            var startAngle = myMath.degreeTo360(c.startAngle); // 起始角度[0,360)
-            var endAngle = myMath.degreeTo360(c.endAngle); // 结束角度(0,360]
+            var model = this.context.$model;
+            var startAngle = myMath.degreeTo360(model.startAngle); // 起始角度[0,360)
+            var endAngle = myMath.degreeTo360(model.endAngle); // 结束角度(0,360]
 
-            if (startAngle > endAngle && !c.clockwise || startAngle < endAngle && c.clockwise) {
+            if (startAngle > endAngle && !model.clockwise || startAngle < endAngle && model.clockwise) {
                 this.regIn = false; //out
             }
             //度的范围，从小到大

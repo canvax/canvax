@@ -65,8 +65,8 @@ var Application = function( opt , options = {}){
 
 Utils.creatClass(Application , DisplayObjectContainer , {
     init : function(){
-        this.context.width  = this.width;
-        this.context.height = this.height; 
+        this.context.$model.width  = this.width;
+        this.context.$model.height = this.height; 
 
         //然后创建一个用于绘制激活 shape 的 stage 到activation
         this._creatHoverStage();
@@ -93,10 +93,8 @@ Utils.creatClass(Application , DisplayObjectContainer , {
         this.view.style.height = this.height+"px";
 
         this.viewOffset     = $.offset(this.view);
-        this._notWatch      = true;
-        this.context.width  = this.width;
-        this.context.height = this.height;
-        this._notWatch      = false;
+        this.context.$model.width  = this.width;
+        this.context.$model.height = this.height;
 
         var me = this;
         var reSizeCanvas    = function(ctx){
@@ -112,11 +110,9 @@ Utils.creatClass(Application , DisplayObjectContainer , {
             }
         }; 
         _.each(this.children , function(s , i){
-            s._notWatch     = true;
-            s.context.width = me.width;
-            s.context.height= me.height;
+            s.context.$model.width = me.width;
+            s.context.$model.height= me.height;
             reSizeCanvas(s.canvas);
-            s._notWatch     = false;
         });
 
         this.dom_c.style.width  = this.width  + "px";
@@ -133,8 +129,8 @@ Utils.creatClass(Application , DisplayObjectContainer , {
         this._bufferStage = new Stage( {
             id : "activCanvas"+(new Date()).getTime(),
             context : {
-                width : this.context.width,
-                height: this.context.height
+                width : this.context.$model.width,
+                height: this.context.$model.height
             }
         } );
         //该stage不参与事件检测
@@ -162,8 +158,8 @@ Utils.creatClass(Application , DisplayObjectContainer , {
             //flashCanvas 的话，swf如果display:none了。就做不了measureText 文本宽度 检测了
             _pixelCanvas.style.zIndex     = -1;
             _pixelCanvas.style.position   = "absolute";
-            _pixelCanvas.style.left       = -this.context.width  + "px";
-            _pixelCanvas.style.top        = -this.context.height + "px";
+            _pixelCanvas.style.left       = -this.context.$model.width  + "px";
+            _pixelCanvas.style.top        = -this.context.$model.height + "px";
             _pixelCanvas.style.visibility = "hidden";
         }
         Utils._pixelCtx = _pixelCanvas.getContext('2d');
@@ -181,7 +177,7 @@ Utils.creatClass(Application , DisplayObjectContainer , {
         var canvas;
 
         if(!stage.canvas){
-            canvas = $.createCanvas( this.context.width , this.context.height, stage.id );
+            canvas = $.createCanvas( this.context.$model.width , this.context.$model.height, stage.id );
         } else {
             canvas = stage.canvas;
         }
@@ -203,7 +199,7 @@ Utils.creatClass(Application , DisplayObjectContainer , {
         };
 
         Utils.initElement( canvas );
-        stage.initStage( canvas , this.context.width , this.context.height ); 
+        stage.initStage( canvas , this.context.$model.width , this.context.$model.height ); 
     },
     _afterDelChild : function(stage){
         this.stage_c.removeChild( stage.canvas );
