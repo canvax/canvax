@@ -79,13 +79,14 @@ export default class WebGLStageRenderer
         this.webglGR.onContextChange();
     }
 
-    render( stage , graphics )
+    render( displayObject, stage )
     {
         if (!this.gl || this.gl.isContextLost())
         {
             return;
         }
-        this.webglGR.render( stage , graphics );
+        debugger
+        this.webglGR.render( displayObject , stage );
     }
 
     resize(width, height)

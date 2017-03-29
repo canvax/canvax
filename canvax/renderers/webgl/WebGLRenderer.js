@@ -33,9 +33,6 @@ export default class WebGLRenderer extends SystemRenderer
         stage.stageRending = true;
         this._clear( stage );
         this._render( stage );
-        if( this.graphics.graphicsData.length > 0 ){
-            stage.webGLStageRenderer.render( stage , this.graphics);
-        }
         stage.stageRending = false;
     }
 
@@ -45,15 +42,17 @@ export default class WebGLRenderer extends SystemRenderer
             displayObject = stage;
         };
 
-        if( !displayObject.context.visible || displayObject.context.globalAlpha <= 0 ){
-            return;
-        };
+        if( displayObject.graphics ){
+            if( !displayObject.context.visible || displayObject.context.globalAlpha <= 0 ){
+                return;
+            };
 
-        if( displayObject.graphics.graphicsData.length > 0 ){
-            displayObject._draw( stage, this.graphics );
-        };
+            if( !displayObject.graphics.graphicsData.length ){
+                displayObject._draw( stage, displayObject.graphics );
+            };
 
-        stage.webGLStageRenderer.render( displayObject, stage , this.graphics);
+            stage.webGLStageRenderer.render( displayObject, stage );
+        };
 
         if( displayObject.children ){
             for(var i = 0, len = displayObject.children.length; i < len; i++) {

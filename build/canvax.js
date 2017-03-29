@@ -7617,9 +7617,10 @@ var GraphicsRenderer = function () {
         }
     }, {
         key: 'render',
-        value: function render(stage, graphics) {
+        value: function render(displayObject, stage) {
             var renderer = this.renderer;
             var gl = renderer.gl;
+            var graphics = displayObject.graphics;
 
             var webGLData = void 0;
             var webGL = graphics._webGL[this.CONTEXT_UID];
@@ -7633,14 +7634,14 @@ var GraphicsRenderer = function () {
             var shader = this.primitiveShader;
 
             renderer.bindShader(shader);
-            debugger;
+
             for (var i = 0, n = webGL.data.length; i < n; i++) {
                 webGLData = webGL.data[i];
                 var shaderTemp = webGLData.shader;
 
                 renderer.bindShader(shaderTemp);
 
-                shaderTemp.uniforms.translationMatrix = webGL.displayObject.worldTransform.toArray(true);
+                shaderTemp.uniforms.translationMatrix = displayObject.worldTransform.toArray(true);
                 shaderTemp.uniforms.tint = hex2rgb(graphics.tint);
                 shaderTemp.uniforms.alpha = graphics.worldAlpha;
 
@@ -7799,11 +7800,12 @@ var WebGLStageRenderer = function () {
         }
     }, {
         key: 'render',
-        value: function render(stage, graphics) {
+        value: function render(displayObject, stage) {
             if (!this.gl || this.gl.isContextLost()) {
                 return;
             }
-            this.webglGR.render(stage, graphics);
+            debugger;
+            this.webglGR.render(displayObject, stage);
         }
     }, {
         key: 'resize',
@@ -7968,9 +7970,6 @@ var WebGLRenderer = function (_SystemRenderer) {
             stage.stageRending = true;
             this._clear(stage);
             this._render(stage);
-            if (this.graphics.graphicsData.length > 0) {
-                stage.webGLStageRenderer.render(stage, this.graphics);
-            }
             stage.stageRending = false;
         }
     }, {
@@ -7980,15 +7979,17 @@ var WebGLRenderer = function (_SystemRenderer) {
                 displayObject = stage;
             }
 
-            if (!displayObject.context.visible || displayObject.context.globalAlpha <= 0) {
-                return;
-            }
+            if (displayObject.graphics) {
+                if (!displayObject.context.visible || displayObject.context.globalAlpha <= 0) {
+                    return;
+                }
 
-            if (displayObject.graphics.graphicsData.length > 0) {
-                displayObject._draw(stage, this.graphics);
-            }
+                if (!displayObject.graphics.graphicsData.length) {
+                    displayObject._draw(stage, displayObject.graphics);
+                }
 
-            stage.webGLStageRenderer.render(displayObject, stage, this.graphics);
+                stage.webGLStageRenderer.render(displayObject, stage);
+            }
 
             if (displayObject.children) {
                 for (var i = 0, len = displayObject.children.length; i < len; i++) {

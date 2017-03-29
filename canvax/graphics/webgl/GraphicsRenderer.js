@@ -39,10 +39,11 @@ export default class GraphicsRenderer
         this.graphicsDataPool = null;
     }
 
-    render( stage , graphics )
+    render( displayObject, stage )
     {
         const renderer = this.renderer;
         const gl = renderer.gl;
+        const graphics = displayObject.graphics;
 
         let webGLData;
         let webGL = graphics._webGL[this.CONTEXT_UID];
@@ -57,7 +58,7 @@ export default class GraphicsRenderer
         const shader = this.primitiveShader;
 
         renderer.bindShader(shader);
-debugger
+
         for (let i = 0, n = webGL.data.length; i < n; i++)
         {
             webGLData = webGL.data[i];
@@ -65,7 +66,7 @@ debugger
 
             renderer.bindShader(shaderTemp);
 
-            shaderTemp.uniforms.translationMatrix = webGL.displayObject.worldTransform.toArray(true);
+            shaderTemp.uniforms.translationMatrix = displayObject.worldTransform.toArray(true);
             shaderTemp.uniforms.tint = hex2rgb(graphics.tint);
             shaderTemp.uniforms.alpha = graphics.worldAlpha;
 
