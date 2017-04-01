@@ -1,6 +1,6 @@
 /*
 * Graphics绘图法则
-* 单个grahics实例里的fill line 样式属性，都从对应shape.context中获取
+* 单个grahics实例里的fill line 样式属性，都从对应shape.context 中获取
 * 
 */
 
@@ -36,12 +36,13 @@ export default class Graphics
     setStyle( context )
     {
         //从 shape 中把绘图需要的style属性同步过来
-        this.lineWidth = context.lineWidth;
-        this.strokeStyle = context.strokeStyle;
-        this.lineAlpha = context.lineAlpha * context.globalAlpha;
+        const model = context.$model;
+        this.lineWidth = model.lineWidth;
+        this.strokeStyle = model.strokeStyle;
+        this.lineAlpha = model.lineAlpha * model.globalAlpha;
 
-        this.fillStyle = context.fillStyle;
-        this.fillAlpha = context.fillAlpha * context.globalAlpha;
+        this.fillStyle = model.fillStyle;
+        this.fillAlpha = model.fillAlpha * model.globalAlpha;
 
         var g = this;
 

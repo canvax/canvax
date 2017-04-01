@@ -35,10 +35,6 @@ var DisplayObject = function(opt){
     //元素的父元素
     this.parent          = null;
 
-    this._eventEnabled   = false;   //是否响应事件交互,在添加了事件侦听后会自动设置为true
-
-    this.dragEnabled     = true ;//"dragEnabled" in opt ? opt.dragEnabled : false;   //是否启用元素的拖拽
-
     this.xyToInt         = "xyToInt" in opt ? opt.xyToInt : true;    //是否对xy坐标统一int处理，默认为true，但是有的时候可以由外界用户手动指定是否需要计算为int，因为有的时候不计算比较好，比如，进度图表中，再sector的两端添加两个圆来做圆角的进度条的时候，圆circle不做int计算，才能和sector更好的衔接
 
     this.moveing         = false; //如果元素在最轨道运动中的时候，最好把这个设置为true，这样能保证轨迹的丝搬顺滑，否则因为xyToInt的原因，会有跳跃
@@ -117,7 +113,6 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
 
         //执行init之前，应该就根据参数，把context组织好线
         self.context = Observe( _contextATTRS );
-        //self.context = _contextATTRS
     },
     /* @myself 是否生成自己的镜像 
      * 克隆又两种，一种是镜像，另外一种是绝对意义上面的新个体
@@ -127,7 +122,8 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
     clone : function( myself ){
         var conf   = {
             id      : this.id,
-            context : _.clone(this.context.$model)
+            context : _.clone(this.context.$model),
+            isClone : true
         };
 
         var newObj;
@@ -141,6 +137,10 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
 
         if( this.children ){
             newObj.children = this.children;
+        }
+
+        if( this.graphics ){
+            newObj.graphics = this.graphics.clone();
         }
 
         if (!myself){

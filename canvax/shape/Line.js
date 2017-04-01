@@ -36,10 +36,9 @@ export default class Line extends Shape
         } , opt.context);
         opt.context = _context;
 
-        super( opt );
+        opt.type = "line";
 
-        this.type = "line";
-        this.id = Utils.createId(this.type);
+        super( opt );
     }
 
     watch(name, value, preValue)

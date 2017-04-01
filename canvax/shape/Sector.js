@@ -33,14 +33,11 @@ export default class Sector extends Shape
         } , opt.context);
         
         opt.context = _context;
+        opt.regAngle = [];
+        opt.isRing = false;//是否为一个圆环
+        opt.type = "sector";
 
         super(opt);
-
-
-        this.regAngle  = [];
-        this.isRing    = false;//是否为一个圆环
-        this.type = "sector";
-        this.id = Utils.createId(this.type);
     }
 
     watch(name, value, preValue) 
@@ -62,8 +59,8 @@ export default class Sector extends Shape
 
         //var isRing     = false;                       //是否为圆环
 
-        //if( startAngle != endAngle && Math.abs(startAngle - endAngle) % 360 == 0 ) {
-        if( startAngle == endAngle && model.startAngle != model.endAngle ) {
+        if( startAngle != endAngle && Math.abs(startAngle - endAngle) % 360 == 0 ) {
+        //if( startAngle == endAngle && model.startAngle != model.endAngle ) {
             //如果两个角度相等，那么就认为是个圆环了
             this.isRing = true;
             startAngle  = 0 ;
@@ -79,21 +76,19 @@ export default class Sector extends Shape
         }
 
         var G = graphics;
-
-        G.arc( 0 , 0 , r, startAngle, endAngle, model.clockwise);
-        if (r0 !== 0) {
-            if( this.isRing ){
-                //加上这个isRing的逻辑是为了兼容flashcanvas下绘制圆环的的问题
-                //不加这个逻辑flashcanvas会绘制一个大圆 ， 而不是圆环
-                G.moveTo( r0 , 0 );
-                G.arc( 0 , 0 , r0 , startAngle , endAngle , !model.clockwise);
+        G.beginPath();
+        if( this.isRing && model.r0 == 0 ){
+            G.drawCircle(0, 0, model.r);
+        } else {
+            
+            G.arc( 0 , 0 , r, startAngle, endAngle, model.clockwise);
+            if( model.r0 == 0 ){
+                G.lineTo( 0 , 0 );
             } else {
                 G.arc( 0 , 0 , r0 , endAngle , startAngle , !model.clockwise);
             }
-        } else {
-            G.lineTo(0,0);
-        };
-        
+        }
+
         G.closePath();
      }
 

@@ -26,11 +26,9 @@ export default class Rect extends Shape
             radius: [],
         } , opt.context);
         opt.context = _context;
+        opt.type = "rect";
 
         super( opt );
-
-        this.type = "rect";
-        this.id = Utils.createId(this.type);
     }
 
     watch(name, value, preValue) 

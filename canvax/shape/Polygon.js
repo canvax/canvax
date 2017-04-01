@@ -15,7 +15,7 @@ import _Math from "../geom/Math"
 
 export default class Polygon extends Shape 
 {
-    constructor(opt, atype)
+    constructor(opt)
     {
         opt = Utils.checkOpt(opt);
         var _context = _.extend({
@@ -25,25 +25,19 @@ export default class Polygon extends Shape
             smoothFilter: Utils.__emptyFunc
         }, opt.context );
 
-        if(atype !== "clone"){
+        if(!opt.isClone){
             var start = _context.pointList[0];
             var end   = _context.pointList.slice( - 1 )[0];
             if( _context.smooth ){
                 _context.pointList.unshift( end );
                 _context.pointList = _Math.getSmoothPointList( _context.pointList );
-            } 
-            //else {
-            //    _context.pointList.push( start );
-            //}
+            }
         };
 
         opt.context = _context;
+        opt.type = "polygon";
         
-        super(opt, atype);
-
-        this._drawTypeOnly = null;
-        this.type = "polygon";
-        this.id = Utils.createId(this.type);
+        super(opt);
     }
 
     watch(name, value, preValue) 

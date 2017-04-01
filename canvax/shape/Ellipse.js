@@ -28,11 +28,9 @@ export default class Ellipse extends Shape
         } , opt.context);
 
         opt.context = _context;
+        opt.type = "ellipse";
 
         super( opt );
-
-        this.type = "ellipse";
-        this.id = Utils.createId(this.type);
     }
 
     watch(name, value, preValue) 

@@ -33,17 +33,10 @@ export default class Path extends Shape
                 //Z = closepath
         } , opt.context);
         opt.context = _context;
+        opt.__parsePathData = null;
+        opt.type = "path";
 
         super( opt );
-        
-        if ("drawTypeOnly" in opt) {
-            this.drawTypeOnly = opt.drawTypeOnly;
-        };
-
-        this.__parsePathData = null;
-        
-        this.type = "path";
-        this.id = Utils.createId(this.type);
     }
 
     watch(name, value, preValue) 

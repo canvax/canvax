@@ -34,7 +34,7 @@
         app = new Canvax.App({
             id : "canvax",
             el : box,
-            webGL:false
+            webGL:true
         });
         app.registEvent();
 
@@ -210,10 +210,10 @@
 
                 //clockwise : true,//逆时针
                 r : 100,
-                r0: 70, 
-                startAngle : 110 ,
+                r0: 60, 
+                startAngle : 0 ,
 
-                endAngle : 60,
+                endAngle : 360,
                 fillStyle:colors.getColor(colorInd++),
                 strokeStyle:colors.getColor(colorInd++),
                 lineWidth : 1

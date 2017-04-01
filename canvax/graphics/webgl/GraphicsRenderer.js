@@ -122,9 +122,6 @@ export default class GraphicsRenderer
                 buildCircle(data, webGLData);
             }
 
-            //这个对象隶属于那个displayObject，可以方便的从这个displayObject上面去获取世界矩阵和style等
-            webGL.displayObject = data.displayObject;
-
             webGL.lastIndex++;
         }
 

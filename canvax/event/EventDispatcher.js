@@ -82,7 +82,7 @@ Utils.creatClass(EventDispatcher , EventManager , {
             this._dispatchEvent( event );
             if( preHeartBeat != this._heartBeatNum ){
                 this._hoverClass = true;
-                if( this.hoverClone ){
+                if( this.hoverCloneEnabled ){
                     var canvax = this.getStage().parent;
                     //然后clone一份obj，添加到_bufferStage 中
                     var activShape = this.clone(true);  

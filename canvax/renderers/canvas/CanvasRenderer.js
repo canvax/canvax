@@ -51,7 +51,7 @@ export default class CanvasRenderer extends SystemRenderer
             
             if( !displayObject.graphics.graphicsData.length ){
                 //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
-                displayObject._draw( stage, displayObject.graphics );//_draw会完成绘制准备好 graphicsData
+                displayObject._draw( displayObject.graphics );//_draw会完成绘制准备好 graphicsData
             };
 
             this.CGR.render( displayObject , stage, this );

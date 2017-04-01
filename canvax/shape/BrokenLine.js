@@ -15,7 +15,7 @@ import _Math from "../geom/Math"
 
 export default class BrokenLine extends Shape
 {
-    constructor(opt , atype){
+    constructor(opt){
         opt = Utils.checkOpt(opt);
         var _context = _.extend({
             lineType: null,
@@ -24,16 +24,14 @@ export default class BrokenLine extends Shape
             smoothFilter: Utils.__emptyFunc
         }, opt.context );
 
-        if( atype !== "clone" && _context.smooth ){
+        if( !opt.isClone && _context.smooth ){
             _context.pointList = _Math.getSmoothPointList( _context.pointList );
         };
 
         opt.context = _context;
+        opt.type = "brokenline";
         
         super(opt);
-
-        this.type = "brokenline";
-        this.id = Utils.createId(this.type);
     }
 
     watch(name, value, preValue) 

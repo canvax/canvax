@@ -30,11 +30,9 @@ export default class Isogon extends Polygon
         _context.pointList = _Math.getIsgonPointList( _context.n , _context.r );
 
         opt.context = _context;
+        opt.type = "isogon";
 
         super( opt );
-
-        this.type = "isogon";
-        this.id = Utils.createId(this.type);
     }
 
     watch(name, value, preValue)

@@ -12,6 +12,10 @@ import _ from "../utils/underscore";
 
 function Observe(scope) {
 
+    //scope.$model = scope;
+    //return scope;
+
+
     var stopRepeatAssign=true;
 
     var pmodel = {}, //要返回的对象

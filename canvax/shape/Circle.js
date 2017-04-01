@@ -26,11 +26,9 @@ export default class Circle extends Shape
         } , opt.context);
 
         opt.context = _context;
+        opt.type = "circle";
 
-        super( opt );
-        
-        this.type = "circle";
-        this.id = Utils.createId(this.type);
+        super( opt );    
     }
     
     watch(name, value, preValue)

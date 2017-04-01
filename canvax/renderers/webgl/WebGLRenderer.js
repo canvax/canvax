@@ -49,7 +49,7 @@ export default class WebGLRenderer extends SystemRenderer
             };
 
             if( !displayObject.graphics.graphicsData.length ){
-                displayObject._draw( stage, displayObject.graphics );
+                displayObject._draw( displayObject.graphics );
             };
 
             stage.webGLStageRenderer.render( displayObject, stage );

@@ -24,11 +24,9 @@ export default class Droplet extends Path
         } , opt.context);
 
         opt.context = _context;
+        opt.type = "droplet";
 
         var my = super(opt);
-
-        this.type = "droplet";
-        this.id = Utils.createId(this.type);
 
         this.context.$model.path = this.createPath();
     }

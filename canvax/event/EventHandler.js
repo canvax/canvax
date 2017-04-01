@@ -227,7 +227,7 @@ EventHandler.prototype = {
             }
         };
 
-        if( obj && oldObj != obj ){ //&& obj._hoverable 已经 干掉了
+        if( obj && oldObj != obj ){
             me.curPointsTarget[0] = obj;
             e.type       = "mouseover";
             e.fromTarget = oldObj;

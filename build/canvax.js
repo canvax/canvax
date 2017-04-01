@@ -1036,7 +1036,6 @@ EventHandler.prototype = {
         }
 
         if (obj && oldObj != obj) {
-            //&& obj._hoverable 已经 干掉了
             me.curPointsTarget[0] = obj;
             e.type = "mouseover";
             e.fromTarget = oldObj;
@@ -1470,7 +1469,7 @@ Utils.creatClass(EventDispatcher, EventManager, {
             this._dispatchEvent(event);
             if (preHeartBeat != this._heartBeatNum) {
                 this._hoverClass = true;
-                if (this.hoverClone) {
+                if (this.hoverCloneEnabled) {
                     var canvax = this.getStage().parent;
                     //然后clone一份obj，添加到_bufferStage 中
                     var activShape = this.clone(true);
@@ -2672,6 +2671,10 @@ var AnimationFrame = {
 
 function Observe(scope) {
 
+    //scope.$model = scope;
+    //return scope;
+
+
     var stopRepeatAssign = true;
 
     var pmodel = {},
@@ -2936,6 +2939,7 @@ var SHAPE_CONTEXT_DEFAULT = {
 var TRANSFORM_PROPS = ["x", "y", "scaleX", "scaleY", "rotation", "scaleOrigin", "rotateOrigin"];
 
 //所有和样式相关的属性
+var STYLE_PROPS = ["lineWidth", "lineAlpha", "strokeStyle", "fillStyle", "fillAlpha", "globalAlpha"];
 
 /**
  * 线段包含判断
@@ -3004,10 +3008,6 @@ var DisplayObject = function DisplayObject(opt) {
 
     //元素的父元素
     this.parent = null;
-
-    this._eventEnabled = false; //是否响应事件交互,在添加了事件侦听后会自动设置为true
-
-    this.dragEnabled = true; //"dragEnabled" in opt ? opt.dragEnabled : false;   //是否启用元素的拖拽
 
     this.xyToInt = "xyToInt" in opt ? opt.xyToInt : true; //是否对xy坐标统一int处理，默认为true，但是有的时候可以由外界用户手动指定是否需要计算为int，因为有的时候不计算比较好，比如，进度图表中，再sector的两端添加两个圆来做圆角的进度条的时候，圆circle不做int计算，才能和sector更好的衔接
 
@@ -3086,7 +3086,6 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
 
         //执行init之前，应该就根据参数，把context组织好线
         self.context = Observe(_contextATTRS);
-        //self.context = _contextATTRS
     },
     /* @myself 是否生成自己的镜像 
      * 克隆又两种，一种是镜像，另外一种是绝对意义上面的新个体
@@ -3096,7 +3095,8 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
     clone: function clone(myself) {
         var conf = {
             id: this.id,
-            context: _$1.clone(this.context.$model)
+            context: _$1.clone(this.context.$model),
+            isClone: true
         };
 
         var newObj;
@@ -3110,6 +3110,10 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
 
         if (this.children) {
             newObj.children = this.children;
+        }
+
+        if (this.graphics) {
+            newObj.graphics = this.graphics.clone();
         }
 
         if (!myself) {
@@ -4040,7 +4044,7 @@ var CanvasRenderer = function (_SystemRenderer) {
 
                 if (!displayObject.graphics.graphicsData.length) {
                     //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
-                    displayObject._draw(stage, displayObject.graphics); //_draw会完成绘制准备好 graphicsData
+                    displayObject._draw(displayObject.graphics); //_draw会完成绘制准备好 graphicsData
                 }
 
                 this.CGR.render(displayObject, stage, this);
@@ -7695,9 +7699,6 @@ var GraphicsRenderer = function () {
                     buildCircle(data, webGLData);
                 }
 
-                //这个对象隶属于那个displayObject，可以方便的从这个displayObject上面去获取世界矩阵和style等
-                webGL.displayObject = data.displayObject;
-
                 webGL.lastIndex++;
             }
 
@@ -7991,7 +7992,7 @@ var WebGLRenderer = function (_SystemRenderer) {
                 }
 
                 if (!displayObject.graphics.graphicsData.length) {
-                    displayObject._draw(stage, displayObject.graphics);
+                    displayObject._draw(displayObject.graphics);
                 }
 
                 stage.webGLStageRenderer.render(displayObject, stage);
@@ -8333,7 +8334,7 @@ function bezierCurveTo(fromX, fromY, cpX, cpY, cpX2, cpY2, toX, toY) {
 
 /*
 * Graphics绘图法则
-* 单个grahics实例里的fill line 样式属性，都从对应shape.context中获取
+* 单个grahics实例里的fill line 样式属性，都从对应shape.context 中获取
 * 
 */
 
@@ -8364,12 +8365,13 @@ var Graphics = function () {
         key: 'setStyle',
         value: function setStyle(context) {
             //从 shape 中把绘图需要的style属性同步过来
-            this.lineWidth = context.lineWidth;
-            this.strokeStyle = context.strokeStyle;
-            this.lineAlpha = context.lineAlpha * context.globalAlpha;
+            var model = context.$model;
+            this.lineWidth = model.lineWidth;
+            this.strokeStyle = model.strokeStyle;
+            this.lineAlpha = model.lineAlpha * model.globalAlpha;
 
-            this.fillStyle = context.fillStyle;
-            this.fillAlpha = context.fillAlpha * context.globalAlpha;
+            this.fillStyle = model.fillStyle;
+            this.fillAlpha = model.fillAlpha * model.globalAlpha;
 
             var g = this;
 
@@ -8846,45 +8848,53 @@ var Shape = function (_DisplayObject) {
         var _context = _$1.extend(_$1.clone(SHAPE_CONTEXT_DEFAULT), opt.context);
         opt.context = _context;
 
-        //一个stage用一个graphics来绘制所有的shape
-        var _this = possibleConstructorReturn(this, (Shape.__proto__ || Object.getPrototypeOf(Shape)).call(this, opt));
-
-        _this.graphics = new Graphics();
-
-        //元素是否有hover事件 和 chick事件，由addEvenetLister和remiveEventLister来触发修改
-        _this._hoverable = false;
-        _this._clickable = false;
+        if (opt.id === undefined && opt.type !== undefined) {
+            opt.id = Utils.createId(opt.type);
+        }
 
         //over的时候如果有修改样式，就为true
+        var _this = possibleConstructorReturn(this, (Shape.__proto__ || Object.getPrototypeOf(Shape)).call(this, opt));
+
         _this._hoverClass = false;
-        _this.hoverClone = true; //是否开启在hover的时候clone一份到active stage 中 
+        _this.hoverCloneEnabled = true; //是否开启在hover的时候clone一份到active stage 中 
         _this.pointChkPriority = true; //在鼠标mouseover到该节点，然后mousemove的时候，是否优先检测该节点
+
+        _this._eventEnabled = false; //是否响应事件交互,在添加了事件侦听后会自动设置为true
+
+        _this.dragEnabled = opt.dragEnabled || true; //"dragEnabled" in opt ? opt.dragEnabled : false;   //是否启用元素的拖拽
 
         //拖拽drag的时候显示在activShape的副本
         _this._dragDuplicate = null;
 
-        //元素是否 开启 drag 拖动，这个有用户设置传入
-        //self.draggable = opt.draggable || false;
-
         _this.type = _this.type || "shape";
-        opt.draw && (_this.draw = opt.draw);
 
         //处理所有的图形一些共有的属性配置,把除开id,context之外的所有属性，全部挂载到this上面
         _this.initCompProperty(opt);
 
-        _this._rect = null;
+        //如果该元素是clone而来，则不需要绘制
+        if (!_this.isClone) {
+            //如果是clone对象的话就直接
+            _this.graphics = new Graphics();
+            _this._draw(_this.graphics);
+        } else {
+            _this.graphics = null;
+        }
+
         return _this;
     }
 
     createClass(Shape, [{
         key: "_draw",
-        value: function _draw(stage, graphics) {
+        value: function _draw(graphics) {
             if (graphics.graphicsData.length == 0) {
                 //先设置好当前graphics的style
                 graphics.setStyle(this.context);
                 this.draw(graphics);
             }
         }
+    }, {
+        key: "draw",
+        value: function draw() {}
     }, {
         key: "clearGraphicsData",
         value: function clearGraphicsData() {
@@ -8893,6 +8903,9 @@ var Shape = function (_DisplayObject) {
     }, {
         key: "$watch",
         value: function $watch(name, value, preValue) {
+            if (_$1.indexOf(STYLE_PROPS, name) > -1) {
+                this.graphics.setStyle(this.context);
+            }
             this.watch(name, value, preValue);
         }
     }, {
@@ -9435,7 +9448,7 @@ var myMath = {
 var BrokenLine = function (_Shape) {
     inherits(BrokenLine, _Shape);
 
-    function BrokenLine(opt, atype) {
+    function BrokenLine(opt) {
         classCallCheck(this, BrokenLine);
 
         opt = Utils.checkOpt(opt);
@@ -9446,17 +9459,14 @@ var BrokenLine = function (_Shape) {
             smoothFilter: Utils.__emptyFunc
         }, opt.context);
 
-        if (atype !== "clone" && _context.smooth) {
+        if (!opt.isClone && _context.smooth) {
             _context.pointList = myMath.getSmoothPointList(_context.pointList);
         }
 
         opt.context = _context;
+        opt.type = "brokenline";
 
-        var _this = possibleConstructorReturn(this, (BrokenLine.__proto__ || Object.getPrototypeOf(BrokenLine)).call(this, opt));
-
-        _this.type = "brokenline";
-        _this.id = Utils.createId(_this.type);
-        return _this;
+        return possibleConstructorReturn(this, (BrokenLine.__proto__ || Object.getPrototypeOf(BrokenLine)).call(this, opt));
     }
 
     createClass(BrokenLine, [{
@@ -9535,12 +9545,9 @@ var Circle$2 = function (_Shape) {
         }, opt.context);
 
         opt.context = _context;
+        opt.type = "circle";
 
-        var _this = possibleConstructorReturn(this, (Circle.__proto__ || Object.getPrototypeOf(Circle)).call(this, opt));
-
-        _this.type = "circle";
-        _this.id = Utils.createId(_this.type);
-        return _this;
+        return possibleConstructorReturn(this, (Circle.__proto__ || Object.getPrototypeOf(Circle)).call(this, opt));
     }
 
     createClass(Circle, [{
@@ -9592,18 +9599,10 @@ var Path = function (_Shape) {
             //Z = closepath
         }, opt.context);
         opt.context = _context;
+        opt.__parsePathData = null;
+        opt.type = "path";
 
-        var _this = possibleConstructorReturn(this, (Path.__proto__ || Object.getPrototypeOf(Path)).call(this, opt));
-
-        if ("drawTypeOnly" in opt) {
-            _this.drawTypeOnly = opt.drawTypeOnly;
-        }
-
-        _this.__parsePathData = null;
-
-        _this.type = "path";
-        _this.id = Utils.createId(_this.type);
-        return _this;
+        return possibleConstructorReturn(this, (Path.__proto__ || Object.getPrototypeOf(Path)).call(this, opt));
     }
 
     createClass(Path, [{
@@ -9932,11 +9931,9 @@ var Droplet = function (_Path) {
         }, opt.context);
 
         opt.context = _context;
+        opt.type = "droplet";
 
         var my = (_this = possibleConstructorReturn(this, (Droplet.__proto__ || Object.getPrototypeOf(Droplet)).call(this, opt)), _this);
-
-        _this.type = "droplet";
-        _this.id = Utils.createId(_this.type);
 
         _this.context.$model.path = _this.createPath();
         return _this;
@@ -9988,12 +9985,9 @@ var Ellipse$2 = function (_Shape) {
         }, opt.context);
 
         opt.context = _context;
+        opt.type = "ellipse";
 
-        var _this = possibleConstructorReturn(this, (Ellipse.__proto__ || Object.getPrototypeOf(Ellipse)).call(this, opt));
-
-        _this.type = "ellipse";
-        _this.id = Utils.createId(_this.type);
-        return _this;
+        return possibleConstructorReturn(this, (Ellipse.__proto__ || Object.getPrototypeOf(Ellipse)).call(this, opt));
     }
 
     createClass(Ellipse, [{
@@ -10026,7 +10020,7 @@ var Ellipse$2 = function (_Shape) {
 var Polygon$2 = function (_Shape) {
     inherits(Polygon, _Shape);
 
-    function Polygon(opt, atype) {
+    function Polygon(opt) {
         classCallCheck(this, Polygon);
 
         opt = Utils.checkOpt(opt);
@@ -10037,26 +10031,19 @@ var Polygon$2 = function (_Shape) {
             smoothFilter: Utils.__emptyFunc
         }, opt.context);
 
-        if (atype !== "clone") {
+        if (!opt.isClone) {
             var start = _context.pointList[0];
             var end = _context.pointList.slice(-1)[0];
             if (_context.smooth) {
                 _context.pointList.unshift(end);
                 _context.pointList = myMath.getSmoothPointList(_context.pointList);
             }
-            //else {
-            //    _context.pointList.push( start );
-            //}
         }
 
         opt.context = _context;
+        opt.type = "polygon";
 
-        var _this = possibleConstructorReturn(this, (Polygon.__proto__ || Object.getPrototypeOf(Polygon)).call(this, opt, atype));
-
-        _this._drawTypeOnly = null;
-        _this.type = "polygon";
-        _this.id = Utils.createId(_this.type);
-        return _this;
+        return possibleConstructorReturn(this, (Polygon.__proto__ || Object.getPrototypeOf(Polygon)).call(this, opt));
     }
 
     createClass(Polygon, [{
@@ -10149,12 +10136,9 @@ var Isogon = function (_Polygon) {
         _context.pointList = myMath.getIsgonPointList(_context.n, _context.r);
 
         opt.context = _context;
+        opt.type = "isogon";
 
-        var _this = possibleConstructorReturn(this, (Isogon.__proto__ || Object.getPrototypeOf(Isogon)).call(this, opt));
-
-        _this.type = "isogon";
-        _this.id = Utils.createId(_this.type);
-        return _this;
+        return possibleConstructorReturn(this, (Isogon.__proto__ || Object.getPrototypeOf(Isogon)).call(this, opt));
     }
 
     createClass(Isogon, [{
@@ -10209,11 +10193,9 @@ var Line = function (_Shape) {
         }, opt.context);
         opt.context = _context;
 
-        var _this = possibleConstructorReturn(this, (Line.__proto__ || Object.getPrototypeOf(Line)).call(this, opt));
+        opt.type = "line";
 
-        _this.type = "line";
-        _this.id = Utils.createId(_this.type);
-        return _this;
+        return possibleConstructorReturn(this, (Line.__proto__ || Object.getPrototypeOf(Line)).call(this, opt));
     }
 
     createClass(Line, [{
@@ -10267,12 +10249,9 @@ var Rect = function (_Shape) {
             radius: []
         }, opt.context);
         opt.context = _context;
+        opt.type = "rect";
 
-        var _this = possibleConstructorReturn(this, (Rect.__proto__ || Object.getPrototypeOf(Rect)).call(this, opt));
-
-        _this.type = "rect";
-        _this.id = Utils.createId(_this.type);
-        return _this;
+        return possibleConstructorReturn(this, (Rect.__proto__ || Object.getPrototypeOf(Rect)).call(this, opt));
     }
 
     createClass(Rect, [{
@@ -10369,14 +10348,11 @@ var Sector = function (_Shape) {
         }, opt.context);
 
         opt.context = _context;
+        opt.regAngle = [];
+        opt.isRing = false; //是否为一个圆环
+        opt.type = "sector";
 
-        var _this = possibleConstructorReturn(this, (Sector.__proto__ || Object.getPrototypeOf(Sector)).call(this, opt));
-
-        _this.regAngle = [];
-        _this.isRing = false; //是否为一个圆环
-        _this.type = "sector";
-        _this.id = Utils.createId(_this.type);
-        return _this;
+        return possibleConstructorReturn(this, (Sector.__proto__ || Object.getPrototypeOf(Sector)).call(this, opt));
     }
 
     createClass(Sector, [{
@@ -10399,8 +10375,8 @@ var Sector = function (_Shape) {
 
             //var isRing     = false;                       //是否为圆环
 
-            //if( startAngle != endAngle && Math.abs(startAngle - endAngle) % 360 == 0 ) {
-            if (startAngle == endAngle && model.startAngle != model.endAngle) {
+            if (startAngle != endAngle && Math.abs(startAngle - endAngle) % 360 == 0) {
+                //if( startAngle == endAngle && model.startAngle != model.endAngle ) {
                 //如果两个角度相等，那么就认为是个圆环了
                 this.isRing = true;
                 startAngle = 0;
@@ -10416,19 +10392,17 @@ var Sector = function (_Shape) {
             }
 
             var G = graphics;
+            G.beginPath();
+            if (this.isRing && model.r0 == 0) {
+                G.drawCircle(0, 0, model.r);
+            } else {
 
-            G.arc(0, 0, r, startAngle, endAngle, model.clockwise);
-            if (r0 !== 0) {
-                if (this.isRing) {
-                    //加上这个isRing的逻辑是为了兼容flashcanvas下绘制圆环的的问题
-                    //不加这个逻辑flashcanvas会绘制一个大圆 ， 而不是圆环
-                    G.moveTo(r0, 0);
-                    G.arc(0, 0, r0, startAngle, endAngle, !model.clockwise);
+                G.arc(0, 0, r, startAngle, endAngle, model.clockwise);
+                if (model.r0 == 0) {
+                    G.lineTo(0, 0);
                 } else {
                     G.arc(0, 0, r0, endAngle, startAngle, !model.clockwise);
                 }
-            } else {
-                G.lineTo(0, 0);
             }
 
             G.closePath();
