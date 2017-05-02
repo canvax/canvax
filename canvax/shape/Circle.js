@@ -16,19 +16,20 @@ import _ from "../utils/underscore";
 
 export default class Circle extends Shape
 {
-    constructor( opt )
+    constructor( _opt )
     {
-        opt = Utils.checkOpt( opt );
         //默认情况下面，circle不需要把xy进行parentInt转换
-        ( "xyToInt" in opt ) || ( opt.xyToInt = false );
-        var _context = _.extend({
-            r : 0   //{number},  // 必须，圆半径
-        } , opt.context);
+        var opt = {
+            type : "circle",
+            xyToInt : false,
+            context : {
+                r : 0
+            }
+        };
 
-        opt.context = _context;
-        opt.type = "circle";
+        _.extend( true, opt, _opt );
 
-        super( opt );    
+        super( opt );
     }
     
     watch(name, value, preValue)

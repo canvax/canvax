@@ -19,7 +19,6 @@ export default class Rect extends Shape
 {
     constructor(opt)
     {
-        opt = Utils.checkOpt( opt );
         var _context = _.extend({
             width : 0,
             height: 0,
@@ -56,7 +55,34 @@ export default class Rect extends Shape
     
         var r = Utils.getCssOrderArr(model.radius);
         var G = graphics;
+
+        var sy = 1;
+        if( height >= 0 ){
+            sy = -1;
+        }
+
+        G.moveTo( parseInt(x + r[0]), parseInt( height ));
+
+        G.lineTo( parseInt(x + width - r[1]), parseInt( height ));
+
+        r[1] !== 0 && G.quadraticCurveTo(
+            x + width, height, parseInt(x + width), parseInt(height + r[1]*sy)
+            );
+        G.lineTo( parseInt(x + width), parseInt(y - r[2]*sy));
+
+        r[2] !== 0 && G.quadraticCurveTo(
+            x + width, y, parseInt(x + width - r[2]), parseInt(y)
+            );
+        G.lineTo( parseInt(x + r[3]), parseInt(y));
+        r[3] !== 0 && G.quadraticCurveTo(
+            x, y, parseInt(x), parseInt(y - r[3]*sy)
+            );
+        G.lineTo( parseInt(x), parseInt(y + height + r[0]*sy));
+        r[0] !== 0 && G.quadraticCurveTo(
+            x, y+height, parseInt(x + r[0]), parseInt(y+height)
+            );
      
+        /*
         G.moveTo( parseInt(x + r[0]), parseInt(y));
         G.lineTo( parseInt(x + width - r[1]), parseInt(y));
         r[1] !== 0 && G.quadraticCurveTo(
@@ -72,7 +98,9 @@ export default class Rect extends Shape
                 );
         G.lineTo( parseInt(x), parseInt(y + r[0]));
         r[0] !== 0 && G.quadraticCurveTo(x, y, x + r[0], y);
+        */
     }
+
     /**
      * 创建矩形路径
      * @param {Context2D} ctx Canvas 2D上下文

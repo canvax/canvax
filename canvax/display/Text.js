@@ -15,9 +15,6 @@ var Text = function(text, opt) {
     self._reNewline = /\r?\n/;
     self.fontProperts = ["fontStyle", "fontVariant", "fontWeight", "fontSize", "fontFamily"];
 
-    //做一次简单的opt参数校验，保证在用户不传opt的时候 或者传了opt但是里面没有context的时候报错
-    opt = Utils.checkOpt(opt);
-
     self._context = _.extend({
         fontSize: 13, //字体大小默认13
         fontWeight: "normal",

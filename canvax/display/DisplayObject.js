@@ -19,9 +19,6 @@ import Settings from '../settings';
 var DisplayObject = function(opt){
     DisplayObject.superclass.constructor.apply(this, arguments);
 
-    //如果用户没有传入context设置，就默认为空的对象
-    opt      = Utils.checkOpt( opt );
-
     //相对父级元素的矩阵
     this._transform      = null;
     this.worldTransform  = null; //webgl 渲染器中专用
@@ -40,7 +37,7 @@ var DisplayObject = function(opt){
     this.moveing         = false; //如果元素在最轨道运动中的时候，最好把这个设置为true，这样能保证轨迹的丝搬顺滑，否则因为xyToInt的原因，会有跳跃
 
     //创建好context
-    this._createContext( opt );
+    this.context         = this._createContext( opt );
 
     this.id = opt.id || Utils.createId(this.type || "displayObject");
 
@@ -54,14 +51,51 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
     init : function(){},
     _createContext : function( opt ){
         var self = this;
-        //所有显示对象，都有一个类似canvas.context类似的 context属性
-        //用来存取改显示对象所有和显示有关的属性，坐标，样式等。
-        //该对象为Coer.Observe()工厂函数生成
-        self.context = null;
 
-        //提供给Coer.Observe() 来 给 self.context 设置 propertys
-        //这里不能用_.extend， 因为要保证_contextATTRS的纯粹，只覆盖下面已有的属性
-        var _contextATTRS = _.extend( _.clone(CONTEXT_DEFAULT), opt.context , true);
+        var optCtx = opt.context || {};
+
+        var _contextATTRS = {
+            width         : optCtx.width  || 0,
+            height        : optCtx.height || 0,
+            x             : optCtx.x      || 0,
+            y             : optCtx.y      || 0,
+            scaleX        : optCtx.scaleX || 1,
+            scaleY        : optCtx.scaleY || 1,
+            scaleOrigin   : optCtx.scaleOrigin || {
+                x : 0,
+                y : 0
+            },
+            rotation      : optCtx.rotation || 0,
+            rotateOrigin  : optCtx.rotateOrigin || {
+                x : 0,
+                y : 0
+            },
+            visible       : optCtx.visible || true,
+            globalAlpha   : optCtx.globalAlpha || 1
+
+
+
+            //样式部分迁移到shape中
+            //cursor        : optCtx.cursor || "default",
+
+            //fillAlpha     : optCtx.fillAlpha || 1,//context2d里没有，自定义
+            //fillStyle     : optCtx.fillStyle || null,//"#000000",
+
+            //lineCap       : optCtx.lineCap || null,//默认都是直角
+            //lineJoin      : optCtx.lineJoin || null,//这两个目前webgl里面没实现
+            //miterLimit    : optCtx.miterLimit || null,//miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
+
+            //lineAlpha     : optCtx.lineAlpha || 1,//context2d里没有，自定义
+            //strokeStyle   : optCtx.strokeStyle || null,
+            //lineType      : optCtx.lineType || "solid", //context2d里没有，自定义线条的type，默认为实线
+            //lineWidth     : optCtx.lineWidth || null
+        }
+        
+
+        //平凡的clone数据非常的耗时，还是走回原来的路
+        //var _contextATTRS = _.extend( true , _.clone(CONTEXT_DEFAULT), opt.context );
+
+        _.extend( true , _contextATTRS, opt.context );
 
         //有些引擎内部设置context属性的时候是不用上报心跳的，比如做热点检测的时候
         self._notWatch = false;
@@ -69,10 +103,10 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         //不需要发心跳信息
         self._noHeart = false;
 
-        _contextATTRS.$owner = self;
+        //_contextATTRS.$owner = self;
         _contextATTRS.$watch = function(name , value , preValue){
             //下面的这些属性变化，都会需要重新组织矩阵属性 _transform 
-            var obj = this.$owner;
+            var obj = self;//this.$owner;
 
             if( _.indexOf( TRANSFORM_PROPS , name ) > -1 ) {
                 obj._updateTransform();
@@ -112,7 +146,7 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         };
 
         //执行init之前，应该就根据参数，把context组织好线
-        self.context = Observe( _contextATTRS );
+        return Observe( _contextATTRS );
     },
     /* @myself 是否生成自己的镜像 
      * 克隆又两种，一种是镜像，另外一种是绝对意义上面的新个体
@@ -435,6 +469,9 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         var to = toContent;
         var from = {};
         for( var p in to ){
+            if( isNaN(to[p]) && to[p] !== '' && to[p] !== null && to[p] !== undefined ){
+                continue;
+            };
             from[ p ] = this.context[p];
         };
         !options && (options = {});

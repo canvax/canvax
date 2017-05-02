@@ -17,7 +17,6 @@ export default class Polygon extends Shape
 {
     constructor(opt)
     {
-        opt = Utils.checkOpt(opt);
         var _context = _.extend({
             lineType: null,
             smooth: false,

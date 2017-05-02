@@ -21,7 +21,6 @@ export default class Isogon extends Polygon
 {
     constructor(opt)
     {
-        opt = Utils.checkOpt(opt);
         var _context = _.extend({
             pointList: [], //从下面的r和n计算得到的边界值的集合
             r: 0, //{number},  // 必须，正n边形外接圆半径

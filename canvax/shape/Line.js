@@ -21,7 +21,6 @@ export default class Line extends Shape
 {
     constructor(opt)
     {
-        opt = Utils.checkOpt(opt);
         var _context = _.extend({
             lineType: null, //可选 虚线 实现 的 类型
             start: {

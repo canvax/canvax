@@ -63,7 +63,8 @@ export default class SystemRenderer
             var _begin = new Date().getTime();
             self.render( this.app );
             var _end = new Date().getTime();
-            console.log( _end - _begin )
+
+            $(document.body).append( "<br />render："+ (_end - _begin) );
             
             self._heartBeat = false;
             //渲染完了，打上最新时间挫

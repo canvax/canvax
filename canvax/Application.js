@@ -209,6 +209,16 @@ Utils.creatClass(Application , DisplayObjectContainer , {
         if( this.children.length > 0 ){
             this.renderer.heartBeat(opt);
         }
+    },
+    toDataURL: function(){
+        var canvas = Base._createCanvas( "curr_base64_canvas" , this.width , this.height );
+        var ctx = canvas.getContext("2d");
+
+        _.each( this.children , function( stage ){
+            ctx.drawImage( stage.canvas , 0 , 0 );
+        } );
+        
+        return canvas.toDataURL();
     }
 } );
 

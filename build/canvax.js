@@ -244,28 +244,6 @@ _$1.indexOf = function (array, item, isSorted) {
 _$1.isWindow = function (obj) {
   return obj != null && obj == obj.window;
 };
-_$1.isPlainObject = function (obj) {
-  // Because of IE, we also have to check the presence of the constructor property.
-  // Make sure that DOM nodes and window objects don't pass through, as well
-  if (!obj || (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) !== "object" || obj.nodeType || _$1.isWindow(obj)) {
-    return false;
-  }
-  try {
-    // Not own constructor property must be Object
-    if (obj.constructor && !hasOwn.call(obj, "constructor") && !hasOwn.call(obj.constructor.prototype, "isPrototypeOf")) {
-      return false;
-    }
-  } catch (e) {
-    // IE8,9 Will throw exceptions on certain host objects #9897
-    return false;
-  }
-  // Own properties are enumerated firstly, so to speed up,
-  // if last one is own, then all properties are own.
-  var key;
-  for (key in obj) {}
-
-  return key === undefined || hasOwn.call(obj, key);
-};
 
 /**
 *
@@ -276,7 +254,6 @@ _$1.extend = function () {
       name,
       src,
       copy,
-      copyIsArray,
       clone,
       target = arguments[0] || {},
       i = 1,
@@ -302,17 +279,24 @@ _$1.extend = function () {
         if (target === copy) {
           continue;
         }
-        if (deep && copy && (_$1.isPlainObject(copy) || (copyIsArray = _$1.isArray(copy)))) {
-          if (copyIsArray) {
-            copyIsArray = false;
-            clone = src && _$1.isArray(src) ? src : [];
-          } else {
-            clone = src && _$1.isPlainObject(src) ? src : {};
-          }
+
+        if (deep && copy && _$1.isObject(copy) && !_$1.isArray(copy)) {
           target[name] = _$1.extend(deep, clone, copy);
-        } else if (copy !== undefined) {
+        } else {
           target[name] = copy;
         }
+        /*
+        if ( deep && copy ) {  
+            if ( _.isArray(copy) ) {  
+                clone = src && _.isArray(src) ? src : [];  
+            } else {  
+                clone = src && _.isObject(src) ? src : {};  
+            }  
+            target[ name ] = _.extend( deep, clone, copy );  
+        } else if ( copy !== undefined ) {  
+            target[ name ] = copy;  
+        }  
+        */
       }
     }
   }
@@ -366,6 +350,7 @@ var Utils = {
         if (!s || !r) {
             return r;
         }
+
         var sp = s.prototype,
             rp;
         // add prototype chain
@@ -381,19 +366,6 @@ var Utils = {
     initElement: function initElement(canvas) {
         if (window.FlashCanvas && FlashCanvas.initElement) {
             FlashCanvas.initElement(canvas);
-        }
-    },
-    //做一次简单的opt参数校验，保证在用户不传opt的时候 或者传了opt但是里面没有context的时候报错
-    checkOpt: function checkOpt(opt) {
-        if (!opt) {
-            return {
-                context: {}
-            };
-        } else if (opt && !opt.context) {
-            opt.context = {};
-            return opt;
-        } else {
-            return opt;
         }
     },
 
@@ -727,7 +699,7 @@ var addOrRmoveEventHand = function addOrRmoveEventHand(domHand, ieHand) {
     }
 };
 
-var $ = {
+var $$1 = {
     // dom操作相关代码
     query: function query(el) {
         if (_$1.isString(el)) {
@@ -891,7 +863,7 @@ EventHandler.prototype = {
             //不再关心浏览器环境是否 'ontouchstart' in window 
             //而是直接只管传给事件模块的是一个原生dom还是 jq对象 or hammer对象等
             if (me.target.nodeType == 1) {
-                $.addEvent(me.target, type, function (e) {
+                $$1.addEvent(me.target, type, function (e) {
                     me.__mouseHandler(e);
                 });
             } else {
@@ -911,7 +883,7 @@ EventHandler.prototype = {
 
         root.updateViewOffset();
 
-        me.curPoints = [new Point($.pageX(e) - root.viewOffset.left, $.pageY(e) - root.viewOffset.top)];
+        me.curPoints = [new Point($$1.pageX(e) - root.viewOffset.left, $$1.pageY(e) - root.viewOffset.top)];
 
         //理论上来说，这里拿到point了后，就要计算这个point对应的target来push到curPointsTarget里，
         //但是因为在drag的时候其实是可以不用计算对应target的。
@@ -1436,7 +1408,6 @@ Utils.creatClass(EventDispatcher, EventManager, {
             for (var p in params) {
                 if (p in e) {
                     //params中的数据不能覆盖event属性
-                    console.log(p + "属性不能覆盖CanvaxEvent属性");
                 } else {
                     e[p] = params[p];
                 }
@@ -2674,14 +2645,13 @@ function Observe(scope) {
     //scope.$model = scope;
     //return scope;
 
-
     var stopRepeatAssign = true;
 
     var pmodel = {},
         //要返回的对象
     accessores = {},
         //内部用于转换的对象
-    _VBPublics = ["$skipArray", "$watch", "$model", "$owner"],
+    _VBPublics = ["$skipArray", "$watch", "$model"],
         //公共属性，不需要get set 化的
     model = {}; //这是pmodel上的$model属性
 
@@ -2899,41 +2869,8 @@ var SHAPES = {
 
 
 
-var CONTEXT_DEFAULT = {
-    width: 0,
-    height: 0,
-    x: 0,
-    y: 0,
-    scaleX: 1,
-    scaleY: 1,
-    scaleOrigin: {
-        x: 0,
-        y: 0
-    },
-    rotation: 0,
-    rotateOrigin: {
-        x: 0,
-        y: 0
-    },
-    visible: true,
-    globalAlpha: 1
 
-};
-var SHAPE_CONTEXT_DEFAULT = {
-    cursor: "default",
 
-    fillAlpha: 1, //context2d里没有，自定义
-    fillStyle: null, //"#000000",
-
-    lineCap: null, //默认都是直角
-    lineJoin: null, //这两个目前webgl里面没实现
-    miterLimit: null, //miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
-
-    lineAlpha: 1, //context2d里没有，自定义
-    strokeStyle: null,
-    lineType: "solid", //context2d里没有，自定义线条的type，默认为实线
-    lineWidth: null
-};
 
 //会影响到transform改变的context属性
 var TRANSFORM_PROPS = ["x", "y", "scaleX", "scaleY", "rotation", "scaleOrigin", "rotateOrigin"];
@@ -2993,9 +2930,6 @@ function insideLine(data, x, y, line) {
 var DisplayObject = function DisplayObject(opt) {
     DisplayObject.superclass.constructor.apply(this, arguments);
 
-    //如果用户没有传入context设置，就默认为空的对象
-    opt = Utils.checkOpt(opt);
-
     //相对父级元素的矩阵
     this._transform = null;
     this.worldTransform = null; //webgl 渲染器中专用
@@ -3014,7 +2948,7 @@ var DisplayObject = function DisplayObject(opt) {
     this.moveing = false; //如果元素在最轨道运动中的时候，最好把这个设置为true，这样能保证轨迹的丝搬顺滑，否则因为xyToInt的原因，会有跳跃
 
     //创建好context
-    this._createContext(opt);
+    this.context = this._createContext(opt);
 
     this.id = opt.id || Utils.createId(this.type || "displayObject");
 
@@ -3028,14 +2962,48 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
     init: function init() {},
     _createContext: function _createContext(opt) {
         var self = this;
-        //所有显示对象，都有一个类似canvas.context类似的 context属性
-        //用来存取改显示对象所有和显示有关的属性，坐标，样式等。
-        //该对象为Coer.Observe()工厂函数生成
-        self.context = null;
 
-        //提供给Coer.Observe() 来 给 self.context 设置 propertys
-        //这里不能用_.extend， 因为要保证_contextATTRS的纯粹，只覆盖下面已有的属性
-        var _contextATTRS = _$1.extend(_$1.clone(CONTEXT_DEFAULT), opt.context, true);
+        var optCtx = opt.context || {};
+
+        var _contextATTRS = {
+            width: optCtx.width || 0,
+            height: optCtx.height || 0,
+            x: optCtx.x || 0,
+            y: optCtx.y || 0,
+            scaleX: optCtx.scaleX || 1,
+            scaleY: optCtx.scaleY || 1,
+            scaleOrigin: optCtx.scaleOrigin || {
+                x: 0,
+                y: 0
+            },
+            rotation: optCtx.rotation || 0,
+            rotateOrigin: optCtx.rotateOrigin || {
+                x: 0,
+                y: 0
+            },
+            visible: optCtx.visible || true,
+            globalAlpha: optCtx.globalAlpha || 1
+
+            //样式部分迁移到shape中
+            //cursor        : optCtx.cursor || "default",
+
+            //fillAlpha     : optCtx.fillAlpha || 1,//context2d里没有，自定义
+            //fillStyle     : optCtx.fillStyle || null,//"#000000",
+
+            //lineCap       : optCtx.lineCap || null,//默认都是直角
+            //lineJoin      : optCtx.lineJoin || null,//这两个目前webgl里面没实现
+            //miterLimit    : optCtx.miterLimit || null,//miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
+
+            //lineAlpha     : optCtx.lineAlpha || 1,//context2d里没有，自定义
+            //strokeStyle   : optCtx.strokeStyle || null,
+            //lineType      : optCtx.lineType || "solid", //context2d里没有，自定义线条的type，默认为实线
+            //lineWidth     : optCtx.lineWidth || null
+        };
+
+        //平凡的clone数据非常的耗时，还是走回原来的路
+        //var _contextATTRS = _.extend( true , _.clone(CONTEXT_DEFAULT), opt.context );
+
+        _$1.extend(true, _contextATTRS, opt.context);
 
         //有些引擎内部设置context属性的时候是不用上报心跳的，比如做热点检测的时候
         self._notWatch = false;
@@ -3043,10 +3011,10 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
         //不需要发心跳信息
         self._noHeart = false;
 
-        _contextATTRS.$owner = self;
+        //_contextATTRS.$owner = self;
         _contextATTRS.$watch = function (name, value, preValue) {
             //下面的这些属性变化，都会需要重新组织矩阵属性 _transform 
-            var obj = this.$owner;
+            var obj = self; //this.$owner;
 
             if (_$1.indexOf(TRANSFORM_PROPS, name) > -1) {
                 obj._updateTransform();
@@ -3085,7 +3053,7 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
         };
 
         //执行init之前，应该就根据参数，把context组织好线
-        self.context = Observe(_contextATTRS);
+        return Observe(_contextATTRS);
     },
     /* @myself 是否生成自己的镜像 
      * 克隆又两种，一种是镜像，另外一种是绝对意义上面的新个体
@@ -3401,6 +3369,9 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
         var to = toContent;
         var from = {};
         for (var p in to) {
+            if (isNaN(to[p]) && to[p] !== '' && to[p] !== null && to[p] !== undefined) {
+                continue;
+            }
             from[p] = this.context[p];
         }
         !options && (options = {});
@@ -3754,7 +3725,8 @@ var SystemRenderer = function () {
                 var _begin = new Date().getTime();
                 self.render(this.app);
                 var _end = new Date().getTime();
-                console.log(_end - _begin);
+
+                $(document.body).append("<br />render：" + (_end - _begin));
 
                 self._heartBeat = false;
                 //渲染完了，打上最新时间挫
@@ -8040,12 +8012,12 @@ var Application = function Application(opt) {
     this.type = "canvax";
     this._cid = new Date().getTime() + "_" + Math.floor(Math.random() * 100);
 
-    this.el = $.query(opt.el);
+    this.el = $$1.query(opt.el);
 
     this.width = parseInt("width" in opt || this.el.offsetWidth, 10);
     this.height = parseInt("height" in opt || this.el.offsetHeight, 10);
 
-    var viewObj = $.createView(this.width, this.height, this._cid);
+    var viewObj = $$1.createView(this.width, this.height, this._cid);
     this.view = viewObj.view;
     this.stage_c = viewObj.stage_c;
     this.dom_c = viewObj.dom_c;
@@ -8053,7 +8025,7 @@ var Application = function Application(opt) {
     this.el.innerHTML = "";
     this.el.appendChild(this.view);
 
-    this.viewOffset = $.offset(this.view);
+    this.viewOffset = $$1.offset(this.view);
     this.lastGetRO = 0; //最后一次获取 viewOffset 的时间
 
     this.webGL = opt.webGL;
@@ -8103,7 +8075,7 @@ Utils.creatClass(Application, DisplayObjectContainer, {
         this.view.style.width = this.width + "px";
         this.view.style.height = this.height + "px";
 
-        this.viewOffset = $.offset(this.view);
+        this.viewOffset = $$1.offset(this.view);
         this.context.$model.width = this.width;
         this.context.$model.height = this.height;
 
@@ -8152,9 +8124,9 @@ Utils.creatClass(Application, DisplayObjectContainer, {
      * @return {Object} 上下文
     */
     _createPixelContext: function _createPixelContext() {
-        var _pixelCanvas = $.query("_pixelCanvas");
+        var _pixelCanvas = $$1.query("_pixelCanvas");
         if (!_pixelCanvas) {
-            _pixelCanvas = $.createCanvas(0, 0, "_pixelCanvas");
+            _pixelCanvas = $$1.createCanvas(0, 0, "_pixelCanvas");
         } else {
             //如果又的话 就不需要在创建了
             return;
@@ -8178,7 +8150,7 @@ Utils.creatClass(Application, DisplayObjectContainer, {
     updateViewOffset: function updateViewOffset() {
         var now = new Date().getTime();
         if (now - this.lastGetRO > 1000) {
-            this.viewOffset = $.offset(this.view);
+            this.viewOffset = $$1.offset(this.view);
             this.lastGetRO = now;
         }
     },
@@ -8187,7 +8159,7 @@ Utils.creatClass(Application, DisplayObjectContainer, {
         var canvas;
 
         if (!stage.canvas) {
-            canvas = $.createCanvas(this.context.$model.width, this.context.$model.height, stage.id);
+            canvas = $$1.createCanvas(this.context.$model.width, this.context.$model.height, stage.id);
         } else {
             canvas = stage.canvas;
         }
@@ -8219,6 +8191,16 @@ Utils.creatClass(Application, DisplayObjectContainer, {
         if (this.children.length > 0) {
             this.renderer.heartBeat(opt);
         }
+    },
+    toDataURL: function toDataURL() {
+        var canvas = Base._createCanvas("curr_base64_canvas", this.width, this.height);
+        var ctx = canvas.getContext("2d");
+
+        _$1.each(this.children, function (stage) {
+            ctx.drawImage(stage.canvas, 0, 0);
+        });
+
+        return canvas.toDataURL();
     }
 });
 
@@ -8844,13 +8826,32 @@ var Shape = function (_DisplayObject) {
         classCallCheck(this, Shape);
 
 
-        opt = Utils.checkOpt(opt);
-        var _context = _$1.extend(_$1.clone(SHAPE_CONTEXT_DEFAULT), opt.context);
+        //var _context = _.extend( _.clone(SHAPE_CONTEXT_DEFAULT) , opt.context );
+        //opt.context = _context;
+
+        var styleContext = {
+            cursor: opt.context.cursor || "default",
+
+            fillAlpha: opt.context.fillAlpha || 1, //context2d里没有，自定义
+            fillStyle: opt.context.fillStyle || null, //"#000000",
+
+            lineCap: opt.context.lineCap || null, //默认都是直角
+            lineJoin: opt.context.lineJoin || null, //这两个目前webgl里面没实现
+            miterLimit: opt.context.miterLimit || null, //miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
+
+            lineAlpha: opt.context.lineAlpha || 1, //context2d里没有，自定义
+            strokeStyle: opt.context.strokeStyle || null,
+            lineType: opt.context.lineType || "solid", //context2d里没有，自定义线条的type，默认为实线
+            lineWidth: opt.context.lineWidth || null
+        };
+
+        var _context = _$1.extend(true, styleContext, opt.context);
         opt.context = _context;
 
         if (opt.id === undefined && opt.type !== undefined) {
             opt.id = Utils.createId(opt.type);
         }
+        debugger;
 
         //over的时候如果有修改样式，就为true
         var _this = possibleConstructorReturn(this, (Shape.__proto__ || Object.getPrototypeOf(Shape)).call(this, opt));
@@ -8999,9 +9000,6 @@ var Text = function Text(text, opt) {
     self.type = "text";
     self._reNewline = /\r?\n/;
     self.fontProperts = ["fontStyle", "fontVariant", "fontWeight", "fontSize", "fontFamily"];
-
-    //做一次简单的opt参数校验，保证在用户不传opt的时候 或者传了opt但是里面没有context的时候报错
-    opt = Utils.checkOpt(opt);
 
     self._context = _$1.extend({
         fontSize: 13, //字体大小默认13
@@ -9451,7 +9449,6 @@ var BrokenLine = function (_Shape) {
     function BrokenLine(opt) {
         classCallCheck(this, BrokenLine);
 
-        opt = Utils.checkOpt(opt);
         var _context = _$1.extend({
             lineType: null,
             smooth: false,
@@ -9534,18 +9531,19 @@ var BrokenLine = function (_Shape) {
 var Circle$2 = function (_Shape) {
     inherits(Circle, _Shape);
 
-    function Circle(opt) {
+    function Circle(_opt) {
         classCallCheck(this, Circle);
 
-        opt = Utils.checkOpt(opt);
         //默认情况下面，circle不需要把xy进行parentInt转换
-        "xyToInt" in opt || (opt.xyToInt = false);
-        var _context = _$1.extend({
-            r: 0 //{number},  // 必须，圆半径
-        }, opt.context);
+        var opt = {
+            type: "circle",
+            xyToInt: false,
+            context: {
+                r: 0
+            }
+        };
 
-        opt.context = _context;
-        opt.type = "circle";
+        _$1.extend(true, opt, _opt);
 
         return possibleConstructorReturn(this, (Circle.__proto__ || Object.getPrototypeOf(Circle)).call(this, opt));
     }
@@ -9584,7 +9582,6 @@ var Path = function (_Shape) {
         classCallCheck(this, Path);
 
 
-        opt = Utils.checkOpt(opt);
         var _context = _$1.extend({
             pointList: [], //从下面的path中计算得到的边界点的集合
             path: "" //字符串 必须，路径。例如:M 0 0 L 0 10 L 10 10 Z (一个三角形)
@@ -9924,7 +9921,6 @@ var Droplet = function (_Path) {
 
         classCallCheck(this, Droplet);
 
-        opt = Utils.checkOpt(opt);
         var _context = _$1.extend({
             hr: 0, //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
             vr: 0 //{number},  // 必须，水滴纵高（中心到尖端距离）
@@ -9976,7 +9972,6 @@ var Ellipse$2 = function (_Shape) {
     function Ellipse(opt) {
         classCallCheck(this, Ellipse);
 
-        opt = Utils.checkOpt(opt);
         var _context = _$1.extend({
             //x             : 0 , //{number},  // 丢弃
             //y             : 0 , //{number},  // 丢弃，原因同circle
@@ -10023,7 +10018,6 @@ var Polygon$2 = function (_Shape) {
     function Polygon(opt) {
         classCallCheck(this, Polygon);
 
-        opt = Utils.checkOpt(opt);
         var _context = _$1.extend({
             lineType: null,
             smooth: false,
@@ -10127,7 +10121,6 @@ var Isogon = function (_Polygon) {
     function Isogon(opt) {
         classCallCheck(this, Isogon);
 
-        opt = Utils.checkOpt(opt);
         var _context = _$1.extend({
             pointList: [], //从下面的r和n计算得到的边界值的集合
             r: 0, //{number},  // 必须，正n边形外接圆半径
@@ -10178,7 +10171,6 @@ var Line = function (_Shape) {
     function Line(opt) {
         classCallCheck(this, Line);
 
-        opt = Utils.checkOpt(opt);
         var _context = _$1.extend({
             lineType: null, //可选 虚线 实现 的 类型
             start: {
@@ -10242,7 +10234,6 @@ var Rect = function (_Shape) {
     function Rect(opt) {
         classCallCheck(this, Rect);
 
-        opt = Utils.checkOpt(opt);
         var _context = _$1.extend({
             width: 0,
             height: 0,
@@ -10283,16 +10274,43 @@ var Rect = function (_Shape) {
             var r = Utils.getCssOrderArr(model.radius);
             var G = graphics;
 
-            G.moveTo(parseInt(x + r[0]), parseInt(y));
-            G.lineTo(parseInt(x + width - r[1]), parseInt(y));
-            r[1] !== 0 && G.quadraticCurveTo(x + width, y, x + width, y + r[1]);
-            G.lineTo(parseInt(x + width), parseInt(y + height - r[2]));
-            r[2] !== 0 && G.quadraticCurveTo(x + width, y + height, x + width - r[2], y + height);
-            G.lineTo(parseInt(x + r[3]), parseInt(y + height));
-            r[3] !== 0 && G.quadraticCurveTo(x, y + height, x, y + height - r[3]);
-            G.lineTo(parseInt(x), parseInt(y + r[0]));
+            var sy = 1;
+            if (height >= 0) {
+                sy = -1;
+            }
+
+            G.moveTo(parseInt(x + r[0]), parseInt(height));
+
+            G.lineTo(parseInt(x + width - r[1]), parseInt(height));
+
+            r[1] !== 0 && G.quadraticCurveTo(x + width, height, parseInt(x + width), parseInt(height + r[1] * sy));
+            G.lineTo(parseInt(x + width), parseInt(y - r[2] * sy));
+
+            r[2] !== 0 && G.quadraticCurveTo(x + width, y, parseInt(x + width - r[2]), parseInt(y));
+            G.lineTo(parseInt(x + r[3]), parseInt(y));
+            r[3] !== 0 && G.quadraticCurveTo(x, y, parseInt(x), parseInt(y - r[3] * sy));
+            G.lineTo(parseInt(x), parseInt(y + height + r[0] * sy));
+            r[0] !== 0 && G.quadraticCurveTo(x, y + height, parseInt(x + r[0]), parseInt(y + height));
+
+            /*
+            G.moveTo( parseInt(x + r[0]), parseInt(y));
+            G.lineTo( parseInt(x + width - r[1]), parseInt(y));
+            r[1] !== 0 && G.quadraticCurveTo(
+                    x + width, y, x + width, y + r[1]
+                    );
+            G.lineTo( parseInt(x + width), parseInt(y + height - r[2]));
+            r[2] !== 0 && G.quadraticCurveTo(
+                    x + width, y + height, x + width - r[2], y + height
+                    );
+            G.lineTo( parseInt(x + r[3]), parseInt(y + height));
+            r[3] !== 0 && G.quadraticCurveTo(
+                    x, y + height, x, y + height - r[3]
+                    );
+            G.lineTo( parseInt(x), parseInt(y + r[0]));
             r[0] !== 0 && G.quadraticCurveTo(x, y, x + r[0], y);
+            */
         }
+
         /**
          * 创建矩形路径
          * @param {Context2D} ctx Canvas 2D上下文
@@ -10337,7 +10355,6 @@ var Sector = function (_Shape) {
     function Sector(opt) {
         classCallCheck(this, Sector);
 
-        opt = Utils.checkOpt(opt);
         var _context = _$1.extend({
             pointList: [], //边界点的集合,私有，从下面的属性计算的来
             r0: 0, // 默认为0，内圆半径指定后将出现内弧，同时扇边长度 = r - r0

@@ -15,14 +15,34 @@ export default class Shape extends DisplayObject
 {
     constructor(opt){
 
-        opt = Utils.checkOpt(opt);
-        var _context = _.extend( _.clone(SHAPE_CONTEXT_DEFAULT) , opt.context );
-        opt.context = _context;
+        //var _context = _.extend( _.clone(SHAPE_CONTEXT_DEFAULT) , opt.context );
+        //opt.context = _context;
+
+        var styleContext = {
+            cursor        : opt.context.cursor     || "default",
+
+            fillAlpha     : opt.context.fillAlpha  || 1,//context2d里没有，自定义
+            fillStyle     : opt.context.fillStyle  || null,//"#000000",
+
+            lineCap       : opt.context.lineCap    || null,//默认都是直角
+            lineJoin      : opt.context.lineJoin   || null,//这两个目前webgl里面没实现
+            miterLimit    : opt.context.miterLimit || null,//miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
+
+            lineAlpha     : opt.context.lineAlpha  || 1,//context2d里没有，自定义
+            strokeStyle   : opt.context.strokeStyle|| null,
+            lineType      : opt.context.lineType   || "solid", //context2d里没有，自定义线条的type，默认为实线
+            lineWidth     : opt.context.lineWidth  || null
+        };
          
+        
+
+        var _context = _.extend( true, styleContext , opt.context );
+        opt.context = _context;
+
         if( opt.id === undefined && opt.type !== undefined ){
             opt.id = Utils.createId(opt.type);
         };
-
+debugger
         super( opt );
 
         //over的时候如果有修改样式，就为true

@@ -22,7 +22,6 @@ export default class Sector extends Shape
 {
     constructor(opt)
     {
-        opt = Utils.checkOpt( opt );
         var _context = _.extend({
             pointList  : [],//边界点的集合,私有，从下面的属性计算的来
             r0         : 0,// 默认为0，内圆半径指定后将出现内弧，同时扇边长度 = r - r0

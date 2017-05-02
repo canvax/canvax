@@ -49,7 +49,6 @@ Utils.creatClass(EventDispatcher , EventManager , {
             for( var p in params ){
                 if( p in e ){
                     //params中的数据不能覆盖event属性
-                    console.log( p + "属性不能覆盖CanvaxEvent属性" )
                 } else {
                     e[p] = params[p];
                 }

@@ -15,12 +15,11 @@ function Observe(scope) {
     //scope.$model = scope;
     //return scope;
 
-
     var stopRepeatAssign=true;
 
     var pmodel = {}, //要返回的对象
         accessores = {}, //内部用于转换的对象
-        _VBPublics = ["$skipArray","$watch","$model","$owner"] , //公共属性，不需要get set 化的
+        _VBPublics = ["$skipArray","$watch","$model"] , //公共属性，不需要get set 化的
         model = {};//这是pmodel上的$model属性
 
     var VBPublics = _VBPublics.concat( scope.$skipArray || [] );

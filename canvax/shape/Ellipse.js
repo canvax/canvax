@@ -19,7 +19,6 @@ export default class Ellipse extends Shape
 {
     constructor(opt)
     {
-        opt = Utils.checkOpt( opt );
         var _context = _.extend({
             //x             : 0 , //{number},  // 丢弃
             //y             : 0 , //{number},  // 丢弃，原因同circle

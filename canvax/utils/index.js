@@ -44,7 +44,8 @@ var Utils = {
     creatClass : function(r, s, px){
         if (!s || !r) {
             return r;
-        }
+        };
+        
         var sp = s.prototype, rp;
         // add prototype chain
         rp = Utils.createObject(sp, r);
@@ -59,21 +60,6 @@ var Utils = {
     initElement : function( canvas ){
         if( window.FlashCanvas && FlashCanvas.initElement){
             FlashCanvas.initElement( canvas );
-        }
-    },
-    //做一次简单的opt参数校验，保证在用户不传opt的时候 或者传了opt但是里面没有context的时候报错
-    checkOpt    : function(opt){
-        if( !opt ){
-          return {
-            context : {
-            
-            }
-          }   
-        } else if( opt && !opt.context ) {
-          opt.context = {}
-          return opt;
-        } else {
-          return opt;
         }
     },
     

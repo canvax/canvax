@@ -34,7 +34,7 @@
         app = new Canvax.App({
             id : "canvax",
             el : box,
-            webGL: true
+            webGL: false
         });
         app.registEvent();
 
@@ -62,8 +62,8 @@
             });
             stage.addChild( circle );
         }
-
-        console.log("created:"+ (new Date().getTime() - ct));
+        $(document.body).append( "<br />created:"+ (new Date().getTime() - ct) )
+        //console.log("created:"+ (new Date().getTime() - ct));
 
         app.addChild(stage); 
 

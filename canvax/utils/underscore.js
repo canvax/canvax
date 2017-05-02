@@ -133,37 +133,13 @@ _.indexOf = function(array, item, isSorted) {
 _.isWindow = function( obj ) { 
    return obj != null && obj == obj.window;
 };
-_.isPlainObject = function( obj ) {
-    // Because of IE, we also have to check the presence of the constructor property.
-    // Make sure that DOM nodes and window objects don't pass through, as well
-    if ( !obj || typeof obj !== "object" || obj.nodeType || _.isWindow( obj ) ) {
-        return false;
-    }
-    try {
-        // Not own constructor property must be Object
-        if ( obj.constructor &&
-            !hasOwn.call(obj, "constructor") &&
-            !hasOwn.call(obj.constructor.prototype, "isPrototypeOf") ) {
-            return false;
-        }
-    } catch ( e ) {
-        // IE8,9 Will throw exceptions on certain host objects #9897
-        return false;
-    }
-    // Own properties are enumerated firstly, so to speed up,
-    // if last one is own, then all properties are own.
-    var key;
-    for ( key in obj ) {}
-
-    return key === undefined || hasOwn.call( obj, key );
-};
 
 /**
 *
 *如果是深度extend，第一个参数就设置为true
 */
 _.extend = function() {  
-  var options, name, src, copy, copyIsArray, clone,  
+  var options, name, src, copy, clone,  
       target = arguments[0] || {},  
       i = 1,  
       length = arguments.length,  
@@ -186,19 +162,26 @@ _.extend = function() {
               src = target[ name ];  
               copy = options[ name ];  
               if ( target === copy ) {  
-                  continue;  
-              }  
-              if ( deep && copy && ( _.isPlainObject(copy) || (copyIsArray = _.isArray(copy)) ) ) {  
-                  if ( copyIsArray ) {  
-                      copyIsArray = false;  
+                  continue;
+              };
+              
+              if( deep && copy && _.isObject( copy ) && !_.isArray( copy ) ){
+                  target[ name ] = _.extend( deep, clone, copy ); 
+              } else {
+                  target[ name ] = copy; 
+              };
+              /*
+              if ( deep && copy ) {  
+                  if ( _.isArray(copy) ) {  
                       clone = src && _.isArray(src) ? src : [];  
                   } else {  
-                      clone = src && _.isPlainObject(src) ? src : {};  
+                      clone = src && _.isObject(src) ? src : {};  
                   }  
                   target[ name ] = _.extend( deep, clone, copy );  
               } else if ( copy !== undefined ) {  
                   target[ name ] = copy;  
               }  
+              */
           }  
       }  
   }  
