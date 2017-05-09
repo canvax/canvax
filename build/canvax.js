@@ -2986,7 +2986,6 @@ Utils.creatClass(DisplayObject, EventDispatcher, {
 
             //样式部分迁移到shape中
             //cursor        : optCtx.cursor || "default",
-
             //fillAlpha     : optCtx.fillAlpha || 1,//context2d里没有，自定义
             //fillStyle     : optCtx.fillStyle || null,//"#000000",
 
