@@ -35,13 +35,12 @@ export default class Ellipse extends Shape
     watch(name, value, preValue) 
     {
         if ( name == "hr" || name == "vr" ) {
-            this.clearGraphicsData();
+            this.graphics.clear();
         }
     }
 
     draw(graphics)
     {    
-        //graphics.beginPath();
         graphics.drawEllipse(0,0, this.context.$model.hr*2 , this.context.$model.vr*2);
     }
 };

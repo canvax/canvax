@@ -36,7 +36,7 @@ export default class BrokenLine extends Shape
     watch(name, value, preValue) 
     {
         if (name == "pointList" || name == "smooth" || name == "lineType") {
-            this.clearGraphicsData();
+            this.graphics.clear();
         }
     }
 

@@ -41,7 +41,7 @@ export default class Path extends Shape
     watch(name, value, preValue) 
     {
         if (name == "path") { //如果path有变动，需要自动计算新的pointList
-            this.clearGraphicsData();
+            this.graphics.clear();
         }
     }
 

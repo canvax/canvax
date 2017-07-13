@@ -4175,6 +4175,7 @@ var CanvasRenderer = function (_SystemRenderer) {
 
                 ctx.setTransform.apply(ctx, displayObject.worldTransform.toArray());
 
+                //如果 graphicsData.length==0 的情况下才需要执行_draw来组织graphics数据
                 if (!displayObject.graphics.graphicsData.length) {
                     //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
                     displayObject._draw(displayObject.graphics); //_draw会完成绘制准备好 graphicsData
@@ -8435,7 +8436,10 @@ var GraphicsData = function () {
     createClass(GraphicsData, [{
         key: "clone",
         value: function clone() {
-            return new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, this.shape);
+            var cloneGraphicsData = new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, this.shape);
+            cloneGraphicsData.fill = this.fill;
+            cloneGraphicsData.line = this.line;
+            return cloneGraphicsData;
         }
     }, {
         key: "addHole",
@@ -8447,14 +8451,19 @@ var GraphicsData = function () {
 
     }, {
         key: "synsStyle",
-        value: function synsStyle(graphics) {
+        value: function synsStyle(style) {
+            //console.log("line:"+this.line+"__fill:"+this.fill)
             //从shape中把绘图需要的style属性同步过来
-            this.lineWidth = graphics.lineWidth;
-            this.strokeStyle = graphics.strokeStyle;
-            this.lineAlpha = graphics.lineAlpha;
+            if (this.line) {
+                this.lineWidth = style.lineWidth;
+                this.strokeStyle = style.strokeStyle;
+                this.lineAlpha = style.lineAlpha;
+            }
 
-            this.fillStyle = graphics.fillStyle;
-            this.fillAlpha = graphics.fillAlpha;
+            if (this.fill) {
+                this.fillStyle = style.fillStyle;
+                this.fillAlpha = style.fillAlpha;
+            }
         }
     }, {
         key: "hasFill",
@@ -8531,6 +8540,10 @@ var Graphics = function () {
         this._webGL = {};
         this.worldAlpha = 1;
         this.tint = 0xFFFFFF; //目标对象附加颜色
+
+        this.Bound = {
+            x: 0, y: 0, width: 0, height: 0
+        };
     }
 
     createClass(Graphics, [{
@@ -8549,7 +8562,7 @@ var Graphics = function () {
 
             //一般都是先设置好style的，所以 ， 当后面再次设置新的style的时候
             //会把所有的data都修改
-            //TODO: 后面需要修改, 能精准的确定是修改graphicsData中的哪个data
+            //TODO: 后面需要修改, 能精准的确定是修改 graphicsData 中的哪个data
             if (this.graphicsData.length) {
                 _$1.each(this.graphicsData, function (gd, i) {
                     gd.synsStyle(g);
@@ -8559,6 +8572,7 @@ var Graphics = function () {
     }, {
         key: 'clone',
         value: function clone() {
+
             var clone = new Graphics();
 
             clone.dirty = 0;
@@ -8716,7 +8730,7 @@ var Graphics = function () {
             }
 
             var sweep = endAngle - startAngle;
-            var segs = Math.ceil(Math.abs(sweep) / (Math.PI * 2)) * 40;
+            var segs = Math.ceil(Math.abs(sweep) / (Math.PI * 2)) * 48;
 
             if (sweep === 0) {
                 return this;
@@ -8975,11 +8989,18 @@ var Graphics = function () {
                 maxY = 0;
             }
 
-            this.Bound.minX = minX;
-            this.Bound.maxX = maxX;
-
-            this.Bound.minY = minY;
-            this.Bound.maxY = maxY;
+            this.Bound = {
+                x: minX,
+                y: minY,
+                width: maxX - minX,
+                height: maxY - minY
+            };
+            return this;
+        }
+    }, {
+        key: 'getBound',
+        value: function getBound() {
+            return this.updateLocalBounds().Bound;
         }
     }, {
         key: 'destroy',
@@ -9016,17 +9037,14 @@ var Shape = function (_DisplayObject) {
         classCallCheck(this, Shape);
 
 
-        //var _context = _.extend( _.clone(SHAPE_CONTEXT_DEFAULT) , opt.context );
-        //opt.context = _context;
-
         var styleContext = {
             cursor: opt.context.cursor || "default",
 
             fillAlpha: opt.context.fillAlpha || 1, //context2d里没有，自定义
             fillStyle: opt.context.fillStyle || null, //"#000000",
 
-            lineCap: opt.context.lineCap || null, //默认都是直角
-            lineJoin: opt.context.lineJoin || null, //这两个目前webgl里面没实现
+            lineCap: opt.context.lineCap || "round", //默认都是直角
+            lineJoin: opt.context.lineJoin || "round", //这两个目前webgl里面没实现
             miterLimit: opt.context.miterLimit || null, //miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
 
             lineAlpha: opt.context.lineAlpha || 1, //context2d里没有，自定义
@@ -9107,6 +9125,11 @@ var Shape = function (_DisplayObject) {
                 }
             }
         }
+    }, {
+        key: "getBound",
+        value: function getBound() {
+            return this.graphics.updateLocalBounds().Bound;
+        }
 
         /*
          * 画虚线
@@ -9128,50 +9151,6 @@ var Shape = function (_DisplayObject) {
                     graphics.lineTo(x2, y2);
                 }
             }
-        }
-
-        /*
-         *从cpl节点中获取到4个方向的边界节点
-         *@param  context 
-         *
-         **/
-
-    }, {
-        key: "getRectFormPointList",
-        value: function getRectFormPointList(context) {
-            var minX = Number.MAX_VALUE;
-            var maxX = Number.MIN_VALUE;
-            var minY = Number.MAX_VALUE;
-            var maxY = Number.MIN_VALUE;
-
-            var cpl = context.pointList; //this.getcpl();
-            for (var i = 0, l = cpl.length; i < l; i++) {
-                if (cpl[i][0] < minX) {
-                    minX = cpl[i][0];
-                }
-                if (cpl[i][0] > maxX) {
-                    maxX = cpl[i][0];
-                }
-                if (cpl[i][1] < minY) {
-                    minY = cpl[i][1];
-                }
-                if (cpl[i][1] > maxY) {
-                    maxY = cpl[i][1];
-                }
-            }
-
-            var lineWidth;
-            if (context.strokeStyle || context.fillStyle) {
-                lineWidth = context.lineWidth || 1;
-            } else {
-                lineWidth = 0;
-            }
-            return {
-                x: Math.round(minX - lineWidth / 2),
-                y: Math.round(minY - lineWidth / 2),
-                width: maxX - minX + lineWidth,
-                height: maxY - minY + lineWidth
-            };
         }
     }]);
     return Shape;
@@ -9697,7 +9676,7 @@ var BrokenLine = function (_Shape) {
         key: "watch",
         value: function watch(name, value, preValue) {
             if (name == "pointList" || name == "smooth" || name == "lineType") {
-                this.clearGraphicsData();
+                this.graphics.clear();
             }
         }
     }, {
@@ -9779,13 +9758,12 @@ var Circle$2 = function (_Shape) {
         key: "watch",
         value: function watch(name, value, preValue) {
             if (name == "r") {
-                this.clearGraphicsData();
+                this.graphics.clear();
             }
         }
     }, {
         key: "draw",
         value: function draw(graphics) {
-            //graphics.beginPath();
             graphics.drawCircle(0, 0, this.context.$model.r);
         }
     }]);
@@ -9834,7 +9812,7 @@ var Path = function (_Shape) {
         value: function watch(name, value, preValue) {
             if (name == "path") {
                 //如果path有变动，需要自动计算新的pointList
-                this.clearGraphicsData();
+                this.graphics.clear();
             }
         }
     }, {
@@ -10216,13 +10194,12 @@ var Ellipse$2 = function (_Shape) {
         key: "watch",
         value: function watch(name, value, preValue) {
             if (name == "hr" || name == "vr") {
-                this.clearGraphicsData();
+                this.graphics.clear();
             }
         }
     }, {
         key: "draw",
         value: function draw(graphics) {
-            //graphics.beginPath();
             graphics.drawEllipse(0, 0, this.context.$model.hr * 2, this.context.$model.vr * 2);
         }
     }]);
@@ -10272,7 +10249,7 @@ var Polygon$2 = function (_Shape) {
         value: function watch(name, value, preValue) {
             //调用parent的setGraphics
             if (name == "pointList" || name == "smooth" || name == "lineType") {
-                this.clearGraphicsData();
+                this.graphics.clear();
             }
         }
     }, {
@@ -10368,9 +10345,8 @@ var Isogon = function (_Polygon) {
                 //如果path有变动，需要自动计算新的pointList
                 this.context.$model.pointList = myMath.getIsgonPointList(this.context.$model.n, this.context.$model.r);
             }
-
             if (name == "pointList" || name == "smooth" || name == "lineType") {
-                this.clearGraphicsData();
+                this.graphics.clear();
             }
         }
     }]);
@@ -10422,13 +10398,12 @@ var Line = function (_Shape) {
         value: function watch(name, value, preValue) {
             //并不清楚是start.x 还是end.x， 当然，这并不重要
             if (name == "x" || name == "y") {
-                this.clearGraphicsData();
+                this.graphics.clear();
             }
         }
     }, {
         key: "draw",
         value: function draw(graphics) {
-            //graphics.beginPath();
             var model = this.context.$model;
             if (!model.lineType || model.lineType == 'solid') {
                 graphics.moveTo(model.start.x, model.start.y);
@@ -10476,7 +10451,7 @@ var Rect = function (_Shape) {
         key: "watch",
         value: function watch(name, value, preValue) {
             if (name == "width" || name == "height" || name == "radius") {
-                this.clearGraphicsData();
+                this.graphics.clear();
             }
         }
 
@@ -10518,36 +10493,10 @@ var Rect = function (_Shape) {
             r[3] !== 0 && G.quadraticCurveTo(x, y, parseInt(x), parseInt(y - r[3] * sy));
             G.lineTo(parseInt(x), parseInt(y + height + r[0] * sy));
             r[0] !== 0 && G.quadraticCurveTo(x, y + height, parseInt(x + r[0]), parseInt(y + height));
-
-            /*
-            G.moveTo( parseInt(x + r[0]), parseInt(y));
-            G.lineTo( parseInt(x + width - r[1]), parseInt(y));
-            r[1] !== 0 && G.quadraticCurveTo(
-                    x + width, y, x + width, y + r[1]
-                    );
-            G.lineTo( parseInt(x + width), parseInt(y + height - r[2]));
-            r[2] !== 0 && G.quadraticCurveTo(
-                    x + width, y + height, x + width - r[2], y + height
-                    );
-            G.lineTo( parseInt(x + r[3]), parseInt(y + height));
-            r[3] !== 0 && G.quadraticCurveTo(
-                    x, y + height, x, y + height - r[3]
-                    );
-            G.lineTo( parseInt(x), parseInt(y + r[0]));
-            r[0] !== 0 && G.quadraticCurveTo(x, y, x + r[0], y);
-            */
         }
-
-        /**
-         * 创建矩形路径
-         * @param {Context2D} ctx Canvas 2D上下文
-         * @param {Object} context 样式
-         */
-
     }, {
         key: "draw",
         value: function draw(graphics) {
-            //graphics.beginPath();
             var model = this.context.$model;
             if (!model.radius.length) {
                 graphics.drawRect(0, 0, model.width, model.height);
@@ -10603,22 +10552,19 @@ var Sector = function (_Shape) {
         key: "watch",
         value: function watch(name, value, preValue) {
             if (name == "r0" || name == "r" || name == "startAngle" || name == "endAngle" || name == "clockwise") {
-                this.clearGraphicsData();
+                //因为这里的graphs不一样。
+                this.graphics.clear();
             }
         }
     }, {
         key: "draw",
         value: function draw(graphics) {
-            debugger;
-            //graphics.beginPath();
             var model = this.context.$model;
             // 形内半径[0,r)
             var r0 = typeof model.r0 == 'undefined' ? 0 : model.r0;
             var r = model.r; // 扇形外半径(0,r]
             var startAngle = myMath.degreeTo360(model.startAngle); // 起始角度[0,360)
             var endAngle = myMath.degreeTo360(model.endAngle); // 结束角度(0,360]
-
-            //var isRing     = false;                       //是否为圆环
 
             if (startAngle != endAngle && Math.abs(startAngle - endAngle) % 360 == 0) {
                 //if( startAngle == endAngle && model.startAngle != model.endAngle ) {
@@ -10637,81 +10583,54 @@ var Sector = function (_Shape) {
             }
 
             var G = graphics;
-            G.beginPath();
-            if (this.isRing && model.r0 == 0) {
-                G.drawCircle(0, 0, model.r);
-            } else {
+            //G.beginPath();
+            if (this.isRing) {
+                if (model.r0 == 0) {
+                    //圆
+                    G.drawCircle(0, 0, model.r);
+                } else {
+                    //圆环
+                    if (model.fillStyle && model.fillAlpha) {
+                        G.beginPath();
+                        G.arc(0, 0, r, startAngle, endAngle, model.clockwise);
+                        if (model.r0 == 0) {
+                            G.lineTo(0, 0);
+                        } else {
+                            G.arc(0, 0, r0, endAngle, startAngle, !model.clockwise);
+                        }
+                        G.closePath();
+                        G.currentPath.lineWidth = 0;
+                        G.currentPath.strokeStyle = null;
+                        G.currentPath.lineAlpha = 0;
+                        G.currentPath.line = false;
+                    }
+                    if (model.lineWidth && model.strokeStyle && model.lineAlpha) {
+                        G.beginPath();
+                        G.arc(0, 0, r, startAngle, endAngle, model.clockwise);
+                        G.closePath();
+                        G.currentPath.fillStyle = null;
+                        G.currentPath.fill = false;
 
+                        G.beginPath();
+                        G.arc(0, 0, r0, endAngle, startAngle, !model.clockwise);
+                        G.closePath();
+                        G.currentPath.fillStyle = null;
+                        G.currentPath.fill = false;
+                    }
+                }
+            } else {
+                //正常的扇形状
+                G.beginPath();
                 G.arc(0, 0, r, startAngle, endAngle, model.clockwise);
                 if (model.r0 == 0) {
                     G.lineTo(0, 0);
                 } else {
                     G.arc(0, 0, r0, endAngle, startAngle, !model.clockwise);
                 }
+                G.closePath();
             }
-
-            G.closePath();
-        }
-    }, {
-        key: "getRect",
-        value: function getRect(context) {
-            var context = context ? context : this.context;
-            var model = context.$model;
-
-            var r0 = typeof model.r0 == 'undefined' // 形内半径[0,r)
-            ? 0 : model.r0;
-            var r = model.r; // 扇形外半径(0,r]
-
-            this.getRegAngle();
-
-            var startAngle = myMath.degreeTo360(model.startAngle); // 起始角度[0,360)
-            var endAngle = myMath.degreeTo360(model.endAngle); // 结束角度(0,360]
-
-            var pointList = [];
-
-            var p4Direction = {
-                "90": [0, r],
-                "180": [-r, 0],
-                "270": [0, -r],
-                "360": [r, 0]
-            };
-
-            for (var d in p4Direction) {
-                var inAngleReg = parseInt(d) > this.regAngle[0] && parseInt(d) < this.regAngle[1];
-                if (this.isRing || inAngleReg && this.regIn || !inAngleReg && !this.regIn) {
-                    pointList.push(p4Direction[d]);
-                }
-            }
-
-            if (!this.isRing) {
-                startAngle = myMath.degreeToRadian(startAngle);
-                endAngle = myMath.degreeToRadian(endAngle);
-
-                pointList.push([myMath.cos(startAngle) * r0, myMath.sin(startAngle) * r0]);
-
-                pointList.push([myMath.cos(startAngle) * r, myMath.sin(startAngle) * r]);
-
-                pointList.push([myMath.cos(endAngle) * r, myMath.sin(endAngle) * r]);
-
-                pointList.push([myMath.cos(endAngle) * r0, myMath.sin(endAngle) * r0]);
-            }
-
-            model.pointList = pointList;
-            return this.getRectFormPointList(context);
-        }
-    }, {
-        key: "getRegAngle",
-        value: function getRegAngle() {
-            this.regIn = true; //如果在start和end的数值中，end大于start而且是顺时针则regIn为true
-            var model = this.context.$model;
-            var startAngle = myMath.degreeTo360(model.startAngle); // 起始角度[0,360)
-            var endAngle = myMath.degreeTo360(model.endAngle); // 结束角度(0,360]
-
-            if (startAngle > endAngle && !model.clockwise || startAngle < endAngle && model.clockwise) {
-                this.regIn = false; //out
-            }
-            //度的范围，从小到大
-            this.regAngle = [Math.min(startAngle, endAngle), Math.max(startAngle, endAngle)];
+            debugger;
+            //G.closePath();
         }
     }]);
     return Sector;

@@ -218,17 +218,16 @@
                 fillStyle:colors.getColor(colorInd++),
                 strokeStyle:colors.getColor(colorInd++),
                 lineWidth : 1
-                //lineJoin : "round"
             }
         });
 
-        var srect = sector.getRect();
+        var sBound = sector.getBound();
         var sector_rect = new Shapes.Rect({
             context : {
-                x           : 700 + srect.x,
-                y           : srect.y,
-                width       : srect.width,
-                height      : srect.height,
+                x           : 700 + sBound.x,
+                y           : sBound.y,
+                width       : sBound.width,
+                height      : sBound.height,
                 strokeStyle : colors.getColor(colorInd++),
                 lineWidth   : 1
             }

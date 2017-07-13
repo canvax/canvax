@@ -31,6 +31,10 @@ export default class Graphics
         this._webGL = {};
         this.worldAlpha = 1;
         this.tint = 0xFFFFFF; //目标对象附加颜色
+
+        this.Bound = {
+            x:0,y:0,width:0,height:0
+        }
     }
 
     setStyle( context )
@@ -48,7 +52,7 @@ export default class Graphics
 
         //一般都是先设置好style的，所以 ， 当后面再次设置新的style的时候
         //会把所有的data都修改
-        //TODO: 后面需要修改, 能精准的确定是修改graphicsData中的哪个data
+        //TODO: 后面需要修改, 能精准的确定是修改 graphicsData 中的哪个data
         if( this.graphicsData.length ){
             _.each( this.graphicsData , function(gd , i){
                 gd.synsStyle( g );
@@ -58,6 +62,7 @@ export default class Graphics
 
     clone()
     {
+        
         const clone = new Graphics();
 
         clone.dirty = 0;
@@ -237,7 +242,7 @@ export default class Graphics
         }
 
         const sweep = endAngle - startAngle;
-        const segs = Math.ceil(Math.abs(sweep) / (Math.PI * 2)) * 40;
+        const segs = Math.ceil(Math.abs(sweep) / (Math.PI * 2)) * 48;
 
         if (sweep === 0)
         {
@@ -531,12 +536,18 @@ export default class Graphics
             maxY = 0;
         }
 
+        this.Bound = {
+            x : minX,
+            y : minY,
+            width : maxX-minX,
+            height : maxY - minY
+        }
+        return this;
+    }
 
-        this.Bound.minX = minX 
-        this.Bound.maxX = maxX;
-
-        this.Bound.minY = minY;
-        this.Bound.maxY = maxY;
+    getBound()
+    {
+        return this.updateLocalBounds().Bound;
     }
 
     destroy(options)

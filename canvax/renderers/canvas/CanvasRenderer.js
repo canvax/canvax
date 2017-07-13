@@ -49,6 +49,7 @@ export default class CanvasRenderer extends SystemRenderer
             
             ctx.setTransform.apply( ctx , displayObject.worldTransform.toArray() );
             
+            //如果 graphicsData.length==0 的情况下才需要执行_draw来组织graphics数据
             if( !displayObject.graphics.graphicsData.length ){
                 //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
                 displayObject._draw( displayObject.graphics );//_draw会完成绘制准备好 graphicsData

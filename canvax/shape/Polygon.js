@@ -43,7 +43,7 @@ export default class Polygon extends Shape
     {
         //调用parent的setGraphics
         if (name == "pointList" || name == "smooth" || name == "lineType") {
-            this.clearGraphicsData();
+            this.graphics.clear();
         }
     }
 

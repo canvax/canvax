@@ -14,18 +14,15 @@ import Graphics from "../graphics/Graphics";
 export default class Shape extends DisplayObject
 {
     constructor(opt){
-
-        //var _context = _.extend( _.clone(SHAPE_CONTEXT_DEFAULT) , opt.context );
-        //opt.context = _context;
-
+      
         var styleContext = {
             cursor        : opt.context.cursor     || "default",
 
             fillAlpha     : opt.context.fillAlpha  || 1,//context2d里没有，自定义
             fillStyle     : opt.context.fillStyle  || null,//"#000000",
 
-            lineCap       : opt.context.lineCap    || null,//默认都是直角
-            lineJoin      : opt.context.lineJoin   || null,//这两个目前webgl里面没实现
+            lineCap       : opt.context.lineCap    || "round",//默认都是直角
+            lineJoin      : opt.context.lineJoin   || "round",//这两个目前webgl里面没实现
             miterLimit    : opt.context.miterLimit || null,//miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
 
             lineAlpha     : opt.context.lineAlpha  || 1,//context2d里没有，自定义
@@ -34,8 +31,6 @@ export default class Shape extends DisplayObject
             lineWidth     : opt.context.lineWidth  || null
         };
          
-        
-
         var _context = _.extend( true, styleContext , opt.context );
         opt.context = _context;
 
@@ -109,6 +104,11 @@ export default class Shape extends DisplayObject
         }
     }
 
+    getBound()
+    {
+        return this.graphics.updateLocalBounds().Bound
+    }
+
    /*
     * 画虚线
     */
@@ -130,47 +130,5 @@ export default class Shape extends DisplayObject
                  graphics.lineTo( x2 , y2 );
              }
          }
-   }
-
-   /*
-    *从cpl节点中获取到4个方向的边界节点
-    *@param  context 
-    *
-    **/
-   getRectFormPointList( context )
-   {
-       var minX =  Number.MAX_VALUE;
-       var maxX =  Number.MIN_VALUE;
-       var minY =  Number.MAX_VALUE;
-       var maxY =  Number.MIN_VALUE;
-
-       var cpl = context.pointList; //this.getcpl();
-       for(var i = 0, l = cpl.length; i < l; i++) {
-           if (cpl[i][0] < minX) {
-               minX = cpl[i][0];
-           }
-           if (cpl[i][0] > maxX) {
-               maxX = cpl[i][0];
-           }
-           if (cpl[i][1] < minY) {
-               minY = cpl[i][1];
-           }
-           if (cpl[i][1] > maxY) {
-               maxY = cpl[i][1];
-           }
-       };
-
-       var lineWidth;
-       if (context.strokeStyle || context.fillStyle  ) {
-           lineWidth = context.lineWidth || 1;
-       } else {
-           lineWidth = 0;
-       }
-       return {
-           x      : Math.round(minX - lineWidth / 2),
-           y      : Math.round(minY - lineWidth / 2),
-           width  : maxX - minX + lineWidth,
-           height : maxY - minY + lineWidth
-       };
    }
 }

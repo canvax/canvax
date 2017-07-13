@@ -35,13 +35,12 @@ export default class Circle extends Shape
     watch(name, value, preValue)
     {
         if ( name == "r" ) {
-            this.clearGraphicsData();
+            this.graphics.clear();
         }
     }
 
     draw( graphics ) 
     {
-        //graphics.beginPath();
         graphics.drawCircle(0, 0, this.context.$model.r);
     }
 

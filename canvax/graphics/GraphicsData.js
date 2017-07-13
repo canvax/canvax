@@ -23,7 +23,7 @@ export default class GraphicsData
 
     clone()
     {
-        return new GraphicsData(
+        var cloneGraphicsData = new GraphicsData(
             this.lineWidth,
             this.strokeStyle,
             this.lineAlpha,
@@ -31,6 +31,9 @@ export default class GraphicsData
             this.fillAlpha,
             this.shape
         );
+        cloneGraphicsData.fill = this.fill;
+        cloneGraphicsData.line = this.line;
+        return cloneGraphicsData;
     }
 
     addHole(shape)
@@ -39,15 +42,20 @@ export default class GraphicsData
     }
 
     //从宿主graphics中同步最新的style属性
-    synsStyle( graphics )
+    synsStyle( style )
     {
+        //console.log("line:"+this.line+"__fill:"+this.fill)
         //从shape中把绘图需要的style属性同步过来
-        this.lineWidth = graphics.lineWidth;
-        this.strokeStyle = graphics.strokeStyle;
-        this.lineAlpha = graphics.lineAlpha;
+        if( this.line ){
+            this.lineWidth = style.lineWidth;
+            this.strokeStyle = style.strokeStyle;
+            this.lineAlpha = style.lineAlpha;
+        }
 
-        this.fillStyle = graphics.fillStyle;
-        this.fillAlpha = graphics.fillAlpha;
+        if( this.fill ){
+            this.fillStyle = style.fillStyle;
+            this.fillAlpha = style.fillAlpha;
+        }
     }
 
     hasFill()

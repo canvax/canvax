@@ -33,7 +33,7 @@ export default class Rect extends Shape
     watch(name, value, preValue) 
     {
         if ( name == "width" || name == "height" || name == "radius" ) {
-            this.clearGraphicsData();
+            this.graphics.clear();
         }
     }
 
@@ -81,34 +81,10 @@ export default class Rect extends Shape
         r[0] !== 0 && G.quadraticCurveTo(
             x, y+height, parseInt(x + r[0]), parseInt(y+height)
             );
-     
-        /*
-        G.moveTo( parseInt(x + r[0]), parseInt(y));
-        G.lineTo( parseInt(x + width - r[1]), parseInt(y));
-        r[1] !== 0 && G.quadraticCurveTo(
-                x + width, y, x + width, y + r[1]
-                );
-        G.lineTo( parseInt(x + width), parseInt(y + height - r[2]));
-        r[2] !== 0 && G.quadraticCurveTo(
-                x + width, y + height, x + width - r[2], y + height
-                );
-        G.lineTo( parseInt(x + r[3]), parseInt(y + height));
-        r[3] !== 0 && G.quadraticCurveTo(
-                x, y + height, x, y + height - r[3]
-                );
-        G.lineTo( parseInt(x), parseInt(y + r[0]));
-        r[0] !== 0 && G.quadraticCurveTo(x, y, x + r[0], y);
-        */
     }
 
-    /**
-     * 创建矩形路径
-     * @param {Context2D} ctx Canvas 2D上下文
-     * @param {Object} context 样式
-     */
     draw( graphics ) 
     {
-        //graphics.beginPath();
         var model = this.context.$model;
         if(!model.radius.length) {
             graphics.drawRect(0,0,model.width , model.height);
