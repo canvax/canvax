@@ -16,40 +16,48 @@ import {CONTEXT_DEFAULT, TRANSFORM_PROPS} from "../const";
 import InsideLine from '../geom/InsideLine';
 import Settings from '../settings';
 
-var DisplayObject = function(opt){
-    DisplayObject.superclass.constructor.apply(this, arguments);
+export default class DisplayObject extends EventDispatcher
+{
+    constructor( opt )
+    {
+        super( opt );
+        //相对父级元素的矩阵
+        this._transform      = null;
+        this.worldTransform  = null; //webgl 渲染器中专用
 
-    //相对父级元素的矩阵
-    this._transform      = null;
-    this.worldTransform  = null; //webgl 渲染器中专用
+        //心跳次数
+        this._heartBeatNum   = 0;
 
-    //心跳次数
-    this._heartBeatNum   = 0;
+        //元素对应的stage元素
+        this.stage           = null;
 
-    //元素对应的stage元素
-    this.stage           = null;
+        //元素的父元素
+        this.parent          = null;
 
-    //元素的父元素
-    this.parent          = null;
+        this.xyToInt         = "xyToInt" in opt ? opt.xyToInt : true;    //是否对xy坐标统一int处理，默认为true，但是有的时候可以由外界用户手动指定是否需要计算为int，因为有的时候不计算比较好，比如，进度图表中，再sector的两端添加两个圆来做圆角的进度条的时候，圆circle不做int计算，才能和sector更好的衔接
 
-    this.xyToInt         = "xyToInt" in opt ? opt.xyToInt : true;    //是否对xy坐标统一int处理，默认为true，但是有的时候可以由外界用户手动指定是否需要计算为int，因为有的时候不计算比较好，比如，进度图表中，再sector的两端添加两个圆来做圆角的进度条的时候，圆circle不做int计算，才能和sector更好的衔接
+        this.moveing         = false; //如果元素在最轨道运动中的时候，最好把这个设置为true，这样能保证轨迹的丝搬顺滑，否则因为xyToInt的原因，会有跳跃
 
-    this.moveing         = false; //如果元素在最轨道运动中的时候，最好把这个设置为true，这样能保证轨迹的丝搬顺滑，否则因为xyToInt的原因，会有跳跃
+        //创建好context
+        this.context         = this._createContext( opt );
 
-    //创建好context
-    this.context         = this._createContext( opt );
+        this.type            = opt.type || "DisplayObject";
 
-    this.id = opt.id || Utils.createId(this.type || "displayObject");
+        this.id              = opt.id || Utils.createId( this.type );
 
-    this.init.apply(this , arguments);
+        this.init.apply(this , arguments);
 
-    //所有属性准备好了后，先要计算一次this._updateTransform()得到_tansform
-    this._updateTransform();
-};
+        //所有属性准备好了后，先要计算一次this._updateTransform()得到_tansform
+        this._updateTransform();
+    }
 
-Utils.creatClass( DisplayObject , EventDispatcher , {
-    init : function(){},
-    _createContext : function( opt ){
+    init()
+    {
+
+    }
+
+    _createContext( opt )
+    {
         var self = this;
 
         var optCtx = opt.context || {};
@@ -146,13 +154,15 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
 
         //执行init之前，应该就根据参数，把context组织好线
         return Observe( _contextATTRS );
-    },
+    }
+
     /* @myself 是否生成自己的镜像 
      * 克隆又两种，一种是镜像，另外一种是绝对意义上面的新个体
      * 默认为绝对意义上面的新个体，新对象id不能相同
      * 镜像基本上是框架内部在实现  镜像的id相同 主要用来把自己画到另外的stage里面，比如
      * mouseover和mouseout的时候调用*/
-    clone : function( myself ){
+    clone( myself )
+    {
         var conf   = {
             id      : this.id,
             context : _.clone(this.context.$model),
@@ -180,8 +190,10 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
             newObj.id = Utils.createId(newObj.type);
         };
         return newObj;
-    },
-    heartBeat : function(opt){
+    }
+
+    heartBeat(opt)
+    {
         //stage存在，才说self代表的display已经被添加到了displayList中，绘图引擎需要知道其改变后
         //的属性，所以，通知到stage.displayAttrHasChange
         var stage = this.getStage();
@@ -189,14 +201,20 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
             this._heartBeatNum ++;
             stage.heartBeat && stage.heartBeat( opt );
         }
-    },
-    getCurrentWidth : function(){
+    }
+
+    getCurrentWidth()
+    {
        return Math.abs(this.context.$model.width * this.context.$model.scaleX);
-    },
-    getCurrentHeight : function(){
+    }
+
+    getCurrentHeight()
+    {
        return Math.abs(this.context.$model.height * this.context.$model.scaleY);
-    },
-    getStage : function(){
+    }
+
+    getStage()
+    {
         if( this.stage ) {
             return this.stage;
         };
@@ -218,8 +236,10 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         //一直回溯到顶层object， 即是stage， stage的parent为null
         this.stage = p;
         return p;
-    },
-    localToGlobal : function( point , container ){
+    }
+
+    localToGlobal( point , container )
+    {
         !point && ( point = new Point( 0 , 0 ) );
         var cm = this.getConcatenatedMatrix( container );
 
@@ -227,8 +247,10 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         var m = new Matrix(1, 0, 0, 1, point.x , point.y);
         m.concat(cm);
         return new Point( m.tx , m.ty ); //{x:m.tx, y:m.ty};
-    },
-    globalToLocal : function( point , container) {
+    }
+
+    globalToLocal( point , container) 
+    {
         !point && ( point = new Point( 0 , 0 ) );
 
         if( this.type == "stage" ){
@@ -241,12 +263,16 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         var m = new Matrix(1, 0, 0, 1, point.x , point.y);
         m.concat(cm);
         return new Point( m.tx , m.ty ); //{x:m.tx, y:m.ty};
-    },
-    localToTarget : function( point , target){
+    }
+
+    localToTarget( point , target)
+    {
         var p = localToGlobal( point );
         return target.globalToLocal( p );
-    },
-    getConcatenatedMatrix : function( container ){
+    }
+
+    getConcatenatedMatrix( container )
+    {
         var cm = new Matrix();
         for (var o = this; o != null; o = o.parent) {
             cm.concat( o._transform );
@@ -256,32 +282,39 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
             }
         }
         return cm;
-    },
+    }
+
     /*
      *设置元素的是否响应事件检测
      *@bool  Boolean 类型
      */
-    setEventEnable : function( bool ){
+    setEventEnable( bool )
+    {
         if(_.isBoolean(bool)){
             this._eventEnabled = bool
             return true;
         };
         return false;
-    },
+    }
+
     /*
      *查询自己在parent的队列中的位置
      */
-    getIndex   : function(){
+    getIndex()
+    {
         if(!this.parent) {
           return;
         };
         return _.indexOf(this.parent.children , this)
-    },
+    }
+
+
     /*
      *元素在z轴方向向下移动
      *@num 移动的层级
      */
-    toBack : function( num ){
+    toBack( num )
+    {
         if(!this.parent) {
           return;
         }
@@ -300,12 +333,14 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
             toIndex = 0;
         };
         this.parent.addChildAt( me , toIndex );
-    },
+    }
+
     /*
      *元素在z轴方向向上移动
      *@num 移动的层数量 默认到顶端
      */
-    toFront : function( num ){
+    toFront( num )
+    {
         if(!this.parent) {
           return;
         }
@@ -325,8 +360,10 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
             toIndex = pcl;
         }
         this.parent.addChildAt( me , toIndex-1 );
-    },
-    _updateTransform : function() {
+    }
+
+    _updateTransform() 
+    {
         var _transform = new Matrix();
         _transform.identity();
         var context = this.context;
@@ -380,10 +417,12 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         };
         this._transform = _transform;
         return _transform;
-    },
+    }
+
     //获取全局的世界坐标系内的矩阵
     //世界坐标是从上而下的，所以只要和parent的直接坐标相乘就好了
-    getWorldTransform: function(){
+    getWorldTransform()
+    {
         var cm;
         if( !this.worldTransform ){
             cm = new Matrix();
@@ -392,9 +431,11 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
             this.worldTransform = cm;
         };
         return this.worldTransform;
-    },
+    }
+
     //显示对象的选取检测处理函数
-    getChildInPoint : function( point ){
+    getChildInPoint( point )
+    {
 
         var result = false; //检测的结果
 
@@ -428,8 +469,10 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         };
 
         return result;
-    },
-    containsPoint: function(point){
+    }
+
+    containsPoint(point)
+    {
         let inside = false;
         for (let i = 0; i < this.graphics.graphicsData.length; ++i)
         {
@@ -458,13 +501,15 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
             }   
         }
         return inside;
-    },
+    }
+
     /*
     * animate
     * @param toContent 要动画变形到的属性集合
     * @param options tween 动画参数
     */
-    animate : function( toContent , options ){
+    animate( toContent , options )
+    {
         var to = toContent;
         var from = {};
         for( var p in to ){
@@ -504,23 +549,24 @@ Utils.creatClass( DisplayObject , EventDispatcher , {
         };
         tween = AnimationFrame.registTween( options );
         return tween;
-    },
+    }
+
     //从树中删除
-    remove : function(){
+    remove()
+    {
         if( this.parent ){
             this.parent.removeChild(this);
             this.parent = null;
         }
-    },
+    }
+
     //元素的自我销毁
-    destroy : function(){
+    destroy()
+    {
         this.remove();
         this.fire("destroy");
         //把自己从父节点中删除了后做自我清除，释放内存
         this.context = null;
         delete this.context;
     }
-} );
-
-export default DisplayObject;
-
+}

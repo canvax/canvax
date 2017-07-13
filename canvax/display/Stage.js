@@ -10,24 +10,30 @@
 import DisplayObjectContainer from "./DisplayObjectContainer";
 import Utils from "../utils/index";
 
-var Stage = function( opt ){
-    var self = this;
-    self.type = "stage";
-    self.canvas = null;
-    self.ctx = null; //渲染的时候由renderer决定,这里不做初始值
-    //stage正在渲染中
-    self.stageRending = false;
-    self._isReady = false;
-    
-    Stage.superclass.constructor.apply(this, arguments);
+export default class Stage extends DisplayObjectContainer
+{
+    constructor( opt )
+    {
+        
+        opt.type = "stage";
 
-};
-Utils.creatClass( Stage , DisplayObjectContainer , {
-    init : function(){
-  
-    },
+        super( opt );
+
+        this.canvas = null;
+        this.ctx = null; //渲染的时候由renderer决定,这里不做初始值
+        //stage正在渲染中
+        this.stageRending = false;
+        this._isReady = false;
+    }
+
+    init()
+    {
+
+    }
+
     //由canvax的afterAddChild 回调
-    initStage : function( canvas , width , height ){
+    initStage( canvas , width , height )
+    {
         var self = this;
         self.canvas = canvas;
         var model = self.context;
@@ -36,8 +42,10 @@ Utils.creatClass( Stage , DisplayObjectContainer , {
         model.scaleX = Utils._devicePixelRatio;
         model.scaleY = Utils._devicePixelRatio;
         self._isReady = true;
-    },
-    heartBeat : function( opt ){
+    }
+
+    heartBeat( opt )
+    {
         //shape , name , value , preValue 
         //displayList中某个属性改变了
         if (!this._isReady) {
@@ -50,5 +58,4 @@ Utils.creatClass( Stage , DisplayObjectContainer , {
         //TODO临时先这么处理
         this.parent && this.parent.heartBeat(opt);
     }
-});
-export default Stage;
+}

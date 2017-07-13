@@ -23,48 +23,49 @@ import Matrix from "./geom/Matrix";
 import _ from "./utils/underscore";
 import $ from "./utils/dom";
 
+export default class Application extends DisplayObjectContainer
+{
+    constructor( opt , options = {} )
+    {
+        opt.type = "canvax";
 
-var Application = function( opt , options = {}){
-    this.type = "canvax";
-    this._cid = new Date().getTime() + "_" + Math.floor(Math.random()*100); 
-    
-    this.el = $.query(opt.el);
+        super( opt );
 
-    this.width = parseInt("width"  in opt || this.el.offsetWidth  , 10); 
-    this.height = parseInt("height" in opt || this.el.offsetHeight , 10); 
+        this._cid = new Date().getTime() + "_" + Math.floor(Math.random()*100); 
+        
+        this.el = $.query(opt.el);
 
-    var viewObj = $.createView(this.width , this.height, this._cid);
-    this.view = viewObj.view;
-    this.stage_c = viewObj.stage_c;
-    this.dom_c = viewObj.dom_c;
-    
-    this.el.innerHTML = "";
-    this.el.appendChild( this.view );
+        this.width = parseInt("width"  in opt || this.el.offsetWidth  , 10); 
+        this.height = parseInt("height" in opt || this.el.offsetHeight , 10); 
 
-    this.viewOffset = $.offset(this.view);
-    this.lastGetRO = 0;//最后一次获取 viewOffset 的时间
+        var viewObj = $.createView(this.width , this.height, this._cid);
+        this.view = viewObj.view;
+        this.stage_c = viewObj.stage_c;
+        this.dom_c = viewObj.dom_c;
+        
+        this.el.innerHTML = "";
+        this.el.appendChild( this.view );
 
-    this.webGL  = opt.webGL;
-    this.renderer = autoRenderer(this , options);
+        this.viewOffset = $.offset(this.view);
+        this.lastGetRO = 0;//最后一次获取 viewOffset 的时间
 
-    this.event = null;
+        this.webGL  = opt.webGL;
+        this.renderer = autoRenderer(this , options);
 
-    this._bufferStage = null;
+        this.event = null;
 
-    //是否阻止浏览器默认事件的执行
-    this.preventDefault = true;
-    if( opt.preventDefault === false ){
-        this.preventDefault = false
-    };
+        this._bufferStage = null;
 
-    //该属性在systenRender里面操作，每帧由心跳上报的 需要重绘的stages 列表
-    this.convertStages = {};
+        //是否阻止浏览器默认事件的执行
+        this.preventDefault = true;
+        if( opt.preventDefault === false ){
+            this.preventDefault = false
+        };
 
-    Application.superclass.constructor.apply(this, arguments);
-};
+        //该属性在systenRender里面操作，每帧由心跳上报的 需要重绘的stages 列表
+        this.convertStages = {};
 
-Utils.creatClass(Application , DisplayObjectContainer , {
-    init : function(){
+
         this.context.$model.width  = this.width;
         this.context.$model.height = this.height; 
 
@@ -76,15 +77,18 @@ Utils.creatClass(Application , DisplayObjectContainer , {
 
         //设置一个默认的matrix做为app的世界根节点坐标
         this.worldTransform = new Matrix().identity();
-        
-    },
-    registEvent : function(opt){
+    }
+
+    registEvent(opt)
+    {
         //初始化事件委托到root元素上面
         this.event = new EventHandler( this , opt);;
         this.event.init();
         return this.event;
-    },
-    resize : function( opt ){
+    }
+
+    resize( opt )
+    {
         //重新设置坐标系统 高宽 等。
         this.width      = parseInt((opt && "width" in opt) || this.el.offsetWidth  , 10); 
         this.height     = parseInt((opt && "height" in opt) || this.el.offsetHeight , 10); 
@@ -120,11 +124,15 @@ Utils.creatClass(Application , DisplayObjectContainer , {
 
         this.heartBeat();
 
-    },
-    getHoverStage : function(){
+    }
+
+    getHoverStage()
+    {
         return this._bufferStage;
-    },
-    _creatHoverStage : function(){
+    }
+
+    _creatHoverStage()
+    {
         //TODO:创建stage的时候一定要传入width height  两个参数
         this._bufferStage = new Stage( {
             id : "activCanvas"+(new Date()).getTime(),
@@ -136,12 +144,14 @@ Utils.creatClass(Application , DisplayObjectContainer , {
         //该stage不参与事件检测
         this._bufferStage._eventEnabled = false;
         this.addChild( this._bufferStage );
-    },
+    }
+
     /**
      * 用来检测文本width height 
      * @return {Object} 上下文
     */
-    _createPixelContext : function() {
+    _createPixelContext() 
+    {
         var _pixelCanvas = $.query("_pixelCanvas");
         if(!_pixelCanvas){
             _pixelCanvas = $.createCanvas(0, 0, "_pixelCanvas"); 
@@ -163,17 +173,19 @@ Utils.creatClass(Application , DisplayObjectContainer , {
             _pixelCanvas.style.visibility = "hidden";
         }
         Utils._pixelCtx = _pixelCanvas.getContext('2d');
-    },
+    }
 
-    updateViewOffset : function(){
+    updateViewOffset()
+    {
         var now = new Date().getTime();
         if( now - this.lastGetRO > 1000 ){
             this.viewOffset      = $.offset(this.view);
             this.lastGetRO       = now;
         }
-    },
+    }
     
-    _afterAddChild : function( stage , index ){
+    _afterAddChild( stage , index )
+    {
         var canvas;
 
         if(!stage.canvas){
@@ -200,17 +212,22 @@ Utils.creatClass(Application , DisplayObjectContainer , {
 
         Utils.initElement( canvas );
         stage.initStage( canvas , this.context.$model.width , this.context.$model.height ); 
-    },
-    _afterDelChild : function(stage){
+    }
+
+    _afterDelChild(stage)
+    {
         this.stage_c.removeChild( stage.canvas );
-    },
+    }
     
-    heartBeat : function(opt){
+    heartBeat(opt)
+    {
         if( this.children.length > 0 ){
             this.renderer.heartBeat(opt);
         }
-    },
-    toDataURL: function(){
+    }
+
+    toDataURL()
+    {
         var canvas = Base._createCanvas( "curr_base64_canvas" , this.width , this.height );
         var ctx = canvas.getContext("2d");
 
@@ -220,6 +237,4 @@ Utils.creatClass(Application , DisplayObjectContainer , {
         
         return canvas.toDataURL();
     }
-} );
-
-export default Application;
+}

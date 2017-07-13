@@ -1,4 +1,4 @@
-/**
+/** 
  * Canvax
  *
  * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
@@ -6,24 +6,25 @@
  * 模拟as3的DisplayList 中的容器类
  */
 import _ from "../utils/underscore";
-import Utils from "../utils/index";
 import DisplayObject from "./DisplayObject";
 import Point from "./Point";
 
-var DisplayObjectContainer = function(opt){
-   var self = this;
-   self.children = [];
-   self.mouseChildren = [];
-   DisplayObjectContainer.superclass.constructor.apply(this, arguments);
+export default class DisplayObjectContainer extends DisplayObject
+{
+    constructor(opt){
+        
+        super( opt );
 
-   //所有的容器默认支持event 检测，因为 可能有里面的shape是eventEnable是true的
-   //如果用户有强制的需求让容器下的所有元素都 不可检测，可以调用
-   //DisplayObjectContainer的 setEventEnable() 方法
-   self._eventEnabled = true;
-};
+        this.children = [];
+        this.mouseChildren = [];
+        //所有的容器默认支持event 检测，因为 可能有里面的shape是eventEnable是true的
+        //如果用户有强制的需求让容器下的所有元素都 不可检测，可以调用
+        //DisplayObjectContainer的 setEventEnable() 方法
+        this._eventEnabled = true;
+    }
 
-Utils.creatClass( DisplayObjectContainer , DisplayObject , {
-    addChild : function(child , index){
+    addChild(child , index)
+    {
         if( !child ) {
             return;
         };
@@ -62,14 +63,20 @@ Utils.creatClass( DisplayObjectContainer , DisplayObject , {
         };
 
         return child;
-    },
-    addChildAt : function(child, index) {
+    }
+
+    addChildAt(child, index) 
+    {
         return this.addChild( child , index );
-    },
-    removeChild : function(child) {
+    }
+
+    removeChild(child) 
+    {
         return this.removeChildAt(_.indexOf( this.children , child ));
-    },
-    removeChildAt : function(index) {
+    }
+
+    removeChildAt(index) 
+    {
         if (index < 0 || index > this.children.length - 1) {
             return false;
         };
@@ -92,22 +99,28 @@ Utils.creatClass( DisplayObjectContainer , DisplayObject , {
         }
 
         return child;
-    },
-    removeChildById : function( id ) {	
+    }
+
+    removeChildById( id ) 
+    {  
         for(var i = 0, len = this.children.length; i < len; i++) {
             if(this.children[i].id == id) {
                 return this.removeChildAt(i);
             }
         }
         return false;
-    },
-    removeAllChildren : function() {
+    }
+
+    removeAllChildren() 
+    {
         while(this.children.length > 0) {
             this.removeChildAt(0);
         }
-    },
+    }
+
     //集合类的自我销毁
-    destroy : function(){
+    destroy()
+    {
         if( this.parent ){
             this.parent.removeChild(this);
             this.parent = null;
@@ -119,12 +132,14 @@ Utils.creatClass( DisplayObjectContainer , DisplayObject , {
             i--;
             l--;
         };
-    },
+    }
+
     /*
      *@id 元素的id
      *@boolen 是否深度查询，默认就在第一层子元素中查询
      **/
-    getChildById : function(id , boolen){
+    getChildById(id , boolen)
+    {
         if(!boolen) {
             for(var i = 0, len = this.children.length; i < len; i++){
                 if(this.children[i].id == id) {
@@ -137,26 +152,36 @@ Utils.creatClass( DisplayObjectContainer , DisplayObject , {
             return null
         }
         return null;
-    },
-    getChildAt : function(index) {
+    }
+
+    getChildAt(index) 
+    {
         if (index < 0 || index > this.children.length - 1) return null;
         return this.children[index];
-    },
-    getChildIndex : function(child) {
+    }
+
+    getChildIndex(child) 
+    {
         return _.indexOf( this.children , child );
-    },
-    setChildIndex : function(child, index){
+    }
+
+    setChildIndex(child, index)
+    {
         if(child.parent != this) return;
         var oldIndex = _.indexOf( this.children , child );
         if(index == oldIndex) return;
         this.children.splice(oldIndex, 1);
         this.children.splice(index, 0, child);
-    },
-    getNumChildren : function() {
+    }
+
+    getNumChildren() 
+    {
         return this.children.length;
-    },
+    }
+
     //获取x,y点上的所有object  num 需要返回的obj数量
-    getObjectsUnderPoint : function( point , num) {
+    getObjectsUnderPoint( point , num) 
+    {
         var result = [];
         
         for(var i = this.children.length - 1; i >= 0; i--) {
@@ -175,7 +200,7 @@ Utils.creatClass( DisplayObjectContainer , DisplayObject , {
                    if (objs.length > 0){
                       result = result.concat( objs );
                    }
-                }		
+                }       
             } else {
                 //非集合，可以开始做getChildInPoint了
                 if (child.getChildInPoint( point )) {
@@ -189,9 +214,11 @@ Utils.creatClass( DisplayObjectContainer , DisplayObject , {
             }
         }
         return result;
-    },
+    }
+
     //更新所有子节点的世界坐标
-    updateChildWorldTransform: function(){
+    updateChildWorldTransform()
+    {
         _.each( this.children , function( obj ){
             obj.getWorldTransform();
             if( obj.children ){
@@ -199,5 +226,5 @@ Utils.creatClass( DisplayObjectContainer , DisplayObject , {
             } 
         } );
     }
-});
-export default DisplayObjectContainer;
+
+}

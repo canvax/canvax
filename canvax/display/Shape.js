@@ -42,12 +42,12 @@ export default class Shape extends DisplayObject
         if( opt.id === undefined && opt.type !== undefined ){
             opt.id = Utils.createId(opt.type);
         };
-debugger
+
         super( opt );
 
         //over的时候如果有修改样式，就为true
         this._hoverClass = false;
-        this.hoverCloneEnabled  = true;    //是否开启在hover的时候clone一份到active stage 中 
+        this.hoverClone  = true;    //是否开启在hover的时候clone一份到active stage 中 
         this.pointChkPriority = true; //在鼠标mouseover到该节点，然后mousemove的时候，是否优先检测该节点
 
         this._eventEnabled   = false; //是否响应事件交互,在添加了事件侦听后会自动设置为true

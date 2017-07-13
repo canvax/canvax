@@ -48,6 +48,7 @@ export default class Sector extends Shape
 
     draw( graphics )
     {
+        debugger
         //graphics.beginPath();
         var model = this.context.$model;
         // 形内半径[0,r)

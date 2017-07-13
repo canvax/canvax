@@ -9,34 +9,38 @@ import DisplayObject from "./DisplayObject";
 import Utils from "../utils/index";
 import _ from "../utils/underscore";
 
-var Text = function(text, opt) {
-    var self = this;
-    self.type = "text";
-    self._reNewline = /\r?\n/;
-    self.fontProperts = ["fontStyle", "fontVariant", "fontWeight", "fontSize", "fontFamily"];
+export default class Text extends DisplayObject
+{
+    constructor(text, opt)
+    {
+        opt.type = "text";
+        super( opt );
 
-    self._context = _.extend({
-        fontSize: 13, //字体大小默认13
-        fontWeight: "normal",
-        fontFamily: "微软雅黑,sans-serif",
-        textDecoration: null,
-        fillStyle: 'blank',
-        strokeStyle: null,
-        lineWidth: 0,
-        lineHeight: 1.2,
-        backgroundColor: null,
-        textBackgroundColor: null
-    }, opt.context);
+        this._reNewline = /\r?\n/;
+        this.fontProperts = ["fontStyle", "fontVariant", "fontWeight", "fontSize", "fontFamily"];
+        this._context = _.extend({
+            fontSize: 13, //字体大小默认13
+            fontWeight: "normal",
+            fontFamily: "微软雅黑,sans-serif",
+            textDecoration: null,
+            fillStyle: 'blank',
+            strokeStyle: null,
+            lineWidth: 0,
+            lineHeight: 1.2,
+            backgroundColor: null,
+            textBackgroundColor: null
+        }, opt.context);
 
-    self._context.font = self._getFontDeclaration();
+        this._context.font = this._getFontDeclaration();
 
-    self.text = text.toString();
+        this.text = text.toString();
 
-    Text.superclass.constructor.apply(this, [opt]);
-};
+        this.context.width = this.getTextWidth();
+        this.context.height = this.getTextHeight();
+    }
 
-Utils.creatClass(Text, DisplayObject, {
-    $watch: function(name, value, preValue) {
+    $watch(name, value, preValue) 
+    {
         //context属性有变化的监听函数
         if (_.indexOf(this.fontProperts, name) >= 0) {
             this._context[name] = value;
@@ -47,14 +51,10 @@ Utils.creatClass(Text, DisplayObject, {
             model.width = this.getTextWidth();
             model.height = this.getTextHeight();
         }
-    },
-    init: function(text, opt) {
-        var self = this;
-        var c = this.context;
-        c.width = this.getTextWidth();
-        c.height = this.getTextHeight();
-    },
-    render: function(ctx) {
+    }
+
+    render(ctx) 
+    {
         var model = this.context.$model;
         for (var p in model) {
             if (p in ctx) {
@@ -64,32 +64,44 @@ Utils.creatClass(Text, DisplayObject, {
             };
         };
         this._renderText(ctx, this._getTextLines());
-    },
-    resetText: function(text) {
+    }
+
+    resetText(text) 
+    {
         this.text = text.toString();
         this.heartBeat();
-    },
-    getTextWidth: function() {
+    }
+
+    getTextWidth() 
+    {
         var width = 0;
         Utils._pixelCtx.save();
         Utils._pixelCtx.font = this.context.$model.font;
         width = this._getTextWidth(Utils._pixelCtx, this._getTextLines());
         Utils._pixelCtx.restore();
         return width;
-    },
-    getTextHeight: function() {
+    }
+
+    getTextHeight() 
+    {
         return this._getTextHeight(Utils._pixelCtx, this._getTextLines());
-    },
-    _getTextLines: function() {
+    }
+
+    _getTextLines() 
+    {
         return this.text.split(this._reNewline);
-    },
-    _renderText: function(ctx, textLines) {
+    }
+
+    _renderText(ctx, textLines) 
+    {
         ctx.save();
         this._renderTextStroke(ctx, textLines);
         this._renderTextFill(ctx, textLines);
         ctx.restore();
-    },
-    _getFontDeclaration: function() {
+    }
+
+    _getFontDeclaration() 
+    {
         var self = this;
         var fontArr = [];
 
@@ -103,8 +115,10 @@ Utils.creatClass(Text, DisplayObject, {
 
         return fontArr.join(' ');
 
-    },
-    _renderTextFill: function(ctx, textLines) {
+    }
+
+    _renderTextFill(ctx, textLines) 
+    {
         if (!this.context.$model.fillStyle) return;
 
         this._boundaries = [];
@@ -123,8 +137,10 @@ Utils.creatClass(Text, DisplayObject, {
                 i
             );
         }
-    },
-    _renderTextStroke: function(ctx, textLines) {
+    }
+
+    _renderTextStroke(ctx, textLines) 
+    {
         if (!this.context.$model.strokeStyle || !this.context.$model.lineWidth) return;
 
         var lineHeights = 0;
@@ -153,8 +169,10 @@ Utils.creatClass(Text, DisplayObject, {
         }
         ctx.closePath();
         ctx.restore();
-    },
-    _renderTextLine: function(method, ctx, line, left, top, lineIndex) {
+    }
+
+    _renderTextLine(method, ctx, line, left, top, lineIndex) 
+    {
         top -= this._getHeightOfLine() / 4;
         if (this.context.$model.textAlign !== 'justify') {
             this._renderChars(method, ctx, line, left, top, lineIndex);
@@ -178,14 +196,20 @@ Utils.creatClass(Text, DisplayObject, {
         } else {
             this._renderChars(method, ctx, line, left, top, lineIndex);
         }
-    },
-    _renderChars: function(method, ctx, chars, left, top) {
+    }
+
+    _renderChars(method, ctx, chars, left, top) 
+    {
         ctx[method](chars, 0, top);
-    },
-    _getHeightOfLine: function() {
+    }
+
+    _getHeightOfLine() 
+    {
         return this.context.$model.fontSize * this.context.$model.lineHeight;
-    },
-    _getTextWidth: function(ctx, textLines) {
+    }
+
+    _getTextWidth(ctx, textLines) 
+    {
         var maxWidth = ctx.measureText(textLines[0] || '|').width;
         for (var i = 1, len = textLines.length; i < len; i++) {
             var currentLineWidth = ctx.measureText(textLines[i]).width;
@@ -194,16 +218,19 @@ Utils.creatClass(Text, DisplayObject, {
             }
         }
         return maxWidth;
-    },
-    _getTextHeight: function(ctx, textLines) {
+    }
+
+    _getTextHeight(ctx, textLines) 
+    {
         return this.context.$model.fontSize * textLines.length * this.context.$model.lineHeight;
-    },
+    }
 
     /**
      * @private
      * @return {Number} Top offset
      */
-    _getTopOffset: function() {
+    _getTopOffset() 
+    {
         var t = 0;
         switch (this.context.$model.textBaseline) {
             case "top":
@@ -217,8 +244,10 @@ Utils.creatClass(Text, DisplayObject, {
                 break;
         }
         return t;
-    },
-    getRect: function() {
+    }
+
+    getRect() 
+    {
         var c = this.context;
         var x = 0;
         var y = 0;
@@ -243,5 +272,4 @@ Utils.creatClass(Text, DisplayObject, {
             height: c.height
         }
     }
-});
-export default Text;
+}

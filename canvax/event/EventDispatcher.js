@@ -5,44 +5,57 @@
  *
  * 事件派发类
  */
-import Utils from "../utils/index";
 import EventManager from "./EventManager";
 import CanvaxEvent from "./CanvaxEvent";
 import _ from "../utils/underscore";
 
 
-var EventDispatcher = function(){
-    EventDispatcher.superclass.constructor.call(this, name);
-};
+export default class EventDispatcher extends EventManager
+{
+    constructor()
+    {
+        super();
+    }
 
-Utils.creatClass(EventDispatcher , EventManager , {
-    on : function(type, listener){
+    on(type, listener)
+    {
         this._addEventListener( type, listener);
         return this;
-    },
-    addEventListener:function(type, listener){
+    }
+
+    addEventListener(type, listener)
+    {
         this._addEventListener( type, listener);
         return this;
-    },
-    un : function(type,listener){
+    }
+
+    un(type,listener)
+    {
         this._removeEventListener( type, listener);
         return this;
-    },
-    removeEventListener:function(type,listener){
+    }
+
+    removeEventListener(type,listener)
+    {
         this._removeEventListener( type, listener);
         return this;
-    },
-    removeEventListenerByType:function(type){
+    }
+
+    removeEventListenerByType(type)
+    {
         this._removeEventListenerByType( type);
         return this;
-    },
-    removeAllEventListeners:function(){
+    }
+
+    removeAllEventListeners()
+    {
         this._removeAllEventListeners();
         return this;
-    },
+    }
 
     //params 要传给evt的eventhandler处理函数的参数，会被merge到Canvax event中
-    fire : function(eventType , params){
+    fire(eventType , params)
+    {
         var e = new CanvaxEvent( eventType );
 
         if( params ){
@@ -61,8 +74,10 @@ Utils.creatClass(EventDispatcher , EventManager , {
             me.dispatchEvent( e );
         } );
         return this;
-    },
-    dispatchEvent:function(event){
+    }
+
+    dispatchEvent(event)
+    {
         //this instanceof DisplayObjectContainer ==> this.children
         //TODO: 这里import DisplayObjectContainer 的话，在displayObject里面的import EventDispatcher from "../event/EventDispatcher";
         //会得到一个undefined，感觉是成了一个循环依赖的问题，所以这里换用简单的判断来判断自己是一个容易，拥有children
@@ -81,7 +96,7 @@ Utils.creatClass(EventDispatcher , EventManager , {
             this._dispatchEvent( event );
             if( preHeartBeat != this._heartBeatNum ){
                 this._hoverClass = true;
-                if( this.hoverCloneEnabled ){
+                if( this.hoverClone ){
                     var canvax = this.getStage().parent;
                     //然后clone一份obj，添加到_bufferStage 中
                     var activShape = this.clone(true);  
@@ -115,19 +130,27 @@ Utils.creatClass(EventDispatcher , EventManager , {
         }
 
         return this;
-    },
-    hasEvent:function(type){
+    }
+
+    hasEvent(type)
+    {
         return this._hasEventListener(type);
-    },
-    hasEventListener:function(type){
+    }
+
+    hasEventListener(type)
+    {
         return this._hasEventListener(type);
-    },
-    hover : function( overFun , outFun ){
+    }
+
+    hover( overFun , outFun )
+    {
         this.on("mouseover" , overFun);
         this.on("mouseout"  , outFun );
         return this;
-    },
-    once : function(type, listener){
+    }
+
+    once(type, listener)
+    {
         var me = this;
         var onceHandle = function(){
             listener.apply(me , arguments);
@@ -136,6 +159,4 @@ Utils.creatClass(EventDispatcher , EventManager , {
         this.on(type , onceHandle);
         return this;
     }
-});
-
-export default EventDispatcher;
+}

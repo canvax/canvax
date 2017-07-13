@@ -1370,132 +1370,162 @@ EventManager.prototype = {
  *
  * 事件派发类
  */
-var EventDispatcher = function EventDispatcher() {
-    EventDispatcher.superclass.constructor.call(this, name);
-};
+var EventDispatcher = function (_EventManager) {
+    inherits(EventDispatcher, _EventManager);
 
-Utils.creatClass(EventDispatcher, EventManager, {
-    on: function on(type, listener) {
-        this._addEventListener(type, listener);
-        return this;
-    },
-    addEventListener: function addEventListener(type, listener) {
-        this._addEventListener(type, listener);
-        return this;
-    },
-    un: function un(type, listener) {
-        this._removeEventListener(type, listener);
-        return this;
-    },
-    removeEventListener: function removeEventListener(type, listener) {
-        this._removeEventListener(type, listener);
-        return this;
-    },
-    removeEventListenerByType: function removeEventListenerByType(type) {
-        this._removeEventListenerByType(type);
-        return this;
-    },
-    removeAllEventListeners: function removeAllEventListeners() {
-        this._removeAllEventListeners();
-        return this;
-    },
-
-    //params 要传给evt的eventhandler处理函数的参数，会被merge到Canvax event中
-    fire: function fire(eventType, params) {
-        var e = new CanvaxEvent(eventType);
-
-        if (params) {
-            for (var p in params) {
-                if (p in e) {
-                    //params中的数据不能覆盖event属性
-                } else {
-                    e[p] = params[p];
-                }
-            }
-        }
-
-        var me = this;
-        _$1.each(eventType.split(" "), function (eType) {
-            e.currentTarget = me;
-            me.dispatchEvent(e);
-        });
-        return this;
-    },
-    dispatchEvent: function dispatchEvent(event) {
-        //this instanceof DisplayObjectContainer ==> this.children
-        //TODO: 这里import DisplayObjectContainer 的话，在displayObject里面的import EventDispatcher from "../event/EventDispatcher";
-        //会得到一个undefined，感觉是成了一个循环依赖的问题，所以这里换用简单的判断来判断自己是一个容易，拥有children
-        if (this.children && event.point) {
-            var target = this.getObjectsUnderPoint(event.point, 1)[0];
-            if (target) {
-                target.dispatchEvent(event);
-            }
-            return;
-        }
-
-        if (this.context && event.type == "mouseover") {
-            //记录dispatchEvent之前的心跳
-            var preHeartBeat = this._heartBeatNum;
-            var pregAlpha = this.context.$model.globalAlpha;
-            this._dispatchEvent(event);
-            if (preHeartBeat != this._heartBeatNum) {
-                this._hoverClass = true;
-                if (this.hoverCloneEnabled) {
-                    var canvax = this.getStage().parent;
-                    //然后clone一份obj，添加到_bufferStage 中
-                    var activShape = this.clone(true);
-                    activShape._transform = this.getConcatenatedMatrix();
-                    canvax._bufferStage.addChildAt(activShape, 0);
-                    //然后把自己隐藏了
-
-                    //用一个临时变量_globalAlpha 来存储自己之前的alpha
-                    this._globalAlpha = pregAlpha;
-                    this.context.globalAlpha = 0;
-                }
-            }
-            return;
-        }
-
-        this._dispatchEvent(event);
-
-        if (this.context && event.type == "mouseout") {
-            if (this._hoverClass) {
-                //说明刚刚over的时候有添加样式
-                var canvax = this.getStage().parent;
-                this._hoverClass = false;
-
-                canvax._bufferStage.removeChildById(this.id);
-
-                if (this._globalAlpha) {
-                    this.context.globalAlpha = this._globalAlpha;
-                    delete this._globalAlpha;
-                }
-            }
-        }
-
-        return this;
-    },
-    hasEvent: function hasEvent(type) {
-        return this._hasEventListener(type);
-    },
-    hasEventListener: function hasEventListener(type) {
-        return this._hasEventListener(type);
-    },
-    hover: function hover(overFun, outFun) {
-        this.on("mouseover", overFun);
-        this.on("mouseout", outFun);
-        return this;
-    },
-    once: function once(type, listener) {
-        var me = this;
-        var onceHandle = function onceHandle() {
-            listener.apply(me, arguments);
-            this.un(type, onceHandle);
-        };
-        this.on(type, onceHandle);
-        return this;
+    function EventDispatcher() {
+        classCallCheck(this, EventDispatcher);
+        return possibleConstructorReturn(this, (EventDispatcher.__proto__ || Object.getPrototypeOf(EventDispatcher)).call(this));
     }
-});
+
+    createClass(EventDispatcher, [{
+        key: "on",
+        value: function on(type, listener) {
+            this._addEventListener(type, listener);
+            return this;
+        }
+    }, {
+        key: "addEventListener",
+        value: function addEventListener(type, listener) {
+            this._addEventListener(type, listener);
+            return this;
+        }
+    }, {
+        key: "un",
+        value: function un(type, listener) {
+            this._removeEventListener(type, listener);
+            return this;
+        }
+    }, {
+        key: "removeEventListener",
+        value: function removeEventListener(type, listener) {
+            this._removeEventListener(type, listener);
+            return this;
+        }
+    }, {
+        key: "removeEventListenerByType",
+        value: function removeEventListenerByType(type) {
+            this._removeEventListenerByType(type);
+            return this;
+        }
+    }, {
+        key: "removeAllEventListeners",
+        value: function removeAllEventListeners() {
+            this._removeAllEventListeners();
+            return this;
+        }
+
+        //params 要传给evt的eventhandler处理函数的参数，会被merge到Canvax event中
+
+    }, {
+        key: "fire",
+        value: function fire(eventType, params) {
+            var e = new CanvaxEvent(eventType);
+
+            if (params) {
+                for (var p in params) {
+                    if (p in e) {
+                        //params中的数据不能覆盖event属性
+                    } else {
+                        e[p] = params[p];
+                    }
+                }
+            }
+
+            var me = this;
+            _$1.each(eventType.split(" "), function (eType) {
+                e.currentTarget = me;
+                me.dispatchEvent(e);
+            });
+            return this;
+        }
+    }, {
+        key: "dispatchEvent",
+        value: function dispatchEvent(event) {
+            //this instanceof DisplayObjectContainer ==> this.children
+            //TODO: 这里import DisplayObjectContainer 的话，在displayObject里面的import EventDispatcher from "../event/EventDispatcher";
+            //会得到一个undefined，感觉是成了一个循环依赖的问题，所以这里换用简单的判断来判断自己是一个容易，拥有children
+            if (this.children && event.point) {
+                var target = this.getObjectsUnderPoint(event.point, 1)[0];
+                if (target) {
+                    target.dispatchEvent(event);
+                }
+                return;
+            }
+
+            if (this.context && event.type == "mouseover") {
+                //记录dispatchEvent之前的心跳
+                var preHeartBeat = this._heartBeatNum;
+                var pregAlpha = this.context.$model.globalAlpha;
+                this._dispatchEvent(event);
+                if (preHeartBeat != this._heartBeatNum) {
+                    this._hoverClass = true;
+                    if (this.hoverClone) {
+                        var canvax = this.getStage().parent;
+                        //然后clone一份obj，添加到_bufferStage 中
+                        var activShape = this.clone(true);
+                        activShape._transform = this.getConcatenatedMatrix();
+                        canvax._bufferStage.addChildAt(activShape, 0);
+                        //然后把自己隐藏了
+
+                        //用一个临时变量_globalAlpha 来存储自己之前的alpha
+                        this._globalAlpha = pregAlpha;
+                        this.context.globalAlpha = 0;
+                    }
+                }
+                return;
+            }
+
+            this._dispatchEvent(event);
+
+            if (this.context && event.type == "mouseout") {
+                if (this._hoverClass) {
+                    //说明刚刚over的时候有添加样式
+                    var canvax = this.getStage().parent;
+                    this._hoverClass = false;
+
+                    canvax._bufferStage.removeChildById(this.id);
+
+                    if (this._globalAlpha) {
+                        this.context.globalAlpha = this._globalAlpha;
+                        delete this._globalAlpha;
+                    }
+                }
+            }
+
+            return this;
+        }
+    }, {
+        key: "hasEvent",
+        value: function hasEvent(type) {
+            return this._hasEventListener(type);
+        }
+    }, {
+        key: "hasEventListener",
+        value: function hasEventListener(type) {
+            return this._hasEventListener(type);
+        }
+    }, {
+        key: "hover",
+        value: function hover(overFun, outFun) {
+            this.on("mouseover", overFun);
+            this.on("mouseout", outFun);
+            return this;
+        }
+    }, {
+        key: "once",
+        value: function once(type, listener) {
+            var me = this;
+            var onceHandle = function onceHandle() {
+                listener.apply(me, arguments);
+                this.un(type, onceHandle);
+            };
+            this.on(type, onceHandle);
+            return this;
+        }
+    }]);
+    return EventDispatcher;
+}(EventManager);
 
 /**
  * Canvax
@@ -2927,695 +2957,810 @@ function insideLine(data, x, y, line) {
  *
  * 模拟as3 DisplayList 的 现实对象基类
  */
-var DisplayObject = function DisplayObject(opt) {
-    DisplayObject.superclass.constructor.apply(this, arguments);
+var DisplayObject = function (_EventDispatcher) {
+    inherits(DisplayObject, _EventDispatcher);
 
-    //相对父级元素的矩阵
-    this._transform = null;
-    this.worldTransform = null; //webgl 渲染器中专用
+    function DisplayObject(opt) {
+        classCallCheck(this, DisplayObject);
 
-    //心跳次数
-    this._heartBeatNum = 0;
+        //相对父级元素的矩阵
+        var _this = possibleConstructorReturn(this, (DisplayObject.__proto__ || Object.getPrototypeOf(DisplayObject)).call(this, opt));
 
-    //元素对应的stage元素
-    this.stage = null;
+        _this._transform = null;
+        _this.worldTransform = null; //webgl 渲染器中专用
 
-    //元素的父元素
-    this.parent = null;
+        //心跳次数
+        _this._heartBeatNum = 0;
 
-    this.xyToInt = "xyToInt" in opt ? opt.xyToInt : true; //是否对xy坐标统一int处理，默认为true，但是有的时候可以由外界用户手动指定是否需要计算为int，因为有的时候不计算比较好，比如，进度图表中，再sector的两端添加两个圆来做圆角的进度条的时候，圆circle不做int计算，才能和sector更好的衔接
+        //元素对应的stage元素
+        _this.stage = null;
 
-    this.moveing = false; //如果元素在最轨道运动中的时候，最好把这个设置为true，这样能保证轨迹的丝搬顺滑，否则因为xyToInt的原因，会有跳跃
+        //元素的父元素
+        _this.parent = null;
 
-    //创建好context
-    this.context = this._createContext(opt);
+        _this.xyToInt = "xyToInt" in opt ? opt.xyToInt : true; //是否对xy坐标统一int处理，默认为true，但是有的时候可以由外界用户手动指定是否需要计算为int，因为有的时候不计算比较好，比如，进度图表中，再sector的两端添加两个圆来做圆角的进度条的时候，圆circle不做int计算，才能和sector更好的衔接
 
-    this.id = opt.id || Utils.createId(this.type || "displayObject");
+        _this.moveing = false; //如果元素在最轨道运动中的时候，最好把这个设置为true，这样能保证轨迹的丝搬顺滑，否则因为xyToInt的原因，会有跳跃
 
-    this.init.apply(this, arguments);
+        //创建好context
+        _this.context = _this._createContext(opt);
 
-    //所有属性准备好了后，先要计算一次this._updateTransform()得到_tansform
-    this._updateTransform();
-};
+        _this.type = opt.type || "DisplayObject";
 
-Utils.creatClass(DisplayObject, EventDispatcher, {
-    init: function init() {},
-    _createContext: function _createContext(opt) {
-        var self = this;
+        _this.id = opt.id || Utils.createId(_this.type);
 
-        var optCtx = opt.context || {};
+        _this.init.apply(_this, arguments);
 
-        var _contextATTRS = {
-            width: optCtx.width || 0,
-            height: optCtx.height || 0,
-            x: optCtx.x || 0,
-            y: optCtx.y || 0,
-            scaleX: optCtx.scaleX || 1,
-            scaleY: optCtx.scaleY || 1,
-            scaleOrigin: optCtx.scaleOrigin || {
-                x: 0,
-                y: 0
-            },
-            rotation: optCtx.rotation || 0,
-            rotateOrigin: optCtx.rotateOrigin || {
-                x: 0,
-                y: 0
-            },
-            visible: optCtx.visible || true,
-            globalAlpha: optCtx.globalAlpha || 1
-
-            //样式部分迁移到shape中
-            //cursor        : optCtx.cursor || "default",
-            //fillAlpha     : optCtx.fillAlpha || 1,//context2d里没有，自定义
-            //fillStyle     : optCtx.fillStyle || null,//"#000000",
-
-            //lineCap       : optCtx.lineCap || null,//默认都是直角
-            //lineJoin      : optCtx.lineJoin || null,//这两个目前webgl里面没实现
-            //miterLimit    : optCtx.miterLimit || null,//miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
-
-            //lineAlpha     : optCtx.lineAlpha || 1,//context2d里没有，自定义
-            //strokeStyle   : optCtx.strokeStyle || null,
-            //lineType      : optCtx.lineType || "solid", //context2d里没有，自定义线条的type，默认为实线
-            //lineWidth     : optCtx.lineWidth || null
-        };
-
-        //平凡的clone数据非常的耗时，还是走回原来的路
-        //var _contextATTRS = _.extend( true , _.clone(CONTEXT_DEFAULT), opt.context );
-
-        _$1.extend(true, _contextATTRS, opt.context);
-
-        //有些引擎内部设置context属性的时候是不用上报心跳的，比如做热点检测的时候
-        self._notWatch = false;
-
-        //不需要发心跳信息
-        self._noHeart = false;
-
-        //_contextATTRS.$owner = self;
-        _contextATTRS.$watch = function (name, value, preValue) {
-            //下面的这些属性变化，都会需要重新组织矩阵属性 _transform 
-            var obj = self; //this.$owner;
-
-            if (_$1.indexOf(TRANSFORM_PROPS, name) > -1) {
-                obj._updateTransform();
-
-                //stage本身就是世界坐标，所以其worldTransform不需要动态修改
-                if (obj.parent && obj.type != "stage" && obj.parent.worldTransform) {
-                    obj.worldTransform = null;
-                    //只有parent有worldTransform，就可以算出自己对应的世界坐标
-                    obj.getWorldTransform();
-                    if (obj.children) {
-                        //如果自己还有子元素，那么子元素的世界坐标也都要对应的调整
-                        obj.updateChildWorldTransform();
-                    }
-                }
-            }
-
-            if (obj._notWatch) {
-                return;
-            }
-
-            if (obj.$watch) {
-                obj.$watch(name, value, preValue);
-            }
-
-            if (obj._noHeart) {
-                return;
-            }
-
-            obj.heartBeat({
-                convertType: "context",
-                shape: obj,
-                name: name,
-                value: value,
-                preValue: preValue
-            });
-        };
-
-        //执行init之前，应该就根据参数，把context组织好线
-        return Observe(_contextATTRS);
-    },
-    /* @myself 是否生成自己的镜像 
-     * 克隆又两种，一种是镜像，另外一种是绝对意义上面的新个体
-     * 默认为绝对意义上面的新个体，新对象id不能相同
-     * 镜像基本上是框架内部在实现  镜像的id相同 主要用来把自己画到另外的stage里面，比如
-     * mouseover和mouseout的时候调用*/
-    clone: function clone(myself) {
-        var conf = {
-            id: this.id,
-            context: _$1.clone(this.context.$model),
-            isClone: true
-        };
-
-        var newObj;
-        if (this.type == 'text') {
-            newObj = new this.constructor(this.text, conf);
-        } else {
-            newObj = new this.constructor(conf);
-        }
-
-        newObj.id = conf.id;
-
-        if (this.children) {
-            newObj.children = this.children;
-        }
-
-        if (this.graphics) {
-            newObj.graphics = this.graphics.clone();
-        }
-
-        if (!myself) {
-            newObj.id = Utils.createId(newObj.type);
-        }
-        return newObj;
-    },
-    heartBeat: function heartBeat(opt) {
-        //stage存在，才说self代表的display已经被添加到了displayList中，绘图引擎需要知道其改变后
-        //的属性，所以，通知到stage.displayAttrHasChange
-        var stage = this.getStage();
-        if (stage) {
-            this._heartBeatNum++;
-            stage.heartBeat && stage.heartBeat(opt);
-        }
-    },
-    getCurrentWidth: function getCurrentWidth() {
-        return Math.abs(this.context.$model.width * this.context.$model.scaleX);
-    },
-    getCurrentHeight: function getCurrentHeight() {
-        return Math.abs(this.context.$model.height * this.context.$model.scaleY);
-    },
-    getStage: function getStage() {
-        if (this.stage) {
-            return this.stage;
-        }
-        var p = this;
-        if (p.type != "stage") {
-            while (p.parent) {
-                p = p.parent;
-                if (p.type == "stage") {
-                    break;
-                }
-            }
-            if (p.type !== "stage") {
-                //如果得到的顶点display 的type不是Stage,也就是说不是stage元素
-                //那么只能说明这个p所代表的顶端display 还没有添加到displayList中，也就是没有没添加到
-                //stage舞台的childen队列中，不在引擎渲染范围内
-                return false;
-            }
-        }
-        //一直回溯到顶层object， 即是stage， stage的parent为null
-        this.stage = p;
-        return p;
-    },
-    localToGlobal: function localToGlobal(point, container) {
-        !point && (point = new Point(0, 0));
-        var cm = this.getConcatenatedMatrix(container);
-
-        if (cm == null) return Point(0, 0);
-        var m = new Matrix(1, 0, 0, 1, point.x, point.y);
-        m.concat(cm);
-        return new Point(m.tx, m.ty); //{x:m.tx, y:m.ty};
-    },
-    globalToLocal: function globalToLocal(point, container) {
-        !point && (point = new Point(0, 0));
-
-        if (this.type == "stage") {
-            return point;
-        }
-        var cm = this.getConcatenatedMatrix(container);
-
-        if (cm == null) return new Point(0, 0); //{x:0, y:0};
-        cm.invert();
-        var m = new Matrix(1, 0, 0, 1, point.x, point.y);
-        m.concat(cm);
-        return new Point(m.tx, m.ty); //{x:m.tx, y:m.ty};
-    },
-    localToTarget: function localToTarget(point, target) {
-        var p = localToGlobal(point);
-        return target.globalToLocal(p);
-    },
-    getConcatenatedMatrix: function getConcatenatedMatrix(container) {
-        var cm = new Matrix();
-        for (var o = this; o != null; o = o.parent) {
-            cm.concat(o._transform);
-            if (!o.parent || container && o.parent && o.parent == container || o.parent && o.parent.type == "stage") {
-                //if( o.type == "stage" || (o.parent && container && o.parent.type == container.type ) ) {
-                return cm; //break;
-            }
-        }
-        return cm;
-    },
-    /*
-     *设置元素的是否响应事件检测
-     *@bool  Boolean 类型
-     */
-    setEventEnable: function setEventEnable(bool) {
-        if (_$1.isBoolean(bool)) {
-            this._eventEnabled = bool;
-            return true;
-        }
-        return false;
-    },
-    /*
-     *查询自己在parent的队列中的位置
-     */
-    getIndex: function getIndex() {
-        if (!this.parent) {
-            return;
-        }
-        return _$1.indexOf(this.parent.children, this);
-    },
-    /*
-     *元素在z轴方向向下移动
-     *@num 移动的层级
-     */
-    toBack: function toBack(num) {
-        if (!this.parent) {
-            return;
-        }
-        var fromIndex = this.getIndex();
-        var toIndex = 0;
-
-        if (_$1.isNumber(num)) {
-            if (num == 0) {
-                //原地不动
-                return;
-            }
-            toIndex = fromIndex - num;
-        }
-        var me = this.parent.children.splice(fromIndex, 1)[0];
-        if (toIndex < 0) {
-            toIndex = 0;
-        }
-        this.parent.addChildAt(me, toIndex);
-    },
-    /*
-     *元素在z轴方向向上移动
-     *@num 移动的层数量 默认到顶端
-     */
-    toFront: function toFront(num) {
-        if (!this.parent) {
-            return;
-        }
-        var fromIndex = this.getIndex();
-        var pcl = this.parent.children.length;
-        var toIndex = pcl;
-
-        if (_$1.isNumber(num)) {
-            if (num == 0) {
-                //原地不动
-                return;
-            }
-            toIndex = fromIndex + num + 1;
-        }
-        var me = this.parent.children.splice(fromIndex, 1)[0];
-        if (toIndex > pcl) {
-            toIndex = pcl;
-        }
-        this.parent.addChildAt(me, toIndex - 1);
-    },
-    _updateTransform: function _updateTransform() {
-        var _transform = new Matrix();
-        _transform.identity();
-        var context = this.context;
-        //是否需要Transform
-        if (context.scaleX !== 1 || context.scaleY !== 1) {
-            //如果有缩放
-            //缩放的原点坐标
-            var origin = new Point(context.scaleOrigin);
-            if (origin.x || origin.y) {
-                _transform.translate(-origin.x, -origin.y);
-            }
-            _transform.scale(context.scaleX, context.scaleY);
-            if (origin.x || origin.y) {
-                _transform.translate(origin.x, origin.y);
-            }
-        }
-
-        var rotation = context.rotation;
-        if (rotation) {
-            //如果有旋转
-            //旋转的原点坐标
-            var origin = new Point(context.rotateOrigin);
-            if (origin.x || origin.y) {
-                _transform.translate(-origin.x, -origin.y);
-            }
-            _transform.rotate(rotation % 360 * Math.PI / 180);
-            if (origin.x || origin.y) {
-                _transform.translate(origin.x, origin.y);
-            }
-        }
-
-        //如果有位移
-        var x, y;
-        if (this.xyToInt && !this.moveing) {
-            //当这个元素在做轨迹运动的时候，比如drag，animation如果实时的调整这个x ， y
-            //那么该元素的轨迹会有跳跃的情况发生。所以加个条件过滤，
-            var x = parseInt(context.x);
-            var y = parseInt(context.y);
-
-            if (parseInt(context.lineWidth, 10) % 2 == 1 && context.strokeStyle) {
-                x += 0.5;
-                y += 0.5;
-            }
-        } else {
-            x = context.x;
-            y = context.y;
-        }
-
-        if (x != 0 || y != 0) {
-            _transform.translate(x, y);
-        }
-        this._transform = _transform;
-        return _transform;
-    },
-    //获取全局的世界坐标系内的矩阵
-    //世界坐标是从上而下的，所以只要和parent的直接坐标相乘就好了
-    getWorldTransform: function getWorldTransform() {
-        var cm;
-        if (!this.worldTransform) {
-            cm = new Matrix();
-            cm.concat(this._transform);
-            cm.concat(this.parent.worldTransform);
-            this.worldTransform = cm;
-        }
-        return this.worldTransform;
-    },
-    //显示对象的选取检测处理函数
-    getChildInPoint: function getChildInPoint(point) {
-
-        var result = false; //检测的结果
-
-        //第一步，吧glob的point转换到对应的obj的层级内的坐标系统
-        //if( this.type != "stage" && this.parent && this.parent.type != "stage" ) {
-        //    point = this.parent.globalToLocal( point );
-        //};
-        //var m = new Matrix( Settings.RESOLUTION, 0, 0, Settings.RESOLUTION, point.x , point.y);
-        //m.concat( this.worldTransform );
-
-        var x = point.x;
-        var y = point.y;
-
-        //对鼠标的坐标也做相同的变换
-        if (this.worldTransform) {
-
-            var inverseMatrix = this.worldTransform.clone().invert();
-            var originPos = [x * settings.RESOLUTION, y * settings.RESOLUTION];
-
-            originPos = inverseMatrix.mulVector(originPos);
-
-            x = originPos[0];
-            y = originPos[1];
-        }
-
-        if (this.graphics) {
-            result = this.containsPoint({ x: x, y: y });
-        }
-
-        return result;
-    },
-    containsPoint: function containsPoint(point) {
-        var inside = false;
-        for (var i = 0; i < this.graphics.graphicsData.length; ++i) {
-            var data = this.graphics.graphicsData[i];
-            if (data.shape) {
-                //先检测fill， fill的检测概率大些。
-                //像circle,ellipse这样的shape 就直接把lineWidth算在fill里面计算就好了，所以他们是没有insideLine的
-                if (data.hasFill() && data.shape.contains(point.x, point.y)) {
-                    inside = true;
-                    if (inside) {
-                        break;
-                    }
-                }
-
-                //circle,ellipse等就没有points
-                if (data.hasLine() && data.shape.points) {
-                    //然后检测是否和描边碰撞
-                    inside = insideLine(data, point.x, point.y);
-                    if (inside) {
-                        break;
-                    }
-                }
-            }
-        }
-        return inside;
-    },
-    /*
-    * animate
-    * @param toContent 要动画变形到的属性集合
-    * @param options tween 动画参数
-    */
-    animate: function animate(toContent, options) {
-        var to = toContent;
-        var from = {};
-        for (var p in to) {
-            if (isNaN(to[p]) && to[p] !== '' && to[p] !== null && to[p] !== undefined) {
-                continue;
-            }
-            from[p] = this.context[p];
-        }
-        !options && (options = {});
-        options.from = from;
-        options.to = to;
-
-        var self = this;
-        var upFun = function upFun() {};
-        if (options.onUpdate) {
-            upFun = options.onUpdate;
-        }
-        var tween;
-        options.onUpdate = function () {
-            //如果context不存在说明该obj已经被destroy了，那么要把他的tween给destroy
-            if (!self.context && tween) {
-                AnimationFrame.destroyTween(tween);
-                tween = null;
-                return;
-            }
-            for (var p in this) {
-                self.context[p] = this[p];
-            }
-            upFun.apply(self, [this]);
-        };
-        var compFun = function compFun() {};
-        if (options.onComplete) {
-            compFun = options.onComplete;
-        }
-        options.onComplete = function (opt) {
-            compFun.apply(self, arguments);
-        };
-        tween = AnimationFrame.registTween(options);
-        return tween;
-    },
-    //从树中删除
-    remove: function remove() {
-        if (this.parent) {
-            this.parent.removeChild(this);
-            this.parent = null;
-        }
-    },
-    //元素的自我销毁
-    destroy: function destroy() {
-        this.remove();
-        this.fire("destroy");
-        //把自己从父节点中删除了后做自我清除，释放内存
-        this.context = null;
-        delete this.context;
+        //所有属性准备好了后，先要计算一次this._updateTransform()得到_tansform
+        _this._updateTransform();
+        return _this;
     }
-});
 
-/**
+    createClass(DisplayObject, [{
+        key: "init",
+        value: function init() {}
+    }, {
+        key: "_createContext",
+        value: function _createContext(opt) {
+            var self = this;
+
+            var optCtx = opt.context || {};
+
+            var _contextATTRS = {
+                width: optCtx.width || 0,
+                height: optCtx.height || 0,
+                x: optCtx.x || 0,
+                y: optCtx.y || 0,
+                scaleX: optCtx.scaleX || 1,
+                scaleY: optCtx.scaleY || 1,
+                scaleOrigin: optCtx.scaleOrigin || {
+                    x: 0,
+                    y: 0
+                },
+                rotation: optCtx.rotation || 0,
+                rotateOrigin: optCtx.rotateOrigin || {
+                    x: 0,
+                    y: 0
+                },
+                visible: optCtx.visible || true,
+                globalAlpha: optCtx.globalAlpha || 1
+
+                //样式部分迁移到shape中
+                //cursor        : optCtx.cursor || "default",
+                //fillAlpha     : optCtx.fillAlpha || 1,//context2d里没有，自定义
+                //fillStyle     : optCtx.fillStyle || null,//"#000000",
+
+                //lineCap       : optCtx.lineCap || null,//默认都是直角
+                //lineJoin      : optCtx.lineJoin || null,//这两个目前webgl里面没实现
+                //miterLimit    : optCtx.miterLimit || null,//miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
+
+                //lineAlpha     : optCtx.lineAlpha || 1,//context2d里没有，自定义
+                //strokeStyle   : optCtx.strokeStyle || null,
+                //lineType      : optCtx.lineType || "solid", //context2d里没有，自定义线条的type，默认为实线
+                //lineWidth     : optCtx.lineWidth || null
+            };
+
+            //平凡的clone数据非常的耗时，还是走回原来的路
+            //var _contextATTRS = _.extend( true , _.clone(CONTEXT_DEFAULT), opt.context );
+
+            _$1.extend(true, _contextATTRS, opt.context);
+
+            //有些引擎内部设置context属性的时候是不用上报心跳的，比如做热点检测的时候
+            self._notWatch = false;
+
+            //不需要发心跳信息
+            self._noHeart = false;
+
+            //_contextATTRS.$owner = self;
+            _contextATTRS.$watch = function (name, value, preValue) {
+                //下面的这些属性变化，都会需要重新组织矩阵属性 _transform 
+                var obj = self; //this.$owner;
+
+                if (_$1.indexOf(TRANSFORM_PROPS, name) > -1) {
+                    obj._updateTransform();
+
+                    //stage本身就是世界坐标，所以其worldTransform不需要动态修改
+                    if (obj.parent && obj.type != "stage" && obj.parent.worldTransform) {
+                        obj.worldTransform = null;
+                        //只有parent有worldTransform，就可以算出自己对应的世界坐标
+                        obj.getWorldTransform();
+                        if (obj.children) {
+                            //如果自己还有子元素，那么子元素的世界坐标也都要对应的调整
+                            obj.updateChildWorldTransform();
+                        }
+                    }
+                }
+
+                if (obj._notWatch) {
+                    return;
+                }
+
+                if (obj.$watch) {
+                    obj.$watch(name, value, preValue);
+                }
+
+                if (obj._noHeart) {
+                    return;
+                }
+
+                obj.heartBeat({
+                    convertType: "context",
+                    shape: obj,
+                    name: name,
+                    value: value,
+                    preValue: preValue
+                });
+            };
+
+            //执行init之前，应该就根据参数，把context组织好线
+            return Observe(_contextATTRS);
+        }
+
+        /* @myself 是否生成自己的镜像 
+         * 克隆又两种，一种是镜像，另外一种是绝对意义上面的新个体
+         * 默认为绝对意义上面的新个体，新对象id不能相同
+         * 镜像基本上是框架内部在实现  镜像的id相同 主要用来把自己画到另外的stage里面，比如
+         * mouseover和mouseout的时候调用*/
+
+    }, {
+        key: "clone",
+        value: function clone(myself) {
+            var conf = {
+                id: this.id,
+                context: _$1.clone(this.context.$model),
+                isClone: true
+            };
+
+            var newObj;
+            if (this.type == 'text') {
+                newObj = new this.constructor(this.text, conf);
+            } else {
+                newObj = new this.constructor(conf);
+            }
+
+            newObj.id = conf.id;
+
+            if (this.children) {
+                newObj.children = this.children;
+            }
+
+            if (this.graphics) {
+                newObj.graphics = this.graphics.clone();
+            }
+
+            if (!myself) {
+                newObj.id = Utils.createId(newObj.type);
+            }
+            return newObj;
+        }
+    }, {
+        key: "heartBeat",
+        value: function heartBeat(opt) {
+            //stage存在，才说self代表的display已经被添加到了displayList中，绘图引擎需要知道其改变后
+            //的属性，所以，通知到stage.displayAttrHasChange
+            var stage = this.getStage();
+            if (stage) {
+                this._heartBeatNum++;
+                stage.heartBeat && stage.heartBeat(opt);
+            }
+        }
+    }, {
+        key: "getCurrentWidth",
+        value: function getCurrentWidth() {
+            return Math.abs(this.context.$model.width * this.context.$model.scaleX);
+        }
+    }, {
+        key: "getCurrentHeight",
+        value: function getCurrentHeight() {
+            return Math.abs(this.context.$model.height * this.context.$model.scaleY);
+        }
+    }, {
+        key: "getStage",
+        value: function getStage() {
+            if (this.stage) {
+                return this.stage;
+            }
+            var p = this;
+            if (p.type != "stage") {
+                while (p.parent) {
+                    p = p.parent;
+                    if (p.type == "stage") {
+                        break;
+                    }
+                }
+                if (p.type !== "stage") {
+                    //如果得到的顶点display 的type不是Stage,也就是说不是stage元素
+                    //那么只能说明这个p所代表的顶端display 还没有添加到displayList中，也就是没有没添加到
+                    //stage舞台的childen队列中，不在引擎渲染范围内
+                    return false;
+                }
+            }
+            //一直回溯到顶层object， 即是stage， stage的parent为null
+            this.stage = p;
+            return p;
+        }
+    }, {
+        key: "localToGlobal",
+        value: function localToGlobal(point, container) {
+            !point && (point = new Point(0, 0));
+            var cm = this.getConcatenatedMatrix(container);
+
+            if (cm == null) return Point(0, 0);
+            var m = new Matrix(1, 0, 0, 1, point.x, point.y);
+            m.concat(cm);
+            return new Point(m.tx, m.ty); //{x:m.tx, y:m.ty};
+        }
+    }, {
+        key: "globalToLocal",
+        value: function globalToLocal(point, container) {
+            !point && (point = new Point(0, 0));
+
+            if (this.type == "stage") {
+                return point;
+            }
+            var cm = this.getConcatenatedMatrix(container);
+
+            if (cm == null) return new Point(0, 0); //{x:0, y:0};
+            cm.invert();
+            var m = new Matrix(1, 0, 0, 1, point.x, point.y);
+            m.concat(cm);
+            return new Point(m.tx, m.ty); //{x:m.tx, y:m.ty};
+        }
+    }, {
+        key: "localToTarget",
+        value: function localToTarget(point, target) {
+            var p = localToGlobal(point);
+            return target.globalToLocal(p);
+        }
+    }, {
+        key: "getConcatenatedMatrix",
+        value: function getConcatenatedMatrix(container) {
+            var cm = new Matrix();
+            for (var o = this; o != null; o = o.parent) {
+                cm.concat(o._transform);
+                if (!o.parent || container && o.parent && o.parent == container || o.parent && o.parent.type == "stage") {
+                    //if( o.type == "stage" || (o.parent && container && o.parent.type == container.type ) ) {
+                    return cm; //break;
+                }
+            }
+            return cm;
+        }
+
+        /*
+         *设置元素的是否响应事件检测
+         *@bool  Boolean 类型
+         */
+
+    }, {
+        key: "setEventEnable",
+        value: function setEventEnable(bool) {
+            if (_$1.isBoolean(bool)) {
+                this._eventEnabled = bool;
+                return true;
+            }
+            return false;
+        }
+
+        /*
+         *查询自己在parent的队列中的位置
+         */
+
+    }, {
+        key: "getIndex",
+        value: function getIndex() {
+            if (!this.parent) {
+                return;
+            }
+            return _$1.indexOf(this.parent.children, this);
+        }
+
+        /*
+         *元素在z轴方向向下移动
+         *@num 移动的层级
+         */
+
+    }, {
+        key: "toBack",
+        value: function toBack(num) {
+            if (!this.parent) {
+                return;
+            }
+            var fromIndex = this.getIndex();
+            var toIndex = 0;
+
+            if (_$1.isNumber(num)) {
+                if (num == 0) {
+                    //原地不动
+                    return;
+                }
+                toIndex = fromIndex - num;
+            }
+            var me = this.parent.children.splice(fromIndex, 1)[0];
+            if (toIndex < 0) {
+                toIndex = 0;
+            }
+            this.parent.addChildAt(me, toIndex);
+        }
+
+        /*
+         *元素在z轴方向向上移动
+         *@num 移动的层数量 默认到顶端
+         */
+
+    }, {
+        key: "toFront",
+        value: function toFront(num) {
+            if (!this.parent) {
+                return;
+            }
+            var fromIndex = this.getIndex();
+            var pcl = this.parent.children.length;
+            var toIndex = pcl;
+
+            if (_$1.isNumber(num)) {
+                if (num == 0) {
+                    //原地不动
+                    return;
+                }
+                toIndex = fromIndex + num + 1;
+            }
+            var me = this.parent.children.splice(fromIndex, 1)[0];
+            if (toIndex > pcl) {
+                toIndex = pcl;
+            }
+            this.parent.addChildAt(me, toIndex - 1);
+        }
+    }, {
+        key: "_updateTransform",
+        value: function _updateTransform() {
+            var _transform = new Matrix();
+            _transform.identity();
+            var context = this.context;
+            //是否需要Transform
+            if (context.scaleX !== 1 || context.scaleY !== 1) {
+                //如果有缩放
+                //缩放的原点坐标
+                var origin = new Point(context.scaleOrigin);
+                if (origin.x || origin.y) {
+                    _transform.translate(-origin.x, -origin.y);
+                }
+                _transform.scale(context.scaleX, context.scaleY);
+                if (origin.x || origin.y) {
+                    _transform.translate(origin.x, origin.y);
+                }
+            }
+
+            var rotation = context.rotation;
+            if (rotation) {
+                //如果有旋转
+                //旋转的原点坐标
+                var origin = new Point(context.rotateOrigin);
+                if (origin.x || origin.y) {
+                    _transform.translate(-origin.x, -origin.y);
+                }
+                _transform.rotate(rotation % 360 * Math.PI / 180);
+                if (origin.x || origin.y) {
+                    _transform.translate(origin.x, origin.y);
+                }
+            }
+
+            //如果有位移
+            var x, y;
+            if (this.xyToInt && !this.moveing) {
+                //当这个元素在做轨迹运动的时候，比如drag，animation如果实时的调整这个x ， y
+                //那么该元素的轨迹会有跳跃的情况发生。所以加个条件过滤，
+                var x = parseInt(context.x);
+                var y = parseInt(context.y);
+
+                if (parseInt(context.lineWidth, 10) % 2 == 1 && context.strokeStyle) {
+                    x += 0.5;
+                    y += 0.5;
+                }
+            } else {
+                x = context.x;
+                y = context.y;
+            }
+
+            if (x != 0 || y != 0) {
+                _transform.translate(x, y);
+            }
+            this._transform = _transform;
+            return _transform;
+        }
+
+        //获取全局的世界坐标系内的矩阵
+        //世界坐标是从上而下的，所以只要和parent的直接坐标相乘就好了
+
+    }, {
+        key: "getWorldTransform",
+        value: function getWorldTransform() {
+            var cm;
+            if (!this.worldTransform) {
+                cm = new Matrix();
+                cm.concat(this._transform);
+                cm.concat(this.parent.worldTransform);
+                this.worldTransform = cm;
+            }
+            return this.worldTransform;
+        }
+
+        //显示对象的选取检测处理函数
+
+    }, {
+        key: "getChildInPoint",
+        value: function getChildInPoint(point) {
+
+            var result = false; //检测的结果
+
+            //第一步，吧glob的point转换到对应的obj的层级内的坐标系统
+            //if( this.type != "stage" && this.parent && this.parent.type != "stage" ) {
+            //    point = this.parent.globalToLocal( point );
+            //};
+            //var m = new Matrix( Settings.RESOLUTION, 0, 0, Settings.RESOLUTION, point.x , point.y);
+            //m.concat( this.worldTransform );
+
+            var x = point.x;
+            var y = point.y;
+
+            //对鼠标的坐标也做相同的变换
+            if (this.worldTransform) {
+
+                var inverseMatrix = this.worldTransform.clone().invert();
+                var originPos = [x * settings.RESOLUTION, y * settings.RESOLUTION];
+
+                originPos = inverseMatrix.mulVector(originPos);
+
+                x = originPos[0];
+                y = originPos[1];
+            }
+
+            if (this.graphics) {
+                result = this.containsPoint({ x: x, y: y });
+            }
+
+            return result;
+        }
+    }, {
+        key: "containsPoint",
+        value: function containsPoint(point) {
+            var inside = false;
+            for (var i = 0; i < this.graphics.graphicsData.length; ++i) {
+                var data = this.graphics.graphicsData[i];
+                if (data.shape) {
+                    //先检测fill， fill的检测概率大些。
+                    //像circle,ellipse这样的shape 就直接把lineWidth算在fill里面计算就好了，所以他们是没有insideLine的
+                    if (data.hasFill() && data.shape.contains(point.x, point.y)) {
+                        inside = true;
+                        if (inside) {
+                            break;
+                        }
+                    }
+
+                    //circle,ellipse等就没有points
+                    if (data.hasLine() && data.shape.points) {
+                        //然后检测是否和描边碰撞
+                        inside = insideLine(data, point.x, point.y);
+                        if (inside) {
+                            break;
+                        }
+                    }
+                }
+            }
+            return inside;
+        }
+
+        /*
+        * animate
+        * @param toContent 要动画变形到的属性集合
+        * @param options tween 动画参数
+        */
+
+    }, {
+        key: "animate",
+        value: function animate(toContent, options) {
+            var to = toContent;
+            var from = {};
+            for (var p in to) {
+                if (isNaN(to[p]) && to[p] !== '' && to[p] !== null && to[p] !== undefined) {
+                    continue;
+                }
+                from[p] = this.context[p];
+            }
+            !options && (options = {});
+            options.from = from;
+            options.to = to;
+
+            var self = this;
+            var upFun = function upFun() {};
+            if (options.onUpdate) {
+                upFun = options.onUpdate;
+            }
+            var tween;
+            options.onUpdate = function () {
+                //如果context不存在说明该obj已经被destroy了，那么要把他的tween给destroy
+                if (!self.context && tween) {
+                    AnimationFrame.destroyTween(tween);
+                    tween = null;
+                    return;
+                }
+                for (var p in this) {
+                    self.context[p] = this[p];
+                }
+                upFun.apply(self, [this]);
+            };
+            var compFun = function compFun() {};
+            if (options.onComplete) {
+                compFun = options.onComplete;
+            }
+            options.onComplete = function (opt) {
+                compFun.apply(self, arguments);
+            };
+            tween = AnimationFrame.registTween(options);
+            return tween;
+        }
+
+        //从树中删除
+
+    }, {
+        key: "remove",
+        value: function remove() {
+            if (this.parent) {
+                this.parent.removeChild(this);
+                this.parent = null;
+            }
+        }
+
+        //元素的自我销毁
+
+    }, {
+        key: "destroy",
+        value: function destroy() {
+            this.remove();
+            this.fire("destroy");
+            //把自己从父节点中删除了后做自我清除，释放内存
+            this.context = null;
+            delete this.context;
+        }
+    }]);
+    return DisplayObject;
+}(EventDispatcher);
+
+/** 
  * Canvax
  *
  * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
  *
  * 模拟as3的DisplayList 中的容器类
  */
-var DisplayObjectContainer = function DisplayObjectContainer(opt) {
-    var self = this;
-    self.children = [];
-    self.mouseChildren = [];
-    DisplayObjectContainer.superclass.constructor.apply(this, arguments);
+var DisplayObjectContainer = function (_DisplayObject) {
+    inherits(DisplayObjectContainer, _DisplayObject);
 
-    //所有的容器默认支持event 检测，因为 可能有里面的shape是eventEnable是true的
-    //如果用户有强制的需求让容器下的所有元素都 不可检测，可以调用
-    //DisplayObjectContainer的 setEventEnable() 方法
-    self._eventEnabled = true;
-};
+    function DisplayObjectContainer(opt) {
+        classCallCheck(this, DisplayObjectContainer);
 
-Utils.creatClass(DisplayObjectContainer, DisplayObject, {
-    addChild: function addChild(child, index) {
-        if (!child) {
-            return;
-        }
-        if (this.getChildIndex(child) != -1) {
+        var _this = possibleConstructorReturn(this, (DisplayObjectContainer.__proto__ || Object.getPrototypeOf(DisplayObjectContainer)).call(this, opt));
+
+        _this.children = [];
+        _this.mouseChildren = [];
+        //所有的容器默认支持event 检测，因为 可能有里面的shape是eventEnable是true的
+        //如果用户有强制的需求让容器下的所有元素都 不可检测，可以调用
+        //DisplayObjectContainer的 setEventEnable() 方法
+        _this._eventEnabled = true;
+        return _this;
+    }
+
+    createClass(DisplayObjectContainer, [{
+        key: "addChild",
+        value: function addChild(child, index) {
+            if (!child) {
+                return;
+            }
+            if (this.getChildIndex(child) != -1) {
+                child.parent = this;
+                return child;
+            }
+            //如果他在别的子元素中，那么就从别人那里删除了
+            if (child.parent) {
+                child.parent.removeChild(child);
+            }
+
+            if (index === undefined) {
+                index = this.children.length;
+            }
+
+            this.children.splice(index, 0, child);
+
             child.parent = this;
+
+            if (this.heartBeat) {
+                this.heartBeat({
+                    convertType: "children",
+                    target: child,
+                    src: this
+                });
+            }
+
+            if (this._afterAddChild) {
+                this._afterAddChild(child);
+            }
+
+            if (this.worldTransform) {
+                //如果过自己已经有了世界坐标了，那么要把新添加进来的所有节点包括其子节点都设置好世界坐标
+                this.updateChildWorldTransform();
+            }
+
             return child;
         }
-        //如果他在别的子元素中，那么就从别人那里删除了
-        if (child.parent) {
-            child.parent.removeChild(child);
+    }, {
+        key: "addChildAt",
+        value: function addChildAt(child, index) {
+            return this.addChild(child, index);
         }
-
-        if (index === undefined) {
-            index = this.children.length;
+    }, {
+        key: "removeChild",
+        value: function removeChild(child) {
+            return this.removeChildAt(_$1.indexOf(this.children, child));
         }
-
-        this.children.splice(index, 0, child);
-
-        child.parent = this;
-
-        if (this.heartBeat) {
-            this.heartBeat({
-                convertType: "children",
-                target: child,
-                src: this
-            });
-        }
-
-        if (this._afterAddChild) {
-            this._afterAddChild(child);
-        }
-
-        if (this.worldTransform) {
-            //如果过自己已经有了世界坐标了，那么要把新添加进来的所有节点包括其子节点都设置好世界坐标
-            this.updateChildWorldTransform();
-        }
-
-        return child;
-    },
-    addChildAt: function addChildAt(child, index) {
-        return this.addChild(child, index);
-    },
-    removeChild: function removeChild(child) {
-        return this.removeChildAt(_$1.indexOf(this.children, child));
-    },
-    removeChildAt: function removeChildAt(index) {
-        if (index < 0 || index > this.children.length - 1) {
-            return false;
-        }
-        var child = this.children[index];
-        if (child != null) {
-            child.parent = null;
-        }
-        this.children.splice(index, 1);
-
-        if (this.heartBeat) {
-            this.heartBeat({
-                convertType: "children",
-                target: child,
-                src: this
-            });
-        }
-
-        if (this._afterDelChild) {
-            this._afterDelChild(child, index);
-        }
-
-        return child;
-    },
-    removeChildById: function removeChildById(id) {
-        for (var i = 0, len = this.children.length; i < len; i++) {
-            if (this.children[i].id == id) {
-                return this.removeChildAt(i);
+    }, {
+        key: "removeChildAt",
+        value: function removeChildAt(index) {
+            if (index < 0 || index > this.children.length - 1) {
+                return false;
             }
+            var child = this.children[index];
+            if (child != null) {
+                child.parent = null;
+            }
+            this.children.splice(index, 1);
+
+            if (this.heartBeat) {
+                this.heartBeat({
+                    convertType: "children",
+                    target: child,
+                    src: this
+                });
+            }
+
+            if (this._afterDelChild) {
+                this._afterDelChild(child, index);
+            }
+
+            return child;
         }
-        return false;
-    },
-    removeAllChildren: function removeAllChildren() {
-        while (this.children.length > 0) {
-            this.removeChildAt(0);
-        }
-    },
-    //集合类的自我销毁
-    destroy: function destroy() {
-        if (this.parent) {
-            this.parent.removeChild(this);
-            this.parent = null;
-        }
-        this.fire("destroy");
-        //依次销毁所有子元素
-        for (var i = 0, l = this.children.length; i < l; i++) {
-            this.getChildAt(i).destroy();
-            i--;
-            l--;
-        }
-    },
-    /*
-     *@id 元素的id
-     *@boolen 是否深度查询，默认就在第一层子元素中查询
-     **/
-    getChildById: function getChildById(id, boolen) {
-        if (!boolen) {
+    }, {
+        key: "removeChildById",
+        value: function removeChildById(id) {
             for (var i = 0, len = this.children.length; i < len; i++) {
                 if (this.children[i].id == id) {
-                    return this.children[i];
+                    return this.removeChildAt(i);
                 }
             }
-        } else {
-            //深度查询
-            //TODO:暂时未实现
-            return null;
+            return false;
         }
-        return null;
-    },
-    getChildAt: function getChildAt(index) {
-        if (index < 0 || index > this.children.length - 1) return null;
-        return this.children[index];
-    },
-    getChildIndex: function getChildIndex(child) {
-        return _$1.indexOf(this.children, child);
-    },
-    setChildIndex: function setChildIndex(child, index) {
-        if (child.parent != this) return;
-        var oldIndex = _$1.indexOf(this.children, child);
-        if (index == oldIndex) return;
-        this.children.splice(oldIndex, 1);
-        this.children.splice(index, 0, child);
-    },
-    getNumChildren: function getNumChildren() {
-        return this.children.length;
-    },
-    //获取x,y点上的所有object  num 需要返回的obj数量
-    getObjectsUnderPoint: function getObjectsUnderPoint(point, num) {
-        var result = [];
-
-        for (var i = this.children.length - 1; i >= 0; i--) {
-            var child = this.children[i];
-
-            if (child == null || !child._eventEnabled && !child.dragEnabled || !child.context.$model.visible) {
-                continue;
+    }, {
+        key: "removeAllChildren",
+        value: function removeAllChildren() {
+            while (this.children.length > 0) {
+                this.removeChildAt(0);
             }
-            if (child instanceof DisplayObjectContainer) {
-                //是集合
-                if (child.mouseChildren && child.getNumChildren() > 0) {
-                    var objs = child.getObjectsUnderPoint(point);
-                    if (objs.length > 0) {
-                        result = result.concat(objs);
+        }
+
+        //集合类的自我销毁
+
+    }, {
+        key: "destroy",
+        value: function destroy() {
+            if (this.parent) {
+                this.parent.removeChild(this);
+                this.parent = null;
+            }
+            this.fire("destroy");
+            //依次销毁所有子元素
+            for (var i = 0, l = this.children.length; i < l; i++) {
+                this.getChildAt(i).destroy();
+                i--;
+                l--;
+            }
+        }
+
+        /*
+         *@id 元素的id
+         *@boolen 是否深度查询，默认就在第一层子元素中查询
+         **/
+
+    }, {
+        key: "getChildById",
+        value: function getChildById(id, boolen) {
+            if (!boolen) {
+                for (var i = 0, len = this.children.length; i < len; i++) {
+                    if (this.children[i].id == id) {
+                        return this.children[i];
                     }
                 }
             } else {
-                //非集合，可以开始做getChildInPoint了
-                if (child.getChildInPoint(point)) {
-                    result.push(child);
-                    if (num != undefined && !isNaN(num)) {
-                        if (result.length == num) {
-                            return result;
+                //深度查询
+                //TODO:暂时未实现
+                return null;
+            }
+            return null;
+        }
+    }, {
+        key: "getChildAt",
+        value: function getChildAt(index) {
+            if (index < 0 || index > this.children.length - 1) return null;
+            return this.children[index];
+        }
+    }, {
+        key: "getChildIndex",
+        value: function getChildIndex(child) {
+            return _$1.indexOf(this.children, child);
+        }
+    }, {
+        key: "setChildIndex",
+        value: function setChildIndex(child, index) {
+            if (child.parent != this) return;
+            var oldIndex = _$1.indexOf(this.children, child);
+            if (index == oldIndex) return;
+            this.children.splice(oldIndex, 1);
+            this.children.splice(index, 0, child);
+        }
+    }, {
+        key: "getNumChildren",
+        value: function getNumChildren() {
+            return this.children.length;
+        }
+
+        //获取x,y点上的所有object  num 需要返回的obj数量
+
+    }, {
+        key: "getObjectsUnderPoint",
+        value: function getObjectsUnderPoint(point, num) {
+            var result = [];
+
+            for (var i = this.children.length - 1; i >= 0; i--) {
+                var child = this.children[i];
+
+                if (child == null || !child._eventEnabled && !child.dragEnabled || !child.context.$model.visible) {
+                    continue;
+                }
+                if (child instanceof DisplayObjectContainer) {
+                    //是集合
+                    if (child.mouseChildren && child.getNumChildren() > 0) {
+                        var objs = child.getObjectsUnderPoint(point);
+                        if (objs.length > 0) {
+                            result = result.concat(objs);
+                        }
+                    }
+                } else {
+                    //非集合，可以开始做getChildInPoint了
+                    if (child.getChildInPoint(point)) {
+                        result.push(child);
+                        if (num != undefined && !isNaN(num)) {
+                            if (result.length == num) {
+                                return result;
+                            }
                         }
                     }
                 }
             }
+            return result;
         }
-        return result;
-    },
-    //更新所有子节点的世界坐标
-    updateChildWorldTransform: function updateChildWorldTransform() {
-        _$1.each(this.children, function (obj) {
-            obj.getWorldTransform();
-            if (obj.children) {
-                obj.updateChildWorldTransform();
-            }
-        });
-    }
-});
+
+        //更新所有子节点的世界坐标
+
+    }, {
+        key: "updateChildWorldTransform",
+        value: function updateChildWorldTransform() {
+            _$1.each(this.children, function (obj) {
+                obj.getWorldTransform();
+                if (obj.children) {
+                    obj.updateChildWorldTransform();
+                }
+            });
+        }
+    }]);
+    return DisplayObjectContainer;
+}(DisplayObject);
 
 /**
  * Canvax
@@ -3626,44 +3771,61 @@ Utils.creatClass(DisplayObjectContainer, DisplayObject, {
  * 但是再canvax中，因为分层设计的需要。stage 舞台 同样代表一个canvas元素，但是不是再整个引擎设计
  * 里面， 不是唯一的根节点。而是会交由canvax类来统一管理其层级
  */
-var Stage = function Stage(opt) {
-    var self = this;
-    self.type = "stage";
-    self.canvas = null;
-    self.ctx = null; //渲染的时候由renderer决定,这里不做初始值
-    //stage正在渲染中
-    self.stageRending = false;
-    self._isReady = false;
+var Stage = function (_DisplayObjectContain) {
+    inherits(Stage, _DisplayObjectContain);
 
-    Stage.superclass.constructor.apply(this, arguments);
-};
-Utils.creatClass(Stage, DisplayObjectContainer, {
-    init: function init() {},
-    //由canvax的afterAddChild 回调
-    initStage: function initStage(canvas, width, height) {
-        var self = this;
-        self.canvas = canvas;
-        var model = self.context;
-        model.width = width;
-        model.height = height;
-        model.scaleX = Utils._devicePixelRatio;
-        model.scaleY = Utils._devicePixelRatio;
-        self._isReady = true;
-    },
-    heartBeat: function heartBeat(opt) {
-        //shape , name , value , preValue 
-        //displayList中某个属性改变了
-        if (!this._isReady) {
-            //在stage还没初始化完毕的情况下，无需做任何处理
-            return;
-        }
-        opt || (opt = {}); //如果opt为空，说明就是无条件刷新
-        opt.stage = this;
+    function Stage(opt) {
+        classCallCheck(this, Stage);
 
-        //TODO临时先这么处理
-        this.parent && this.parent.heartBeat(opt);
+
+        opt.type = "stage";
+
+        var _this = possibleConstructorReturn(this, (Stage.__proto__ || Object.getPrototypeOf(Stage)).call(this, opt));
+
+        _this.canvas = null;
+        _this.ctx = null; //渲染的时候由renderer决定,这里不做初始值
+        //stage正在渲染中
+        _this.stageRending = false;
+        _this._isReady = false;
+        return _this;
     }
-});
+
+    createClass(Stage, [{
+        key: "init",
+        value: function init() {}
+
+        //由canvax的afterAddChild 回调
+
+    }, {
+        key: "initStage",
+        value: function initStage(canvas, width, height) {
+            var self = this;
+            self.canvas = canvas;
+            var model = self.context;
+            model.width = width;
+            model.height = height;
+            model.scaleX = Utils._devicePixelRatio;
+            model.scaleY = Utils._devicePixelRatio;
+            self._isReady = true;
+        }
+    }, {
+        key: "heartBeat",
+        value: function heartBeat(opt) {
+            //shape , name , value , preValue 
+            //displayList中某个属性改变了
+            if (!this._isReady) {
+                //在stage还没初始化完毕的情况下，无需做任何处理
+                return;
+            }
+            opt || (opt = {}); //如果opt为空，说明就是无条件刷新
+            opt.stage = this;
+
+            //TODO临时先这么处理
+            this.parent && this.parent.heartBeat(opt);
+        }
+    }]);
+    return Stage;
+}(DisplayObjectContainer);
 
 var SystemRenderer = function () {
     function SystemRenderer() {
@@ -8005,203 +8167,228 @@ function autoRenderer(app, options) {
  **/
 
 //utils
-var Application = function Application(opt) {
-    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+var Application = function (_DisplayObjectContain) {
+    inherits(Application, _DisplayObjectContain);
 
-    this.type = "canvax";
-    this._cid = new Date().getTime() + "_" + Math.floor(Math.random() * 100);
+    function Application(opt) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+        classCallCheck(this, Application);
 
-    this.el = $$1.query(opt.el);
+        opt.type = "canvax";
 
-    this.width = parseInt("width" in opt || this.el.offsetWidth, 10);
-    this.height = parseInt("height" in opt || this.el.offsetHeight, 10);
+        var _this = possibleConstructorReturn(this, (Application.__proto__ || Object.getPrototypeOf(Application)).call(this, opt));
 
-    var viewObj = $$1.createView(this.width, this.height, this._cid);
-    this.view = viewObj.view;
-    this.stage_c = viewObj.stage_c;
-    this.dom_c = viewObj.dom_c;
+        _this._cid = new Date().getTime() + "_" + Math.floor(Math.random() * 100);
 
-    this.el.innerHTML = "";
-    this.el.appendChild(this.view);
+        _this.el = $$1.query(opt.el);
 
-    this.viewOffset = $$1.offset(this.view);
-    this.lastGetRO = 0; //最后一次获取 viewOffset 的时间
+        _this.width = parseInt("width" in opt || _this.el.offsetWidth, 10);
+        _this.height = parseInt("height" in opt || _this.el.offsetHeight, 10);
 
-    this.webGL = opt.webGL;
-    this.renderer = autoRenderer(this, options);
+        var viewObj = $$1.createView(_this.width, _this.height, _this._cid);
+        _this.view = viewObj.view;
+        _this.stage_c = viewObj.stage_c;
+        _this.dom_c = viewObj.dom_c;
 
-    this.event = null;
+        _this.el.innerHTML = "";
+        _this.el.appendChild(_this.view);
 
-    this._bufferStage = null;
+        _this.viewOffset = $$1.offset(_this.view);
+        _this.lastGetRO = 0; //最后一次获取 viewOffset 的时间
 
-    //是否阻止浏览器默认事件的执行
-    this.preventDefault = true;
-    if (opt.preventDefault === false) {
-        this.preventDefault = false;
-    }
+        _this.webGL = opt.webGL;
+        _this.renderer = autoRenderer(_this, options);
 
-    //该属性在systenRender里面操作，每帧由心跳上报的 需要重绘的stages 列表
-    this.convertStages = {};
+        _this.event = null;
 
-    Application.superclass.constructor.apply(this, arguments);
-};
+        _this._bufferStage = null;
 
-Utils.creatClass(Application, DisplayObjectContainer, {
-    init: function init() {
-        this.context.$model.width = this.width;
-        this.context.$model.height = this.height;
+        //是否阻止浏览器默认事件的执行
+        _this.preventDefault = true;
+        if (opt.preventDefault === false) {
+            _this.preventDefault = false;
+        }
+
+        //该属性在systenRender里面操作，每帧由心跳上报的 需要重绘的stages 列表
+        _this.convertStages = {};
+
+        _this.context.$model.width = _this.width;
+        _this.context.$model.height = _this.height;
 
         //然后创建一个用于绘制激活 shape 的 stage 到activation
-        this._creatHoverStage();
+        _this._creatHoverStage();
 
         //创建一个如果要用像素检测的时候的容器
-        this._createPixelContext();
+        _this._createPixelContext();
 
         //设置一个默认的matrix做为app的世界根节点坐标
-        this.worldTransform = new Matrix().identity();
-    },
-    registEvent: function registEvent(opt) {
-        //初始化事件委托到root元素上面
-        this.event = new EventHandler(this, opt);
-        this.event.init();
-        return this.event;
-    },
-    resize: function resize(opt) {
-        //重新设置坐标系统 高宽 等。
-        this.width = parseInt(opt && "width" in opt || this.el.offsetWidth, 10);
-        this.height = parseInt(opt && "height" in opt || this.el.offsetHeight, 10);
+        _this.worldTransform = new Matrix().identity();
+        return _this;
+    }
 
-        this.view.style.width = this.width + "px";
-        this.view.style.height = this.height + "px";
-
-        this.viewOffset = $$1.offset(this.view);
-        this.context.$model.width = this.width;
-        this.context.$model.height = this.height;
-
-        var me = this;
-        var reSizeCanvas = function reSizeCanvas(ctx) {
-            var canvas = ctx.canvas;
-            canvas.style.width = me.width + "px";
-            canvas.style.height = me.height + "px";
-            canvas.setAttribute("width", me.width * Utils._devicePixelRatio);
-            canvas.setAttribute("height", me.height * Utils._devicePixelRatio);
-
-            //如果是swf的话就还要调用这个方法。
-            if (ctx.resize) {
-                ctx.resize(me.width, me.height);
-            }
-        };
-        _$1.each(this.children, function (s, i) {
-            s.context.$model.width = me.width;
-            s.context.$model.height = me.height;
-            reSizeCanvas(s.canvas);
-        });
-
-        this.dom_c.style.width = this.width + "px";
-        this.dom_c.style.height = this.height + "px";
-
-        this.heartBeat();
-    },
-    getHoverStage: function getHoverStage() {
-        return this._bufferStage;
-    },
-    _creatHoverStage: function _creatHoverStage() {
-        //TODO:创建stage的时候一定要传入width height  两个参数
-        this._bufferStage = new Stage({
-            id: "activCanvas" + new Date().getTime(),
-            context: {
-                width: this.context.$model.width,
-                height: this.context.$model.height
-            }
-        });
-        //该stage不参与事件检测
-        this._bufferStage._eventEnabled = false;
-        this.addChild(this._bufferStage);
-    },
-    /**
-     * 用来检测文本width height 
-     * @return {Object} 上下文
-    */
-    _createPixelContext: function _createPixelContext() {
-        var _pixelCanvas = $$1.query("_pixelCanvas");
-        if (!_pixelCanvas) {
-            _pixelCanvas = $$1.createCanvas(0, 0, "_pixelCanvas");
-        } else {
-            //如果又的话 就不需要在创建了
-            return;
+    createClass(Application, [{
+        key: "registEvent",
+        value: function registEvent(opt) {
+            //初始化事件委托到root元素上面
+            this.event = new EventHandler(this, opt);
+            this.event.init();
+            return this.event;
         }
-        document.body.appendChild(_pixelCanvas);
-        Utils.initElement(_pixelCanvas);
-        if (Utils.canvasSupport()) {
-            //canvas的话，哪怕是display:none的页可以用来左像素检测和measureText文本width检测
-            _pixelCanvas.style.display = "none";
-        } else {
-            //flashCanvas 的话，swf如果display:none了。就做不了measureText 文本宽度 检测了
-            _pixelCanvas.style.zIndex = -1;
-            _pixelCanvas.style.position = "absolute";
-            _pixelCanvas.style.left = -this.context.$model.width + "px";
-            _pixelCanvas.style.top = -this.context.$model.height + "px";
-            _pixelCanvas.style.visibility = "hidden";
-        }
-        Utils._pixelCtx = _pixelCanvas.getContext('2d');
-    },
+    }, {
+        key: "resize",
+        value: function resize(opt) {
+            //重新设置坐标系统 高宽 等。
+            this.width = parseInt(opt && "width" in opt || this.el.offsetWidth, 10);
+            this.height = parseInt(opt && "height" in opt || this.el.offsetHeight, 10);
 
-    updateViewOffset: function updateViewOffset() {
-        var now = new Date().getTime();
-        if (now - this.lastGetRO > 1000) {
+            this.view.style.width = this.width + "px";
+            this.view.style.height = this.height + "px";
+
             this.viewOffset = $$1.offset(this.view);
-            this.lastGetRO = now;
+            this.context.$model.width = this.width;
+            this.context.$model.height = this.height;
+
+            var me = this;
+            var reSizeCanvas = function reSizeCanvas(ctx) {
+                var canvas = ctx.canvas;
+                canvas.style.width = me.width + "px";
+                canvas.style.height = me.height + "px";
+                canvas.setAttribute("width", me.width * Utils._devicePixelRatio);
+                canvas.setAttribute("height", me.height * Utils._devicePixelRatio);
+
+                //如果是swf的话就还要调用这个方法。
+                if (ctx.resize) {
+                    ctx.resize(me.width, me.height);
+                }
+            };
+            _$1.each(this.children, function (s, i) {
+                s.context.$model.width = me.width;
+                s.context.$model.height = me.height;
+                reSizeCanvas(s.canvas);
+            });
+
+            this.dom_c.style.width = this.width + "px";
+            this.dom_c.style.height = this.height + "px";
+
+            this.heartBeat();
         }
-    },
-
-    _afterAddChild: function _afterAddChild(stage, index) {
-        var canvas;
-
-        if (!stage.canvas) {
-            canvas = $$1.createCanvas(this.context.$model.width, this.context.$model.height, stage.id);
-        } else {
-            canvas = stage.canvas;
+    }, {
+        key: "getHoverStage",
+        value: function getHoverStage() {
+            return this._bufferStage;
+        }
+    }, {
+        key: "_creatHoverStage",
+        value: function _creatHoverStage() {
+            //TODO:创建stage的时候一定要传入width height  两个参数
+            this._bufferStage = new Stage({
+                id: "activCanvas" + new Date().getTime(),
+                context: {
+                    width: this.context.$model.width,
+                    height: this.context.$model.height
+                }
+            });
+            //该stage不参与事件检测
+            this._bufferStage._eventEnabled = false;
+            this.addChild(this._bufferStage);
         }
 
-        if (this.children.length == 1) {
-            this.stage_c.appendChild(canvas);
-        } else if (this.children.length > 1) {
-            if (index == undefined) {
-                //如果没有指定位置，那么就放到_bufferStage的下面。
-                this.stage_c.insertBefore(canvas, this._bufferStage.canvas);
+        /**
+         * 用来检测文本width height 
+         * @return {Object} 上下文
+        */
+
+    }, {
+        key: "_createPixelContext",
+        value: function _createPixelContext() {
+            var _pixelCanvas = $$1.query("_pixelCanvas");
+            if (!_pixelCanvas) {
+                _pixelCanvas = $$1.createCanvas(0, 0, "_pixelCanvas");
             } else {
-                //如果有指定的位置，那么就指定的位置来
-                if (index >= this.children.length - 1) {
-                    this.stage_c.appendChild(canvas);
+                //如果又的话 就不需要在创建了
+                return;
+            }
+            document.body.appendChild(_pixelCanvas);
+            Utils.initElement(_pixelCanvas);
+            if (Utils.canvasSupport()) {
+                //canvas的话，哪怕是display:none的页可以用来左像素检测和measureText文本width检测
+                _pixelCanvas.style.display = "none";
+            } else {
+                //flashCanvas 的话，swf如果display:none了。就做不了measureText 文本宽度 检测了
+                _pixelCanvas.style.zIndex = -1;
+                _pixelCanvas.style.position = "absolute";
+                _pixelCanvas.style.left = -this.context.$model.width + "px";
+                _pixelCanvas.style.top = -this.context.$model.height + "px";
+                _pixelCanvas.style.visibility = "hidden";
+            }
+            Utils._pixelCtx = _pixelCanvas.getContext('2d');
+        }
+    }, {
+        key: "updateViewOffset",
+        value: function updateViewOffset() {
+            var now = new Date().getTime();
+            if (now - this.lastGetRO > 1000) {
+                this.viewOffset = $$1.offset(this.view);
+                this.lastGetRO = now;
+            }
+        }
+    }, {
+        key: "_afterAddChild",
+        value: function _afterAddChild(stage, index) {
+            var canvas;
+
+            if (!stage.canvas) {
+                canvas = $$1.createCanvas(this.context.$model.width, this.context.$model.height, stage.id);
+            } else {
+                canvas = stage.canvas;
+            }
+
+            if (this.children.length == 1) {
+                this.stage_c.appendChild(canvas);
+            } else if (this.children.length > 1) {
+                if (index == undefined) {
+                    //如果没有指定位置，那么就放到_bufferStage的下面。
+                    this.stage_c.insertBefore(canvas, this._bufferStage.canvas);
                 } else {
-                    this.stage_c.insertBefore(canvas, this.children[index].canvas);
+                    //如果有指定的位置，那么就指定的位置来
+                    if (index >= this.children.length - 1) {
+                        this.stage_c.appendChild(canvas);
+                    } else {
+                        this.stage_c.insertBefore(canvas, this.children[index].canvas);
+                    }
                 }
             }
+
+            Utils.initElement(canvas);
+            stage.initStage(canvas, this.context.$model.width, this.context.$model.height);
         }
-
-        Utils.initElement(canvas);
-        stage.initStage(canvas, this.context.$model.width, this.context.$model.height);
-    },
-    _afterDelChild: function _afterDelChild(stage) {
-        this.stage_c.removeChild(stage.canvas);
-    },
-
-    heartBeat: function heartBeat(opt) {
-        if (this.children.length > 0) {
-            this.renderer.heartBeat(opt);
+    }, {
+        key: "_afterDelChild",
+        value: function _afterDelChild(stage) {
+            this.stage_c.removeChild(stage.canvas);
         }
-    },
-    toDataURL: function toDataURL() {
-        var canvas = Base._createCanvas("curr_base64_canvas", this.width, this.height);
-        var ctx = canvas.getContext("2d");
+    }, {
+        key: "heartBeat",
+        value: function heartBeat(opt) {
+            if (this.children.length > 0) {
+                this.renderer.heartBeat(opt);
+            }
+        }
+    }, {
+        key: "toDataURL",
+        value: function toDataURL() {
+            var canvas = Base._createCanvas("curr_base64_canvas", this.width, this.height);
+            var ctx = canvas.getContext("2d");
 
-        _$1.each(this.children, function (stage) {
-            ctx.drawImage(stage.canvas, 0, 0);
-        });
+            _$1.each(this.children, function (stage) {
+                ctx.drawImage(stage.canvas, 0, 0);
+            });
 
-        return canvas.toDataURL();
-    }
-});
+            return canvas.toDataURL();
+        }
+    }]);
+    return Application;
+}(DisplayObjectContainer);
 
 /**
  * Canvax
@@ -8210,14 +8397,18 @@ Utils.creatClass(Application, DisplayObjectContainer, {
  *
  * 模拟as3 中 的sprite类，目前还只是个简单的容易。
  */
-var Sprite = function Sprite() {
-    this.type = "sprite";
-    Sprite.superclass.constructor.apply(this, arguments);
-};
+var Sprite = function (_DisplayObjectContain) {
+  inherits(Sprite, _DisplayObjectContain);
 
-Utils.creatClass(Sprite, DisplayObjectContainer, {
-    init: function init() {}
-});
+  function Sprite(opt) {
+    classCallCheck(this, Sprite);
+
+    opt.type = "sprite";
+    return possibleConstructorReturn(this, (Sprite.__proto__ || Object.getPrototypeOf(Sprite)).call(this, opt));
+  }
+
+  return Sprite;
+}(DisplayObjectContainer);
 
 var GraphicsData = function () {
     function GraphicsData(lineWidth, strokeStyle, lineAlpha, fillStyle, fillAlpha, shape) {
@@ -8850,13 +9041,12 @@ var Shape = function (_DisplayObject) {
         if (opt.id === undefined && opt.type !== undefined) {
             opt.id = Utils.createId(opt.type);
         }
-        debugger;
 
         //over的时候如果有修改样式，就为true
         var _this = possibleConstructorReturn(this, (Shape.__proto__ || Object.getPrototypeOf(Shape)).call(this, opt));
 
         _this._hoverClass = false;
-        _this.hoverCloneEnabled = true; //是否开启在hover的时候clone一份到active stage 中 
+        _this.hoverClone = true; //是否开启在hover的时候clone一份到active stage 中 
         _this.pointChkPriority = true; //在鼠标mouseover到该节点，然后mousemove的时候，是否优先检测该节点
 
         _this._eventEnabled = false; //是否响应事件交互,在添加了事件侦听后会自动设置为true
@@ -8994,228 +9184,266 @@ var Shape = function (_DisplayObject) {
  *
  * 文本 类
  **/
-var Text = function Text(text, opt) {
-    var self = this;
-    self.type = "text";
-    self._reNewline = /\r?\n/;
-    self.fontProperts = ["fontStyle", "fontVariant", "fontWeight", "fontSize", "fontFamily"];
+var Text = function (_DisplayObject) {
+    inherits(Text, _DisplayObject);
 
-    self._context = _$1.extend({
-        fontSize: 13, //字体大小默认13
-        fontWeight: "normal",
-        fontFamily: "微软雅黑,sans-serif",
-        textDecoration: null,
-        fillStyle: 'blank',
-        strokeStyle: null,
-        lineWidth: 0,
-        lineHeight: 1.2,
-        backgroundColor: null,
-        textBackgroundColor: null
-    }, opt.context);
+    function Text(text, opt) {
+        classCallCheck(this, Text);
 
-    self._context.font = self._getFontDeclaration();
+        opt.type = "text";
 
-    self.text = text.toString();
+        var _this = possibleConstructorReturn(this, (Text.__proto__ || Object.getPrototypeOf(Text)).call(this, opt));
 
-    Text.superclass.constructor.apply(this, [opt]);
-};
+        _this._reNewline = /\r?\n/;
+        _this.fontProperts = ["fontStyle", "fontVariant", "fontWeight", "fontSize", "fontFamily"];
+        _this._context = _$1.extend({
+            fontSize: 13, //字体大小默认13
+            fontWeight: "normal",
+            fontFamily: "微软雅黑,sans-serif",
+            textDecoration: null,
+            fillStyle: 'blank',
+            strokeStyle: null,
+            lineWidth: 0,
+            lineHeight: 1.2,
+            backgroundColor: null,
+            textBackgroundColor: null
+        }, opt.context);
 
-Utils.creatClass(Text, DisplayObject, {
-    $watch: function $watch(name, value, preValue) {
-        //context属性有变化的监听函数
-        if (_$1.indexOf(this.fontProperts, name) >= 0) {
-            this._context[name] = value;
-            //如果修改的是font的某个内容，就重新组装一遍font的值，
-            //然后通知引擎这次对context的修改不需要上报心跳
-            var model = this.context.$model;
-            model.font = this._getFontDeclaration();
-            model.width = this.getTextWidth();
-            model.height = this.getTextHeight();
+        _this._context.font = _this._getFontDeclaration();
+
+        _this.text = text.toString();
+
+        _this.context.width = _this.getTextWidth();
+        _this.context.height = _this.getTextHeight();
+        return _this;
+    }
+
+    createClass(Text, [{
+        key: "$watch",
+        value: function $watch(name, value, preValue) {
+            //context属性有变化的监听函数
+            if (_$1.indexOf(this.fontProperts, name) >= 0) {
+                this._context[name] = value;
+                //如果修改的是font的某个内容，就重新组装一遍font的值，
+                //然后通知引擎这次对context的修改不需要上报心跳
+                var model = this.context.$model;
+                model.font = this._getFontDeclaration();
+                model.width = this.getTextWidth();
+                model.height = this.getTextHeight();
+            }
         }
-    },
-    init: function init(text, opt) {
-        var self = this;
-        var c = this.context;
-        c.width = this.getTextWidth();
-        c.height = this.getTextHeight();
-    },
-    render: function render(ctx) {
-        var model = this.context.$model;
-        for (var p in model) {
-            if (p in ctx) {
-                if (p != "textBaseline" && model[p]) {
-                    ctx[p] = model[p];
+    }, {
+        key: "render",
+        value: function render(ctx) {
+            var model = this.context.$model;
+            for (var p in model) {
+                if (p in ctx) {
+                    if (p != "textBaseline" && model[p]) {
+                        ctx[p] = model[p];
+                    }
                 }
             }
+            this._renderText(ctx, this._getTextLines());
         }
-        this._renderText(ctx, this._getTextLines());
-    },
-    resetText: function resetText(text) {
-        this.text = text.toString();
-        this.heartBeat();
-    },
-    getTextWidth: function getTextWidth() {
-        var width = 0;
-        Utils._pixelCtx.save();
-        Utils._pixelCtx.font = this.context.$model.font;
-        width = this._getTextWidth(Utils._pixelCtx, this._getTextLines());
-        Utils._pixelCtx.restore();
-        return width;
-    },
-    getTextHeight: function getTextHeight() {
-        return this._getTextHeight(Utils._pixelCtx, this._getTextLines());
-    },
-    _getTextLines: function _getTextLines() {
-        return this.text.split(this._reNewline);
-    },
-    _renderText: function _renderText(ctx, textLines) {
-        ctx.save();
-        this._renderTextStroke(ctx, textLines);
-        this._renderTextFill(ctx, textLines);
-        ctx.restore();
-    },
-    _getFontDeclaration: function _getFontDeclaration() {
-        var self = this;
-        var fontArr = [];
-
-        _$1.each(this.fontProperts, function (p) {
-            var fontP = self._context[p];
-            if (p == "fontSize") {
-                fontP = parseFloat(fontP) + "px";
-            }
-            fontP && fontArr.push(fontP);
-        });
-
-        return fontArr.join(' ');
-    },
-    _renderTextFill: function _renderTextFill(ctx, textLines) {
-        if (!this.context.$model.fillStyle) return;
-
-        this._boundaries = [];
-        var lineHeights = 0;
-
-        for (var i = 0, len = textLines.length; i < len; i++) {
-            var heightOfLine = this._getHeightOfLine(ctx, i, textLines);
-            lineHeights += heightOfLine;
-
-            this._renderTextLine('fillText', ctx, textLines[i], 0, //this._getLeftOffset(),
-            this._getTopOffset() + lineHeights, i);
+    }, {
+        key: "resetText",
+        value: function resetText(text) {
+            this.text = text.toString();
+            this.heartBeat();
         }
-    },
-    _renderTextStroke: function _renderTextStroke(ctx, textLines) {
-        if (!this.context.$model.strokeStyle || !this.context.$model.lineWidth) return;
-
-        var lineHeights = 0;
-
-        ctx.save();
-        if (this.strokeDashArray) {
-            if (1 & this.strokeDashArray.length) {
-                this.strokeDashArray.push.apply(this.strokeDashArray, this.strokeDashArray);
-            }
-            supportsLineDash && ctx.setLineDash(this.strokeDashArray);
+    }, {
+        key: "getTextWidth",
+        value: function getTextWidth() {
+            var width = 0;
+            Utils._pixelCtx.save();
+            Utils._pixelCtx.font = this.context.$model.font;
+            width = this._getTextWidth(Utils._pixelCtx, this._getTextLines());
+            Utils._pixelCtx.restore();
+            return width;
         }
-
-        ctx.beginPath();
-        for (var i = 0, len = textLines.length; i < len; i++) {
-            var heightOfLine = this._getHeightOfLine(ctx, i, textLines);
-            lineHeights += heightOfLine;
-
-            this._renderTextLine('strokeText', ctx, textLines[i], 0, //this._getLeftOffset(),
-            this._getTopOffset() + lineHeights, i);
+    }, {
+        key: "getTextHeight",
+        value: function getTextHeight() {
+            return this._getTextHeight(Utils._pixelCtx, this._getTextLines());
         }
-        ctx.closePath();
-        ctx.restore();
-    },
-    _renderTextLine: function _renderTextLine(method, ctx, line, left, top, lineIndex) {
-        top -= this._getHeightOfLine() / 4;
-        if (this.context.$model.textAlign !== 'justify') {
-            this._renderChars(method, ctx, line, left, top, lineIndex);
-            return;
+    }, {
+        key: "_getTextLines",
+        value: function _getTextLines() {
+            return this.text.split(this._reNewline);
         }
-        var lineWidth = ctx.measureText(line).width;
-        var totalWidth = this.context.$model.width;
-
-        if (totalWidth > lineWidth) {
-            var words = line.split(/\s+/);
-            var wordsWidth = ctx.measureText(line.replace(/\s+/g, '')).width;
-            var widthDiff = totalWidth - wordsWidth;
-            var numSpaces = words.length - 1;
-            var spaceWidth = widthDiff / numSpaces;
-
-            var leftOffset = 0;
-            for (var i = 0, len = words.length; i < len; i++) {
-                this._renderChars(method, ctx, words[i], left + leftOffset, top, lineIndex);
-                leftOffset += ctx.measureText(words[i]).width + spaceWidth;
-            }
-        } else {
-            this._renderChars(method, ctx, line, left, top, lineIndex);
+    }, {
+        key: "_renderText",
+        value: function _renderText(ctx, textLines) {
+            ctx.save();
+            this._renderTextStroke(ctx, textLines);
+            this._renderTextFill(ctx, textLines);
+            ctx.restore();
         }
-    },
-    _renderChars: function _renderChars(method, ctx, chars, left, top) {
-        ctx[method](chars, 0, top);
-    },
-    _getHeightOfLine: function _getHeightOfLine() {
-        return this.context.$model.fontSize * this.context.$model.lineHeight;
-    },
-    _getTextWidth: function _getTextWidth(ctx, textLines) {
-        var maxWidth = ctx.measureText(textLines[0] || '|').width;
-        for (var i = 1, len = textLines.length; i < len; i++) {
-            var currentLineWidth = ctx.measureText(textLines[i]).width;
-            if (currentLineWidth > maxWidth) {
-                maxWidth = currentLineWidth;
+    }, {
+        key: "_getFontDeclaration",
+        value: function _getFontDeclaration() {
+            var self = this;
+            var fontArr = [];
+
+            _$1.each(this.fontProperts, function (p) {
+                var fontP = self._context[p];
+                if (p == "fontSize") {
+                    fontP = parseFloat(fontP) + "px";
+                }
+                fontP && fontArr.push(fontP);
+            });
+
+            return fontArr.join(' ');
+        }
+    }, {
+        key: "_renderTextFill",
+        value: function _renderTextFill(ctx, textLines) {
+            if (!this.context.$model.fillStyle) return;
+
+            this._boundaries = [];
+            var lineHeights = 0;
+
+            for (var i = 0, len = textLines.length; i < len; i++) {
+                var heightOfLine = this._getHeightOfLine(ctx, i, textLines);
+                lineHeights += heightOfLine;
+
+                this._renderTextLine('fillText', ctx, textLines[i], 0, //this._getLeftOffset(),
+                this._getTopOffset() + lineHeights, i);
             }
         }
-        return maxWidth;
-    },
-    _getTextHeight: function _getTextHeight(ctx, textLines) {
-        return this.context.$model.fontSize * textLines.length * this.context.$model.lineHeight;
-    },
+    }, {
+        key: "_renderTextStroke",
+        value: function _renderTextStroke(ctx, textLines) {
+            if (!this.context.$model.strokeStyle || !this.context.$model.lineWidth) return;
 
-    /**
-     * @private
-     * @return {Number} Top offset
-     */
-    _getTopOffset: function _getTopOffset() {
-        var t = 0;
-        switch (this.context.$model.textBaseline) {
-            case "top":
-                t = 0;
-                break;
-            case "middle":
-                t = -this.context.$model.height / 2;
-                break;
-            case "bottom":
-                t = -this.context.$model.height;
-                break;
+            var lineHeights = 0;
+
+            ctx.save();
+            if (this.strokeDashArray) {
+                if (1 & this.strokeDashArray.length) {
+                    this.strokeDashArray.push.apply(this.strokeDashArray, this.strokeDashArray);
+                }
+                supportsLineDash && ctx.setLineDash(this.strokeDashArray);
+            }
+
+            ctx.beginPath();
+            for (var i = 0, len = textLines.length; i < len; i++) {
+                var heightOfLine = this._getHeightOfLine(ctx, i, textLines);
+                lineHeights += heightOfLine;
+
+                this._renderTextLine('strokeText', ctx, textLines[i], 0, //this._getLeftOffset(),
+                this._getTopOffset() + lineHeights, i);
+            }
+            ctx.closePath();
+            ctx.restore();
         }
-        return t;
-    },
-    getRect: function getRect() {
-        var c = this.context;
-        var x = 0;
-        var y = 0;
-        //更具textAlign 和 textBaseline 重新矫正 xy
-        if (c.textAlign == "center") {
-            x = -c.width / 2;
+    }, {
+        key: "_renderTextLine",
+        value: function _renderTextLine(method, ctx, line, left, top, lineIndex) {
+            top -= this._getHeightOfLine() / 4;
+            if (this.context.$model.textAlign !== 'justify') {
+                this._renderChars(method, ctx, line, left, top, lineIndex);
+                return;
+            }
+            var lineWidth = ctx.measureText(line).width;
+            var totalWidth = this.context.$model.width;
+
+            if (totalWidth > lineWidth) {
+                var words = line.split(/\s+/);
+                var wordsWidth = ctx.measureText(line.replace(/\s+/g, '')).width;
+                var widthDiff = totalWidth - wordsWidth;
+                var numSpaces = words.length - 1;
+                var spaceWidth = widthDiff / numSpaces;
+
+                var leftOffset = 0;
+                for (var i = 0, len = words.length; i < len; i++) {
+                    this._renderChars(method, ctx, words[i], left + leftOffset, top, lineIndex);
+                    leftOffset += ctx.measureText(words[i]).width + spaceWidth;
+                }
+            } else {
+                this._renderChars(method, ctx, line, left, top, lineIndex);
+            }
         }
-        if (c.textAlign == "right") {
-            x = -c.width;
+    }, {
+        key: "_renderChars",
+        value: function _renderChars(method, ctx, chars, left, top) {
+            ctx[method](chars, 0, top);
         }
-        if (c.textBaseline == "middle") {
-            y = -c.height / 2;
+    }, {
+        key: "_getHeightOfLine",
+        value: function _getHeightOfLine() {
+            return this.context.$model.fontSize * this.context.$model.lineHeight;
         }
-        if (c.textBaseline == "bottom") {
-            y = -c.height;
+    }, {
+        key: "_getTextWidth",
+        value: function _getTextWidth(ctx, textLines) {
+            var maxWidth = ctx.measureText(textLines[0] || '|').width;
+            for (var i = 1, len = textLines.length; i < len; i++) {
+                var currentLineWidth = ctx.measureText(textLines[i]).width;
+                if (currentLineWidth > maxWidth) {
+                    maxWidth = currentLineWidth;
+                }
+            }
+            return maxWidth;
+        }
+    }, {
+        key: "_getTextHeight",
+        value: function _getTextHeight(ctx, textLines) {
+            return this.context.$model.fontSize * textLines.length * this.context.$model.lineHeight;
         }
 
-        return {
-            x: x,
-            y: y,
-            width: c.width,
-            height: c.height
-        };
-    }
-});
+        /**
+         * @private
+         * @return {Number} Top offset
+         */
+
+    }, {
+        key: "_getTopOffset",
+        value: function _getTopOffset() {
+            var t = 0;
+            switch (this.context.$model.textBaseline) {
+                case "top":
+                    t = 0;
+                    break;
+                case "middle":
+                    t = -this.context.$model.height / 2;
+                    break;
+                case "bottom":
+                    t = -this.context.$model.height;
+                    break;
+            }
+            return t;
+        }
+    }, {
+        key: "getRect",
+        value: function getRect() {
+            var c = this.context;
+            var x = 0;
+            var y = 0;
+            //更具textAlign 和 textBaseline 重新矫正 xy
+            if (c.textAlign == "center") {
+                x = -c.width / 2;
+            }
+            if (c.textAlign == "right") {
+                x = -c.width;
+            }
+            if (c.textBaseline == "middle") {
+                y = -c.height / 2;
+            }
+            if (c.textBaseline == "bottom") {
+                y = -c.height;
+            }
+
+            return {
+                x: x,
+                y: y,
+                width: c.width,
+                height: c.height
+            };
+        }
+    }]);
+    return Text;
+}(DisplayObject);
 
 /**
  * Canvax
@@ -10381,6 +10609,7 @@ var Sector = function (_Shape) {
     }, {
         key: "draw",
         value: function draw(graphics) {
+            debugger;
             //graphics.beginPath();
             var model = this.context.$model;
             // 形内半径[0,r)
