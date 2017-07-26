@@ -334,35 +334,7 @@ var Utils = {
     canvasSupport: function canvasSupport() {
         return !!document.createElement('canvas').getContext;
     },
-    createObject: function createObject(proto, constructor) {
-        var newProto;
-        var ObjectCreate = Object.create;
-        if (ObjectCreate) {
-            newProto = ObjectCreate(proto);
-        } else {
-            Utils.__emptyFunc.prototype = proto;
-            newProto = new Utils.__emptyFunc();
-        }
-        newProto.constructor = constructor;
-        return newProto;
-    },
-    creatClass: function creatClass(r, s, px) {
-        if (!s || !r) {
-            return r;
-        }
 
-        var sp = s.prototype,
-            rp;
-        // add prototype chain
-        rp = Utils.createObject(sp, r);
-        r.prototype = _$1.extend(rp, r.prototype);
-        r.superclass = Utils.createObject(sp, s);
-        // add prototype overrides
-        if (px) {
-            _$1.extend(rp, px);
-        }
-        return r;
-    },
     initElement: function initElement(canvas) {
         if (window.FlashCanvas && FlashCanvas.initElement) {
             FlashCanvas.initElement(canvas);
@@ -4182,6 +4154,13 @@ var CanvasRenderer = function (_SystemRenderer) {
                 }
 
                 this.CGR.render(displayObject, stage, this);
+            }
+
+            if (displayObject.type == "text") {
+                //如果是文本
+                var ctx = this.app._textStage.ctx;
+                ctx.setTransform.apply(ctx, displayObject.worldTransform.toArray());
+                displayObject.render(ctx);
             }
 
             if (displayObject.children) {
@@ -8202,8 +8181,6 @@ var Application = function (_DisplayObjectContain) {
 
         _this.event = null;
 
-        _this._bufferStage = null;
-
         //是否阻止浏览器默认事件的执行
         _this.preventDefault = true;
         if (opt.preventDefault === false) {
@@ -8217,7 +8194,12 @@ var Application = function (_DisplayObjectContain) {
         _this.context.$model.height = _this.height;
 
         //然后创建一个用于绘制激活 shape 的 stage 到activation
+        _this._bufferStage = null;
         _this._creatHoverStage();
+
+        //把所有的文字单独放在一个stage中，为了兼容后续的webgl渲染的时候，text依然采用canvas2d渲染
+        _this._textStage = null;
+        _this._creatTextStage();
 
         //创建一个如果要用像素检测的时候的容器
         _this._createPixelContext();
@@ -8293,6 +8275,20 @@ var Application = function (_DisplayObjectContain) {
             this._bufferStage._eventEnabled = false;
             this.addChild(this._bufferStage);
         }
+    }, {
+        key: "_creatTextStage",
+        value: function _creatTextStage() {
+            this._textStage = new Stage({
+                id: "textCanvas" + new Date().getTime(),
+                context: {
+                    width: this.context.$model.width,
+                    height: this.context.$model.height
+                }
+            });
+
+            this.addChild(this._textStage, 0);
+            this._textStage.ctx = this._textStage.canvas.getContext('2d');
+        }
 
         /**
          * 用来检测文本width height 
@@ -8347,9 +8343,14 @@ var Application = function (_DisplayObjectContain) {
             if (this.children.length == 1) {
                 this.stage_c.appendChild(canvas);
             } else if (this.children.length > 1) {
-                if (index == undefined) {
-                    //如果没有指定位置，那么就放到_bufferStage的下面。
-                    this.stage_c.insertBefore(canvas, this._bufferStage.canvas);
+                if (index === undefined) {
+                    //如果没有指定位置，那么就放到 _bufferStage 的下面。
+
+                    if (this._textStage.canvas) {
+                        this.stage_c.insertBefore(canvas, this._textStage.canvas);
+                    } else if (this._bufferStage.canvas) {
+                        this.stage_c.insertBefore(canvas, this._bufferStage.canvas);
+                    }
                 } else {
                     //如果有指定的位置，那么就指定的位置来
                     if (index >= this.children.length - 1) {
@@ -9170,12 +9171,7 @@ var Text = function (_DisplayObject) {
         classCallCheck(this, Text);
 
         opt.type = "text";
-
-        var _this = possibleConstructorReturn(this, (Text.__proto__ || Object.getPrototypeOf(Text)).call(this, opt));
-
-        _this._reNewline = /\r?\n/;
-        _this.fontProperts = ["fontStyle", "fontVariant", "fontWeight", "fontSize", "fontFamily"];
-        _this._context = _$1.extend({
+        var _context = _$1.extend({
             fontSize: 13, //字体大小默认13
             fontWeight: "normal",
             fontFamily: "微软雅黑,sans-serif",
@@ -9188,6 +9184,15 @@ var Text = function (_DisplayObject) {
             textBackgroundColor: null
         }, opt.context);
 
+        opt.context = _context;
+
+        var _this = possibleConstructorReturn(this, (Text.__proto__ || Object.getPrototypeOf(Text)).call(this, opt));
+
+        _this._context = _context;
+        debugger;
+
+        _this._reNewline = /\r?\n/;
+        _this.fontProperts = ["fontStyle", "fontVariant", "fontWeight", "fontSize", "fontFamily"];
         _this._context.font = _this._getFontDeclaration();
 
         _this.text = text.toString();
@@ -9214,6 +9219,7 @@ var Text = function (_DisplayObject) {
     }, {
         key: "render",
         value: function render(ctx) {
+            debugger;
             var model = this.context.$model;
             for (var p in model) {
                 if (p in ctx) {
@@ -10629,7 +10635,6 @@ var Sector = function (_Shape) {
                 }
                 G.closePath();
             }
-            debugger;
             //G.closePath();
         }
     }]);

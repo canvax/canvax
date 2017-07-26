@@ -58,6 +58,13 @@ export default class CanvasRenderer extends SystemRenderer
             this.CGR.render( displayObject , stage, this );
         };
 
+        if( displayObject.type == "text" ){
+            //如果是文本
+            var ctx = this.app._textStage.ctx;
+            ctx.setTransform.apply( ctx , displayObject.worldTransform.toArray() );
+            displayObject.render( ctx );
+        };
+
         if( displayObject.children ){
 	        for(var i = 0, len = displayObject.children.length; i < len; i++) {
 	        	this._render( stage , displayObject.children[i] );

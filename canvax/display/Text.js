@@ -14,11 +14,7 @@ export default class Text extends DisplayObject
     constructor(text, opt)
     {
         opt.type = "text";
-        super( opt );
-
-        this._reNewline = /\r?\n/;
-        this.fontProperts = ["fontStyle", "fontVariant", "fontWeight", "fontSize", "fontFamily"];
-        this._context = _.extend({
+        var _context = _.extend({
             fontSize: 13, //字体大小默认13
             fontWeight: "normal",
             fontFamily: "微软雅黑,sans-serif",
@@ -31,6 +27,15 @@ export default class Text extends DisplayObject
             textBackgroundColor: null
         }, opt.context);
 
+        opt.context = _context;
+
+        super( opt );
+
+        this._context = _context;
+        debugger
+ 
+        this._reNewline = /\r?\n/;
+        this.fontProperts = ["fontStyle", "fontVariant", "fontWeight", "fontSize", "fontFamily"];
         this._context.font = this._getFontDeclaration();
 
         this.text = text.toString();
@@ -52,9 +57,10 @@ export default class Text extends DisplayObject
             model.height = this.getTextHeight();
         }
     }
-
+ 
     render(ctx) 
-    {
+    { 
+        debugger
         var model = this.context.$model;
         for (var p in model) {
             if (p in ctx) {

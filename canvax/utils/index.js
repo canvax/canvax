@@ -29,34 +29,7 @@ var Utils = {
     canvasSupport : function() {
         return !!document.createElement('canvas').getContext;
     },
-    createObject : function( proto , constructor ) {
-        var newProto;
-        var ObjectCreate = Object.create;
-        if (ObjectCreate) {
-            newProto = ObjectCreate(proto);
-        } else {
-            Utils.__emptyFunc.prototype = proto;
-            newProto = new Utils.__emptyFunc();
-        }
-        newProto.constructor = constructor;
-        return newProto;
-    },
-    creatClass : function(r, s, px){
-        if (!s || !r) {
-            return r;
-        };
-        
-        var sp = s.prototype, rp;
-        // add prototype chain
-        rp = Utils.createObject(sp, r);
-        r.prototype = _.extend(rp, r.prototype);
-        r.superclass = Utils.createObject(sp, s);
-        // add prototype overrides
-        if (px) {
-            _.extend(rp, px);
-        }
-        return r;
-    },
+
     initElement : function( canvas ){
         if( window.FlashCanvas && FlashCanvas.initElement){
             FlashCanvas.initElement( canvas );

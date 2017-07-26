@@ -119,7 +119,6 @@ export default class Sector extends Shape
             }
             G.closePath();
         }
-debugger
         //G.closePath();
      }
 
