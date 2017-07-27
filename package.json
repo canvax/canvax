@@ -1,14 +1,44 @@
 {
-  "name": "canvax",
-  "devDependencies": {
-    "grunt": "~0.4.1",
-    "grunt-contrib-compass": "~0.3.0",
-    "grunt-contrib-watch": "~0.4.4",
-    "grunt-contrib-concat": "~0.3.0",
-    "grunt-contrib-uglify": "~0.9.1",
-    "grunt-contrib-copy": "~0.5.0",
-    "grunt-auto-kissy-module-name" : "~0.1.6",
-    "grunt-contrib-clean": "^0.5.0",
-    "require2commonjs" : "^1.0.0"
-  }
+    "name": "canvax",
+    "title": "Canvax.JS",
+    "description": "A javascript canvas 2d rendering engine",
+    "version": "1.0.0",
+    "homepage": "http://canvax.org",
+    "license": "MIT",
+    "keywords": [
+        "2d",
+        "canvas",
+        "webgl",
+        "Cross-platform",
+        "Cross-terminal"
+    ],
+    "author": {
+        "name": "nickli",
+        "email": "252759102@qq.com"
+    },
+    "repository": "git",
+    "main": "./dist/cjs/canvax.js",
+    "devDependencies": {
+        "babel-core": "^6.13.0",
+        "babel-preset-es2015-rollup": "^1.1.1",
+        "rollup": "^0.41.4",
+        "rollup-plugin-babel": "^2.6.1",
+        "rollup-plugin-commonjs": "^3.3.1",
+        "rollup-plugin-node-resolve": "^2.0.0",
+        "rollup-plugin-uglify": "^1.0.1",
+        "onchange": "^3.0.2",
+        "rollup-plugin-commonjs": "^8.0.2",
+        "rollup-plugin-node-resolve": "^2.0.0"
+    },
+    "dependencies":{
+        "rollup-watch":"3.2.2",
+        "earcut": "^2.0.7",
+        "pixi-gl-core": "^1.0.3"
+    },
+    "scripts": {
+        "rollup": "node rollup.config.js",
+        "string-replace": "node string-replace.js",
+        "build": "npm run rollup",
+        "build:watch": "onchange 'src/**/**' -- npm run build"
+    }
 }

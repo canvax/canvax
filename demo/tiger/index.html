@@ -1,184 +1,85 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta name="viewport" content="user-scalable=no, width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1, maximum-scale=1" />
-<title>Canvax</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="user-scalable=no, width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1, maximum-scale=1" />
+    <title>Canvax</title>
 
-<style type="text/css">
-    body{margin:0;padding:0;font-size:12px;background-color:#eee;padding:10px 100px 100px;}
-    //canvas {background:#999}
-</style>
+    <style type="text/css">
+        body{margin:0;padding:0;font-size:12px;background-color:#eee;padding:10px 100px 100px;}
+        //canvas {background:#999}
+    </style>
 
-<script type="text/javascript" src="http://g.tbcdn.cn/kissy/k/1.3.1/seed-min.js"></script>
+    <!--
+    <script type="text/javascript" src="http://seajs.github.io/examples/sea-modules/seajs/seajs/2.1.1/sea.js"></script>
+    -->
+
+    <script type="text/javascript" src="../../dist/canvax.js"></script>
+    <script src="../js/jquery-1.11.1.min.js"></script>
+    <script src="../js/color.js"></script>
+    <script src="../js/underscore.js"></script>
+    <script src="./tigerData.js"></script>
 
 </head>
 
-<body>
-    <div id="ready"></div>
+<body onload="pageload()">
    <script>
-   if (!window.define) {
-    if(KISSY){
-        window.define = function define(id, dependencies, factory) {
-            // KISSY.add(name?, factory?, deps)
-            function proxy() {
-                var slice = [].slice;
-                var args = slice.call(arguments, 1, arguments.length);
-                return factory.apply(window, args)
-            }
-            switch (arguments.length) {
-                case 2:
-                    factory = dependencies;
-                dependencies = id;
-                KISSY.add(proxy, {
-                    requires: dependencies
-                });
-                break;
-                case 3:
-                    KISSY.add(id, proxy, {
-                    requires: dependencies
-                });
-                break;
-            }
-        };
-        window.define.kmd = {}
-    }
-} 
-if( typeof define == "function" && define.cmd ){
-    var cmdDefine = define
-    window.define = function( id , deps , factory ){
-
-        //只有固定的一些包是按照amd规范写的才需要转换。
-        //比如canvax项目，是按照amd规范的，但是这个包是给业务项目中去使用的。
-        //而这个业务使用seajs规范，所以业务中自己的本身的module肯定是按照seajs来编写的不需要转换
-        if( typeof id == "string" && id.indexOf("canvax/") >= 0 ){
-            //只有canvax包下面的才需要做转换，因为canvax的module是安装amd格式编写的
-            return cmdDefine(id , deps , function( require, exports, module ){
-                var depList = []
-                for( var i = 0 , l = deps.length ; i<l ; i++ ){
-                    depList.push( require(deps[i]) )
-                }
-                //return factory.apply(window , depList);
-
-                //其实用上面的直接return也是可以的
-                //但是为了遵循cmd的规范，还是给module的exports赋值
-                module.exports = factory.apply(window , depList)
-            });
-        } else {
-            return cmdDefine.apply(window , arguments)
-        }
-    }
-}    
-if( typeof define == "function" && define.amd ){
-    //额，本来就是按照amd规范来开发的，就不需要改造了。
-}
+    var pageload = function(){
+        var Shapes = Canvax.Shapes;
 
 
+        var box = $("#canvasTest");
+        app = new Canvax.App({
+            id : "canvax",
+            el : box,
+            webGL: true
+        });
+        
+        app.registEvent();
 
+        stage = new Canvax.Display.Stage({
+            id : "chart0"
+        });
 
+        //数据在tigerData.js中
+        _.each(tigerData , function( Data , i ){
+           if(i<=3){
+             return;
+           };
 
+           var fill = Data.fill;
+           if( fill == "#fff" ){
+               fill = "#ffffff"
+           }
+           if( fill == "#000" ){
+               fill = "#000000"
+           }
+           if( fill == "#ccc" ){
+               fill = "#cccccc"
+           };
 
-   KISSY.ready(function(){
-       KISSY.config({
-           debug:true,
-           //base : "./",
-           packages:[
-             {
-               name : "demo",
-               path : "../../"
-             },
-             {
-               name : "canvax",
-               path : "../../"
-             }
-           ]
-       });
-
-       var colorInd=0;
-       window.stage=null;
-
-       KISSY.use("demo/tiger/tigerData,canvax/,canvax/shape/Path , canvax/library/color,node" , function( S ,tigerData ,Canvax,Path,color ){
-           var box = S.one("#canvasTest");
-           var width = box.width();
-           var height = box.height();
-
-           
-           var canvax = new Canvax({
-              id : "canvax",
-              el : box
-           })
-
-           var stage = new Canvax.Display.Stage({
-               id : "tiger",
-               context:{
-                 width : width,
-                 height: height
+           var map = new Shapes.Path({
+               //id:"map1",
+               context : {
+                   x:200,
+                   y:200,
+                   path :Data.path ,
+                
+                   lineWidth : Data.stroke-800,
+                   fillStyle:fill,
+                   strokeStyle: Data.stroke=="none" ? null : Data.stroke
                }
            });
+           stage.addChild(map); 
+        });
 
-/*
-           path="M-129.83,103.065C-56.6,319.201,-37.4,301.201,-49,322.001L-49,338.801C-49,338.801,-33.8,322.401,-40.2,335.201C-40.2,335.201,-30.2,326.401,-34.2,341.601C-34.2,341.601,-35,352.001,-30.6,340.801C-30.6,340.801,-14.6,310.201,-20.6,336.401C-20.6,336.401,-21.4,355.601,-16.6,340.801C-16.6,340.801,-16.2,351.201,-7,358.401C-7,358.401,-8.2,307.601,4.6,343.601L8.6,360.001C8.6,360.001,11.4,350.801,11,345.601C11,345.601,25.8,329.201,19,353.601C19,353.601,34.2,330.801,31,344.001C31,344.001,23.4,360.001,25,364.801C25,364.801,41.8,330.001,43,328.401C43,328.401,41,370.802,51.8,334.801C51.8,334.801,57.4,346.801,54.6,351.201C54.6,351.201,62.6,343.201,61.8,340.001C61.8,340.001,66.4,331.801,69.2,345.401C69.2,345.401,71,354.801,72.6,351.601C72.6,351.601,76.6,375.602,77.8,352.801C77.8,352.801,79.4,339.201,72.2,327.601C72.2,327.601,73,324.401,70.2,320.401C70.2,320.401,83.8,342.001,76.6,313.201C76.6,313.201,87.801,321.201,89.001,321.201C89.001,321.201,75.4,298.001,84.2,302.801C84.2,302.801,79,292.401,97.001,304.401C97.001,304.401,81,288.401,98.601,298.001C98.601,298.001,106.601,304.401,99.001,294.401C99.001,294.401,84.6,278.401,106.601,296.401C106.601,296.401,118.201,312.801,119.001,315.601C119.001,315.601,109.001,286.401,104.601,283.601C104.601,283.601,113.001,247.201,154.201,262.801C154.201,262.801,161.001,280.001,165.401,261.601C165.401,261.601,178.201,255.201,189.401,282.801C189.401,282.801,193.401,269.201,192.601,266.401C192.601,266.401,199.401,267.601,198.601,266.401C198.601,266.401,211.801,270.801,213.001,270.001C213.001,270.001,219.801,276.801,220.201,273.201C220.201,273.201,229.401,276.001,227.401,272.401C227.401,272.401,236.201,288.001,236.601,291.601L239.001,277.601L241.001,280.401C241.001,280.401,242.601,272.801,241.801,271.601C241.001,270.401,261.801,278.401,266.601,299.201L268.601,307.601C268.601,307.601,274.601,292.801,273.001,288.801C273.001,288.801,278.201,289.601,278.601,294.001C278.601,294.001,282.601,270.801,277.801,264.801C277.801,264.801,282.201,264.001,283.401,267.601L283.401,260.401C283.401,260.401,290.601,261.201,290.601,258.801C290.601,258.801,295.001,254.801,297.001,259.601C297.001,259.601,284.601,224.401,303.001,243.601C303.001,243.601,310.201,254.401,306.601,235.601C303.001,216.801,299.001,215.201,303.801,214.801C303.801,214.801,304.601,211.201,302.601,209.601C300.601,208.001,303.801,209.601,303.801,209.601C303.801,209.601,308.601,213.601,303.401,191.601C303.401,191.601,309.801,193.201,297.801,164.001C297.801,164.001,300.601,161.601,296.601,153.201C296.601,153.201,304.601,157.601,307.401,156.001C307.401,156.001,307.001,154.401,303.801,150.401C303.801,150.401,282.201,95.6,302.601,117.601C302.601,117.601,314.451,131.151,308.051,108.351C308.051,108.351,298.94,84.341,299.717,80.045L-129.83,103.065Z"
-     
-
-
-
-
-           
-
-
-           var map = new Path({
-                   //id:"map1",
-                   context : {
-                       x:200,
-                       y:200,
-                       path :path ,
-                    
-                       lineWidth : 1,
-                       fillStyle: "white",
-                       strokeStyle:"blue" 
-                   }
-               });
-               
-          
-
-               stage.addChild(map); 
-               */
-
-            
-           S.each(tigerData , function( Data , i ){
-               if(i<=3){
-                 return;
-               }
-           
-                           
-               //console.log(Data.path)
-               var map = new Path({
-                   //id:"map1",
-                   context : {
-                       x:200,
-                       y:200,
-                       path :Data.path ,
-                    
-                       lineWidth : Data.stroke-width,
-                       fillStyle:Data.fill,
-                       strokeStyle: Data.stroke=="none" ? null : Data.stroke
-                   }
-               });
-               
-                        
-
-               stage.addChild(map); 
-               });
-            
-
- 
+        app.addChild(stage);
+    };
 
 
 
-        canvax.addChild(stage);
 
-       })
-   }) 
+
    </script>
 
 

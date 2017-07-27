@@ -10,12 +10,8 @@
         //canvas {background:#999}
     </style>
 
-    <!--
-    <script type="text/javascript" src="http://seajs.github.io/examples/sea-modules/seajs/seajs/2.1.1/sea.js"></script>
-    -->
-
-    <script type="text/javascript" src="../dist/canvax.js"></script>
-    <script src="./js/jquery-1.11.1.min.js"></script>
+    
+    <script type="text/javascript" src="./js/kissy.js"></script>
     <script src="./js/color.js"></script>
     <script src="./js/underscore.js"></script>
 
@@ -25,19 +21,57 @@
     <div id="ready"></div>
     <script>
 
+    define = function(id, dependencies, factory) {
+        // KISSY.add(name?, factory?, deps)
+        function proxy() {
+            var args = [].slice.call(arguments, 1, arguments.length);
+            return factory.apply(window, args)
+        }
+
+        switch (arguments.length) {
+            case 1: 
+                factory = arguments[0];
+                KISSY.add(proxy);
+                break;
+            case 2:
+                factory = arguments[1];
+                dependencies = arguments[0];
+                KISSY.add(proxy, {
+                    requires: dependencies
+                });
+                break;
+            case 3:
+                KISSY.add(id, proxy, {
+                    requires: dependencies
+                });
+                break;
+        }
+    };
+
+    KISSY.config({
+        packages: [{
+            name: "canvax",
+            path: "../build/amd/",
+            debug: true,
+            combine: false
+        }]
+    });
+
     var pageload = function(){
-        var Shapes = Canvax.Shapes;
-        var colorInd=1;
-
-
-        var box = $("#canvasTest");
-        app = new Canvax.App({
-            id : "canvax",
-            el : box,
-            webGL : false
+        KISSY.use(["canvax"] , function(S, Canvax ){
+            draw( Canvax );
         });
+    };
 
-        app.registEvent();
+    var draw = function( Canvax ){
+        var Shapes = Canvax.Shapes;
+        var colorInd=0;
+
+        canvax = new Canvax({
+            id : "canvax",
+            el : "canvasTest"
+        });
+        canvax.registEvent();
 
         stage = new Canvax.Display.Stage({
             id : "chart0"
@@ -51,41 +85,21 @@
                 height: 300,
 
                 rotation : 30,
-                //scaleX : 1.2,
-                //scaleOrigin:{
-                //    x:50,
-                //    y:50
-                //},
+                scaleX : 1.2,
+                scaleOrigin:{
+                    x:50,
+                    y:50
+                },
                 rotateOrigin : {
                     x:150,
                     y:150
                 }
 
-            }
-        });
-        window.sprite1 = new Canvax.Display.Sprite({
-            context : {
-                x    : 30,
-                y    : 30,
-                width : 300,
-                height: 300,
-
-                rotation : 30,
-                //scaleX : 1.2,
-                //scaleOrigin:{
-                //    x:50,
-                //    y:50
-                //},
-                rotateOrigin : {
-                    x:150,
-                    y:150
-                }
 
             }
         });
 
         stage.addChild( sprite );
-        sprite.addChild( sprite1 );
 
         var circle2 = new Shapes.Circle({
             id : "c2",               
@@ -95,7 +109,7 @@
                 y:0,
 
                 r : 50,
-                fillStyle : colors.getColor(colorInd++),          // rgba supported
+                fillStyle : 'rgba(220, 20, 60, 0.8)',          // rgba supported
                 strokeStyle : colors.getColor(colorInd++),  // getColor from default palette
                 lineWidth : 5
                 //lineType  : "dashed"
@@ -114,25 +128,29 @@
         circle3.context.x = 500;
         circle3.context.y = 200;
 
+
+
+
         //折线
         var brokenLine = new Shapes.BrokenLine({
             id : "brokenline",
             context : {
                 x:300,
                 pointList : [[10, 10], [60, 100], [148, 130], [250, 40], [446, 100]],
-                strokeStyle : colors.getColor(colorInd++),//colors.getColor(colorInd++),
+                strokeStyle : "red",//colors.getColor(colorInd++),
                 lineWidth : 1,
-                smooth    : true,
+                smooth    : true ,
                 lineType  : "dashed"
             }
         });
 
         brokenLine.on("mouseover" , function(){
-            this.context.strokeStyle = colors.getColor(colorInd++);
+            this.context.strokeStyle = "red";
         });
 
         brokenLine.on("mouseout" , function(){
-            this.context.strokeStyle =colors.getColor(colorInd++);
+            this.context.strokeStyle = "yellow";
+
         });
 
         var droplet = new Shapes.Droplet({
@@ -156,14 +174,14 @@
         });
 
         setTimeout(function() {
-            return;
+
             _.each(droplet.context.pointList, function(p) {
                 //debugger
                 _.each(p, function(point) {
                     console.log(point[0]+"|"+point[1])
                     stage.addChild(new Shapes.Circle( {
                         context: {
-                            r: 1, x:point[0]+380, y:point[1]+380, fillStyle:colors.getColor(colorInd++)
+                            r: 1, x:point[0]+380, y:point[1]+380, fillStyle:"blue"
                         }
                     }
                     ));
@@ -207,40 +225,46 @@
             id : "sector",
             context : {
                 x :700,
-                y : 0,
+                y : 110,
 
                 //clockwise : true,//逆时针
                 r : 100,
-                r0: 60, 
-                startAngle : 0 ,
+                r0: 70, 
+                startAngle : 110 ,
 
-                endAngle : 360,
+                endAngle : 60,
                 fillStyle:colors.getColor(colorInd++),
                 strokeStyle:colors.getColor(colorInd++),
-                lineWidth : 1
+                lineWidth : 0
+                //lineJoin : "round"
             }
         });
 
-        var sBound = sector.getBound();
+        sector.on("mousemove" , function( e ){
+
+        });
+
+        var srect = sector.getRect();
         var sector_rect = new Shapes.Rect({
             context : {
-                x           : 700 + sBound.x,
-                y           : sBound.y,
-                width       : sBound.width,
-                height      : sBound.height,
-                strokeStyle : colors.getColor(colorInd++),
+                x           : 700 + srect.x,
+                y           : 110 + srect.y,
+                width       : srect.width,
+                height      : srect.height,
+                strokeStyle : "red",
                 lineWidth   : 1
             }
         })
 
         sector.on("mouseover" , function(){
-            console.log(this.graphicsData)
             this.context.lineWidth = 2;
         })
 
         sector.on("mouseout" , function(){
             this.context.lineWidth = 1;
         })
+
+
 
         //不规则多变形
         var polygon = new Shapes.Polygon({
@@ -267,14 +291,13 @@
             this.context.lineWidth = 2
         });
 
-        var c1 = colors.getColor(colorInd++)
         _.each( polygon.context.pointList , function(point , i){
-            return
+
             setTimeout(function(){
                 stage.addChild(
                     new Shapes.Circle( {
                         context: {
-                            r: 2, x:point[0]+480, y:point[1]+150, fillStyle:c1
+                            r: 1, x:point[0]+480, y:point[1]+150, fillStyle:"blue"
                         }
                     }) 
                     )
@@ -287,7 +310,6 @@
 
 
         map1Path = "M423.637,253.208l2.024-0.597l6.312,2.621c0,0,1.768,2.299,2.861,2.856c1.092,0.557,5.118,1.43,5.118,1.43l2.021,1.667l2.858-0.479l0.599,1.072l-0.957,6.074l2.858,1.666l1.189,2.263l4.287,0.831l1.666-2.854l2.621,0.356l1.666,2.265l-0.24,2.021l-5.121,0.596v2.264v1.665l-2.021,2.265l1.43,2.618l4.287,2.856l0.237,3.454l8.572,0.832v4.525l-1.666,2.381l1.191,2.263l-0.951,1.43l-3.338,0.594l-1.428,1.906l0.235,4.882l-4.285,6.072l-0.715,0.683l-2.381-2.111H446.5l-2.498-2.855l-4.884,4.761l-1.786-0.834l2.026-3.69l-0.24-1.188l-1.786-0.479l-5.718,3.099l-5.356-10.241l1.666-3.214l-0.595-1.071l-2.858-0.952l-4.76-2.858l1.903-3.928l2.855-1.43l0.598-3.214l-1.07-5.716l-0.596-0.479l-2.856,2.86c0,0-5.978-4.647-4.287-3.453c1.69,1.192-3.217-4.049-3.217-4.049l3.217-2.261l0.834-4.05l2.021-1.431l-0.354-5.359l1.43-1.188l2.619,1.787l1.664,2.26l3.453-2.26l1.192-1.434l-0.598-2.617l-4.049-2.263L423.637,253.208z"
-
         var map1 = new Shapes.Path({
             id:"map1",
             context : {
@@ -300,7 +322,7 @@
             }
         });
         map1.on("mouseover" , function(){
-            this.context.lineWidth = 3;
+            this.context.lineWidth = 5;
         })
 
         map1.on("mouseout" , function(){
@@ -329,22 +351,7 @@
         });
         isogon.on("mouseout"  , function(){
             this.context.lineWidth = 2
-        });
-
-        var c2 = colors.getColor(colorInd++);
-        _.each( isogon.context.pointList , function(point , i){
-            return
-            setTimeout(function(){
-                stage.addChild(
-                    new Shapes.Circle( {
-                        context: {
-                            r: 2, x:point[0]+150, y:point[1]+420, fillStyle:c2
-                        }
-                    }) 
-                    )
-            }, i*100);
-            
-        } );
+        })
 
 
 
@@ -353,25 +360,25 @@
             id : "rect",
             context : {
 
-                x  : 0,
-                y  : 0,
+                x  : 100,
+                y  :100,
                 width : 100,
                 height:100,
                 rotation : 45,
-                //scaleX : 2,
-                //scaleOrigin:{
-                //    x:50,
-                //    y:50
-                //},
+                scaleX : 2,
+                scaleOrigin:{
+                    x:50,
+                    y:50
+                },
                 rotateOrigin : {x : 50,y:50},
                 //scaleY : 0.5,
                 cursor:"pointer",
 
 
                 radius: [10, 20,0],
-                lineWidth : 1,
-                fillStyle:colors.getColor(colorInd++),
-                strokeStyle:colors.getColor(colorInd++),
+                //lineWidth : 6,
+                fillStyle:colors.getColor(colorInd++)
+                //strokeStyle:colors.getColor(colorInd++),
                 //shadowColor :"blue",
 
                 //shadowOffsetX : 3,
@@ -394,28 +401,22 @@
         var line = new Shapes.Line({
             id : "line1",
             context : {
-                start: {
-                    x: 10,
-                    y: 300
-                },
-                end : {
-                    x: 300,
-                    y: 300
-                },
+                xStart : 10,
+                yStart : 300,
+                xEnd : 300,
+                yEnd : 300,
                 lineType : "dashed",
                 lineWidth : 2,
-                //dashLength : 2, //虚线的长度
+                dashLength : 2, //虚线的长度
                 strokeStyle:colors.getColor(colorInd++)
             }
         });
         line.once("mouseover" , function(){
-            this.context.lineWidth = 3;
-            this.context.start.x += 10
+            this.context.lineWidth = 8;
         });
 
         line.once("mouseout" , function(){
             this.context.lineWidth = 2;
-            this.context.start.x -= 10
         });
 
         window.text = new Canvax.Display.Text("每一个真实的现在，\n都是我们曾经幻想的未来" , {
@@ -436,7 +437,10 @@
 
 
         //stage.addChild(rect);
-        
+        sprite.addChild(sector);
+
+        sprite.addChild(sector_rect);
+        sprite.addChild(rect);
 
 
 
@@ -465,6 +469,12 @@
 
 
         stage.addChild(line);
+        setTimeout(function(){
+
+            line.toBack(6);
+        },1000)
+
+
 
 
         window.stage1 = new Canvax.Display.Stage({
@@ -472,14 +482,9 @@
         });
 
         stage1.addChild( text );
-        app.addChild( stage1 );
+        canvax.addChild( stage1 );
 
-        sprite.addChild(sector);
-
-        sprite.addChild(sector_rect);
-        sprite1.addChild(rect);
-
-        app.addChild(stage); 
+        canvax.addChild(stage); 
 
     }
 
