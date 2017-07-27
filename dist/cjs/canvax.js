@@ -1,4 +1,3 @@
-var Canvax = (function () {
 'use strict';
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
@@ -3481,12 +3480,17 @@ var DisplayObject = function (_EventDispatcher) {
                 this.parent = null;
             }
         }
+    }, {
+        key: "destroy",
+        value: function destroy() {
+            this._destroy();
+        }
 
         //元素的自我销毁
 
     }, {
-        key: "destroy",
-        value: function destroy() {
+        key: "_destroy",
+        value: function _destroy() {
             this.remove();
             this.fire("destroy");
             //把自己从父节点中删除了后做自我清除，释放内存
@@ -3622,11 +3626,14 @@ var DisplayObjectContainer = function (_DisplayObject) {
     }, {
         key: "destroy",
         value: function destroy() {
-            if (this.parent) {
+            /*
+            if( this.parent ){
                 this.parent.removeChild(this);
                 this.parent = null;
-            }
+            };
             this.fire("destroy");
+            */
+            this._destroy();
             //依次销毁所有子元素
             for (var i = 0, l = this.children.length; i < l; i++) {
                 this.getChildAt(i).destroy();
@@ -4158,7 +4165,7 @@ var CanvasRenderer = function (_SystemRenderer) {
 
             if (displayObject.type == "text") {
                 //如果是文本
-                var ctx = this.app._textStage.ctx;
+                var ctx = stage.ctx;
                 ctx.setTransform.apply(ctx, displayObject.worldTransform.toArray());
                 displayObject.render(ctx);
             }
@@ -8197,10 +8204,6 @@ var Application = function (_DisplayObjectContain) {
         _this._bufferStage = null;
         _this._creatHoverStage();
 
-        //把所有的文字单独放在一个stage中，为了兼容后续的webgl渲染的时候，text依然采用canvas2d渲染
-        _this._textStage = null;
-        _this._creatTextStage();
-
         //创建一个如果要用像素检测的时候的容器
         _this._createPixelContext();
 
@@ -8275,20 +8278,6 @@ var Application = function (_DisplayObjectContain) {
             this._bufferStage._eventEnabled = false;
             this.addChild(this._bufferStage);
         }
-    }, {
-        key: "_creatTextStage",
-        value: function _creatTextStage() {
-            this._textStage = new Stage({
-                id: "textCanvas" + new Date().getTime(),
-                context: {
-                    width: this.context.$model.width,
-                    height: this.context.$model.height
-                }
-            });
-
-            this.addChild(this._textStage, 0);
-            this._textStage.ctx = this._textStage.canvas.getContext('2d');
-        }
 
         /**
          * 用来检测文本width height 
@@ -8345,12 +8334,7 @@ var Application = function (_DisplayObjectContain) {
             } else if (this.children.length > 1) {
                 if (index === undefined) {
                     //如果没有指定位置，那么就放到 _bufferStage 的下面。
-
-                    if (this._textStage.canvas) {
-                        this.stage_c.insertBefore(canvas, this._textStage.canvas);
-                    } else if (this._bufferStage.canvas) {
-                        this.stage_c.insertBefore(canvas, this._bufferStage.canvas);
-                    }
+                    this.stage_c.insertBefore(canvas, this._bufferStage.canvas);
                 } else {
                     //如果有指定的位置，那么就指定的位置来
                     if (index >= this.children.length - 1) {
@@ -9171,7 +9155,9 @@ var Text = function (_DisplayObject) {
         classCallCheck(this, Text);
 
         opt.type = "text";
-        var _context = _$1.extend({
+
+        opt.context = _$1.extend({
+            font: "",
             fontSize: 13, //字体大小默认13
             fontWeight: "normal",
             fontFamily: "微软雅黑,sans-serif",
@@ -9184,16 +9170,11 @@ var Text = function (_DisplayObject) {
             textBackgroundColor: null
         }, opt.context);
 
-        opt.context = _context;
-
         var _this = possibleConstructorReturn(this, (Text.__proto__ || Object.getPrototypeOf(Text)).call(this, opt));
-
-        _this._context = _context;
-        debugger;
 
         _this._reNewline = /\r?\n/;
         _this.fontProperts = ["fontStyle", "fontVariant", "fontWeight", "fontSize", "fontFamily"];
-        _this._context.font = _this._getFontDeclaration();
+        _this.context.font = _this._getFontDeclaration();
 
         _this.text = text.toString();
 
@@ -9205,29 +9186,38 @@ var Text = function (_DisplayObject) {
     createClass(Text, [{
         key: "$watch",
         value: function $watch(name, value, preValue) {
+
             //context属性有变化的监听函数
             if (_$1.indexOf(this.fontProperts, name) >= 0) {
-                this._context[name] = value;
+                this.context[name] = value;
                 //如果修改的是font的某个内容，就重新组装一遍font的值，
-                //然后通知引擎这次对context的修改不需要上报心跳
-                var model = this.context.$model;
-                model.font = this._getFontDeclaration();
-                model.width = this.getTextWidth();
-                model.height = this.getTextHeight();
+                //然后通知引擎这次对context的修改上报心跳
+                this.context.font = this._getFontDeclaration();
+                this.context.width = this.getTextWidth();
+                this.context.height = this.getTextHeight();
             }
+        }
+    }, {
+        key: "_setContextStyle",
+        value: function _setContextStyle(ctx, style) {
+            // 简单判断不做严格类型检测
+            for (var p in style) {
+                if (p != "textBaseline" && p in ctx) {
+                    if (style[p] || _$1.isNumber(style[p])) {
+                        if (p == "globalAlpha") {
+                            //透明度要从父节点继承
+                            ctx[p] *= style[p];
+                        } else {
+                            ctx[p] = style[p];
+                        }
+                    }
+                }
+            }
+            return;
         }
     }, {
         key: "render",
         value: function render(ctx) {
-            debugger;
-            var model = this.context.$model;
-            for (var p in model) {
-                if (p in ctx) {
-                    if (p != "textBaseline" && model[p]) {
-                        ctx[p] = model[p];
-                    }
-                }
-            }
             this._renderText(ctx, this._getTextLines());
         }
     }, {
@@ -9260,6 +9250,7 @@ var Text = function (_DisplayObject) {
         key: "_renderText",
         value: function _renderText(ctx, textLines) {
             ctx.save();
+            this._setContextStyle(ctx, this.context.$model);
             this._renderTextStroke(ctx, textLines);
             this._renderTextFill(ctx, textLines);
             ctx.restore();
@@ -9271,7 +9262,7 @@ var Text = function (_DisplayObject) {
             var fontArr = [];
 
             _$1.each(this.fontProperts, function (p) {
-                var fontP = self._context[p];
+                var fontP = self.context[p];
                 if (p == "fontSize") {
                     fontP = parseFloat(fontP) + "px";
                 }
@@ -10674,6 +10665,4 @@ Canvax.Event = {
     EventManager: EventManager
 };
 
-return Canvax;
-
-}());
+module.exports = Canvax;

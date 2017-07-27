@@ -14,7 +14,9 @@ export default class Text extends DisplayObject
     constructor(text, opt)
     {
         opt.type = "text";
-        var _context = _.extend({
+
+        opt.context = _.extend({
+            font: "", 
             fontSize: 13, //字体大小默认13
             fontWeight: "normal",
             fontFamily: "微软雅黑,sans-serif",
@@ -27,16 +29,11 @@ export default class Text extends DisplayObject
             textBackgroundColor: null
         }, opt.context);
 
-        opt.context = _context;
-
         super( opt );
-
-        this._context = _context;
-        debugger
  
         this._reNewline = /\r?\n/;
         this.fontProperts = ["fontStyle", "fontVariant", "fontWeight", "fontSize", "fontFamily"];
-        this._context.font = this._getFontDeclaration();
+        this.context.font = this._getFontDeclaration();
 
         this.text = text.toString();
 
@@ -46,29 +43,37 @@ export default class Text extends DisplayObject
 
     $watch(name, value, preValue) 
     {
+
         //context属性有变化的监听函数
         if (_.indexOf(this.fontProperts, name) >= 0) {
-            this._context[name] = value;
+            this.context[name] = value;
             //如果修改的是font的某个内容，就重新组装一遍font的值，
-            //然后通知引擎这次对context的修改不需要上报心跳
-            var model = this.context.$model;
-            model.font = this._getFontDeclaration();
-            model.width = this.getTextWidth();
-            model.height = this.getTextHeight();
+            //然后通知引擎这次对context的修改上报心跳
+            this.context.font = this._getFontDeclaration();
+            this.context.width = this.getTextWidth();
+            this.context.height = this.getTextHeight();
         }
+    }
+
+    _setContextStyle( ctx , style ){
+        // 简单判断不做严格类型检测
+        for(var p in style){
+            if( p != "textBaseline" && ( p in ctx ) ){
+                if ( style[p] || _.isNumber( style[p] ) ) {
+                    if( p == "globalAlpha" ){
+                        //透明度要从父节点继承
+                        ctx[p] *= style[p];
+                    } else {
+                        ctx[p] = style[p];
+                    }
+                }
+            }
+        };
+        return;
     }
  
     render(ctx) 
     { 
-        debugger
-        var model = this.context.$model;
-        for (var p in model) {
-            if (p in ctx) {
-                if (p != "textBaseline" && model[p]) {
-                    ctx[p] = model[p];
-                };
-            };
-        };
         this._renderText(ctx, this._getTextLines());
     }
 
@@ -101,6 +106,7 @@ export default class Text extends DisplayObject
     _renderText(ctx, textLines) 
     {
         ctx.save();
+        this._setContextStyle( ctx , this.context.$model );
         this._renderTextStroke(ctx, textLines);
         this._renderTextFill(ctx, textLines);
         ctx.restore();
@@ -112,7 +118,7 @@ export default class Text extends DisplayObject
         var fontArr = [];
 
         _.each(this.fontProperts, function(p) {
-            var fontP = self._context[p];
+            var fontP = self.context[p];
             if (p == "fontSize") {
                 fontP = parseFloat(fontP) + "px"
             }

@@ -560,8 +560,13 @@ export default class DisplayObject extends EventDispatcher
         }
     }
 
-    //元素的自我销毁
     destroy()
+    {
+        this._destroy();
+    }
+
+    //元素的自我销毁
+    _destroy()
     {
         this.remove();
         this.fire("destroy");

@@ -121,11 +121,14 @@ export default class DisplayObjectContainer extends DisplayObject
     //集合类的自我销毁
     destroy()
     {
+        /*
         if( this.parent ){
             this.parent.removeChild(this);
             this.parent = null;
         };
         this.fire("destroy");
+        */
+        this._destroy();
         //依次销毁所有子元素
         for (var i=0,l=this.children.length ; i<l ; i++){
             this.getChildAt(i).destroy();

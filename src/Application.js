@@ -74,11 +74,6 @@ export default class Application extends DisplayObjectContainer
         this._creatHoverStage();
 
 
-        //把所有的文字单独放在一个stage中，为了兼容后续的webgl渲染的时候，text依然采用canvas2d渲染
-        this._textStage = null;
-        this._creatTextStage();
-
-
         //创建一个如果要用像素检测的时候的容器
         this._createPixelContext();
 
@@ -153,20 +148,6 @@ export default class Application extends DisplayObjectContainer
         this.addChild( this._bufferStage );
     }
 
-    _creatTextStage()
-    {
-        this._textStage = new Stage( {
-            id : "textCanvas"+(new Date()).getTime(),
-            context : {
-                width : this.context.$model.width,
-                height: this.context.$model.height
-            }
-        } );
-
-        this.addChild( this._textStage , 0 );
-        this._textStage.ctx = this._textStage.canvas.getContext('2d');
-    }
-
     /**
      * 用来检测文本width height 
      * @return {Object} 上下文
@@ -220,13 +201,7 @@ export default class Application extends DisplayObjectContainer
         } else if(this.children.length>1) {
             if( index === undefined ) {
                 //如果没有指定位置，那么就放到 _bufferStage 的下面。
-                
-                if( this._textStage.canvas ){
-                    this.stage_c.insertBefore( canvas , this._textStage.canvas);
-                } else if( this._bufferStage.canvas ){
-                    this.stage_c.insertBefore( canvas , this._bufferStage.canvas);
-                };
-                
+                this.stage_c.insertBefore( canvas , this._bufferStage.canvas);
             } else {
                 //如果有指定的位置，那么就指定的位置来
                 if( index >= this.children.length-1 ){

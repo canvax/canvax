@@ -4,7 +4,7 @@ var commonjs = require('rollup-plugin-commonjs');
 var resolve = require('rollup-plugin-node-resolve');
 
 rollup.rollup({
-    entry: 'canvax/index.js',
+    entry: 'src/index.js',
     plugins: [
       babel({
         exclude: 'node_modules/**'
@@ -24,7 +24,7 @@ rollup.rollup({
     bundle.write({
         format: 'iife',
         moduleName: 'Canvax',
-        dest: 'build/canvax.js',
+        dest: 'dist/canvax.js',
         //sourceMap: 'inline'
     });
 
@@ -32,23 +32,23 @@ rollup.rollup({
     bundle.write({
         format: 'amd',
         moduleName: 'Canvax',
-        dest: 'build/amd/canvax.js',
-        sourceMap: 'inline'
+        dest: 'dist/amd/canvax.js',
+        //sourceMap: 'inline'
     });
 
     bundle.write({
         format: 'umd',
         moduleName: 'Canvax',
-        dest: 'build/umd/canvax.js',
-        sourceMap: 'inline'
+        dest: 'dist/umd/canvax.js',
+        //sourceMap: 'inline'
     });
 
 
     bundle.write({
         format: 'cjs',
         moduleName: 'Canvax',
-        dest: 'build/cjs/canvax.js',
-        sourceMap: 'inline'
+        dest: 'dist/cjs/canvax.js',
+        //sourceMap: 'inline'
     });
 
 });

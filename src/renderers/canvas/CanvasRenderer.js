@@ -60,7 +60,7 @@ export default class CanvasRenderer extends SystemRenderer
 
         if( displayObject.type == "text" ){
             //如果是文本
-            var ctx = this.app._textStage.ctx;
+            var ctx = stage.ctx;
             ctx.setTransform.apply( ctx , displayObject.worldTransform.toArray() );
             displayObject.render( ctx );
         };
