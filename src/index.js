@@ -22,6 +22,8 @@ import Polygon from "./shape/Polygon";
 import Rect from "./shape/Rect";
 import Sector from "./shape/Sector";
 
+import AnimationFrame from "./animation/AnimationFrame"
+
 var Canvax = {
     App: Application
 };
@@ -53,5 +55,7 @@ Canvax.Event = {
     EventDispatcher : EventDispatcher,
     EventManager    : EventManager
 }
+
+Canvax.AnimationFrame = AnimationFrame;
 
 export default Canvax;

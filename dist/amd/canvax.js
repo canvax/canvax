@@ -10665,6 +10665,8 @@ Canvax.Event = {
     EventManager: EventManager
 };
 
+Canvax.AnimationFrame = AnimationFrame;
+
 return Canvax;
 
 });

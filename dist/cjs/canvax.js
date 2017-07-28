@@ -10665,4 +10665,6 @@ Canvax.Event = {
     EventManager: EventManager
 };
 
+Canvax.AnimationFrame = AnimationFrame;
+
 module.exports = Canvax;
