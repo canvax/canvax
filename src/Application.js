@@ -40,8 +40,8 @@ export default class Application extends DisplayObjectContainer
 
         var viewObj = $.createView(this.width , this.height, this._cid);
         this.view = viewObj.view;
-        this.stage_c = viewObj.stage_c;
-        this.dom_c = viewObj.dom_c;
+        this.stageView = viewObj.stageView;
+        this.domView = viewObj.domView;
         
         this.el.innerHTML = "";
         this.el.appendChild( this.view );
@@ -121,8 +121,8 @@ export default class Application extends DisplayObjectContainer
             reSizeCanvas(s.canvas);
         });
 
-        this.dom_c.style.width  = this.width  + "px";
-        this.dom_c.style.height = this.height + "px";
+        this.domView.style.width  = this.width  + "px";
+        this.domView.style.height = this.height + "px";
 
         this.heartBeat();
 
@@ -197,17 +197,17 @@ export default class Application extends DisplayObjectContainer
         }
 
         if(this.children.length == 1){
-            this.stage_c.appendChild( canvas );
+            this.stageView.appendChild( canvas );
         } else if(this.children.length>1) {
             if( index === undefined ) {
                 //如果没有指定位置，那么就放到 _bufferStage 的下面。
-                this.stage_c.insertBefore( canvas , this._bufferStage.canvas);
+                this.stageView.insertBefore( canvas , this._bufferStage.canvas);
             } else {
                 //如果有指定的位置，那么就指定的位置来
                 if( index >= this.children.length-1 ){
-                   this.stage_c.appendChild( canvas );
+                   this.stageView.appendChild( canvas );
                 } else {
-                   this.stage_c.insertBefore( canvas , this.children[ index ].canvas );
+                   this.stageView.insertBefore( canvas , this.children[ index ].canvas );
                 }
             }
         };
@@ -218,7 +218,7 @@ export default class Application extends DisplayObjectContainer
 
     _afterDelChild(stage)
     {
-        this.stage_c.removeChild( stage.canvas );
+        this.stageView.removeChild( stage.canvas );
     }
     
     heartBeat(opt)

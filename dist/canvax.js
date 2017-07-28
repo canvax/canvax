@@ -747,20 +747,20 @@ var $$1 = {
         view.className = "canvax-view";
         view.style.cssText += "position:relative;width:" + _width + "px;height:" + _height + "px;";
 
-        var stage_c = document.createElement("div");
-        view.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height + "px;";
+        var stageView = document.createElement("div");
+        stageView.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height + "px;";
 
         //用来存放一些dom元素
-        var dom_c = document.createElement("div");
-        view.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height + "px;";
+        var domView = document.createElement("div");
+        domView.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height + "px;";
 
-        view.appendChild(stage_c);
-        view.appendChild(dom_c);
+        view.appendChild(stageView);
+        view.appendChild(domView);
 
         return {
             view: view,
-            stage_c: stage_c,
-            dom_c: dom_c
+            stageView: stageView,
+            domView: domView
         };
     }
     //dom相关代码结束
@@ -8175,8 +8175,8 @@ var Application = function (_DisplayObjectContain) {
 
         var viewObj = $$1.createView(_this.width, _this.height, _this._cid);
         _this.view = viewObj.view;
-        _this.stage_c = viewObj.stage_c;
-        _this.dom_c = viewObj.dom_c;
+        _this.stageView = viewObj.stageView;
+        _this.domView = viewObj.domView;
 
         _this.el.innerHTML = "";
         _this.el.appendChild(_this.view);
@@ -8254,8 +8254,8 @@ var Application = function (_DisplayObjectContain) {
                 reSizeCanvas(s.canvas);
             });
 
-            this.dom_c.style.width = this.width + "px";
-            this.dom_c.style.height = this.height + "px";
+            this.domView.style.width = this.width + "px";
+            this.domView.style.height = this.height + "px";
 
             this.heartBeat();
         }
@@ -8331,17 +8331,17 @@ var Application = function (_DisplayObjectContain) {
             }
 
             if (this.children.length == 1) {
-                this.stage_c.appendChild(canvas);
+                this.stageView.appendChild(canvas);
             } else if (this.children.length > 1) {
                 if (index === undefined) {
                     //如果没有指定位置，那么就放到 _bufferStage 的下面。
-                    this.stage_c.insertBefore(canvas, this._bufferStage.canvas);
+                    this.stageView.insertBefore(canvas, this._bufferStage.canvas);
                 } else {
                     //如果有指定的位置，那么就指定的位置来
                     if (index >= this.children.length - 1) {
-                        this.stage_c.appendChild(canvas);
+                        this.stageView.appendChild(canvas);
                     } else {
-                        this.stage_c.insertBefore(canvas, this.children[index].canvas);
+                        this.stageView.insertBefore(canvas, this.children[index].canvas);
                     }
                 }
             }
@@ -8352,7 +8352,7 @@ var Application = function (_DisplayObjectContain) {
     }, {
         key: "_afterDelChild",
         value: function _afterDelChild(stage) {
-            this.stage_c.removeChild(stage.canvas);
+            this.stageView.removeChild(stage.canvas);
         }
     }, {
         key: "heartBeat",

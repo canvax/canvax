@@ -111,20 +111,20 @@ export default {
         view.className = "canvax-view";
         view.style.cssText += "position:relative;width:" + _width + "px;height:" + _height +"px;"
 
-        var stage_c = document.createElement("div");
-        view.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height +"px;"
+        var stageView = document.createElement("div");
+        stageView.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height +"px;"
 
         //用来存放一些dom元素
-        var dom_c = document.createElement("div");
-        view.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height +"px;"
+        var domView = document.createElement("div");
+        domView.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height +"px;"
 
-        view.appendChild(stage_c);
-        view.appendChild(dom_c);
+        view.appendChild(stageView);
+        view.appendChild(domView);
         
         return {
             view : view,
-            stage_c: stage_c,
-            dom_c: dom_c
+            stageView: stageView,
+            domView: domView
         }
     }
     //dom相关代码结束
