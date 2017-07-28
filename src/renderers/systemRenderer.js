@@ -60,11 +60,10 @@ export default class SystemRenderer
         Utils.now = new Date().getTime();
         if( self._heartBeat ){
 
-            var _begin = new Date().getTime();
+            //var _begin = new Date().getTime();
             self.render( this.app );
-            var _end = new Date().getTime();
-
-            $(document.body).append( "<br />render："+ (_end - _begin) );
+            //var _end = new Date().getTime();
+            //$(document.body).append( "<br />render："+ (_end - _begin) );
             
             self._heartBeat = false;
             //渲染完了，打上最新时间挫
