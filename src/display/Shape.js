@@ -14,7 +14,7 @@ import Graphics from "../graphics/Graphics";
 export default class Shape extends DisplayObject
 {
     constructor(opt){
-      
+        opt = Utils.checkOpt( opt );
         var styleContext = {
             cursor        : opt.context.cursor     || "default",
 
@@ -47,7 +47,7 @@ export default class Shape extends DisplayObject
 
         this._eventEnabled   = false; //是否响应事件交互,在添加了事件侦听后会自动设置为true
 
-        this.dragEnabled     = opt.dragEnabled || true ;//"dragEnabled" in opt ? opt.dragEnabled : false;   //是否启用元素的拖拽
+        this.dragEnabled     = opt.dragEnabled || false ;//"dragEnabled" in opt ? opt.dragEnabled : false;   //是否启用元素的拖拽
 
          //拖拽drag的时候显示在activShape的副本
         this._dragDuplicate = null;

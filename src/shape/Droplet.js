@@ -17,13 +17,13 @@ export default class Droplet extends Path
 {
     constructor(opt)
     {
-        var _context = _.extend({
-            hr : 0, //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
-            vr : 0   //{number},  // 必须，水滴纵高（中心到尖端距离）
-        } , opt.context);
-
-        opt.context = _context;
-        opt.type = "droplet";
+        opt = _.extend({
+            type : "droplet",
+            context : {
+                hr : 0, //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
+                vr : 0   //{number},  // 必须，水滴纵高（中心到尖端距离）
+            }
+        } , Utils.checkOpt( opt ));
 
         var my = super(opt);
 

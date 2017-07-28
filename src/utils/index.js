@@ -88,6 +88,18 @@ var Utils = {
         {
             return false;
         }
+    },
+    checkOpt: function( opt ){
+        if( !opt ){
+            opt = {
+                context : {}
+            }
+        } else {
+            if( !opt.context ){
+                opt.context = {}
+            }
+        }
+        return opt;
     }
 };
 

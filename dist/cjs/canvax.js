@@ -386,6 +386,18 @@ var Utils = {
         } catch (e) {
             return false;
         }
+    },
+    checkOpt: function checkOpt(opt) {
+        if (!opt) {
+            opt = {
+                context: {}
+            };
+        } else {
+            if (!opt.context) {
+                opt.context = {};
+            }
+        }
+        return opt;
     }
 };
 
@@ -8389,6 +8401,7 @@ var Sprite = function (_DisplayObjectContain) {
   function Sprite(opt) {
     classCallCheck(this, Sprite);
 
+    opt = Utils.checkOpt(opt);
     opt.type = "sprite";
     return possibleConstructorReturn(this, (Sprite.__proto__ || Object.getPrototypeOf(Sprite)).call(this, opt));
   }
@@ -9021,7 +9034,7 @@ var Shape = function (_DisplayObject) {
     function Shape(opt) {
         classCallCheck(this, Shape);
 
-
+        opt = Utils.checkOpt(opt);
         var styleContext = {
             cursor: opt.context.cursor || "default",
 
@@ -9054,7 +9067,7 @@ var Shape = function (_DisplayObject) {
 
         _this._eventEnabled = false; //是否响应事件交互,在添加了事件侦听后会自动设置为true
 
-        _this.dragEnabled = opt.dragEnabled || true; //"dragEnabled" in opt ? opt.dragEnabled : false;   //是否启用元素的拖拽
+        _this.dragEnabled = opt.dragEnabled || false; //"dragEnabled" in opt ? opt.dragEnabled : false;   //是否启用元素的拖拽
 
         //拖拽drag的时候显示在activShape的副本
         _this._dragDuplicate = null;
@@ -9652,6 +9665,8 @@ var BrokenLine = function (_Shape) {
     function BrokenLine(opt) {
         classCallCheck(this, BrokenLine);
 
+        opt = Utils.checkOpt(opt);
+
         var _context = _$1.extend({
             lineType: null,
             smooth: false,
@@ -9734,19 +9749,28 @@ var BrokenLine = function (_Shape) {
 var Circle$2 = function (_Shape) {
     inherits(Circle, _Shape);
 
-    function Circle(_opt) {
+    function Circle(opt) {
         classCallCheck(this, Circle);
 
+        //opt = Utils.checkOpt( opt );
         //默认情况下面，circle不需要把xy进行parentInt转换
+        /*
         var opt = {
+            type : "circle",
+            xyToInt : false,
+            context : {
+                r : 0
+            }
+        };
+        */
+
+        opt = _$1.extend(true, {
             type: "circle",
             xyToInt: false,
             context: {
                 r: 0
             }
-        };
-
-        _$1.extend(true, opt, _opt);
+        }, Utils.checkOpt(opt));
 
         return possibleConstructorReturn(this, (Circle.__proto__ || Object.getPrototypeOf(Circle)).call(this, opt));
     }
@@ -10123,13 +10147,13 @@ var Droplet = function (_Path) {
 
         classCallCheck(this, Droplet);
 
-        var _context = _$1.extend({
-            hr: 0, //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
-            vr: 0 //{number},  // 必须，水滴纵高（中心到尖端距离）
-        }, opt.context);
-
-        opt.context = _context;
-        opt.type = "droplet";
+        opt = _$1.extend({
+            type: "droplet",
+            context: {
+                hr: 0, //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
+                vr: 0 //{number},  // 必须，水滴纵高（中心到尖端距离）
+            }
+        }, Utils.checkOpt(opt));
 
         var my = (_this = possibleConstructorReturn(this, (Droplet.__proto__ || Object.getPrototypeOf(Droplet)).call(this, opt)), _this);
 
@@ -10174,15 +10198,13 @@ var Ellipse$2 = function (_Shape) {
     function Ellipse(opt) {
         classCallCheck(this, Ellipse);
 
-        var _context = _$1.extend({
-            //x             : 0 , //{number},  // 丢弃
-            //y             : 0 , //{number},  // 丢弃，原因同circle
-            hr: 0, //{number},  // 必须，椭圆横轴半径
-            vr: 0 //{number},  // 必须，椭圆纵轴半径
-        }, opt.context);
-
-        opt.context = _context;
-        opt.type = "ellipse";
+        opt = _$1.extend({
+            type: "ellipse",
+            context: {
+                hr: 0, //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
+                vr: 0 //{number},  // 必须，水滴纵高（中心到尖端距离）
+            }
+        }, Utils.checkOpt(opt));
 
         return possibleConstructorReturn(this, (Ellipse.__proto__ || Object.getPrototypeOf(Ellipse)).call(this, opt));
     }

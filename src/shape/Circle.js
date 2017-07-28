@@ -16,9 +16,11 @@ import _ from "../utils/underscore";
 
 export default class Circle extends Shape
 {
-    constructor( _opt )
+    constructor( opt )
     {
+        //opt = Utils.checkOpt( opt );
         //默认情况下面，circle不需要把xy进行parentInt转换
+        /*
         var opt = {
             type : "circle",
             xyToInt : false,
@@ -26,8 +28,15 @@ export default class Circle extends Shape
                 r : 0
             }
         };
+        */
 
-        _.extend( true, opt, _opt );
+        opt = _.extend( true, {
+            type : "circle",
+            xyToInt : false,
+            context : {
+                r : 0
+            }
+        }, Utils.checkOpt( opt ) );
 
         super( opt );
     }

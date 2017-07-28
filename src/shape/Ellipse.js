@@ -19,15 +19,13 @@ export default class Ellipse extends Shape
 {
     constructor(opt)
     {
-        var _context = _.extend({
-            //x             : 0 , //{number},  // 丢弃
-            //y             : 0 , //{number},  // 丢弃，原因同circle
-            hr : 0,  //{number},  // 必须，椭圆横轴半径
-            vr : 0   //{number},  // 必须，椭圆纵轴半径
-        } , opt.context);
-
-        opt.context = _context;
-        opt.type = "ellipse";
+        opt = _.extend({
+            type : "ellipse",
+            context : {
+                hr : 0,  //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
+                vr : 0   //{number},  // 必须，水滴纵高（中心到尖端距离）
+            }
+        } , Utils.checkOpt( opt ));
 
         super( opt );
     }

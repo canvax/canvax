@@ -16,6 +16,8 @@ import _Math from "../geom/Math"
 export default class BrokenLine extends Shape
 {
     constructor(opt){
+        opt = Utils.checkOpt( opt );
+        
         var _context = _.extend({
             lineType: null,
             smooth: false,
