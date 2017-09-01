@@ -508,15 +508,24 @@ export default class DisplayObject extends EventDispatcher
     * @param toContent 要动画变形到的属性集合
     * @param options tween 动画参数
     */
-    animate( toContent , options )
+    animate( toContent , options , context )
     {
+        if( !context ){
+            context = this.context;
+        };
+
         var to = toContent;
         var from = {};
         for( var p in to ){
+            if( _.isObject( to[p] ) ){
+                this.animate( to[p], options, context[p] );
+                //如果是个object
+                continue;
+            };
             if( isNaN(to[p]) && to[p] !== '' && to[p] !== null && to[p] !== undefined ){
                 continue;
             };
-            from[ p ] = this.context[p];
+            from[ p ] = context[p];
         };
         !options && (options = {});
         options.from = from;
@@ -530,13 +539,13 @@ export default class DisplayObject extends EventDispatcher
         var tween;
         options.onUpdate = function(){
             //如果context不存在说明该obj已经被destroy了，那么要把他的tween给destroy
-            if (!self.context && tween) {
+            if (!context && tween) {
                 AnimationFrame.destroyTween(tween);
                 tween = null;
                 return;
             };
             for( var p in this ){
-                self.context[p] = this[p];
+                context[p] = this[p];
             };
             upFun.apply(self , [this]);
         };

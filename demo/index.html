@@ -45,7 +45,7 @@
 
         window.sprite = new Canvax.Display.Sprite({
             context : {
-                x    : 100,
+                x    : 150,
                 y    : 100,
                 width : 300,
                 height: 300,
@@ -59,7 +59,9 @@
                 rotateOrigin : {
                     x:150,
                     y:150
-                }
+                },
+                globleAlpha:0
+
 
             }
         });
@@ -390,8 +392,7 @@
         })
 
 
-
-        var line = new Shapes.Line({
+        window.line = new Shapes.Line({
             id : "line1",
             context : {
                 start: {
@@ -408,15 +409,29 @@
                 strokeStyle:colors.getColor(colorInd++)
             }
         });
+        
         line.once("mouseover" , function(){
             this.context.lineWidth = 3;
-            this.context.start.x += 10
+            this.context.start.x = 20
         });
 
         line.once("mouseout" , function(){
             this.context.lineWidth = 2;
-            this.context.start.x -= 10
+            this.context.start.x = 10
         });
+
+        setTimeout(function(){
+            line.animate({
+                start : {
+                    x : 10,
+                    y : 330
+                },
+                end : {
+                    x : 300,
+                    y : 330
+                }
+            })
+        } , 3000)
 
         window.text = new Canvax.Display.Text("每一个真实的现在，\n都是我们曾经幻想的未来" , {
             context : {
@@ -442,30 +457,13 @@
 
 
         stage.addChild(circle2);
-
         stage.addChild(circle3);
-
         stage.addChild(brokenLine);
         stage.addChild(ellipse);
-
-
-
-
         stage.addChild(map1);
-
         stage.addChild(isogon);
         stage.addChild(polygon);
-
-
-
-
-
         stage.addChild(droplet);
-
-
-
-        stage.addChild(line);
-
 
         window.textStage = new Canvax.Display.Stage({
             id : "text"               
@@ -479,6 +477,9 @@
         sprite.addChild(sector_rect);
         sprite1.addChild(rect);
 
+
+
+        stage.addChild(line);
         app.addChild(stage); 
 
     }

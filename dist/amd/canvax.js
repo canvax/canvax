@@ -2649,14 +2649,11 @@ var AnimationFrame = {
  *
  * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
  *
- * 属性工厂，ie下面用VBS提供支持
+ * 把canvax元素的context实现监听属性改动
  * 来给整个引擎提供心跳包的触发机制
  */
 
 function Observe(scope) {
-
-    //scope.$model = scope;
-    //return scope;
 
     var stopRepeatAssign = true;
 
@@ -2664,26 +2661,26 @@ function Observe(scope) {
         //要返回的对象
     accessores = {},
         //内部用于转换的对象
-    _VBPublics = ["$skipArray", "$watch", "$model"],
+    _Publics = ["$watch", "$model"],
         //公共属性，不需要get set 化的
     model = {}; //这是pmodel上的$model属性
 
-    var VBPublics = _VBPublics.concat(scope.$skipArray || []);
+    var Publics = _Publics;
 
     function loop(name, val) {
-        if (_$1.indexOf(_VBPublics, name) === -1) {
-            //非_VBPublics中的值，都要先设置好对应的val到model上
+        if (_$1.indexOf(_Publics, name) === -1) {
+            //非 _Publics 中的值，都要先设置好对应的val到model上
             model[name] = val;
         }
 
         var valueType = typeof val === "undefined" ? "undefined" : _typeof(val);
 
-        if (_$1.indexOf(VBPublics, name) > -1) {
+        if (_$1.indexOf(Publics, name) > -1) {
             return;
         }
 
         if (valueType === "function") {
-            VBPublics.push(name); //函数无需要转换，也可以做为公共属性存在
+            Publics.push(name); //函数无需要转换，也可以做为公共属性存在
         } else {
             var accessor = function accessor(neo) {
                 //创建监控属性或数组，自变量，由用户触发其改变
@@ -2731,6 +2728,7 @@ function Observe(scope) {
                     if (value && valueType === "object" && !(value instanceof Array) && !value.$model && !value.addColorStop) {
 
                         value = Observe(value, value);
+                        value.$watch = pmodel.$watch;
                         //accessor.value = value;
                         model[name] = value;
                     }
@@ -2751,9 +2749,9 @@ function Observe(scope) {
         loop(i, scope[i]);
     }
 
-    pmodel = defineProperties(pmodel, accessores, VBPublics); //生成一个空的ViewModel
+    pmodel = defineProperties(pmodel, accessores, Publics); //生成一个空的ViewModel
 
-    _$1.forEach(VBPublics, function (name) {
+    _$1.forEach(Publics, function (name) {
         if (scope[name]) {
             //然后为函数等不被监控的属性赋值
             if (typeof scope[name] == "function") {
@@ -2776,6 +2774,7 @@ function Observe(scope) {
 
     return pmodel;
 }
+
 var defineProperty$1 = Object.defineProperty;
 //如果浏览器不支持ecma262v5的Object.defineProperties或者存在BUG，比如IE8
 //标准浏览器使用__defineGetter__, __defineSetter__实现
@@ -2807,54 +2806,6 @@ try {
             return obj;
         };
     }
-}
-//IE6-8使用VBScript类的set get语句实现
-if (!defineProperties && window.VBArray) {
-    (function () {
-        var VBMediator = function VBMediator(description, name, value) {
-            var fn = description[name] && description[name].set;
-            if (arguments.length === 3) {
-                fn(value);
-            } else {
-                return fn();
-            }
-        };
-
-        window.execScript(["Function parseVB(code)", "\tExecuteGlobal(code)", "End Function"].join("\n"), "VBScript");
-
-        
-        defineProperties = function defineProperties(publics, description, array) {
-            publics = array.slice(0);
-            publics.push("hasOwnProperty");
-            var className = "VBClass" + setTimeout("1"),
-                owner = {},
-                buffer = [];
-            buffer.push("Class " + className, "\tPrivate [__data__], [__proxy__]", "\tPublic Default Function [__const__](d, p)", "\t\tSet [__data__] = d: set [__proxy__] = p", "\t\tSet [__const__] = Me", //链式调用
-            "\tEnd Function");
-            _$1.forEach(publics, function (name) {
-                //添加公共属性,如果此时不加以后就没机会了
-                if (owner[name] !== true) {
-                    owner[name] = true; //因为VBScript对象不能像JS那样随意增删属性
-                    buffer.push("\tPublic [" + name + "]"); //你可以预先放到  skipArray 中
-                }
-            });
-            for (var name in description) {
-                owner[name] = true;
-                buffer.push(
-                //由于不知对方会传入什么,因此set, let都用上
-                "\tPublic Property Let [" + name + "](val)", //setter
-                "\t\tCall [__proxy__]([__data__], \"" + name + "\", val)", "\tEnd Property", "\tPublic Property Set [" + name + "](val)", //setter
-                "\t\tCall [__proxy__]([__data__], \"" + name + "\", val)", "\tEnd Property", "\tPublic Property Get [" + name + "]", //getter
-                "\tOn Error Resume Next", //必须优先使用set语句,否则它会误将数组当字符串返回
-                "\t\tSet[" + name + "] = [__proxy__]([__data__],\"" + name + "\")", "\tIf Err.Number <> 0 Then", "\t\t[" + name + "] = [__proxy__]([__data__],\"" + name + "\")", "\tEnd If", "\tOn Error Goto 0", "\tEnd Property");
-            }
-            buffer.push("End Class"); //类定义完毕
-            buffer.push("Function " + className + "Factory(a, b)", //创建实例并传入两个关键的参数
-            "\tDim o", "\tSet o = (New " + className + ")(a, b)", "\tSet " + className + "Factory = o", "End Function");
-            window.parseVB(buffer.join("\r\n")); //先创建一个VB类工厂
-            return window[className + "Factory"](description, VBMediator); //得到其产品
-        };
-    })();
 }
 
 var RENDERER_TYPE = {
@@ -3440,14 +3391,23 @@ var DisplayObject = function (_EventDispatcher) {
 
     }, {
         key: "animate",
-        value: function animate(toContent, options) {
+        value: function animate(toContent, options, context) {
+            if (!context) {
+                context = this.context;
+            }
+
             var to = toContent;
             var from = {};
             for (var p in to) {
+                if (_$1.isObject(to[p])) {
+                    this.animate(to[p], options, context[p]);
+                    //如果是个object
+                    continue;
+                }
                 if (isNaN(to[p]) && to[p] !== '' && to[p] !== null && to[p] !== undefined) {
                     continue;
                 }
-                from[p] = this.context[p];
+                from[p] = context[p];
             }
             !options && (options = {});
             options.from = from;
@@ -3461,13 +3421,13 @@ var DisplayObject = function (_EventDispatcher) {
             var tween;
             options.onUpdate = function () {
                 //如果context不存在说明该obj已经被destroy了，那么要把他的tween给destroy
-                if (!self.context && tween) {
+                if (!context && tween) {
                     AnimationFrame.destroyTween(tween);
                     tween = null;
                     return;
                 }
                 for (var p in this) {
-                    self.context[p] = this[p];
+                    context[p] = this[p];
                 }
                 upFun.apply(self, [this]);
             };

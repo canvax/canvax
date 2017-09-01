@@ -3,7 +3,7 @@
  *
  * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
  *
- * 属性工厂，ie下面用VBS提供支持
+ * 把canvax元素的context实现监听属性改动
  * 来给整个引擎提供心跳包的触发机制
  */
 
@@ -12,32 +12,29 @@ import _ from "../utils/underscore";
 
 function Observe(scope) {
 
-    //scope.$model = scope;
-    //return scope;
-
     var stopRepeatAssign=true;
 
     var pmodel = {}, //要返回的对象
         accessores = {}, //内部用于转换的对象
-        _VBPublics = ["$skipArray","$watch","$model"] , //公共属性，不需要get set 化的
+        _Publics = ["$watch","$model"] , //公共属性，不需要get set 化的
         model = {};//这是pmodel上的$model属性
 
-    var VBPublics = _VBPublics.concat( scope.$skipArray || [] );
+    var Publics = _Publics;
         
     function loop(name, val) {
-        if ( _.indexOf( _VBPublics , name ) === -1 ) {
-            //非_VBPublics中的值，都要先设置好对应的val到model上
+        if ( _.indexOf( _Publics , name ) === -1 ) {
+            //非 _Publics 中的值，都要先设置好对应的val到model上
             model[name] = val
         };
         
         var valueType = typeof val;
 
-        if( _.indexOf(VBPublics,name) > -1 ){
+        if( _.indexOf(Publics,name) > -1 ){
             return;
         };
 
         if (valueType === "function") {
-            VBPublics.push(name) //函数无需要转换，也可以做为公共属性存在
+            Publics.push(name) //函数无需要转换，也可以做为公共属性存在
         } else {
             var accessor = function(neo) { //创建监控属性或数组，自变量，由用户触发其改变
 
@@ -73,7 +70,7 @@ function Observe(scope) {
                         }
 
                         if ( pmodel.$watch ) {
-                          pmodel.$watch.call(pmodel , name, value, preValue);
+                            pmodel.$watch.call(pmodel , name, value, preValue);
                         }
                     }
                 } else {
@@ -86,6 +83,7 @@ function Observe(scope) {
                        && !value.addColorStop) {
 
                         value = Observe(value , value);
+                        value.$watch = pmodel.$watch;
                         //accessor.value = value;
                         model[name] = value;
                     };
@@ -106,9 +104,9 @@ function Observe(scope) {
         loop(i, scope[i])
     };
 
-    pmodel = defineProperties(pmodel, accessores, VBPublics);//生成一个空的ViewModel
+    pmodel = defineProperties(pmodel, accessores, Publics);//生成一个空的ViewModel
 
-    _.forEach(VBPublics,function(name) {
+    _.forEach(Publics,function(name) {
         if (scope[name]) {//然后为函数等不被监控的属性赋值
             if(typeof scope[name] == "function" ){
                pmodel[name] = function(){
@@ -129,40 +127,43 @@ function Observe(scope) {
     stopRepeatAssign = false;
 
     return pmodel
-}
-var defineProperty = Object.defineProperty
-    //如果浏览器不支持ecma262v5的Object.defineProperties或者存在BUG，比如IE8
-    //标准浏览器使用__defineGetter__, __defineSetter__实现
-    try {
-        defineProperty({}, "_", {
-            value: "x"
-        })
-        var defineProperties = Object.defineProperties
-    } catch (e) {
-        if ("__defineGetter__" in Object) {
-            defineProperty = function(obj, prop, desc) {
-                if ('value' in desc) {
-                    obj[prop] = desc.value
+};
+
+var defineProperty = Object.defineProperty;
+//如果浏览器不支持ecma262v5的Object.defineProperties或者存在BUG，比如IE8
+//标准浏览器使用__defineGetter__, __defineSetter__实现
+try {
+    defineProperty({}, "_", {
+        value: "x"
+    })
+    var defineProperties = Object.defineProperties
+} catch (e) {
+    if ("__defineGetter__" in Object) {
+        defineProperty = function(obj, prop, desc) {
+            if ('value' in desc) {
+                obj[prop] = desc.value
+            }
+            if ('get' in desc) {
+                obj.__defineGetter__(prop, desc.get)
+            }
+            if ('set' in desc) {
+                obj.__defineSetter__(prop, desc.set)
+            }
+            return obj
+        };
+        defineProperties = function(obj, descs) {
+            for (var prop in descs) {
+                if (descs.hasOwnProperty(prop)) {
+                    defineProperty(obj, prop, descs[prop])
                 }
-                if ('get' in desc) {
-                    obj.__defineGetter__(prop, desc.get)
-                }
-                if ('set' in desc) {
-                    obj.__defineSetter__(prop, desc.set)
-                }
-                return obj
-            };
-            defineProperties = function(obj, descs) {
-                for (var prop in descs) {
-                    if (descs.hasOwnProperty(prop)) {
-                        defineProperty(obj, prop, descs[prop])
-                    }
-                }
-                return obj
-            };
-        }
+            }
+            return obj
+        };
     }
+};
+
 //IE6-8使用VBScript类的set get语句实现
+/*  因为flash不被支持的策略，所以对应的vbs 实现get set的上古代码也不再支持
 if (!defineProperties && window.VBArray) {
     window.execScript([
             "Function parseVB(code)",
@@ -225,5 +226,7 @@ if (!defineProperties && window.VBArray) {
         return  window[className + "Factory"](description, VBMediator);//得到其产品
     }
 }
+*/
+
 export default Observe;
 
