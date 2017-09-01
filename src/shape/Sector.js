@@ -56,7 +56,7 @@ export default class Sector extends Shape
         var startAngle = myMath.degreeTo360(model.startAngle);          // 起始角度[0,360)
         var endAngle   = myMath.degreeTo360(model.endAngle);              // 结束角度(0,360]
 
-        if( startAngle != endAngle && Math.abs(startAngle - endAngle) % 360 == 0 ) {
+        if( model.startAngle != model.endAngle && Math.abs(model.startAngle - model.endAngle) % 360 == 0 ) {
         //if( startAngle == endAngle && model.startAngle != model.endAngle ) {
             //如果两个角度相等，那么就认为是个圆环了
             this.isRing = true;

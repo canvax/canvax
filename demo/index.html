@@ -234,7 +234,7 @@
         })
 
         sector.on("mouseover" , function(){
-            console.log(this.graphicsData)
+            console.log(this.graphics.graphicsData)
             this.context.lineWidth = 2;
         })
 
@@ -467,12 +467,12 @@
         stage.addChild(line);
 
 
-        window.stage1 = new Canvax.Display.Stage({
-            id : "chart1"               
+        window.textStage = new Canvax.Display.Stage({
+            id : "text"               
         });
 
-        stage1.addChild( text );
-        app.addChild( stage1 );
+        textStage.addChild( text );
+        app.addChild( textStage );
 
         sprite.addChild(sector);
 

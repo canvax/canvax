@@ -6589,104 +6589,70 @@ function hex2rgb(hex, out) {
 }
 
 var WebGLGraphicsData = function () {
-  function WebGLGraphicsData(gl, shader, attribsState) {
-    classCallCheck(this, WebGLGraphicsData);
+    function WebGLGraphicsData(gl, shader, attribsState) {
+        classCallCheck(this, WebGLGraphicsData);
 
-    this.gl = gl;
+        this.gl = gl;
 
-    this.color = [0, 0, 0]; // color split!
-
-
-    this.points = [];
-
-    /**
-     * The indices of the vertices
-     * @member {number[]}
-     */
-    this.indices = [];
-    /**
-     * The main buffer
-     * @member {WebGLBuffer}
-     */
-    this.buffer = index.GLBuffer.createVertexBuffer(gl);
-
-    /**
-     * The index buffer
-     * @member {WebGLBuffer}
-     */
-    this.indexBuffer = index.GLBuffer.createIndexBuffer(gl);
-
-    /**
-     * Whether this graphics is dirty or not
-     * @member {boolean}
-     */
-    this.dirty = true;
-
-    this.glPoints = null;
-    this.glIndices = null;
-
-    /**
-     *
-     * @member {PIXI.Shader}
-     */
-    this.shader = shader;
-
-    this.vao = new index.VertexArrayObject(gl, attribsState).addIndex(this.indexBuffer).addAttribute(this.buffer, shader.attributes.aVertexPosition, gl.FLOAT, false, 4 * 6, 0).addAttribute(this.buffer, shader.attributes.aColor, gl.FLOAT, false, 4 * 6, 2 * 4);
-  }
-
-  /**
-   * Resets the vertices and the indices
-   */
+        this.color = [0, 0, 0]; // color split!
 
 
-  createClass(WebGLGraphicsData, [{
-    key: 'reset',
-    value: function reset() {
-      this.points.length = 0;
-      this.indices.length = 0;
+        this.points = [];
+
+        this.indices = [];
+
+        this.buffer = index.GLBuffer.createVertexBuffer(gl);
+
+        this.indexBuffer = index.GLBuffer.createIndexBuffer(gl);
+
+        this.dirty = true;
+
+        this.glPoints = null;
+        this.glIndices = null;
+
+        this.shader = shader;
+
+        this.vao = new index.VertexArrayObject(gl, attribsState).addIndex(this.indexBuffer).addAttribute(this.buffer, shader.attributes.aVertexPosition, gl.FLOAT, false, 4 * 6, 0).addAttribute(this.buffer, shader.attributes.aColor, gl.FLOAT, false, 4 * 6, 2 * 4);
     }
 
-    /**
-     * Binds the buffers and uploads the data
-     */
+    createClass(WebGLGraphicsData, [{
+        key: 'reset',
+        value: function reset() {
+            this.points.length = 0;
+            this.indices.length = 0;
+        }
+    }, {
+        key: 'upload',
+        value: function upload() {
+            this.glPoints = new Float32Array(this.points);
+            this.buffer.upload(this.glPoints);
 
-  }, {
-    key: 'upload',
-    value: function upload() {
-      this.glPoints = new Float32Array(this.points);
-      this.buffer.upload(this.glPoints);
+            this.glIndices = new Uint16Array(this.indices);
+            this.indexBuffer.upload(this.glIndices);
 
-      this.glIndices = new Uint16Array(this.indices);
-      this.indexBuffer.upload(this.glIndices);
+            this.dirty = false;
+        }
+    }, {
+        key: 'destroy',
+        value: function destroy() {
+            this.color = null;
+            this.points = null;
+            this.indices = null;
 
-      this.dirty = false;
-    }
+            this.vao.destroy();
+            this.buffer.destroy();
+            this.indexBuffer.destroy();
 
-    /**
-     * Empties all the data
-     */
+            this.gl = null;
 
-  }, {
-    key: 'destroy',
-    value: function destroy() {
-      this.color = null;
-      this.points = null;
-      this.indices = null;
+            this.buffer = null;
+            this.indexBuffer = null;
 
-      this.vao.destroy();
-      this.buffer.destroy();
-      this.indexBuffer.destroy();
-
-      this.gl = null;
-
-      this.buffer = null;
-      this.indexBuffer = null;
-
-      this.glPoints = null;
-      this.glIndices = null;
-    }
-  }]);
-  return WebGLGraphicsData;
+            this.glPoints = null;
+            this.glIndices = null;
+        }
+    }]);
+    return WebGLGraphicsData;
 }();
 
 var PRECISION = settings.PRECISION;
@@ -10588,7 +10554,7 @@ var Sector = function (_Shape) {
             var startAngle = myMath.degreeTo360(model.startAngle); // 起始角度[0,360)
             var endAngle = myMath.degreeTo360(model.endAngle); // 结束角度(0,360]
 
-            if (startAngle != endAngle && Math.abs(startAngle - endAngle) % 360 == 0) {
+            if (model.startAngle != model.endAngle && Math.abs(model.startAngle - model.endAngle) % 360 == 0) {
                 //if( startAngle == endAngle && model.startAngle != model.endAngle ) {
                 //如果两个角度相等，那么就认为是个圆环了
                 this.isRing = true;
