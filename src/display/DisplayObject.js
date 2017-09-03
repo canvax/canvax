@@ -23,7 +23,9 @@ export default class DisplayObject extends EventDispatcher
         super( opt );
         //相对父级元素的矩阵
         this._transform      = null;
-        this.worldTransform  = null; //webgl 渲染器中专用
+        this.worldTransform  = null;
+        //_transform如果有修改，则_transformChange为true，renderer的时候worldTransform
+        this._transformChange= false;
 
         //心跳次数
         this._heartBeatNum   = 0;
@@ -117,17 +119,7 @@ export default class DisplayObject extends EventDispatcher
 
             if( _.indexOf( TRANSFORM_PROPS , name ) > -1 ) {
                 obj._updateTransform();
-                
-                //stage本身就是世界坐标，所以其worldTransform不需要动态修改
-                if( obj.parent && obj.type != "stage" && obj.parent.worldTransform ){
-                    obj.worldTransform = null;
-                    //只有parent有worldTransform，就可以算出自己对应的世界坐标
-                    obj.getWorldTransform();
-                    if( obj.children ){
-                        //如果自己还有子元素，那么子元素的世界坐标也都要对应的调整
-                        obj.updateChildWorldTransform();
-                    }
-                }
+                obj._transformChange = true;
             };
 
             if( obj._notWatch ){
@@ -421,15 +413,14 @@ export default class DisplayObject extends EventDispatcher
 
     //获取全局的世界坐标系内的矩阵
     //世界坐标是从上而下的，所以只要和parent的直接坐标相乘就好了
-    getWorldTransform()
+    setWorldTransform()
     {
-        var cm;
-        if( !this.worldTransform ){
-            cm = new Matrix();
-            cm.concat( this._transform );
-            cm.concat( this.parent.worldTransform );
-            this.worldTransform = cm;
-        };
+        //if( !this.worldTransform ){
+        var cm = new Matrix();
+        cm.concat( this._transform );
+        cm.concat( this.parent.worldTransform );
+        this.worldTransform = cm;
+        //};
         return this.worldTransform;
     }
 
@@ -510,23 +501,40 @@ export default class DisplayObject extends EventDispatcher
     */
     animate( toContent , options , context )
     {
+
         if( !context ){
             context = this.context;
         };
 
         var to = toContent;
-        var from = {};
+        var from = null;
         for( var p in to ){
             if( _.isObject( to[p] ) ){
-                this.animate( to[p], options, context[p] );
+
+                //options必须传递一份copy出去，比如到下一个animate
+                this.animate( to[p], _.extend({} , options), context[p] );
                 //如果是个object
                 continue;
             };
             if( isNaN(to[p]) && to[p] !== '' && to[p] !== null && to[p] !== undefined ){
+                delete to[p];
                 continue;
+            };
+            if( !from ){
+                from = {};
             };
             from[ p ] = context[p];
         };
+
+        if( !from ){
+            //这里很重要，不能删除。 
+            //比如line.animate({start:{x:0,y:0}} , {duration:500});
+            //那么递归到start的时候  from 的值依然为null
+            //如果这个时候继续执行的话，会有很严重的bug
+            //line.context.start 会 被赋值了 line对象上的所有属性，严重的bug
+            return;
+        };
+
         !options && (options = {});
         options.from = from;
         options.to = to;

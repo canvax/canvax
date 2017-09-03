@@ -87,7 +87,7 @@ export default class Shape extends DisplayObject
         this.graphics.clear();
     }
 
-    $watch(name, value, preValue) 
+    $watch(name, value, preValue)
     {
         if( _.indexOf( STYLE_PROPS , name ) > -1 ){
             this.graphics.setStyle( this.context );

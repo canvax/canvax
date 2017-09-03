@@ -106,18 +106,19 @@ export const SHAPE_CONTEXT_DEFAULT = {
 
 //会影响到transform改变的context属性
 export const TRANSFORM_PROPS = [ 
-    "x" , 
-    "y" , 
-    "scaleX" , 
-    "scaleY" , 
-    "rotation" , 
-    "scaleOrigin" , 
+    "x", 
+    "y", 
+    "scaleX", 
+    "scaleY", 
+    "rotation", 
+    "scaleOrigin", 
     "rotateOrigin" 
 ]
 
 //所有和样式相关的属性
+//appha 有 自己的 处理方式
 export const STYLE_PROPS = [
-    "lineWidth" ,
+    "lineWidth",
     "lineAlpha",
     "strokeStyle",
     "fillStyle",

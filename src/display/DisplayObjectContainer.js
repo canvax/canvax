@@ -57,11 +57,6 @@ export default class DisplayObjectContainer extends DisplayObject
            this._afterAddChild(child);
         };
 
-        if( this.worldTransform ){
-            //如果过自己已经有了世界坐标了，那么要把新添加进来的所有节点包括其子节点都设置好世界坐标
-            this.updateChildWorldTransform();
-        };
-
         return child;
     }
 
@@ -218,16 +213,4 @@ export default class DisplayObjectContainer extends DisplayObject
         }
         return result;
     }
-
-    //更新所有子节点的世界坐标
-    updateChildWorldTransform()
-    {
-        _.each( this.children , function( obj ){
-            obj.getWorldTransform();
-            if( obj.children ){
-                obj.updateChildWorldTransform();
-            } 
-        } );
-    }
-
 }

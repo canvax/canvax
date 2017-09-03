@@ -9,6 +9,7 @@ export default class Rectangle
         this.width = width;
         this.height = height;
         this.type = SHAPES.RECT;
+        this.closed = true;
     }
 
     clone()

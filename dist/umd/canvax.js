@@ -1191,8 +1191,10 @@ EventHandler.prototype = {
         //这里只能直接修改_transform 。 不能用下面的修改x，y的方式。
         var _dragDuplicate = root._bufferStage.getChildById(target.id);
         _dragDuplicate._transform = target.getConcatenatedMatrix();
-        _dragDuplicate.worldTransform = null;
-        _dragDuplicate.getWorldTransform();
+
+        //worldTransform在renderer的时候计算
+        //_dragDuplicate.worldTransform = null;
+        //_dragDuplicate.setWorldTransform();
 
         //直接修改的_transform不会出发心跳上报， 渲染引擎不制动这个stage需要绘制。
         //所以要手动出发心跳包
@@ -2844,6 +2846,7 @@ var SHAPES = {
 var TRANSFORM_PROPS = ["x", "y", "scaleX", "scaleY", "rotation", "scaleOrigin", "rotateOrigin"];
 
 //所有和样式相关的属性
+//appha 有 自己的 处理方式
 var STYLE_PROPS = ["lineWidth", "lineAlpha", "strokeStyle", "fillStyle", "fillAlpha", "globalAlpha"];
 
 /**
@@ -2905,7 +2908,9 @@ var DisplayObject = function (_EventDispatcher) {
         var _this = possibleConstructorReturn(this, (DisplayObject.__proto__ || Object.getPrototypeOf(DisplayObject)).call(this, opt));
 
         _this._transform = null;
-        _this.worldTransform = null; //webgl 渲染器中专用
+        _this.worldTransform = null;
+        //_transform如果有修改，则_transformChange为true，renderer的时候worldTransform
+        _this._transformChange = false;
 
         //心跳次数
         _this._heartBeatNum = 0;
@@ -2996,17 +3001,7 @@ var DisplayObject = function (_EventDispatcher) {
 
                 if (_$1.indexOf(TRANSFORM_PROPS, name) > -1) {
                     obj._updateTransform();
-
-                    //stage本身就是世界坐标，所以其worldTransform不需要动态修改
-                    if (obj.parent && obj.type != "stage" && obj.parent.worldTransform) {
-                        obj.worldTransform = null;
-                        //只有parent有worldTransform，就可以算出自己对应的世界坐标
-                        obj.getWorldTransform();
-                        if (obj.children) {
-                            //如果自己还有子元素，那么子元素的世界坐标也都要对应的调整
-                            obj.updateChildWorldTransform();
-                        }
-                    }
+                    obj._transformChange = true;
                 }
 
                 if (obj._notWatch) {
@@ -3310,15 +3305,14 @@ var DisplayObject = function (_EventDispatcher) {
         //世界坐标是从上而下的，所以只要和parent的直接坐标相乘就好了
 
     }, {
-        key: "getWorldTransform",
-        value: function getWorldTransform() {
-            var cm;
-            if (!this.worldTransform) {
-                cm = new Matrix();
-                cm.concat(this._transform);
-                cm.concat(this.parent.worldTransform);
-                this.worldTransform = cm;
-            }
+        key: "setWorldTransform",
+        value: function setWorldTransform() {
+            //if( !this.worldTransform ){
+            var cm = new Matrix();
+            cm.concat(this._transform);
+            cm.concat(this.parent.worldTransform);
+            this.worldTransform = cm;
+            //};
             return this.worldTransform;
         }
 
@@ -3396,23 +3390,40 @@ var DisplayObject = function (_EventDispatcher) {
     }, {
         key: "animate",
         value: function animate(toContent, options, context) {
+
             if (!context) {
                 context = this.context;
             }
 
             var to = toContent;
-            var from = {};
+            var from = null;
             for (var p in to) {
                 if (_$1.isObject(to[p])) {
-                    this.animate(to[p], options, context[p]);
+
+                    //options必须传递一份copy出去，比如到下一个animate
+                    this.animate(to[p], _$1.extend({}, options), context[p]);
                     //如果是个object
                     continue;
                 }
                 if (isNaN(to[p]) && to[p] !== '' && to[p] !== null && to[p] !== undefined) {
+                    delete to[p];
                     continue;
+                }
+                if (!from) {
+                    from = {};
                 }
                 from[p] = context[p];
             }
+
+            if (!from) {
+                //这里很重要，不能删除。 
+                //比如line.animate({start:{x:0,y:0}} , {duration:500});
+                //那么递归到start的时候  from 的值依然为null
+                //如果这个时候继续执行的话，会有很严重的bug
+                //line.context.start 会 被赋值了 line对象上的所有属性，严重的bug
+                return;
+            }
+
             !options && (options = {});
             options.from = from;
             options.to = to;
@@ -3534,11 +3545,6 @@ var DisplayObjectContainer = function (_DisplayObject) {
 
             if (this._afterAddChild) {
                 this._afterAddChild(child);
-            }
-
-            if (this.worldTransform) {
-                //如果过自己已经有了世界坐标了，那么要把新添加进来的所有节点包括其子节点都设置好世界坐标
-                this.updateChildWorldTransform();
             }
 
             return child;
@@ -3699,19 +3705,6 @@ var DisplayObjectContainer = function (_DisplayObject) {
                 }
             }
             return result;
-        }
-
-        //更新所有子节点的世界坐标
-
-    }, {
-        key: "updateChildWorldTransform",
-        value: function updateChildWorldTransform() {
-            _$1.each(this.children, function (obj) {
-                obj.getWorldTransform();
-                if (obj.children) {
-                    obj.updateChildWorldTransform();
-                }
-            });
         }
     }]);
     return DisplayObjectContainer;
@@ -3957,16 +3950,10 @@ var CanvasGraphicsRenderer = function () {
 
     createClass(CanvasGraphicsRenderer, [{
         key: 'render',
-        value: function render(displayObject, stage) {
+        value: function render(displayObject, stage, globalAlpha) {
             var renderer = this.renderer;
             var graphicsData = displayObject.graphics.graphicsData;
             var ctx = stage.ctx;
-            var $MC = displayObject.context.$model;
-            var $PMC = displayObject.parent.context.$model;
-
-            if (displayObject.parent) {
-                $MC.globalAlpha *= $PMC.globalAlpha;
-            }
 
             for (var i = 0; i < graphicsData.length; i++) {
                 var data = graphicsData[i];
@@ -3986,23 +3973,23 @@ var CanvasGraphicsRenderer = function () {
                     this.renderPolygon(shape.points, shape.closed, ctx);
 
                     if (fill) {
-                        ctx.globalAlpha = data.fillAlpha;
+                        ctx.globalAlpha = data.fillAlpha * globalAlpha;
                         ctx.fillStyle = fillStyle;
                         ctx.fill();
                     }
                     if (line) {
-                        ctx.globalAlpha = data.lineAlpha;
+                        ctx.globalAlpha = data.lineAlpha * globalAlpha;
                         ctx.strokeStyle = strokeStyle;
                         ctx.stroke();
                     }
                 } else if (data.type === SHAPES.RECT) {
                     if (fill) {
-                        ctx.globalAlpha = data.fillAlpha;
+                        ctx.globalAlpha = data.fillAlpha * globalAlpha;
                         ctx.fillStyle = fillStyle;
                         ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
                     }
                     if (line) {
-                        ctx.globalAlpha = data.lineAlpha;
+                        ctx.globalAlpha = data.lineAlpha * globalAlpha;
                         ctx.strokeStyle = strokeStyle;
                         ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
                     }
@@ -4014,12 +4001,12 @@ var CanvasGraphicsRenderer = function () {
                     ctx.closePath();
 
                     if (fill) {
-                        ctx.globalAlpha = data.fillAlpha;
+                        ctx.globalAlpha = data.fillAlpha * globalAlpha;
                         ctx.fillStyle = fillStyle;
                         ctx.fill();
                     }
                     if (line) {
-                        ctx.globalAlpha = data.lineAlpha;
+                        ctx.globalAlpha = data.lineAlpha * globalAlpha;
                         ctx.strokeStyle = strokeStyle;
                         ctx.stroke();
                     }
@@ -4049,12 +4036,12 @@ var CanvasGraphicsRenderer = function () {
                     ctx.closePath();
 
                     if (fill) {
-                        ctx.globalAlpha = data.fillAlpha;
+                        ctx.globalAlpha = data.fillAlpha * globalAlpha;
                         ctx.fillStyle = fillStyle;
                         ctx.fill();
                     }
                     if (line) {
-                        ctx.globalAlpha = data.lineAlpha;
+                        ctx.globalAlpha = data.lineAlpha * globalAlpha;
                         ctx.strokeStyle = strokeStyle;
                         ctx.stroke();
                     }
@@ -4108,22 +4095,36 @@ var CanvasRenderer = function (_SystemRenderer) {
                 stage.ctx = stage.canvas.getContext("2d");
             }
             stage.stageRending = true;
+            stage.setWorldTransform();
             this._clear(stage);
             this._render(stage);
             stage.stageRending = false;
         }
     }, {
         key: '_render',
-        value: function _render(stage, displayObject) {
+        value: function _render(stage, displayObject, globalAlpha) {
             if (!displayObject) {
                 displayObject = stage;
+            }
+            if (!globalAlpha) {
+                globalAlpha = 1;
+            }
+
+            var $MC = displayObject.context.$model;
+
+            if (!displayObject.worldTransform || displayObject._transformChange || displayObject.parent._transformChange) {
+                displayObject.setWorldTransform();
+                displayObject._transformChange = true;
+            }
+
+            globalAlpha *= $MC.globalAlpha;
+
+            if (!$MC.visible || globalAlpha <= 0) {
+                return;
             }
 
             //因为已经采用了setTransform了， 非shape元素已经不需要执行transform 和 render
             if (displayObject.graphics) {
-                if (!displayObject.context.$model.visible || displayObject.context.$model.globalAlpha <= 0) {
-                    return;
-                }
 
                 var ctx = stage.ctx;
 
@@ -4135,7 +4136,7 @@ var CanvasRenderer = function (_SystemRenderer) {
                     displayObject._draw(displayObject.graphics); //_draw会完成绘制准备好 graphicsData
                 }
 
-                this.CGR.render(displayObject, stage, this);
+                this.CGR.render(displayObject, stage, globalAlpha);
             }
 
             if (displayObject.type == "text") {
@@ -4147,9 +4148,11 @@ var CanvasRenderer = function (_SystemRenderer) {
 
             if (displayObject.children) {
                 for (var i = 0, len = displayObject.children.length; i < len; i++) {
-                    this._render(stage, displayObject.children[i]);
+                    this._render(stage, displayObject.children[i], globalAlpha);
                 }
             }
+
+            displayObject._transformChange = false;
         }
     }, {
         key: '_clear',
@@ -4446,6 +4449,7 @@ var Rectangle = function () {
         this.width = width;
         this.height = height;
         this.type = SHAPES.RECT;
+        this.closed = true;
     }
 
     createClass(Rectangle, [{

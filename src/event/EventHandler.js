@@ -425,8 +425,10 @@ EventHandler.prototype = {
         //这里只能直接修改_transform 。 不能用下面的修改x，y的方式。
         var _dragDuplicate = root._bufferStage.getChildById(target.id);
         _dragDuplicate._transform = target.getConcatenatedMatrix();
-        _dragDuplicate.worldTransform = null;
-        _dragDuplicate.getWorldTransform();
+
+        //worldTransform在renderer的时候计算
+        //_dragDuplicate.worldTransform = null;
+        //_dragDuplicate.setWorldTransform();
 
         //直接修改的_transform不会出发心跳上报， 渲染引擎不制动这个stage需要绘制。
         //所以要手动出发心跳包

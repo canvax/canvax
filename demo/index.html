@@ -31,7 +31,7 @@
 
 
         var box = $("#canvasTest");
-        app = new Canvax.App({
+        window.app = new Canvax.App({
             id : "canvax",
             el : box,
             webGL : false
@@ -60,7 +60,8 @@
                     x:150,
                     y:150
                 },
-                globleAlpha:0
+                
+                globalAlpha : 1
 
 
             }
@@ -374,6 +375,7 @@
                 lineWidth : 1,
                 fillStyle:colors.getColor(colorInd++),
                 strokeStyle:colors.getColor(colorInd++),
+                
                 //shadowColor :"blue",
 
                 //shadowOffsetX : 3,
@@ -430,6 +432,11 @@
                     x : 300,
                     y : 330
                 }
+            }, {
+                duration: 500,
+                //easing : 'Back.Out',//Tween.Easing.Elastic.InOut
+                //delay: 1 * 80,
+                //id: line.id
             })
         } , 3000)
 
@@ -476,8 +483,6 @@
 
         sprite.addChild(sector_rect);
         sprite1.addChild(rect);
-
-
 
         stage.addChild(line);
         app.addChild(stage); 

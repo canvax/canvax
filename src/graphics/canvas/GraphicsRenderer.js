@@ -12,17 +12,11 @@ export default class CanvasGraphicsRenderer
      * @param displayObject
      * @stage 也可以displayObject.getStage()获取。
      */
-    render(displayObject , stage)
+    render(displayObject , stage, globalAlpha)
     {
         const renderer = this.renderer;
         const graphicsData = displayObject.graphics.graphicsData;
         const ctx = stage.ctx;
-        const $MC = displayObject.context.$model;
-        const $PMC = displayObject.parent.context.$model;
-
-        if( displayObject.parent ){
-            $MC.globalAlpha *= $PMC.globalAlpha;
-        };
 
         for (let i = 0; i < graphicsData.length; i++)
         {
@@ -45,13 +39,13 @@ export default class CanvasGraphicsRenderer
 
                 if ( fill )
                 {
-                    ctx.globalAlpha = data.fillAlpha;
+                    ctx.globalAlpha = data.fillAlpha * globalAlpha;
                     ctx.fillStyle = fillStyle;
                     ctx.fill();
                 }
                 if ( line )
                 {
-                    ctx.globalAlpha = data.lineAlpha;
+                    ctx.globalAlpha = data.lineAlpha * globalAlpha;
                     ctx.strokeStyle = strokeStyle;
                     ctx.stroke();
                 }
@@ -60,13 +54,13 @@ export default class CanvasGraphicsRenderer
             {
                 if ( fill )
                 {
-                    ctx.globalAlpha = data.fillAlpha;
+                    ctx.globalAlpha = data.fillAlpha * globalAlpha;
                     ctx.fillStyle = fillStyle;
                     ctx.fillRect(shape.x, shape.y, shape.width, shape.height);
                 }
                 if ( line ) 
                 {
-                    ctx.globalAlpha = data.lineAlpha;
+                    ctx.globalAlpha = data.lineAlpha * globalAlpha;
                     ctx.strokeStyle = strokeStyle;
                     ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
                 }
@@ -81,13 +75,13 @@ export default class CanvasGraphicsRenderer
 
                 if ( fill )
                 {
-                    ctx.globalAlpha = data.fillAlpha;
+                    ctx.globalAlpha = data.fillAlpha * globalAlpha;
                     ctx.fillStyle = fillStyle;
                     ctx.fill();
                 }
                 if ( line )
                 {
-                    ctx.globalAlpha = data.lineAlpha;
+                    ctx.globalAlpha = data.lineAlpha * globalAlpha;
                     ctx.strokeStyle = strokeStyle;
                     ctx.stroke();
                 }
@@ -120,13 +114,13 @@ export default class CanvasGraphicsRenderer
 
                 if ( fill )
                 {
-                    ctx.globalAlpha = data.fillAlpha;
+                    ctx.globalAlpha = data.fillAlpha * globalAlpha;
                     ctx.fillStyle = fillStyle;
                     ctx.fill();
                 }
                 if ( line )
                 {
-                    ctx.globalAlpha = data.lineAlpha;
+                    ctx.globalAlpha = data.lineAlpha * globalAlpha;
                     ctx.strokeStyle = strokeStyle;
                     ctx.stroke();
                 }

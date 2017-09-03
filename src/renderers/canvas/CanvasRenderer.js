@@ -28,23 +28,37 @@ export default class CanvasRenderer extends SystemRenderer
             stage.ctx = stage.canvas.getContext("2d");
         }
         stage.stageRending = true;
+        stage.setWorldTransform();
         this._clear( stage );
         this._render( stage );
         stage.stageRending = false;
     }
 
-    _render( stage , displayObject )
+    _render( stage , displayObject , globalAlpha )
     {
         if( !displayObject ){
             displayObject = stage;
         };
+        if( !globalAlpha ){
+            globalAlpha = 1;
+        };
+
+        var $MC = displayObject.context.$model;
+
+        if( !displayObject.worldTransform || displayObject._transformChange || displayObject.parent._transformChange ){
+            displayObject.setWorldTransform();
+            displayObject._transformChange = true;
+        };
+
+        globalAlpha *= $MC.globalAlpha;
+
+        if( !$MC.visible || globalAlpha <= 0 ){
+            return;
+        };
 
         //因为已经采用了setTransform了， 非shape元素已经不需要执行transform 和 render
         if( displayObject.graphics ){
-            if( !displayObject.context.$model.visible || displayObject.context.$model.globalAlpha <= 0 ){
-                return;
-            };
-
+            
             var ctx = stage.ctx;
             
             ctx.setTransform.apply( ctx , displayObject.worldTransform.toArray() );
@@ -55,7 +69,7 @@ export default class CanvasRenderer extends SystemRenderer
                 displayObject._draw( displayObject.graphics );//_draw会完成绘制准备好 graphicsData
             };
 
-            this.CGR.render( displayObject , stage, this );
+            this.CGR.render( displayObject , stage, globalAlpha );
         };
 
         if( displayObject.type == "text" ){
@@ -67,9 +81,11 @@ export default class CanvasRenderer extends SystemRenderer
 
         if( displayObject.children ){
 	        for(var i = 0, len = displayObject.children.length; i < len; i++) {
-	        	this._render( stage , displayObject.children[i] );
+	        	this._render( stage , displayObject.children[i] , globalAlpha );
 	        }
-	    };
+	    }; 
+
+        displayObject._transformChange = false;
 
     }
 
