@@ -1,4 +1,4 @@
-import Tween from "./Tween";
+import Tween from "@tweenjs/tween.js";
 import Utils from "../utils/index";
 import _ from "../utils/underscore";
 

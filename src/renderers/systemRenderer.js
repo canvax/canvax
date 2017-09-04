@@ -12,7 +12,7 @@ export default class SystemRenderer
         this.app = app;
 
         //prepare options
-        if (options)
+        if ( options )
         {
             for (const i in settings.RENDER_OPTIONS)
             {

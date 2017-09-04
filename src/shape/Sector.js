@@ -68,9 +68,9 @@ export default class Sector extends Shape
         endAngle   = myMath.degreeToRadian(endAngle);
      
         //处理下极小夹角的情况
-        if( endAngle - startAngle < 0.025 ){
-            startAngle -= 0.003
-        }
+        //if( endAngle - startAngle < 0.025 ){
+        //    startAngle -= 0.003
+        //}
 
         var G = graphics;
         //G.beginPath();
