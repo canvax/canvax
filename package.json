@@ -31,7 +31,7 @@
     "dependencies": {
         "rollup-watch": "3.2.2",
         "earcut": "^2.0.7",
-        "@tweenjs/tween.js": "^17.1.0",
+        "@tweenjs/tween.js": "17.1.0",
         "pixi-gl-core": "^1.0.3"
     },
     "scripts": {

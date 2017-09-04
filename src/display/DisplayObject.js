@@ -552,10 +552,10 @@ export default class DisplayObject extends EventDispatcher
                 tween = null;
                 return;
             };
-            for( var p in this ){
-                context[p] = this[p];
+            for( var p in options.from ){
+                context[p] = options.from[p];
             };
-            upFun.apply(self , [this]);
+            upFun.apply(self , [ options.from ]);
         };
         var compFun = function(){};
         if( options.onComplete ){

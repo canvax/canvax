@@ -2583,6 +2583,7 @@ TWEEN.Interpolation = {
 })(commonjsGlobal);
 });
 
+//import Tween from "./Tween"
 /**
  * 设置 AnimationFrame begin
  */
@@ -2703,21 +2704,25 @@ function registTween(options) {
             };
 
             tween = new Tween.Tween(opt.from).to(opt.to, opt.duration).onStart(function () {
-                opt.onStart.apply(this);
+                //opt.onStart.apply( this )
+                opt.onStart();
             }).onUpdate(function () {
-                opt.onUpdate.apply(this);
+                //opt.onUpdate.apply( this );
+                opt.onUpdate();
             }).onComplete(function () {
                 destroyFrame({
                     id: tid
                 });
                 tween._isCompleteed = true;
-                opt.onComplete.apply(this, [this]); //执行用户的conComplete
+                //opt.onComplete.apply( this , [this] ); //执行用户的conComplete
+                opt.onComplete();
             }).onStop(function () {
                 destroyFrame({
                     id: tid
                 });
                 tween._isStoped = true;
-                opt.onStop.apply(this, [this]);
+                //opt.onStop.apply( this , [this] );
+                opt.onStop();
             }).repeat(opt.repeat).delay(opt.delay).easing(Tween.Easing[opt.easing.split(".")[0]][opt.easing.split(".")[1]]);
 
             tween.id = tid;
@@ -3527,10 +3532,10 @@ var DisplayObject = function (_EventDispatcher) {
                     tween = null;
                     return;
                 }
-                for (var p in this) {
-                    context[p] = this[p];
+                for (var p in options.from) {
+                    context[p] = options.from[p];
                 }
-                upFun.apply(self, [this]);
+                upFun.apply(self, [options.from]);
             };
             var compFun = function compFun() {};
             if (options.onComplete) {

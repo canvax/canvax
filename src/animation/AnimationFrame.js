@@ -1,4 +1,5 @@
 import Tween from "@tweenjs/tween.js";
+//import Tween from "./Tween"
 import Utils from "../utils/index";
 import _ from "../utils/underscore";
 
@@ -111,24 +112,28 @@ function registTween(options) {
         tween = new Tween.Tween( opt.from )
         .to( opt.to, opt.duration )
         .onStart(function(){
-            opt.onStart.apply( this )
+            //opt.onStart.apply( this )
+            opt.onStart();
         })
         .onUpdate( function(){
-            opt.onUpdate.apply( this );
+            //opt.onUpdate.apply( this );
+            opt.onUpdate();
         } )
         .onComplete( function() {
             destroyFrame({
                 id: tid
             });
             tween._isCompleteed = true;
-            opt.onComplete.apply( this , [this] ); //执行用户的conComplete
+            //opt.onComplete.apply( this , [this] ); //执行用户的conComplete
+            opt.onComplete();
         } )
         .onStop( function(){
             destroyFrame({
                 id: tid
             });
             tween._isStoped = true;
-            opt.onStop.apply( this , [this] );
+            //opt.onStop.apply( this , [this] );
+            opt.onStop();
         } )
         .repeat( opt.repeat )
         .delay( opt.delay )
