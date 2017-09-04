@@ -545,23 +545,24 @@ export default class DisplayObject extends EventDispatcher
             upFun = options.onUpdate;
         };
         var tween;
-        options.onUpdate = function(){
+        options.onUpdate = function( status ){
             //如果context不存在说明该obj已经被destroy了，那么要把他的tween给destroy
             if (!context && tween) {
                 AnimationFrame.destroyTween(tween);
                 tween = null;
                 return;
             };
-            for( var p in options.from ){
-                context[p] = options.from[p];
+            for( var p in status ){
+                context[p] = status[p];
             };
-            upFun.apply(self , [ options.from ]);
+            upFun.apply(self , [ status ]);
         };
+
         var compFun = function(){};
         if( options.onComplete ){
             compFun = options.onComplete;
         };
-        options.onComplete = function( opt ){
+        options.onComplete = function( status ){
             compFun.apply(self , arguments)
         };
         tween = AnimationFrame.registTween( options );

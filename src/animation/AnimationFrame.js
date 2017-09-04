@@ -113,11 +113,11 @@ function registTween(options) {
         .to( opt.to, opt.duration )
         .onStart(function(){
             //opt.onStart.apply( this )
-            opt.onStart();
+            opt.onStart( opt.from );
         })
         .onUpdate( function(){
             //opt.onUpdate.apply( this );
-            opt.onUpdate();
+            opt.onUpdate( opt.from );
         } )
         .onComplete( function() {
             destroyFrame({
@@ -125,7 +125,7 @@ function registTween(options) {
             });
             tween._isCompleteed = true;
             //opt.onComplete.apply( this , [this] ); //执行用户的conComplete
-            opt.onComplete();
+            opt.onComplete( opt.from );
         } )
         .onStop( function(){
             destroyFrame({
@@ -133,7 +133,7 @@ function registTween(options) {
             });
             tween._isStoped = true;
             //opt.onStop.apply( this , [this] );
-            opt.onStop();
+            opt.onStop( opt.from );
         } )
         .repeat( opt.repeat )
         .delay( opt.delay )

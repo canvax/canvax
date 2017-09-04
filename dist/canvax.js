@@ -2705,24 +2705,24 @@ function registTween(options) {
 
             tween = new Tween.Tween(opt.from).to(opt.to, opt.duration).onStart(function () {
                 //opt.onStart.apply( this )
-                opt.onStart();
+                opt.onStart(opt.from);
             }).onUpdate(function () {
                 //opt.onUpdate.apply( this );
-                opt.onUpdate();
+                opt.onUpdate(opt.from);
             }).onComplete(function () {
                 destroyFrame({
                     id: tid
                 });
                 tween._isCompleteed = true;
                 //opt.onComplete.apply( this , [this] ); //执行用户的conComplete
-                opt.onComplete();
+                opt.onComplete(opt.from);
             }).onStop(function () {
                 destroyFrame({
                     id: tid
                 });
                 tween._isStoped = true;
                 //opt.onStop.apply( this , [this] );
-                opt.onStop();
+                opt.onStop(opt.from);
             }).repeat(opt.repeat).delay(opt.delay).easing(Tween.Easing[opt.easing.split(".")[0]][opt.easing.split(".")[1]]);
 
             tween.id = tid;
@@ -3525,23 +3525,24 @@ var DisplayObject = function (_EventDispatcher) {
                 upFun = options.onUpdate;
             }
             var tween;
-            options.onUpdate = function () {
+            options.onUpdate = function (status) {
                 //如果context不存在说明该obj已经被destroy了，那么要把他的tween给destroy
                 if (!context && tween) {
                     AnimationFrame.destroyTween(tween);
                     tween = null;
                     return;
                 }
-                for (var p in options.from) {
-                    context[p] = options.from[p];
+                for (var p in status) {
+                    context[p] = status[p];
                 }
-                upFun.apply(self, [options.from]);
+                upFun.apply(self, [status]);
             };
+
             var compFun = function compFun() {};
             if (options.onComplete) {
                 compFun = options.onComplete;
             }
-            options.onComplete = function (opt) {
+            options.onComplete = function (status) {
                 compFun.apply(self, arguments);
             };
             tween = AnimationFrame.registTween(options);
