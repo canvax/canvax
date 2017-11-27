@@ -24,6 +24,8 @@ import Sector from "./shape/Sector";
 
 import AnimationFrame from "./animation/AnimationFrame"
 
+import _ from "./utils/underscore"
+
 var Canvax = {
     App: Application
 };
@@ -57,5 +59,7 @@ Canvax.Event = {
 }
 
 Canvax.AnimationFrame = AnimationFrame;
+
+Canvax._ = _;
 
 export default Canvax;

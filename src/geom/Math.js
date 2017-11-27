@@ -8,6 +8,7 @@
  **/
 
 import SmoothSpline from "../geom/SmoothSpline";
+import _ from "./underscore";
 
 
 var _cache = {

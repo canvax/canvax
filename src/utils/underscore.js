@@ -69,6 +69,12 @@ each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp'], function(n
   };
 });
 
+if (!_.isArguments(arguments)) {
+  _.isArguments = function (obj) {
+    return !!(obj && _.has(obj, 'callee'));
+  };
+}
+
 if (typeof (/./) !== 'function') {
   _.isFunction = function(obj) {
     return typeof obj === 'function';
@@ -134,6 +140,37 @@ _.isWindow = function( obj ) {
    return obj != null && obj == obj.window;
 };
 
+// Internal implementation of a recursive `flatten` function.
+var flatten = function (input, shallow, output) {
+  if (shallow && _.every(input, _.isArray)) {
+    return concat.apply(output, input);
+  }
+  each(input, function (value) {
+    if (_.isArray(value) || _.isArguments(value)) {
+      shallow ? push.apply(output, value) : flatten(value, shallow, output);
+    } else {
+      output.push(value);
+    }
+  });
+  return output;
+};
+
+// Flatten out an array, either recursively (by default), or just one level.
+_.flatten = function (array, shallow) {
+  return flatten(array, shallow, []);
+};
+
+_.every = _.all = function (obj, iterator, context) {
+  iterator || (iterator = _.identity);
+  var result = true;
+  if (obj == null) return result;
+  if (nativeEvery && obj.every === nativeEvery) return obj.every(iterator, context);
+  each(obj, function (value, index, list) {
+    if (!(result = result && iterator.call(context, value, index, list))) return breaker;
+  });
+  return !!result;
+};
+
 /**
 *
 *如果是深度extend，第一个参数就设置为true
@@ -186,9 +223,11 @@ _.extend = function() {
       }  
   }  
   return target;  
-}; 
+};
+
 _.clone = function(obj) {
   if (!_.isObject(obj)) return obj;
   return _.isArray(obj) ? obj.slice() : _.extend(true, {}, obj);
 };
+
 export default _;
