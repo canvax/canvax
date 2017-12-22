@@ -83,21 +83,31 @@ var possibleConstructorReturn = function (self, call) {
   return call && (typeof call === "object" || typeof call === "function") ? call : self;
 };
 
-var _$1 = {};
+var _ = {};
 var breaker = {};
 var ArrayProto = Array.prototype;
 var ObjProto = Object.prototype;
+
+// Create quick reference variables for speed access to core prototypes.
+var push = ArrayProto.push;
+var slice = ArrayProto.slice;
+var concat = ArrayProto.concat;
 var toString = ObjProto.toString;
 var hasOwnProperty = ObjProto.hasOwnProperty;
 
+// All **ECMAScript 5** native function implementations that we hope to use
+// are declared here.
 var nativeForEach = ArrayProto.forEach;
+var nativeMap = ArrayProto.map;
 var nativeFilter = ArrayProto.filter;
+var nativeEvery = ArrayProto.every;
+var nativeSome = ArrayProto.some;
 var nativeIndexOf = ArrayProto.indexOf;
 var nativeIsArray = Array.isArray;
 var nativeKeys = Object.keys;
 
-_$1.values = function (obj) {
-  var keys = _$1.keys(obj);
+_.values = function (obj) {
+  var keys = _.keys(obj);
   var length = keys.length;
   var values = new Array(length);
   for (var i = 0; i < length; i++) {
@@ -106,19 +116,19 @@ _$1.values = function (obj) {
   return values;
 };
 
-_$1.keys = nativeKeys || function (obj) {
+_.keys = nativeKeys || function (obj) {
   if (obj !== Object(obj)) throw new TypeError('Invalid object');
   var keys = [];
   for (var key in obj) {
-    if (_$1.has(obj, key)) keys.push(key);
+    if (_.has(obj, key)) keys.push(key);
   }return keys;
 };
 
-_$1.has = function (obj, key) {
+_.has = function (obj, key) {
   return hasOwnProperty.call(obj, key);
 };
 
-var each = _$1.each = _$1.forEach = function (obj, iterator, context) {
+var each = _.each = _.forEach = function (obj, iterator, context) {
   if (obj == null) return;
   if (nativeForEach && obj.forEach === nativeForEach) {
     obj.forEach(iterator, context);
@@ -127,18 +137,18 @@ var each = _$1.each = _$1.forEach = function (obj, iterator, context) {
       if (iterator.call(context, obj[i], i, obj) === breaker) return;
     }
   } else {
-    var keys = _$1.keys(obj);
+    var keys = _.keys(obj);
     for (var i = 0, length = keys.length; i < length; i++) {
       if (iterator.call(context, obj[keys[i]], keys[i], obj) === breaker) return;
     }
   }
 };
 
-_$1.compact = function (array) {
-  return _$1.filter(array, _$1.identity);
+_.compact = function (array) {
+  return _.filter(array, _.identity);
 };
 
-_$1.filter = _$1.select = function (obj, iterator, context) {
+_.filter = _.select = function (obj, iterator, context) {
   var results = [];
   if (obj == null) return results;
   if (nativeFilter && obj.filter === nativeFilter) return obj.filter(iterator, context);
@@ -149,58 +159,64 @@ _$1.filter = _$1.select = function (obj, iterator, context) {
 };
 
 each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp'], function (name) {
-  _$1['is' + name] = function (obj) {
+  _['is' + name] = function (obj) {
     return toString.call(obj) == '[object ' + name + ']';
   };
 });
 
+if (!_.isArguments(arguments)) {
+  _.isArguments = function (obj) {
+    return !!(obj && _.has(obj, 'callee'));
+  };
+}
+
 {
-  _$1.isFunction = function (obj) {
+  _.isFunction = function (obj) {
     return typeof obj === 'function';
   };
 }
 
-_$1.isFinite = function (obj) {
+_.isFinite = function (obj) {
   return isFinite(obj) && !isNaN(parseFloat(obj));
 };
 
-_$1.isNaN = function (obj) {
-  return _$1.isNumber(obj) && obj != +obj;
+_.isNaN = function (obj) {
+  return _.isNumber(obj) && obj != +obj;
 };
 
-_$1.isBoolean = function (obj) {
+_.isBoolean = function (obj) {
   return obj === true || obj === false || toString.call(obj) == '[object Boolean]';
 };
 
-_$1.isNull = function (obj) {
+_.isNull = function (obj) {
   return obj === null;
 };
 
-_$1.isEmpty = function (obj) {
+_.isEmpty = function (obj) {
   if (obj == null) return true;
-  if (_$1.isArray(obj) || _$1.isString(obj)) return obj.length === 0;
+  if (_.isArray(obj) || _.isString(obj)) return obj.length === 0;
   for (var key in obj) {
-    if (_$1.has(obj, key)) return false;
+    if (_.has(obj, key)) return false;
   }return true;
 };
 
-_$1.isElement = function (obj) {
+_.isElement = function (obj) {
   return !!(obj && obj.nodeType === 1);
 };
 
-_$1.isArray = nativeIsArray || function (obj) {
+_.isArray = nativeIsArray || function (obj) {
   return toString.call(obj) == '[object Array]';
 };
 
-_$1.isObject = function (obj) {
+_.isObject = function (obj) {
   return obj === Object(obj);
 };
 
-_$1.identity = function (value) {
+_.identity = function (value) {
   return value;
 };
 
-_$1.indexOf = function (array, item, isSorted) {
+_.indexOf = function (array, item, isSorted) {
   if (array == null) return -1;
   var i = 0,
       length = array.length;
@@ -208,7 +224,7 @@ _$1.indexOf = function (array, item, isSorted) {
     if (typeof isSorted == 'number') {
       i = isSorted < 0 ? Math.max(0, length + isSorted) : isSorted;
     } else {
-      i = _$1.sortedIndex(array, item);
+      i = _.sortedIndex(array, item);
       return array[i] === item ? i : -1;
     }
   }
@@ -218,20 +234,163 @@ _$1.indexOf = function (array, item, isSorted) {
   }return -1;
 };
 
-_$1.isWindow = function (obj) {
+_.isWindow = function (obj) {
   return obj != null && obj == obj.window;
+};
+
+// Internal implementation of a recursive `flatten` function.
+var flatten = function flatten(input, shallow, output) {
+  if (shallow && _.every(input, _.isArray)) {
+    return concat.apply(output, input);
+  }
+  each(input, function (value) {
+    if (_.isArray(value) || _.isArguments(value)) {
+      shallow ? push.apply(output, value) : flatten(value, shallow, output);
+    } else {
+      output.push(value);
+    }
+  });
+  return output;
+};
+
+// Flatten out an array, either recursively (by default), or just one level.
+_.flatten = function (array, shallow) {
+  return flatten(array, shallow, []);
+};
+
+_.every = _.all = function (obj, iterator, context) {
+  iterator || (iterator = _.identity);
+  var result = true;
+  if (obj == null) return result;
+  if (nativeEvery && obj.every === nativeEvery) return obj.every(iterator, context);
+  each(obj, function (value, index, list) {
+    if (!(result = result && iterator.call(context, value, index, list))) return breaker;
+  });
+  return !!result;
+};
+
+// Return the minimum element (or element-based computation).
+_.min = function (obj, iterator, context) {
+  if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
+    return Math.min.apply(Math, obj);
+  }
+  if (!iterator && _.isEmpty(obj)) return Infinity;
+  var result = { computed: Infinity, value: Infinity };
+  each(obj, function (value, index, list) {
+    var computed = iterator ? iterator.call(context, value, index, list) : value;
+    computed < result.computed && (result = { value: value, computed: computed });
+  });
+  return result.value;
+};
+// Return the maximum element or (element-based computation).
+// Can't optimize arrays of integers longer than 65,535 elements.
+// See [WebKit Bug 80797](https://bugs.webkit.org/show_bug.cgi?id=80797)
+_.max = function (obj, iterator, context) {
+  if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
+    return Math.max.apply(Math, obj);
+  }
+  if (!iterator && _.isEmpty(obj)) return -Infinity;
+  var result = { computed: -Infinity, value: -Infinity };
+  each(obj, function (value, index, list) {
+    var computed = iterator ? iterator.call(context, value, index, list) : value;
+    computed > result.computed && (result = { value: value, computed: computed });
+  });
+  return result.value;
+};
+
+// Return the first value which passes a truth test. Aliased as `detect`.
+_.find = _.detect = function (obj, iterator, context) {
+  var result;
+  any(obj, function (value, index, list) {
+    if (iterator.call(context, value, index, list)) {
+      result = value;
+      return true;
+    }
+  });
+  return result;
+};
+// Determine if at least one element in the object matches a truth test.
+// Delegates to **ECMAScript 5**'s native `some` if available.
+// Aliased as `any`.
+var any = _.some = _.any = function (obj, iterator, context) {
+  iterator || (iterator = _.identity);
+  var result = false;
+  if (obj == null) return result;
+  if (nativeSome && obj.some === nativeSome) return obj.some(iterator, context);
+  each(obj, function (value, index, list) {
+    if (result || (result = iterator.call(context, value, index, list))) return breaker;
+  });
+  return !!result;
+};
+// Return a version of the array that does not contain the specified value(s).
+_.without = function (array) {
+  return _.difference(array, slice.call(arguments, 1));
+};
+// Take the difference between one array and a number of other arrays.
+// Only the elements present in just the first array will remain.
+_.difference = function (array) {
+  var rest = concat.apply(ArrayProto, slice.call(arguments, 1));
+  return _.filter(array, function (value) {
+    return !_.contains(rest, value);
+  });
+};
+// Produce a duplicate-free version of the array. If the array has already
+// been sorted, you have the option of using a faster algorithm.
+// Aliased as `unique`.
+_.uniq = _.unique = function (array, isSorted, iterator, context) {
+  if (_.isFunction(isSorted)) {
+    context = iterator;
+    iterator = isSorted;
+    isSorted = false;
+  }
+  var initial = iterator ? _.map(array, iterator, context) : array;
+  var results = [];
+  var seen = [];
+  each(initial, function (value, index) {
+    if (isSorted ? !index || seen[seen.length - 1] !== value : !_.contains(seen, value)) {
+      seen.push(value);
+      results.push(array[index]);
+    }
+  });
+  return results;
+};
+// Return the results of applying the iterator to each element.
+// Delegates to **ECMAScript 5**'s native `map` if available.
+_.map = _.collect = function (obj, iterator, context) {
+  var results = [];
+  if (obj == null) return results;
+  if (nativeMap && obj.map === nativeMap) return obj.map(iterator, context);
+  each(obj, function (value, index, list) {
+    results.push(iterator.call(context, value, index, list));
+  });
+  return results;
+};
+// Determine if the array or object contains a given value (using `===`).
+// Aliased as `include`.
+_.contains = _.include = function (obj, target) {
+  if (obj == null) return false;
+  if (nativeIndexOf && obj.indexOf === nativeIndexOf) return obj.indexOf(target) != -1;
+  return any(obj, function (value) {
+    return value === target;
+  });
+};
+
+// Convenience version of a common use case of `map`: fetching a property.
+_.pluck = function (obj, key) {
+  return _.map(obj, function (value) {
+    return value[key];
+  });
 };
 
 /**
 *
 *如果是深度extend，第一个参数就设置为true
 */
-_$1.extend = function () {
+_.extend = function () {
   var options,
       name,
       src,
       copy,
-      clone,
       target = arguments[0] || {},
       i = 1,
       length = arguments.length,
@@ -241,7 +400,7 @@ _$1.extend = function () {
     target = arguments[1] || {};
     i = 2;
   }
-  if ((typeof target === 'undefined' ? 'undefined' : _typeof(target)) !== "object" && !_$1.isFunction(target)) {
+  if ((typeof target === 'undefined' ? 'undefined' : _typeof(target)) !== "object" && !_.isFunction(target)) {
     target = {};
   }
   if (length === i) {
@@ -257,31 +416,20 @@ _$1.extend = function () {
           continue;
         }
 
-        if (deep && copy && _$1.isObject(copy) && !_$1.isArray(copy)) {
-          target[name] = _$1.extend(deep, clone, copy);
+        if (deep && copy && _.isObject(copy) && !_.isArray(copy) && !_.isFunction(copy)) {
+          target[name] = _.extend(deep, src, copy);
         } else {
           target[name] = copy;
         }
-        /*
-        if ( deep && copy ) {  
-            if ( _.isArray(copy) ) {  
-                clone = src && _.isArray(src) ? src : [];  
-            } else {  
-                clone = src && _.isObject(src) ? src : {};  
-            }  
-            target[ name ] = _.extend( deep, clone, copy );  
-        } else if ( copy !== undefined ) {  
-            target[ name ] = copy;  
-        }  
-        */
       }
     }
   }
   return target;
 };
-_$1.clone = function (obj) {
-  if (!_$1.isObject(obj)) return obj;
-  return _$1.isArray(obj) ? obj.slice() : _$1.extend(true, {}, obj);
+
+_.clone = function (obj) {
+  if (!_.isObject(obj)) return obj;
+  return _.isArray(obj) ? obj.slice() : _.extend(true, {}, obj);
 };
 
 /**
@@ -302,7 +450,6 @@ var Utils = {
         return this._UID++;
     },
     createId: function createId(name) {
-        if (!name) {}
         //if end with a digit, then append an undersBase before appending
         var charCode = name.charCodeAt(name.length - 1);
         if (charCode >= 48 && charCode <= 57) name += "_";
@@ -432,10 +579,10 @@ var Point = function () {
 var CanvaxEvent = function CanvaxEvent(evt, params) {
 
     var eventType = "CanvaxEvent";
-    if (_$1.isString(evt)) {
+    if (_.isString(evt)) {
         eventType = evt;
     }
-    if (_$1.isObject(evt) && evt.type) {
+    if (_.isObject(evt) && evt.type) {
         eventType = evt.type;
     }
 
@@ -663,7 +810,7 @@ var addOrRmoveEventHand = function addOrRmoveEventHand(domHand, ieHand) {
 var $ = {
     // dom操作相关代码
     query: function query(el) {
-        if (_$1.isString(el)) {
+        if (_.isString(el)) {
             return document.getElementById(el);
         }
         if (el.nodeType == 1) {
@@ -789,7 +936,7 @@ var EventHandler = function EventHandler(canvax, opt) {
         end: "panend"
     };
 
-    _$1.extend(true, this, opt);
+    _.extend(true, this, opt);
 };
 
 //这样的好处是document.compareDocumentPosition只会在定义的时候执行一次。
@@ -820,7 +967,7 @@ EventHandler.prototype = {
             me.types = _mouseEventTypes;
         }
 
-        _$1.each(me.types, function (type) {
+        _.each(me.types, function (type) {
             //不再关心浏览器环境是否 'ontouchstart' in window 
             //而是直接只管传给事件模块的是一个原生dom还是 jq对象 or hammer对象等
             if (me.target.nodeType == 1) {
@@ -907,7 +1054,7 @@ EventHandler.prototype = {
                     cloneObject.context.globalAlpha = curMouseTarget._globalAlpha;
                 } else {
                     //drag move ing
-                    me._dragMoveHander(e, curMouseTarget, 0);
+                    me._dragIngHander(e, curMouseTarget, 0);
                 }
                 me._draging = true;
             } else {
@@ -1024,7 +1171,7 @@ EventHandler.prototype = {
             if (e.type == me.drag.start) {
                 //dragstart的时候touch已经准备好了target， curPointsTarget 里面只要有一个是有效的
                 //就认为drags开始
-                _$1.each(me.curPointsTarget, function (child, i) {
+                _.each(me.curPointsTarget, function (child, i) {
                     if (child && child.dragEnabled) {
                         //只要有一个元素就认为正在准备drag了
                         me._draging = true;
@@ -1050,9 +1197,9 @@ EventHandler.prototype = {
             //dragIng
             if (e.type == me.drag.move) {
                 if (me._draging) {
-                    _$1.each(me.curPointsTarget, function (child, i) {
+                    _.each(me.curPointsTarget, function (child, i) {
                         if (child && child.dragEnabled) {
-                            me._dragMoveHander(e, child, i);
+                            me._dragIngHander(e, child, i);
                         }
                     });
                 }
@@ -1061,7 +1208,7 @@ EventHandler.prototype = {
             //drag结束
             if (e.type == me.drag.end) {
                 if (me._draging) {
-                    _$1.each(me.curPointsTarget, function (child, i) {
+                    _.each(me.curPointsTarget, function (child, i) {
                         if (child && child.dragEnabled) {
                             me._dragEnd(e, child, 0);
                             child.fire("dragend");
@@ -1081,7 +1228,7 @@ EventHandler.prototype = {
         var me = this;
         var root = me.canvax;
         var curTouchs = [];
-        _$1.each(e.point, function (touch) {
+        _.each(e.point, function (touch) {
             curTouchs.push({
                 x: CanvaxEvent.pageX(touch) - root.viewOffset.left,
                 y: CanvaxEvent.pageY(touch) - root.viewOffset.top
@@ -1093,13 +1240,13 @@ EventHandler.prototype = {
         var me = this;
         var root = me.canvax;
         var touchesTarget = [];
-        _$1.each(touchs, function (touch) {
+        _.each(touchs, function (touch) {
             touchesTarget.push(root.getObjectsUnderPoint(touch, 1)[0]);
         });
         return touchesTarget;
     },
     /*
-    *第三方库的事件系统------------------------------------------------begin
+    *第三方库的事件系统------------------------------------------------end
     */
 
     /*
@@ -1111,7 +1258,7 @@ EventHandler.prototype = {
         }
         var me = this;
         var hasChild = false;
-        _$1.each(childs, function (child, i) {
+        _.each(childs, function (child, i) {
             if (child) {
                 hasChild = true;
                 var ce = new CanvaxEvent(e);
@@ -1145,7 +1292,7 @@ EventHandler.prototype = {
         return _dragDuplicate;
     },
     //drag 中 的处理函数
-    _dragMoveHander: function _dragMoveHander(e, target, i) {
+    _dragIngHander: function _dragIngHander(e, target, i) {
 
         var me = this;
         var root = me.canvax;
@@ -1157,7 +1304,7 @@ EventHandler.prototype = {
         target.moveing = true;
         target.context.x += _point.x - target._dragPoint.x;
         target.context.y += _point.y - target._dragPoint.y;
-        target.fire("dragmove");
+        target.fire("draging");
         target.moveing = _moveStage;
         target._noHeart = false;
         //同步完毕本尊的位置
@@ -1167,7 +1314,9 @@ EventHandler.prototype = {
         _dragDuplicate._transform = target.getConcatenatedMatrix();
 
         //worldTransform在renderer的时候计算
-        //_dragDuplicate.worldTransform = null;
+        _dragDuplicate.worldTransform = null;
+
+        //setWorldTransform都统一在render中执行，这里注释掉
         //_dragDuplicate.setWorldTransform();
 
         //直接修改的_transform不会出发心跳上报， 渲染引擎不制动这个stage需要绘制。
@@ -1182,7 +1331,7 @@ EventHandler.prototype = {
 
         //_dragDuplicate 复制在_bufferStage 中的副本
         var _dragDuplicate = root._bufferStage.getChildById(target.id);
-        _dragDuplicate.destroy();
+        _dragDuplicate && _dragDuplicate.destroy();
 
         target.context.globalAlpha = target._globalAlpha;
     }
@@ -1217,7 +1366,7 @@ EventManager.prototype = {
         }
         var addResult = true;
         var self = this;
-        _$1.each(type.split(" "), function (type) {
+        _.each(type.split(" "), function (type) {
             var map = self._eventMap[type];
             if (!map) {
                 map = self._eventMap[type] = [];
@@ -1226,7 +1375,7 @@ EventManager.prototype = {
                 return true;
             }
 
-            if (_$1.indexOf(map, listener) == -1) {
+            if (_.indexOf(map, listener) == -1) {
                 map.push(listener);
                 self._eventEnabled = true;
                 return true;
@@ -1254,7 +1403,7 @@ EventManager.prototype = {
                 if (map.length == 0) {
                     delete this._eventMap[type];
                     //如果这个如果这个时候child没有任何事件侦听
-                    if (_$1.isEmpty(this._eventMap)) {
+                    if (_.isEmpty(this._eventMap)) {
                         //那么该元素不再接受事件的检测
                         this._eventEnabled = false;
                     }
@@ -1274,7 +1423,7 @@ EventManager.prototype = {
             delete this._eventMap[type];
 
             //如果这个如果这个时候child没有任何事件侦听
-            if (_$1.isEmpty(this._eventMap)) {
+            if (_.isEmpty(this._eventMap)) {
                 //那么该元素不再接受事件的检测
                 this._eventEnabled = false;
             }
@@ -1383,20 +1532,21 @@ var EventDispatcher = function (_EventManager) {
     }, {
         key: "fire",
         value: function fire(eventType, params) {
+            //{currentTarget,point,target,type,_stopPropagation}
             var e = new CanvaxEvent(eventType);
 
             if (params) {
                 for (var p in params) {
-                    if (p in e) {
-                        //params中的数据不能覆盖event属性
-                    } else {
+                    if (p != "type") {
                         e[p] = params[p];
                     }
+                    //然后，currentTarget要修正为自己
+                    e.currentTarget = this;
                 }
             }
 
             var me = this;
-            _$1.each(eventType.split(" "), function (eType) {
+            _.each(eventType.split(" "), function (eType) {
                 e.currentTarget = me;
                 me.dispatchEvent(e);
             });
@@ -2669,7 +2819,7 @@ function destroyFrame($frame) {
  * @result tween
  */
 function registTween(options) {
-    var opt = _$1.extend({
+    var opt = _.extend({
         from: null,
         to: null,
         duration: 500,
@@ -2773,14 +2923,14 @@ function Observe(scope) {
     var Publics = _Publics;
 
     function loop(name, val) {
-        if (_$1.indexOf(_Publics, name) === -1) {
+        if (_.indexOf(_Publics, name) === -1) {
             //非 _Publics 中的值，都要先设置好对应的val到model上
             model[name] = val;
         }
 
         var valueType = typeof val === "undefined" ? "undefined" : _typeof(val);
 
-        if (_$1.indexOf(Publics, name) > -1) {
+        if (_.indexOf(Publics, name) > -1) {
             return;
         }
 
@@ -2856,7 +3006,7 @@ function Observe(scope) {
 
     pmodel = defineProperties(pmodel, accessores, Publics); //生成一个空的ViewModel
 
-    _$1.forEach(Publics, function (name) {
+    _.forEach(Publics, function (name) {
         if (scope[name]) {
             //然后为函数等不被监控的属性赋值
             if (typeof scope[name] == "function") {
@@ -3077,7 +3227,7 @@ var DisplayObject = function (_EventDispatcher) {
             //平凡的clone数据非常的耗时，还是走回原来的路
             //var _contextATTRS = _.extend( true , _.clone(CONTEXT_DEFAULT), opt.context );
 
-            _$1.extend(true, _contextATTRS, opt.context);
+            _.extend(true, _contextATTRS, opt.context);
 
             //有些引擎内部设置context属性的时候是不用上报心跳的，比如做热点检测的时候
             self._notWatch = false;
@@ -3090,7 +3240,13 @@ var DisplayObject = function (_EventDispatcher) {
                 //下面的这些属性变化，都会需要重新组织矩阵属性 _transform 
                 var obj = self; //this.$owner;
 
-                if (_$1.indexOf(TRANSFORM_PROPS, name) > -1) {
+                if (!obj.context) {
+                    //如果这个obj的context已经不存在了，那么就什么都不处理，
+                    //TODO:后续还要把自己给destroy 并且要把在 动画队列里面的动画也干掉
+                    return;
+                }
+
+                if (_.indexOf(TRANSFORM_PROPS, name) > -1) {
                     obj._updateTransform();
                     obj._transformChange = true;
                 }
@@ -3100,7 +3256,10 @@ var DisplayObject = function (_EventDispatcher) {
                 }
 
                 if (obj.$watch) {
+                    //执行的内部$watch的时候必须把_notWatch 设置为true，否则会死循环调用
+                    obj._notWatch = true;
                     obj.$watch(name, value, preValue);
+                    obj._notWatch = false;
                 }
 
                 if (obj._noHeart) {
@@ -3131,7 +3290,7 @@ var DisplayObject = function (_EventDispatcher) {
         value: function clone(myself) {
             var conf = {
                 id: this.id,
-                context: _$1.clone(this.context.$model),
+                context: _.clone(this.context.$model),
                 isClone: true
             };
 
@@ -3258,7 +3417,7 @@ var DisplayObject = function (_EventDispatcher) {
     }, {
         key: "setEventEnable",
         value: function setEventEnable(bool) {
-            if (_$1.isBoolean(bool)) {
+            if (_.isBoolean(bool)) {
                 this._eventEnabled = bool;
                 return true;
             }
@@ -3275,7 +3434,7 @@ var DisplayObject = function (_EventDispatcher) {
             if (!this.parent) {
                 return;
             }
-            return _$1.indexOf(this.parent.children, this);
+            return _.indexOf(this.parent.children, this);
         }
 
         /*
@@ -3292,7 +3451,7 @@ var DisplayObject = function (_EventDispatcher) {
             var fromIndex = this.getIndex();
             var toIndex = 0;
 
-            if (_$1.isNumber(num)) {
+            if (_.isNumber(num)) {
                 if (num == 0) {
                     //原地不动
                     return;
@@ -3321,7 +3480,7 @@ var DisplayObject = function (_EventDispatcher) {
             var pcl = this.parent.children.length;
             var toIndex = pcl;
 
-            if (_$1.isNumber(num)) {
+            if (_.isNumber(num)) {
                 if (num == 0) {
                     //原地不动
                     return;
@@ -3489,10 +3648,10 @@ var DisplayObject = function (_EventDispatcher) {
             var to = toContent;
             var from = null;
             for (var p in to) {
-                if (_$1.isObject(to[p])) {
+                if (_.isObject(to[p])) {
 
                     //options必须传递一份copy出去，比如到下一个animate
-                    this.animate(to[p], _$1.extend({}, options), context[p]);
+                    this.animate(to[p], _.extend({}, options), context[p]);
                     //如果是个object
                     continue;
                 }
@@ -3649,7 +3808,7 @@ var DisplayObjectContainer = function (_DisplayObject) {
     }, {
         key: "removeChild",
         value: function removeChild(child) {
-            return this.removeChildAt(_$1.indexOf(this.children, child));
+            return this.removeChildAt(_.indexOf(this.children, child));
         }
     }, {
         key: "removeChildAt",
@@ -3746,13 +3905,13 @@ var DisplayObjectContainer = function (_DisplayObject) {
     }, {
         key: "getChildIndex",
         value: function getChildIndex(child) {
-            return _$1.indexOf(this.children, child);
+            return _.indexOf(this.children, child);
         }
     }, {
         key: "setChildIndex",
         value: function setChildIndex(child, index) {
             if (child.parent != this) return;
-            var oldIndex = _$1.indexOf(this.children, child);
+            var oldIndex = _.indexOf(this.children, child);
             if (index == oldIndex) return;
             this.children.splice(oldIndex, 1);
             this.children.splice(index, 0, child);
@@ -3937,7 +4096,7 @@ var SystemRenderer = function () {
         key: '_convertCanvax',
         value: function _convertCanvax(opt) {
             var me = this;
-            _$1.each(me.app.children, function (stage) {
+            _.each(me.app.children, function (stage) {
                 stage.context[opt.name] = opt.value;
             });
         }
@@ -4007,7 +4166,7 @@ var SystemRenderer = function () {
                 }
             } else {
                 //无条件要求全部刷新，一般用在resize等。
-                _$1.each(self.app.children, function (stage, i) {
+                _.each(self.app.children, function (stage, i) {
                     self.app.convertStages[stage.id] = {
                         stage: stage,
                         convertShapes: {}
@@ -4175,7 +4334,7 @@ var CanvasRenderer = function (_SystemRenderer) {
         value: function render(app) {
             var me = this;
             me.app = app;
-            _$1.each(_$1.values(app.convertStages), function (convertStage) {
+            _.each(_.values(app.convertStages), function (convertStage) {
                 me.renderStage(convertStage.stage);
             });
             app.convertStages = {};
@@ -4211,7 +4370,7 @@ var CanvasRenderer = function (_SystemRenderer) {
 
             globalAlpha *= $MC.globalAlpha;
 
-            if (!$MC.visible || globalAlpha <= 0) {
+            if (!$MC.visible) {
                 return;
             }
 
@@ -4228,10 +4387,15 @@ var CanvasRenderer = function (_SystemRenderer) {
                     displayObject._draw(displayObject.graphics); //_draw会完成绘制准备好 graphicsData
                 }
 
-                this.CGR.render(displayObject, stage, globalAlpha);
+                if (globalAlpha) {
+                    this.CGR.render(displayObject, stage, globalAlpha);
+                }
             }
 
             if (displayObject.type == "text") {
+                if (!globalAlpha) {
+                    return;
+                }
                 //如果是文本
                 var ctx = stage.ctx;
                 ctx.setTransform.apply(ctx, displayObject.worldTransform.toArray());
@@ -4377,7 +4541,7 @@ var Application = function (_DisplayObjectContain) {
                     ctx.resize(me.width, me.height);
                 }
             };
-            _$1.each(this.children, function (s, i) {
+            _.each(this.children, function (s, i) {
                 s.context.$model.width = me.width;
                 s.context.$model.height = me.height;
                 reSizeCanvas(s.canvas);
@@ -4496,7 +4660,7 @@ var Application = function (_DisplayObjectContain) {
             var canvas = Base._createCanvas("curr_base64_canvas", this.width, this.height);
             var ctx = canvas.getContext("2d");
 
-            _$1.each(this.children, function (stage) {
+            _.each(this.children, function (stage) {
                 ctx.drawImage(stage.canvas, 0, 0);
             });
 
@@ -5174,7 +5338,7 @@ var Graphics = function () {
             //会把所有的data都修改
             //TODO: 后面需要修改, 能精准的确定是修改 graphicsData 中的哪个data
             if (this.graphicsData.length) {
-                _$1.each(this.graphicsData, function (gd, i) {
+                _.each(this.graphicsData, function (gd, i) {
                     gd.synsStyle(g);
                 });
             }
@@ -5460,7 +5624,8 @@ var Graphics = function () {
                 }
             }
 
-            this.currentPath = null;
+            //this.currentPath = null;
+            this.beginPath();
 
             var data = new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, shape);
 
@@ -5663,7 +5828,7 @@ var Shape = function (_DisplayObject) {
             lineWidth: opt.context.lineWidth || null
         };
 
-        var _context = _$1.extend(true, styleContext, opt.context);
+        var _context = _.extend(true, styleContext, opt.context);
         opt.context = _context;
 
         if (opt.id === undefined && opt.type !== undefined) {
@@ -5721,7 +5886,7 @@ var Shape = function (_DisplayObject) {
     }, {
         key: "$watch",
         value: function $watch(name, value, preValue) {
-            if (_$1.indexOf(STYLE_PROPS, name) > -1) {
+            if (_.indexOf(STYLE_PROPS, name) > -1) {
                 this.graphics.setStyle(this.context);
             }
             this.watch(name, value, preValue);
@@ -5781,7 +5946,7 @@ var Text = function (_DisplayObject) {
 
         opt.type = "text";
 
-        opt.context = _$1.extend({
+        opt.context = _.extend({
             font: "",
             fontSize: 13, //字体大小默认13
             fontWeight: "normal",
@@ -5813,7 +5978,7 @@ var Text = function (_DisplayObject) {
         value: function $watch(name, value, preValue) {
 
             //context属性有变化的监听函数
-            if (_$1.indexOf(this.fontProperts, name) >= 0) {
+            if (_.indexOf(this.fontProperts, name) >= 0) {
                 this.context[name] = value;
                 //如果修改的是font的某个内容，就重新组装一遍font的值，
                 //然后通知引擎这次对context的修改上报心跳
@@ -5828,7 +5993,7 @@ var Text = function (_DisplayObject) {
             // 简单判断不做严格类型检测
             for (var p in style) {
                 if (p != "textBaseline" && p in ctx) {
-                    if (style[p] || _$1.isNumber(style[p])) {
+                    if (style[p] || _.isNumber(style[p])) {
                         if (p == "globalAlpha") {
                             //透明度要从父节点继承
                             ctx[p] *= style[p];
@@ -5886,7 +6051,7 @@ var Text = function (_DisplayObject) {
             var self = this;
             var fontArr = [];
 
-            _$1.each(this.fontProperts, function (p) {
+            _.each(this.fontProperts, function (p) {
                 var fontP = self.context[p];
                 if (p == "fontSize") {
                     fontP = parseFloat(fontP) + "px";
@@ -6056,9 +6221,9 @@ var Text = function (_DisplayObject) {
 function Vector(x, y) {
     var vx = 0,
         vy = 0;
-    if (arguments.length == 1 && _$1.isObject(x)) {
+    if (arguments.length == 1 && _.isObject(x)) {
         var arg = arguments[0];
-        if (_$1.isArray(arg)) {
+        if (_.isArray(arg)) {
             vx = arg[0];
             vy = arg[1];
         } else if (arg.hasOwnProperty("x") && arg.hasOwnProperty("y")) {
@@ -6147,7 +6312,7 @@ var SmoothSpline = function (opt) {
 
         var rp = [interpolate(p0[0], p1[0], p2[0], p3[0], w, w2, w3), interpolate(p0[1], p1[1], p2[1], p3[1], w, w2, w3)];
 
-        _$1.isFunction(smoothFilter) && smoothFilter(rp);
+        _.isFunction(smoothFilter) && smoothFilter(rp);
 
         ret.push(rp);
     }
@@ -6235,6 +6400,37 @@ function getIsgonPointList(n, r) {
 function getSmoothPointList(pList, smoothFilter) {
     //smoothFilter -- 比如在折线图中。会传一个smoothFilter过来做point的纠正。
     //让y不能超过底部的原点
+    var List = [];
+
+    var Len = pList.length;
+    var _currList = [];
+    _.each(pList, function (point, i) {
+
+        if (isNotValibPoint(point)) {
+            //undefined , [ number, null] 等结构
+            if (_currList.length) {
+                List = List.concat(_getSmoothGroupPointList(_currList, smoothFilter));
+                _currList = [];
+            }
+
+            List.push(point);
+        } else {
+            //有效的point 都push 进_currList 准备做曲线设置
+            _currList.push(point);
+        }
+
+        if (i == Len - 1) {
+            if (_currList.length) {
+                List = List.concat(_getSmoothGroupPointList(_currList, smoothFilter));
+                _currList = [];
+            }
+        }
+    });
+
+    return List;
+}
+
+function _getSmoothGroupPointList(pList, smoothFilter) {
     var obj = {
         points: pList
     };
@@ -6250,6 +6446,15 @@ function getSmoothPointList(pList, smoothFilter) {
     return currL;
 }
 
+function isNotValibPoint(point) {
+    var res = !point || _.isArray(point) && point.length >= 2 && (!_.isNumber(point[0]) || !_.isNumber(point[1])) || "x" in point && !_.isNumber(point.x) || "y" in point && !_.isNumber(point.y);
+
+    return res;
+}
+function isValibPoint(point) {
+    return !isNotValibPoint(point);
+}
+
 var myMath = {
     PI: Math.PI,
     sin: sin,
@@ -6258,7 +6463,9 @@ var myMath = {
     radianToDegree: radianToDegree,
     degreeTo360: degreeTo360,
     getIsgonPointList: getIsgonPointList,
-    getSmoothPointList: getSmoothPointList
+    getSmoothPointList: getSmoothPointList,
+    isNotValibPoint: isNotValibPoint,
+    isValibPoint: isValibPoint
 };
 
 /**
@@ -6279,7 +6486,7 @@ var BrokenLine = function (_Shape) {
 
         opt = Utils.checkOpt(opt);
 
-        var _context = _$1.extend({
+        var _context = _.extend({
             lineType: null,
             smooth: false,
             pointList: [], //{Array}  // 必须，各个顶角坐标
@@ -6287,19 +6494,36 @@ var BrokenLine = function (_Shape) {
         }, opt.context);
 
         if (!opt.isClone && _context.smooth) {
-            _context.pointList = myMath.getSmoothPointList(_context.pointList);
+            _context.pointList = myMath.getSmoothPointList(_context.pointList, _context.smoothFilter);
         }
 
         opt.context = _context;
         opt.type = "brokenline";
 
-        return possibleConstructorReturn(this, (BrokenLine.__proto__ || Object.getPrototypeOf(BrokenLine)).call(this, opt));
+        //保存好原始值
+        var _this = possibleConstructorReturn(this, (BrokenLine.__proto__ || Object.getPrototypeOf(BrokenLine)).call(this, opt));
+
+        _this._pointList = _context.pointList;
+        return _this;
     }
 
     createClass(BrokenLine, [{
         key: "watch",
         value: function watch(name, value, preValue) {
             if (name == "pointList" || name == "smooth" || name == "lineType") {
+                if (name == "pointList" && this.context.smooth) {
+                    this.context.pointList = myMath.getSmoothPointList(value, this.context.smoothFilter);
+                    this._pointList = value;
+                }
+                if (name == "smooth") {
+                    //如果是smooth的切换
+                    if (value) {
+                        //从原始中拿数据重新生成
+                        this.context.pointList = myMath.getSmoothPointList(this._pointList, this.context.smoothFilter);
+                    } else {
+                        this.context.pointList = this._pointList;
+                    }
+                }
                 this.graphics.clear();
             }
         }
@@ -6308,27 +6532,67 @@ var BrokenLine = function (_Shape) {
         value: function draw(graphics) {
             var context = this.context;
             var pointList = context.pointList;
-            if (pointList.length < 2) {
-                //少于2个点就不画了~
-                return this;
+            var beginPath = false;
+
+            for (var i = 0, l = pointList.length; i < l; i++) {
+                var point = pointList[i];
+                var nextPoint = pointList[i + 1];
+                if (myMath.isValibPoint(point)) {
+                    if (!context.lineType || context.lineType == 'solid') {
+                        //实线的绘制
+                        if (!beginPath) {
+                            graphics.moveTo(point[0], point[1]);
+                        } else {
+                            graphics.lineTo(point[0], point[1]);
+                        }
+                    } else if (context.lineType == 'dashed' || context.lineType == 'dotted') {
+                        //如果是虚线
+
+                        //如果是曲线
+                        if (context.smooth) {
+                            //就直接做间隔好了
+                            //TODO: 这个情况会有点稀疏，要优化
+                            if (!beginPath) {
+                                graphics.moveTo(point[0], point[1]);
+                            } else {
+                                graphics.lineTo(point[0], point[1]);
+                                beginPath = false;
+                                i++; //跳过下一个点
+                                continue;
+                            }
+                        } else {
+                            //point 有效，而且 next也有效的话
+                            //直线的虚线
+                            if (myMath.isValibPoint(nextPoint)) {
+                                this.dashedLineTo(graphics, point[0], point[1], nextPoint[0], nextPoint[1], 5);
+                            }
+                        }
+                    }
+
+                    beginPath = true;
+                } else {
+                    beginPath = false;
+                }
             }
+
+            /*
             if (!context.lineType || context.lineType == 'solid') {
                 //默认为实线
                 //TODO:目前如果 有设置smooth 的情况下是不支持虚线的
                 graphics.moveTo(pointList[0][0], pointList[0][1]);
                 for (var i = 1, l = pointList.length; i < l; i++) {
                     graphics.lineTo(pointList[i][0], pointList[i][1]);
-                }
-            } else if (context.lineType == 'dashed' || context.lineType == 'dotted') {
+                };
+              } else if (context.lineType == 'dashed' || context.lineType == 'dotted') {
                 if (context.smooth) {
                     for (var si = 0, sl = pointList.length; si < sl; si++) {
-                        if (si == sl - 1) {
+                        if (si == sl-1) {
                             break;
-                        }
-                        graphics.moveTo(pointList[si][0], pointList[si][1]);
-                        graphics.lineTo(pointList[si + 1][0], pointList[si + 1][1]);
-                        si += 1;
-                    }
+                        };
+                        graphics.moveTo( pointList[si][0] , pointList[si][1] );
+                        graphics.lineTo( pointList[si+1][0] , pointList[si+1][1] );
+                        si+=1;
+                      };
                 } else {
                     //画虚线的方法  
                     for (var i = 1, l = pointList.length; i < l; i++) {
@@ -6337,9 +6601,11 @@ var BrokenLine = function (_Shape) {
                         var fromY = pointList[i - 1][1];
                         var toY = pointList[i][1];
                         this.dashedLineTo(graphics, fromX, fromY, toX, toY, 5);
-                    }
+                    };
                 }
-            }
+                
+            };
+            */
             return this;
         }
     }]);
@@ -6376,7 +6642,7 @@ var Circle$2 = function (_Shape) {
         };
         */
 
-        opt = _$1.extend(true, {
+        opt = _.extend(true, {
             type: "circle",
             xyToInt: false,
             context: {
@@ -6420,7 +6686,7 @@ var Path = function (_Shape) {
         classCallCheck(this, Path);
 
 
-        var _context = _$1.extend({
+        var _context = _.extend({
             pointList: [], //从下面的path中计算得到的边界点的集合
             path: "" //字符串 必须，路径。例如:M 0 0 L 0 10 L 10 10 Z (一个三角形)
             //M = moveto
@@ -6459,9 +6725,9 @@ var Path = function (_Shape) {
             }
             //分拆子分组
             this.__parsePathData = [];
-            var paths = _$1.compact(data.replace(/[Mm]/g, "\\r$&").split('\\r'));
+            var paths = _.compact(data.replace(/[Mm]/g, "\\r$&").split('\\r'));
             var me = this;
-            _$1.each(paths, function (pathStr) {
+            _.each(paths, function (pathStr) {
                 me.__parsePathData.push(me._parseChildPathData(pathStr));
             });
             return this.__parsePathData;
@@ -6759,7 +7025,7 @@ var Droplet = function (_Path) {
 
         classCallCheck(this, Droplet);
 
-        opt = _$1.extend({
+        opt = _.extend({
             type: "droplet",
             context: {
                 hr: 0, //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
@@ -6810,7 +7076,7 @@ var Ellipse$2 = function (_Shape) {
     function Ellipse(opt) {
         classCallCheck(this, Ellipse);
 
-        opt = _$1.extend({
+        opt = _.extend({
             type: "ellipse",
             context: {
                 hr: 0, //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）
@@ -6853,7 +7119,7 @@ var Polygon$2 = function (_Shape) {
     function Polygon(opt) {
         classCallCheck(this, Polygon);
 
-        var _context = _$1.extend({
+        var _context = _.extend({
             lineType: null,
             smooth: false,
             pointList: [], //{Array}  // 必须，各个顶角坐标
@@ -6956,7 +7222,7 @@ var Isogon = function (_Polygon) {
     function Isogon(opt) {
         classCallCheck(this, Isogon);
 
-        var _context = _$1.extend({
+        var _context = _.extend({
             pointList: [], //从下面的r和n计算得到的边界值的集合
             r: 0, //{number},  // 必须，正n边形外接圆半径
             n: 0 //{number},  // 必须，指明正几边形
@@ -6994,10 +7260,6 @@ var Isogon = function (_Polygon) {
  *
  * 对应context的属性有
  * @lineType  可选 虚线 实现 的 类型
- * @xStart    必须，起点横坐标
- * @yStart    必须，起点纵坐标
- * @xEnd      必须，终点横坐标
- * @yEnd      必须，终点纵坐标
  **/
 var Line = function (_Shape) {
     inherits(Line, _Shape);
@@ -7005,7 +7267,7 @@ var Line = function (_Shape) {
     function Line(opt) {
         classCallCheck(this, Line);
 
-        var _context = _$1.extend({
+        var _context = _.extend({
             lineType: null, //可选 虚线 实现 的 类型
             start: {
                 x: 0, // 必须，起点横坐标
@@ -7067,7 +7329,7 @@ var Rect = function (_Shape) {
     function Rect(opt) {
         classCallCheck(this, Rect);
 
-        var _context = _$1.extend({
+        var _context = _.extend({
             width: 0,
             height: 0,
             radius: []
@@ -7162,7 +7424,7 @@ var Sector = function (_Shape) {
     function Sector(opt) {
         classCallCheck(this, Sector);
 
-        var _context = _$1.extend({
+        var _context = _.extend({
             pointList: [], //边界点的集合,私有，从下面的属性计算的来
             r0: 0, // 默认为0，内圆半径指定后将出现内弧，同时扇边长度 = r - r0
             r: 0, //{number},  // 必须，外圆半径
@@ -7300,6 +7562,8 @@ Canvax.Event = {
 };
 
 Canvax.AnimationFrame = AnimationFrame;
+
+Canvax._ = _;
 
 return Canvax;
 

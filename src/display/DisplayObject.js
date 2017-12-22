@@ -117,6 +117,12 @@ export default class DisplayObject extends EventDispatcher
             //下面的这些属性变化，都会需要重新组织矩阵属性 _transform 
             var obj = self;//this.$owner;
 
+            if( !obj.context ){
+                //如果这个obj的context已经不存在了，那么就什么都不处理，
+                //TODO:后续还要把自己给destroy 并且要把在 动画队列里面的动画也干掉
+                return;
+            }
+
             if( _.indexOf( TRANSFORM_PROPS , name ) > -1 ) {
                 obj._updateTransform();
                 obj._transformChange = true;
@@ -127,7 +133,10 @@ export default class DisplayObject extends EventDispatcher
             };
 
             if( obj.$watch ){
+                //执行的内部$watch的时候必须把_notWatch 设置为true，否则会死循环调用
+                obj._notWatch = true;
                 obj.$watch( name , value , preValue );
+                obj._notWatch = false;
             };
 
             if( obj._noHeart ){

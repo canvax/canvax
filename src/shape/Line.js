@@ -8,10 +8,6 @@
  *
  * 对应context的属性有
  * @lineType  可选 虚线 实现 的 类型
- * @xStart    必须，起点横坐标
- * @yStart    必须，起点纵坐标
- * @xEnd      必须，终点横坐标
- * @yEnd      必须，终点纵坐标
  **/
 import Shape from "../display/Shape";
 import Utils from "../utils/index";

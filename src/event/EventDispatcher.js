@@ -56,15 +56,16 @@ export default class EventDispatcher extends EventManager
     //params 要传给evt的eventhandler处理函数的参数，会被merge到Canvax event中
     fire(eventType , params)
     {
+        //{currentTarget,point,target,type,_stopPropagation}
         var e = new CanvaxEvent( eventType );
 
         if( params ){
             for( var p in params ){
-                if( p in e ){
-                    //params中的数据不能覆盖event属性
-                } else {
+                if( p != "type" ){
                     e[p] = params[p];
                 }
+                //然后，currentTarget要修正为自己
+                e.currentTarget = this;
             }
         };
 

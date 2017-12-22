@@ -163,7 +163,7 @@ EventHandler.prototype = {
                     cloneObject.context.globalAlpha = curMouseTarget._globalAlpha;
                 } else {
                     //drag move ing
-                    me._dragMoveHander( e , curMouseTarget , 0 );
+                    me._dragIngHander( e , curMouseTarget , 0 );
                 };
                 me._draging = true;
             } else {
@@ -311,7 +311,7 @@ EventHandler.prototype = {
                 if( me._draging ){
                     _.each( me.curPointsTarget , function( child , i ){
                         if( child && child.dragEnabled) {
-                           me._dragMoveHander( e , child , i);
+                           me._dragIngHander( e , child , i);
                         }
                     } )
                 }
@@ -358,7 +358,7 @@ EventHandler.prototype = {
         return touchesTarget;
     },
     /*
-    *第三方库的事件系统------------------------------------------------begin
+    *第三方库的事件系统------------------------------------------------end
     */
 
 
@@ -405,7 +405,7 @@ EventHandler.prototype = {
         return _dragDuplicate;
     },
     //drag 中 的处理函数
-    _dragMoveHander: function(e, target, i) {
+    _dragIngHander: function(e, target, i) {
         
         var me = this;
         var root = me.canvax;
@@ -417,7 +417,7 @@ EventHandler.prototype = {
         target.moveing = true;
         target.context.x += (_point.x - target._dragPoint.x);
         target.context.y += (_point.y - target._dragPoint.y);
-        target.fire("dragmove");
+        target.fire("draging");
         target.moveing = _moveStage;
         target._noHeart = false;
         //同步完毕本尊的位置
@@ -427,7 +427,9 @@ EventHandler.prototype = {
         _dragDuplicate._transform = target.getConcatenatedMatrix();
 
         //worldTransform在renderer的时候计算
-        //_dragDuplicate.worldTransform = null;
+        _dragDuplicate.worldTransform = null;
+
+        //setWorldTransform都统一在render中执行，这里注释掉
         //_dragDuplicate.setWorldTransform();
 
         //直接修改的_transform不会出发心跳上报， 渲染引擎不制动这个stage需要绘制。
@@ -442,7 +444,7 @@ EventHandler.prototype = {
 
         //_dragDuplicate 复制在_bufferStage 中的副本
         var _dragDuplicate = root._bufferStage.getChildById(target.id);
-        _dragDuplicate.destroy();
+        _dragDuplicate && _dragDuplicate.destroy();
 
         target.context.globalAlpha = target._globalAlpha;
     }

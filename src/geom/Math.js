@@ -8,7 +8,7 @@
  **/
 
 import SmoothSpline from "../geom/SmoothSpline";
-import _ from "./underscore";
+import _ from "../utils/underscore";
 
 
 var _cache = {
@@ -83,6 +83,37 @@ function getIsgonPointList( n , r ){
 function getSmoothPointList( pList, smoothFilter ){
     //smoothFilter -- 比如在折线图中。会传一个smoothFilter过来做point的纠正。
     //让y不能超过底部的原点
+    var List = [];
+
+    var Len = pList.length;
+    var _currList = [];
+    _.each( pList, function( point, i ){
+
+        if( isNotValibPoint( point ) ){
+            //undefined , [ number, null] 等结构
+            if( _currList.length ){
+                List = List.concat( _getSmoothGroupPointList( _currList, smoothFilter ) );
+                _currList = [];
+            }
+
+            List.push( point );
+        } else {
+            //有效的point 都push 进_currList 准备做曲线设置
+            _currList.push( point );
+        };
+        
+        if( i == Len-1 ){
+            if( _currList.length ){
+                List = List.concat( _getSmoothGroupPointList( _currList, smoothFilter ) );
+                _currList = [];
+            }
+        }
+    } );
+
+    return List;
+}
+
+function _getSmoothGroupPointList( pList, smoothFilter ){
     var obj = {
         points: pList
     }
@@ -98,6 +129,18 @@ function getSmoothPointList( pList, smoothFilter ){
     return currL;
 }
 
+function isNotValibPoint( point ){
+    var res = !point || 
+    (_.isArray(point) && point.length >= 2 && (!_.isNumber(point[0]) || !_.isNumber(point[1])) ) || 
+    ( "x" in point && !_.isNumber(point.x) ) ||
+    ( "y" in point && !_.isNumber(point.y) )
+
+    return res;
+}
+function isValibPoint( point ){
+    return !isNotValibPoint( point )
+}
+
 export default {
     PI  : Math.PI  ,
     sin : sin      ,
@@ -106,6 +149,8 @@ export default {
     radianToDegree : radianToDegree,
     degreeTo360    : degreeTo360,
     getIsgonPointList : getIsgonPointList,
-    getSmoothPointList: getSmoothPointList   
+    getSmoothPointList: getSmoothPointList,
+    isNotValibPoint : isNotValibPoint,
+    isValibPoint : isValibPoint   
 };
 

@@ -1,16 +1,33 @@
 var _ = {}
 var breaker = {};
 var ArrayProto = Array.prototype, ObjProto = Object.prototype, FuncProto = Function.prototype;
-var
-toString         = ObjProto.toString,
-hasOwnProperty   = ObjProto.hasOwnProperty;
 
-var
-nativeForEach      = ArrayProto.forEach,
-nativeFilter       = ArrayProto.filter,
-nativeIndexOf      = ArrayProto.indexOf,
-nativeIsArray      = Array.isArray,
-nativeKeys         = Object.keys;
+
+// Create quick reference variables for speed access to core prototypes.
+var 
+push = ArrayProto.push,
+slice = ArrayProto.slice,
+concat = ArrayProto.concat,
+toString = ObjProto.toString,
+hasOwnProperty = ObjProto.hasOwnProperty;
+
+// All **ECMAScript 5** native function implementations that we hope to use
+// are declared here.
+var 
+nativeForEach = ArrayProto.forEach,
+nativeMap = ArrayProto.map,
+nativeReduce = ArrayProto.reduce,
+nativeReduceRight = ArrayProto.reduceRight,
+nativeFilter = ArrayProto.filter,
+nativeEvery = ArrayProto.every,
+nativeSome = ArrayProto.some,
+nativeIndexOf = ArrayProto.indexOf,
+nativeLastIndexOf = ArrayProto.lastIndexOf,
+nativeIsArray = Array.isArray,
+nativeKeys = Object.keys,
+nativeBind = FuncProto.bind;
+
+
 
 _.values = function(obj) {
   var keys = _.keys(obj);
@@ -171,12 +188,128 @@ _.every = _.all = function (obj, iterator, context) {
   return !!result;
 };
 
+
+
+
+
+
+// Return the minimum element (or element-based computation).
+_.min = function (obj, iterator, context) {
+  if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
+    return Math.min.apply(Math, obj);
+  }
+  if (!iterator && _.isEmpty(obj)) return Infinity;
+  var result = { computed: Infinity, value: Infinity };
+  each(obj, function (value, index, list) {
+    var computed = iterator ? iterator.call(context, value, index, list) : value;
+    computed < result.computed && (result = { value: value, computed: computed });
+  });
+  return result.value;
+};
+// Return the maximum element or (element-based computation).
+// Can't optimize arrays of integers longer than 65,535 elements.
+// See [WebKit Bug 80797](https://bugs.webkit.org/show_bug.cgi?id=80797)
+_.max = function (obj, iterator, context) {
+  if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
+    return Math.max.apply(Math, obj);
+  }
+  if (!iterator && _.isEmpty(obj)) return -Infinity;
+  var result = { computed: -Infinity, value: -Infinity };
+  each(obj, function (value, index, list) {
+    var computed = iterator ? iterator.call(context, value, index, list) : value;
+    computed > result.computed && (result = { value: value, computed: computed });
+  });
+  return result.value;
+};
+
+// Return the first value which passes a truth test. Aliased as `detect`.
+_.find = _.detect = function (obj, iterator, context) {
+  var result;
+  any(obj, function (value, index, list) {
+    if (iterator.call(context, value, index, list)) {
+      result = value;
+      return true;
+    }
+  });
+  return result;
+};
+// Determine if at least one element in the object matches a truth test.
+// Delegates to **ECMAScript 5**'s native `some` if available.
+// Aliased as `any`.
+var any = _.some = _.any = function (obj, iterator, context) {
+  iterator || (iterator = _.identity);
+  var result = false;
+  if (obj == null) return result;
+  if (nativeSome && obj.some === nativeSome) return obj.some(iterator, context);
+  each(obj, function (value, index, list) {
+    if (result || (result = iterator.call(context, value, index, list))) return breaker;
+  });
+  return !!result;
+};
+// Return a version of the array that does not contain the specified value(s).
+_.without = function (array) {
+  return _.difference(array, slice.call(arguments, 1));
+};
+// Take the difference between one array and a number of other arrays.
+// Only the elements present in just the first array will remain.
+_.difference = function (array) {
+  var rest = concat.apply(ArrayProto, slice.call(arguments, 1));
+  return _.filter(array, function (value) { return !_.contains(rest, value); });
+};
+// Produce a duplicate-free version of the array. If the array has already
+// been sorted, you have the option of using a faster algorithm.
+// Aliased as `unique`.
+_.uniq = _.unique = function (array, isSorted, iterator, context) {
+  if (_.isFunction(isSorted)) {
+    context = iterator;
+    iterator = isSorted;
+    isSorted = false;
+  }
+  var initial = iterator ? _.map(array, iterator, context) : array;
+  var results = [];
+  var seen = [];
+  each(initial, function (value, index) {
+    if (isSorted ? (!index || seen[seen.length - 1] !== value) : !_.contains(seen, value)) {
+      seen.push(value);
+      results.push(array[index]);
+    }
+  });
+  return results;
+};
+// Return the results of applying the iterator to each element.
+// Delegates to **ECMAScript 5**'s native `map` if available.
+_.map = _.collect = function (obj, iterator, context) {
+  var results = [];
+  if (obj == null) return results;
+  if (nativeMap && obj.map === nativeMap) return obj.map(iterator, context);
+  each(obj, function (value, index, list) {
+    results.push(iterator.call(context, value, index, list));
+  });
+  return results;
+};
+// Determine if the array or object contains a given value (using `===`).
+// Aliased as `include`.
+_.contains = _.include = function (obj, target) {
+  if (obj == null) return false;
+  if (nativeIndexOf && obj.indexOf === nativeIndexOf) return obj.indexOf(target) != -1;
+  return any(obj, function (value) {
+    return value === target;
+  });
+};
+
+// Convenience version of a common use case of `map`: fetching a property.
+_.pluck = function (obj, key) {
+  return _.map(obj, function (value) { return value[key]; });
+};
+
+
+
 /**
 *
 *如果是深度extend，第一个参数就设置为true
 */
 _.extend = function() {  
-  var options, name, src, copy, clone,  
+  var options, name, src, copy,  
       target = arguments[0] || {},  
       i = 1,  
       length = arguments.length,  
@@ -202,23 +335,11 @@ _.extend = function() {
                   continue;
               };
               
-              if( deep && copy && _.isObject( copy ) && !_.isArray( copy ) ){
-                  target[ name ] = _.extend( deep, clone, copy ); 
+              if( deep && copy && _.isObject( copy ) && !_.isArray( copy ) && !_.isFunction( copy ) ){
+                  target[ name ] = _.extend( deep, src, copy ); 
               } else {
-                  target[ name ] = copy; 
+                  target[ name ] = copy;
               };
-              /*
-              if ( deep && copy ) {  
-                  if ( _.isArray(copy) ) {  
-                      clone = src && _.isArray(src) ? src : [];  
-                  } else {  
-                      clone = src && _.isObject(src) ? src : {};  
-                  }  
-                  target[ name ] = _.extend( deep, clone, copy );  
-              } else if ( copy !== undefined ) {  
-                  target[ name ] = copy;  
-              }  
-              */
           }  
       }  
   }  

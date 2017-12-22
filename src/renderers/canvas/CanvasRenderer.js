@@ -52,7 +52,7 @@ export default class CanvasRenderer extends SystemRenderer
 
         globalAlpha *= $MC.globalAlpha;
 
-        if( !$MC.visible || globalAlpha <= 0 ){
+        if( !$MC.visible ){
             return;
         };
 
@@ -69,10 +69,15 @@ export default class CanvasRenderer extends SystemRenderer
                 displayObject._draw( displayObject.graphics );//_draw会完成绘制准备好 graphicsData
             };
 
-            this.CGR.render( displayObject , stage, globalAlpha );
+            if( globalAlpha ){
+                this.CGR.render( displayObject , stage, globalAlpha );
+            }
         };
 
         if( displayObject.type == "text" ){
+            if( !globalAlpha ){
+                return;
+            }
             //如果是文本
             var ctx = stage.ctx;
             ctx.setTransform.apply( ctx , displayObject.worldTransform.toArray() );

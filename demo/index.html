@@ -7,7 +7,7 @@
 
     <style type="text/css">
         body{margin:0;padding:0;font-size:12px;background-color:#eee;padding:10px 100px 100px;}
-        //canvas {background:#999}
+      
     </style>
 
     <!--
@@ -122,7 +122,7 @@
             id : "brokenline",
             context : {
                 x:300,
-                pointList : [[10, 10], [60, 100], [148, 130], [250, 40], [446, 100]],
+                pointList : [ [10, 10], [60, 100], [148, 130],undefined, [250, 40], [446, 60], [ 600, 30 ]],
                 strokeStyle : colors.getColor(colorInd++),//colors.getColor(colorInd++),
                 lineWidth : 1,
                 smooth    : true,
@@ -300,7 +300,8 @@
                 path : map1Path,
                 lineWidth : 1,
                 fillStyle:colors.getColor(colorInd++),
-                strokeStyle:colors.getColor(colorInd++)
+                strokeStyle:colors.getColor(colorInd++),
+                globalAlpha: 0.3
             }
         });
         map1.on("mouseover" , function(){

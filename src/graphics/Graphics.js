@@ -377,7 +377,8 @@ export default class Graphics
             }
         }
 
-        this.currentPath = null;
+        //this.currentPath = null;
+        this.beginPath();
 
         const data = new GraphicsData(
             this.lineWidth,
