@@ -17,7 +17,7 @@ var Utils = {
     getUID:function(){
         return this._UID++;
     },
-    createId : function(name) {
+    createId : function( name ) {
         //if end with a digit, then append an undersBase before appending
         var charCode = name.charCodeAt(name.length - 1);
         if (charCode >= 48 && charCode <= 57) name += "_";
