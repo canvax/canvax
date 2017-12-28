@@ -2805,7 +2805,6 @@ var AnimationFrame = {
  * 把canvax元素的context实现监听属性改动
  * 来给整个引擎提供心跳包的触发机制
  */
-
 function Observe(scope) {
 
     var stopRepeatAssign = true;
@@ -4968,9 +4967,12 @@ var Rectangle = function () {
     }, {
         key: 'contains',
         value: function contains(x, y) {
-            if (this.width <= 0 || this.height <= 0) {
+            /*
+            if (this.width <= 0 || this.height <= 0)
+            {
                 return false;
             }
+            */
 
             if (x >= this.x && x < this.x + this.width) {
                 if (y >= this.y && y < this.y + this.height) {

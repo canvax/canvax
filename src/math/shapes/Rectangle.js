@@ -29,10 +29,12 @@ export default class Rectangle
 
     contains(x, y)
     {
+        /*
         if (this.width <= 0 || this.height <= 0)
         {
             return false;
         }
+        */
 
         if (x >= this.x && x < this.x + this.width)
         {
