@@ -4974,12 +4974,27 @@ var Rectangle = function () {
                 return false;
             }
             */
+            if (this.height * y < 0 || this.width * x < 0) {
+                return false;
+            }
 
-            if (x >= this.x && x < this.x + this.width) {
-                if (y >= this.y && y < this.y + this.height) {
+            if (x >= this.x && x <= this.x + this.width && (this.height >= 0 && y >= this.y && y <= this.y + this.height || this.height < 0 && y <= this.y && y >= this.y + this.height)) {
+                return true;
+            }
+
+            return false;
+
+            //当x和 width , y和height都 为正或者都未负数的情况下，才可能在范围内
+
+            /*
+            if (x >= this.x && x < this.x + this.width)
+            {
+                if (y >= this.y && y < this.y + this.height)
+                {
                     return true;
                 }
             }
+            */
 
             return false;
         }
