@@ -30,19 +30,12 @@ export default class CanvasRenderer extends SystemRenderer
         stage.stageRending = true;
         stage.setWorldTransform();
         this._clear( stage );
-        this._render( stage );
+        this._render( stage , stage, stage.context.globalAlpha );
         stage.stageRending = false;
     }
 
     _render( stage , displayObject , globalAlpha )
     {
-        if( !displayObject ){
-            displayObject = stage;
-        };
-        if( !globalAlpha ){
-            globalAlpha = 1;
-        };
-
         var $MC = displayObject.context.$model;
 
         if( !displayObject.worldTransform || displayObject._transformChange || displayObject.parent._transformChange ){
@@ -71,7 +64,7 @@ export default class CanvasRenderer extends SystemRenderer
 
             if( globalAlpha ){
                 this.CGR.render( displayObject , stage, globalAlpha );
-            }
+            };
         };
 
         if( displayObject.type == "text" ){

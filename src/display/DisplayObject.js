@@ -123,6 +123,10 @@ export default class DisplayObject extends EventDispatcher
                 return;
             }
 
+            if( name == "globalGalpha" ){
+                obj._globalAlphaChange = true;
+            };
+
             if( _.indexOf( TRANSFORM_PROPS , name ) > -1 ) {
                 obj._updateTransform();
                 obj._transformChange = true;

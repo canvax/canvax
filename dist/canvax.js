@@ -3144,6 +3144,10 @@ var DisplayObject = function (_EventDispatcher) {
                     return;
                 }
 
+                if (name == "globalGalpha") {
+                    obj._globalAlphaChange = true;
+                }
+
                 if (_.indexOf(TRANSFORM_PROPS, name) > -1) {
                     obj._updateTransform();
                     obj._transformChange = true;
@@ -4246,19 +4250,12 @@ var CanvasRenderer = function (_SystemRenderer) {
             stage.stageRending = true;
             stage.setWorldTransform();
             this._clear(stage);
-            this._render(stage);
+            this._render(stage, stage, stage.context.globalAlpha);
             stage.stageRending = false;
         }
     }, {
         key: '_render',
         value: function _render(stage, displayObject, globalAlpha) {
-            if (!displayObject) {
-                displayObject = stage;
-            }
-            if (!globalAlpha) {
-                globalAlpha = 1;
-            }
-
             var $MC = displayObject.context.$model;
 
             if (!displayObject.worldTransform || displayObject._transformChange || displayObject.parent._transformChange) {
