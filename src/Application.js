@@ -230,7 +230,8 @@ export default class Application extends DisplayObjectContainer
 
     toDataURL()
     {
-        var canvas = Base._createCanvas( "curr_base64_canvas" , this.width , this.height );
+        //var canvas = Base._createCanvas( "curr_base64_canvas" , this.width , this.height );
+        var canvas = $.createCanvas( this.width , this.height, "curr_base64_canvas" );
         var ctx = canvas.getContext("2d");
 
         _.each( this.children , function( stage ){
