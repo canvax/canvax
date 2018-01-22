@@ -103,17 +103,11 @@ export default class Application extends DisplayObjectContainer
         this.context.$model.height = this.height;
 
         var me = this;
-        var reSizeCanvas    = function(ctx){
-            var canvas = ctx.canvas;
+        var reSizeCanvas    = function(canvas){
             canvas.style.width = me.width + "px";
             canvas.style.height= me.height+ "px";
             canvas.setAttribute("width"  , me.width * Utils._devicePixelRatio);
             canvas.setAttribute("height" , me.height* Utils._devicePixelRatio);
-
-            //如果是swf的话就还要调用这个方法。
-            if (ctx.resize) {
-                ctx.resize(me.width , me.height);
-            }
         }; 
         _.each(this.children , function(s , i){
             s.context.$model.width = me.width;
@@ -125,7 +119,6 @@ export default class Application extends DisplayObjectContainer
         this.domView.style.height = this.height + "px";
 
         this.heartBeat();
-
     }
 
     getHoverStage()
