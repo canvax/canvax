@@ -55,14 +55,14 @@ export default class Text extends DisplayObject
         }
     }
 
-    _setContextStyle( ctx , style ){
+    _setContextStyle( ctx , style, globalAlpha ){
         // 简单判断不做严格类型检测
         for(var p in style){
             if( p != "textBaseline" && ( p in ctx ) ){
                 if ( style[p] || _.isNumber( style[p] ) ) {
                     if( p == "globalAlpha" ){
                         //透明度要从父节点继承
-                        ctx[p] *= style[p];
+                        ctx[p] = style[p] * globalAlpha;
                     } else {
                         ctx[p] = style[p];
                     }
@@ -72,9 +72,9 @@ export default class Text extends DisplayObject
         return;
     }
  
-    render(ctx) 
+    render(ctx, globalAlpha) 
     { 
-        this._renderText(ctx, this._getTextLines());
+        this._renderText(ctx, this._getTextLines(), globalAlpha);
     }
 
     resetText(text) 
@@ -103,10 +103,10 @@ export default class Text extends DisplayObject
         return this.text.split(this._reNewline);
     }
 
-    _renderText(ctx, textLines) 
+    _renderText(ctx, textLines, globalAlpha) 
     {
         ctx.save();
-        this._setContextStyle( ctx , this.context.$model );
+        this._setContextStyle( ctx , this.context.$model , globalAlpha);
         this._renderTextStroke(ctx, textLines);
         this._renderTextFill(ctx, textLines);
         ctx.restore();

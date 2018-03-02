@@ -991,7 +991,7 @@ EventHandler.prototype = {
 
         var e = new CanvaxEvent(e);
 
-        if (e.type == "mousemove" && oldObj && oldObj._hoverClass && oldObj.pointChkPriority && oldObj.getChildInPoint(point)) {
+        if (e.type == "mousemove" && oldObj && oldObj._hoverClass && oldObj.hoverClone && oldObj.pointChkPriority && oldObj.getChildInPoint(point)) {
             //小优化,鼠标move的时候。计算频率太大，所以。做此优化
             //如果有target存在，而且当前元素正在hoverStage中，而且当前鼠标还在target内,就没必要取检测整个displayList了
             //开发派发常规mousemove事件
@@ -1490,7 +1490,7 @@ var EventDispatcher = function (_EventManager) {
             this._dispatchEvent(event);
 
             if (this.context && event.type == "mouseout") {
-                if (this._hoverClass) {
+                if (this._hoverClass && this.hoverClone) {
                     //说明刚刚over的时候有添加样式
                     var canvax = this.getStage().parent;
                     this._hoverClass = false;
@@ -4293,7 +4293,7 @@ var CanvasRenderer = function (_SystemRenderer) {
                 //如果是文本
                 var ctx = stage.ctx;
                 ctx.setTransform.apply(ctx, displayObject.worldTransform.toArray());
-                displayObject.render(ctx);
+                displayObject.render(ctx, globalAlpha);
             }
 
             if (displayObject.children) {
@@ -5896,14 +5896,14 @@ var Text = function (_DisplayObject) {
         }
     }, {
         key: "_setContextStyle",
-        value: function _setContextStyle(ctx, style) {
+        value: function _setContextStyle(ctx, style, globalAlpha) {
             // 简单判断不做严格类型检测
             for (var p in style) {
                 if (p != "textBaseline" && p in ctx) {
                     if (style[p] || _.isNumber(style[p])) {
                         if (p == "globalAlpha") {
                             //透明度要从父节点继承
-                            ctx[p] *= style[p];
+                            ctx[p] = style[p] * globalAlpha;
                         } else {
                             ctx[p] = style[p];
                         }
@@ -5914,8 +5914,8 @@ var Text = function (_DisplayObject) {
         }
     }, {
         key: "render",
-        value: function render(ctx) {
-            this._renderText(ctx, this._getTextLines());
+        value: function render(ctx, globalAlpha) {
+            this._renderText(ctx, this._getTextLines(), globalAlpha);
         }
     }, {
         key: "resetText",
@@ -5945,9 +5945,9 @@ var Text = function (_DisplayObject) {
         }
     }, {
         key: "_renderText",
-        value: function _renderText(ctx, textLines) {
+        value: function _renderText(ctx, textLines, globalAlpha) {
             ctx.save();
-            this._setContextStyle(ctx, this.context.$model);
+            this._setContextStyle(ctx, this.context.$model, globalAlpha);
             this._renderTextStroke(ctx, textLines);
             this._renderTextFill(ctx, textLines);
             ctx.restore();

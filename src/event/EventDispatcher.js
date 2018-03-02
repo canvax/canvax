@@ -116,7 +116,7 @@ export default class EventDispatcher extends EventManager
         this._dispatchEvent( event );
 
         if( this.context && event.type == "mouseout"){
-            if(this._hoverClass){
+            if(this._hoverClass && this.hoverClone){
                 //说明刚刚over的时候有添加样式
                 var canvax = this.getStage().parent;
                 this._hoverClass = false;

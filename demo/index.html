@@ -256,7 +256,8 @@
                 smooth : true,
                 lineType  : "dashed",
                 //pointList : [[310, 120], [360, 120], [348, 230], [250, 340], [146, 200]],
-                pointList : [[120,42],[175,75],[225,144],[162,207],[90,180],[55,134],[82,90]],
+                //pointList : [[120,42],[175,75],[225,144],[162,207],[90,180],[55,134],[82,90]],
+                pointList: [[0,-46.666666666666664],[40.41451884327379,-23.333333333333353],[40.414518843273804,23.33333333333333],[0,46.666666666666664],[-40.414518843273804,23.33333333333333],[-40.4145188432738,-23.333333333333336]],
                 fillStyle:colors.getColor(colorInd++),
                 strokeStyle:colors.getColor(colorInd++),
                 lineWidth : 1
@@ -359,10 +360,10 @@
             id : "rect",
             context : {
 
-                x  : 0,
-                y  : 0,
+                x  : 200,
+                y  : 200,
                 width : 100,
-                height:100,
+                height: 100,
                 rotation : 45,
                 //scaleX : 2,
                 //scaleOrigin:{
@@ -389,12 +390,7 @@
 
             }
         });
-        rect.on("mouseover" , function(e){
-            this.context.rotation = 50;
-        })
-        rect.on("mouseout" , function(){
-            this.context.rotation = 45;
-        })
+
 
 
         window.line = new Shapes.Line({
@@ -463,7 +459,7 @@ debugger
         });
 debugger
 
-        //stage.addChild(rect);
+        stage.addChild(rect);
         
 
 
@@ -488,7 +484,7 @@ debugger
         sprite.addChild(sector);
 
         sprite.addChild(sector_rect);
-        sprite1.addChild(rect);
+        //sprite1.addChild(rect);
 
         stage.addChild(line);
         app.addChild(stage); 

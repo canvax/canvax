@@ -74,7 +74,7 @@ export default class CanvasRenderer extends SystemRenderer
             //如果是文本
             var ctx = stage.ctx;
             ctx.setTransform.apply( ctx , displayObject.worldTransform.toArray() );
-            displayObject.render( ctx );
+            displayObject.render( ctx , globalAlpha );
         };
 
         if( displayObject.children ){
