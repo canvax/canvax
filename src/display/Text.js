@@ -15,6 +15,10 @@ export default class Text extends DisplayObject
     {
         opt.type = "text";
 
+        if( text === null || text === undefined ){
+            text = "";
+        };
+
         opt.context = _.extend({
             font: "", 
             fontSize: 13, //字体大小默认13
@@ -62,7 +66,8 @@ export default class Text extends DisplayObject
                 if ( style[p] || _.isNumber( style[p] ) ) {
                     if( p == "globalAlpha" ){
                         //透明度要从父节点继承
-                        ctx[p] = style[p] * globalAlpha;
+                        //ctx[p] = style[p] * globalAlpha; //render里面已经做过相乘了，不需要重新*
+                        ctx.globalAlpha = globalAlpha;
                     } else {
                         ctx[p] = style[p];
                     }
@@ -86,10 +91,12 @@ export default class Text extends DisplayObject
     getTextWidth() 
     {
         var width = 0;
-        Utils._pixelCtx.save();
-        Utils._pixelCtx.font = this.context.$model.font;
-        width = this._getTextWidth(Utils._pixelCtx, this._getTextLines());
-        Utils._pixelCtx.restore();
+        if( Utils._pixelCtx ){
+            Utils._pixelCtx.save();
+            Utils._pixelCtx.font = this.context.$model.font;
+            width = this._getTextWidth(Utils._pixelCtx, this._getTextLines());
+            Utils._pixelCtx.restore();
+        };
         return width;
     }
 
@@ -105,6 +112,7 @@ export default class Text extends DisplayObject
 
     _renderText(ctx, textLines, globalAlpha) 
     {
+        if( !ctx ) return;
         ctx.save();
         this._setContextStyle( ctx , this.context.$model , globalAlpha);
         this._renderTextStroke(ctx, textLines);
@@ -153,6 +161,8 @@ export default class Text extends DisplayObject
 
     _renderTextStroke(ctx, textLines) 
     {
+        if( !ctx ) return;
+        
         if (!this.context.$model.strokeStyle || !this.context.$model.lineWidth) return;
 
         var lineHeights = 0;

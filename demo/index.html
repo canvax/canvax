@@ -90,6 +90,16 @@
         stage.addChild( sprite );
         sprite.addChild( sprite1 );
 
+        var clipRect = new Canvax.Shapes.Rect({
+            id : "cliprect",
+            context : {
+                x : 0,y: 0,
+                width : 200,height:200
+            }
+        });
+        sprite1.clipTo(clipRect);
+        sprite.addChild( clipRect );
+
         var circle2 = new Shapes.Circle({
             id : "c2",               
             context : {
@@ -360,8 +370,8 @@
             id : "rect",
             context : {
 
-                x  : 200,
-                y  : 200,
+                x  : 100,
+                y  : 100,
                 width : 100,
                 height: 100,
                 rotation : 45,
@@ -439,7 +449,7 @@
             })
         } , 3000)
 
-        window.text = new Canvax.Display.Text("每一个真实的现在，\n都是我们曾经幻想的未来" , {
+        window.text = new Canvax.Display.Text( undefined , {
             context : {
                 x :500,
                 y :500,
@@ -451,20 +461,15 @@
                 lineWidth: 1,
                 strokeStyle:"red"
 
-
             }
         })
         text.on("click" , function(){
 debugger
         });
-debugger
 
-        stage.addChild(rect);
+
+        //stage.addChild(rect);
         
-
-
-
-
         stage.addChild(circle2);
         stage.addChild(circle3);
         stage.addChild(brokenLine);
@@ -484,7 +489,7 @@ debugger
         sprite.addChild(sector);
 
         sprite.addChild(sector_rect);
-        //sprite1.addChild(rect);
+        sprite1.addChild(rect);
 
         stage.addChild(line);
         app.addChild(stage); 

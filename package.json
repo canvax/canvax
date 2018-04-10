@@ -2,7 +2,7 @@
     "name": "canvax2d",
     "title": "Canvax.JS",
     "description": "A javascript canvas 2d rendering engine",
-    "version": "1.0.19",
+    "version": "1.0.36",
     "homepage": "http://canvax.org",
     "license": "MIT",
     "keywords": [
@@ -21,11 +21,11 @@
     "devDependencies": {
         "babel-core": "^6.13.0",
         "babel-preset-es2015-rollup": "^1.1.1",
-        "rollup": "^0.41.4",
+        "rollup": "^0.51.7",
         "rollup-plugin-babel": "^2.6.1",
         "rollup-plugin-commonjs": "^8.0.2",
-        "rollup-plugin-node-resolve": "^2.0.0",
-        "rollup-plugin-uglify": "^1.0.1",
+        "rollup-plugin-node-resolve": "^3.3.0",
+        "rollup-plugin-uglify": "^3.0.0",
         "onchange": "^3.0.2"
     },
     "dependencies": {

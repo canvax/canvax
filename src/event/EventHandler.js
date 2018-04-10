@@ -140,7 +140,7 @@ EventHandler.prototype = {
 
         if( e.type == "mouseout" ){
             if( !contains(root.view , (e.toElement || e.relatedTarget) ) ){
-                me.__getcurPointsTarget(e , curMousePoint);
+                me.__getcurPointsTarget(e, curMousePoint, true);
             }
         } else if( e.type == "mousemove" ){  //|| e.type == "mousedown" ){
             //拖动过程中就不在做其他的mouseover检测，drag优先
@@ -192,7 +192,9 @@ EventHandler.prototype = {
             }
         }; 
     },
-    __getcurPointsTarget : function(e , point ) {
+
+    //notInRootView 真正的mouseout,鼠标已经不在图表的节点内了
+    __getcurPointsTarget : function(e, point, notInRootView ) {
         var me     = this;
         var root   = me.canvax;
         var oldObj = me.curPointsTarget[0];
@@ -214,7 +216,7 @@ EventHandler.prototype = {
             oldObj.dispatchEvent( e );
             return;
         };
-        var obj = root.getObjectsUnderPoint( point , 1)[0];
+        var obj = notInRootView ? null: root.getObjectsUnderPoint( point , 1)[0];
 
         if(oldObj && oldObj != obj || e.type=="mouseout") {
             if( oldObj && oldObj.context ){

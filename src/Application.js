@@ -115,6 +115,8 @@ export default class Application extends DisplayObjectContainer
             reSizeCanvas(s.canvas);
         });
 
+        this.stageView.style.width  = this.width  + "px";
+        this.stageView.style.height = this.height + "px";
         this.domView.style.width  = this.width  + "px";
         this.domView.style.height = this.height + "px";
 
@@ -149,9 +151,10 @@ export default class Application extends DisplayObjectContainer
     {
         var _pixelCanvas = $.query("_pixelCanvas");
         if(!_pixelCanvas){
-            _pixelCanvas = $.createCanvas(0, 0, "_pixelCanvas"); 
+            _pixelCanvas = $.createCanvas(0, 0, "_pixelCanvas");
         } else {
-            //如果又的话 就不需要在创建了
+            //如果有的话 就不需要在创建了，但是最好获取一下context,因为可能同时存在chartx1.0的图表
+            Utils._pixelCtx = _pixelCanvas.getContext('2d');
             return;
         };
         document.body.appendChild( _pixelCanvas );

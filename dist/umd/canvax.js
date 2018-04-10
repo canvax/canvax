@@ -109,6 +109,18 @@ var nativeIndexOf = ArrayProto.indexOf;
 var nativeIsArray = Array.isArray;
 var nativeKeys = Object.keys;
 
+var shallowProperty = function shallowProperty(key) {
+  return function (obj) {
+    return obj == null ? void 0 : obj[key];
+  };
+};
+var MAX_ARRAY_INDEX = Math.pow(2, 53) - 1;
+var getLength = shallowProperty('length');
+var isArrayLike = function isArrayLike(collection) {
+  var length = getLength(collection);
+  return typeof length == 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
+};
+
 _.values = function (obj) {
   var keys = _.keys(obj);
   var length = keys.length;
@@ -385,6 +397,38 @@ _.pluck = function (obj, key) {
   });
 };
 
+// Return a random integer between min and max (inclusive).
+_.random = function (min, max) {
+  if (max == null) {
+    max = min;
+    min = 0;
+  }
+  return min + Math.floor(Math.random() * (max - min + 1));
+};
+
+// Shuffle a collection.
+_.shuffle = function (obj) {
+  return _.sample(obj, Infinity);
+};
+
+_.sample = function (obj, n, guard) {
+  if (n == null || guard) {
+    if (!isArrayLike(obj)) obj = _.values(obj);
+    return obj[_.random(obj.length - 1)];
+  }
+  var sample = isArrayLike(obj) ? _.clone(obj) : _.values(obj);
+  var length = getLength(sample);
+  n = Math.max(Math.min(n, length), 0);
+  var last = length - 1;
+  for (var index = 0; index < n; index++) {
+    var rand = _.random(index, last);
+    var temp = sample[index];
+    sample[index] = sample[rand];
+    sample[rand] = temp;
+  }
+  return sample.slice(0, n);
+};
+
 /**
 *
 *如果是深度extend，第一个参数就设置为true
@@ -419,7 +463,8 @@ _.extend = function () {
           continue;
         }
 
-        if (deep && copy && _.isObject(copy) && !_.isArray(copy) && !_.isFunction(copy)) {
+        //if( deep && copy && _.isObject( copy ) &&  && !_.isArray( copy ) && !_.isFunction( copy ) ){
+        if (deep && copy && _.isObject(copy) && copy.constructor === Object) {
           target[name] = _.extend(deep, src, copy);
         } else {
           target[name] = copy;
@@ -932,7 +977,7 @@ EventHandler.prototype = {
 
         if (e.type == "mouseout") {
             if (!contains(root.view, e.toElement || e.relatedTarget)) {
-                me.__getcurPointsTarget(e, curMousePoint);
+                me.__getcurPointsTarget(e, curMousePoint, true);
             }
         } else if (e.type == "mousemove") {
             //|| e.type == "mousedown" ){
@@ -984,7 +1029,9 @@ EventHandler.prototype = {
             }
         }
     },
-    __getcurPointsTarget: function __getcurPointsTarget(e, point) {
+
+    //notInRootView 真正的mouseout,鼠标已经不在图表的节点内了
+    __getcurPointsTarget: function __getcurPointsTarget(e, point, notInRootView) {
         var me = this;
         var root = me.canvax;
         var oldObj = me.curPointsTarget[0];
@@ -1004,7 +1051,7 @@ EventHandler.prototype = {
             oldObj.dispatchEvent(e);
             return;
         }
-        var obj = root.getObjectsUnderPoint(point, 1)[0];
+        var obj = notInRootView ? null : root.getObjectsUnderPoint(point, 1)[0];
 
         if (oldObj && oldObj != obj || e.type == "mouseout") {
             if (oldObj && oldObj.context) {
@@ -3067,12 +3114,16 @@ var DisplayObject = function (_EventDispatcher) {
 
         _this.moveing = false; //如果元素在最轨道运动中的时候，最好把这个设置为true，这样能保证轨迹的丝搬顺滑，否则因为xyToInt的原因，会有跳跃
 
+        _this.clip = null; //裁剪的图形对象
+
         //创建好context
         _this.context = _this._createContext(opt);
 
         _this.type = opt.type || "DisplayObject";
 
         _this.id = opt.id || Utils.createId(_this.type);
+
+        _this._trackList = []; //一个元素可以追踪另外元素的变动
 
         _this.init.apply(_this, arguments);
 
@@ -3084,6 +3135,12 @@ var DisplayObject = function (_EventDispatcher) {
     createClass(DisplayObject, [{
         key: "init",
         value: function init() {}
+    }, {
+        key: "clipTo",
+        value: function clipTo(node) {
+            this.clip = node;
+            node.isClip = true;
+        }
     }, {
         key: "_createContext",
         value: function _createContext(opt) {
@@ -3182,6 +3239,24 @@ var DisplayObject = function (_EventDispatcher) {
 
             //执行init之前，应该就根据参数，把context组织好线
             return Observe(_contextATTRS);
+        }
+
+        //TODO:track目前还没测试过,需要的时候再测试
+
+    }, {
+        key: "track",
+        value: function track(el) {
+            if (_.indexOf(this._trackList, el) == -1) {
+                this._trackList.push(el);
+            }
+        }
+    }, {
+        key: "untrack",
+        value: function untrack(el) {
+            var ind = _.indexOf(this._trackList, el);
+            if (ind > -1) {
+                this._trackList.splice(ind, 1);
+            }
         }
 
         /* @myself 是否生成自己的镜像 
@@ -3503,6 +3578,23 @@ var DisplayObject = function (_EventDispatcher) {
 
             if (this.graphics) {
                 result = this.containsPoint({ x: x, y: y });
+            }
+
+            if (this.type == "text") {
+                //文本框的先单独处理
+                var _rect = this.getRect();
+                if (!_rect.width || !_rect.height) {
+                    return false;
+                }
+                //正式开始第一步的矩形范围判断
+                if (x >= _rect.x && x <= _rect.x + _rect.width && (_rect.height >= 0 && y >= _rect.y && y <= _rect.y + _rect.height || _rect.height < 0 && y <= _rect.y && y >= _rect.y + _rect.height)) {
+                    //那么就在这个元素的矩形范围内
+                    result = true;
+                } else {
+                    //如果连矩形内都不是，那么肯定的，这个不是我们要找的shap
+                    result = false;
+                }
+                return result;
             }
 
             return result;
@@ -4106,7 +4198,7 @@ var CanvasGraphicsRenderer = function () {
 
     createClass(CanvasGraphicsRenderer, [{
         key: 'render',
-        value: function render(displayObject, stage, globalAlpha) {
+        value: function render(displayObject, stage, globalAlpha, isClip) {
             var renderer = this.renderer;
             var graphicsData = displayObject.graphics.graphicsData;
             var ctx = stage.ctx;
@@ -4118,15 +4210,15 @@ var CanvasGraphicsRenderer = function () {
                 var fillStyle = data.fillStyle;
                 var strokeStyle = data.strokeStyle;
 
-                var fill = data.hasFill() && data.fillAlpha;
-                var line = data.hasLine() && data.lineAlpha;
+                var fill = data.hasFill() && data.fillAlpha && !isClip;
+                var line = data.hasLine() && data.lineAlpha && !isClip;
 
                 ctx.lineWidth = data.lineWidth;
 
                 if (data.type === SHAPES.POLY) {
                     ctx.beginPath();
 
-                    this.renderPolygon(shape.points, shape.closed, ctx);
+                    this.renderPolygon(shape.points, shape.closed, ctx, isClip);
 
                     if (fill) {
                         ctx.globalAlpha = data.fillAlpha * globalAlpha;
@@ -4139,6 +4231,13 @@ var CanvasGraphicsRenderer = function () {
                         ctx.stroke();
                     }
                 } else if (data.type === SHAPES.RECT) {
+                    if (isClip) {
+                        //ctx.beginPath();
+                        //rect本身已经是个close的path
+                        ctx.rect(shape.x, shape.y, shape.width, shape.height);
+                        //ctx.closePath();
+                    }
+
                     if (fill) {
                         ctx.globalAlpha = data.fillAlpha * globalAlpha;
                         ctx.fillStyle = fillStyle;
@@ -4206,14 +4305,14 @@ var CanvasGraphicsRenderer = function () {
         }
     }, {
         key: 'renderPolygon',
-        value: function renderPolygon(points, close, ctx) {
+        value: function renderPolygon(points, close, ctx, isClip) {
             ctx.moveTo(points[0], points[1]);
 
             for (var j = 1; j < points.length / 2; ++j) {
                 ctx.lineTo(points[j * 2], points[j * 2 + 1]);
             }
 
-            if (close) {
+            if (close || isClip) {
                 ctx.closePath();
             }
         }
@@ -4259,6 +4358,12 @@ var CanvasRenderer = function (_SystemRenderer) {
     }, {
         key: '_render',
         value: function _render(stage, displayObject, globalAlpha) {
+            var ctx = stage.ctx;
+
+            if (!ctx) {
+                return;
+            }
+
             var $MC = displayObject.context.$model;
 
             if (!displayObject.worldTransform || displayObject._transformChange || displayObject.parent._transformChange) {
@@ -4268,35 +4373,49 @@ var CanvasRenderer = function (_SystemRenderer) {
 
             globalAlpha *= $MC.globalAlpha;
 
-            if (!$MC.visible) {
+            if (!$MC.visible || !globalAlpha || displayObject.isClip) {
                 return;
+            }
+
+            ctx.setTransform.apply(ctx, displayObject.worldTransform.toArray());
+
+            var isClipSave = false;
+            if (displayObject.clip && displayObject.clip.graphics) {
+                //如果这个对象有一个裁剪路径对象，那么就绘制这个裁剪路径
+                var _clip = displayObject.clip;
+                ctx.save();
+                isClipSave = true;
+
+                if (!_clip.worldTransform || _clip._transformChange || _clip.parent._transformChange) {
+                    _clip.setWorldTransform();
+                    _clip._transformChange = true;
+                }
+                ctx.setTransform.apply(ctx, _clip.worldTransform.toArray());
+
+                //如果 graphicsData.length==0 的情况下才需要执行_draw来组织graphics数据
+                if (!_clip.graphics.graphicsData.length) {
+                    //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
+                    _clip._draw(_clip.graphics); //_draw会完成绘制准备好 graphicsData
+                }
+                this.CGR.render(_clip, stage, globalAlpha, isClipSave);
+
+                _clip._transformChange = false;
+
+                ctx.clip();
             }
 
             //因为已经采用了setTransform了， 非shape元素已经不需要执行transform 和 render
             if (displayObject.graphics) {
-
-                var ctx = stage.ctx;
-
-                ctx.setTransform.apply(ctx, displayObject.worldTransform.toArray());
-
                 //如果 graphicsData.length==0 的情况下才需要执行_draw来组织graphics数据
                 if (!displayObject.graphics.graphicsData.length) {
                     //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
                     displayObject._draw(displayObject.graphics); //_draw会完成绘制准备好 graphicsData
                 }
-
-                if (globalAlpha) {
-                    this.CGR.render(displayObject, stage, globalAlpha);
-                }
+                this.CGR.render(displayObject, stage, globalAlpha);
             }
 
             if (displayObject.type == "text") {
-                if (!globalAlpha) {
-                    return;
-                }
                 //如果是文本
-                var ctx = stage.ctx;
-                ctx.setTransform.apply(ctx, displayObject.worldTransform.toArray());
                 displayObject.render(ctx, globalAlpha);
             }
 
@@ -4307,6 +4426,11 @@ var CanvasRenderer = function (_SystemRenderer) {
             }
 
             displayObject._transformChange = false;
+
+            if (isClipSave) {
+                //如果这个对象有裁剪对象， 则要恢复，裁剪之前的环境
+                ctx.restore();
+            }
         }
     }, {
         key: '_clear',
@@ -4439,6 +4563,8 @@ var Application = function (_DisplayObjectContain) {
                 reSizeCanvas(s.canvas);
             });
 
+            this.stageView.style.width = this.width + "px";
+            this.stageView.style.height = this.height + "px";
             this.domView.style.width = this.width + "px";
             this.domView.style.height = this.height + "px";
 
@@ -5857,6 +5983,10 @@ var Text = function (_DisplayObject) {
 
         opt.type = "text";
 
+        if (text === null || text === undefined) {
+            text = "";
+        }
+
         opt.context = _.extend({
             font: "",
             fontSize: 13, //字体大小默认13
@@ -5907,7 +6037,8 @@ var Text = function (_DisplayObject) {
                     if (style[p] || _.isNumber(style[p])) {
                         if (p == "globalAlpha") {
                             //透明度要从父节点继承
-                            ctx[p] = style[p] * globalAlpha;
+                            //ctx[p] = style[p] * globalAlpha; //render里面已经做过相乘了，不需要重新*
+                            ctx.globalAlpha = globalAlpha;
                         } else {
                             ctx[p] = style[p];
                         }
@@ -5931,10 +6062,12 @@ var Text = function (_DisplayObject) {
         key: "getTextWidth",
         value: function getTextWidth() {
             var width = 0;
-            Utils._pixelCtx.save();
-            Utils._pixelCtx.font = this.context.$model.font;
-            width = this._getTextWidth(Utils._pixelCtx, this._getTextLines());
-            Utils._pixelCtx.restore();
+            if (Utils._pixelCtx) {
+                Utils._pixelCtx.save();
+                Utils._pixelCtx.font = this.context.$model.font;
+                width = this._getTextWidth(Utils._pixelCtx, this._getTextLines());
+                Utils._pixelCtx.restore();
+            }
             return width;
         }
     }, {
@@ -5950,6 +6083,7 @@ var Text = function (_DisplayObject) {
     }, {
         key: "_renderText",
         value: function _renderText(ctx, textLines, globalAlpha) {
+            if (!ctx) return;
             ctx.save();
             this._setContextStyle(ctx, this.context.$model, globalAlpha);
             this._renderTextStroke(ctx, textLines);
@@ -5991,6 +6125,8 @@ var Text = function (_DisplayObject) {
     }, {
         key: "_renderTextStroke",
         value: function _renderTextStroke(ctx, textLines) {
+            if (!ctx) return;
+
             if (!this.context.$model.strokeStyle || !this.context.$model.lineWidth) return;
 
             var lineHeights = 0;
@@ -6574,7 +6710,11 @@ var Circle$2 = function (_Shape) {
     }, {
         key: "draw",
         value: function draw(graphics) {
-            graphics.drawCircle(0, 0, this.context.$model.r);
+            var r = this.context.$model.r;
+            if (r < 0) {
+                r = 0;
+            }
+            graphics.drawCircle(0, 0, r);
         }
     }]);
     return Circle;
@@ -7475,6 +7615,8 @@ Canvax.Event = {
 Canvax.AnimationFrame = AnimationFrame;
 
 Canvax._ = _;
+
+Canvax.utils = Utils;
 
 return Canvax;
 

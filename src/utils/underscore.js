@@ -28,6 +28,19 @@ nativeKeys = Object.keys,
 nativeBind = FuncProto.bind;
 
 
+var shallowProperty = function(key) {
+  return function(obj) {
+    return obj == null ? void 0 : obj[key];
+  };
+};
+var MAX_ARRAY_INDEX = Math.pow(2, 53) - 1;
+var getLength = shallowProperty('length');
+var isArrayLike = function(collection) {
+  var length = getLength(collection);
+  return typeof length == 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
+};
+
+
 
 _.values = function(obj) {
   var keys = _.keys(obj);
@@ -302,6 +315,40 @@ _.pluck = function (obj, key) {
   return _.map(obj, function (value) { return value[key]; });
 };
 
+// Return a random integer between min and max (inclusive).
+_.random = function(min, max) {
+  if (max == null) {
+    max = min;
+    min = 0;
+  }
+  return min + Math.floor(Math.random() * (max - min + 1));
+};
+
+// Shuffle a collection.
+_.shuffle = function(obj) {
+  return _.sample(obj, Infinity);
+};
+
+_.sample = function(obj, n, guard) {
+  if (n == null || guard) {
+    if (!isArrayLike(obj)) obj = _.values(obj);
+    return obj[_.random(obj.length - 1)];
+  }
+  var sample = isArrayLike(obj) ? _.clone(obj) : _.values(obj);
+  var length = getLength(sample);
+  n = Math.max(Math.min(n, length), 0);
+  var last = length - 1;
+  for (var index = 0; index < n; index++) {
+    var rand = _.random(index, last);
+    var temp = sample[index];
+    sample[index] = sample[rand];
+    sample[rand] = temp;
+  }
+  return sample.slice(0, n);
+};
+
+
+
 
 
 /**
@@ -335,7 +382,8 @@ _.extend = function() {
                   continue;
               };
               
-              if( deep && copy && _.isObject( copy ) && !_.isArray( copy ) && !_.isFunction( copy ) ){
+              //if( deep && copy && _.isObject( copy ) &&  && !_.isArray( copy ) && !_.isFunction( copy ) ){
+              if( deep && copy && _.isObject( copy ) && copy.constructor === Object ){
                   target[ name ] = _.extend( deep, src, copy ); 
               } else {
                   target[ name ] = copy;

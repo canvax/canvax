@@ -40,12 +40,16 @@ export default class DisplayObject extends EventDispatcher
 
         this.moveing         = false; //如果元素在最轨道运动中的时候，最好把这个设置为true，这样能保证轨迹的丝搬顺滑，否则因为xyToInt的原因，会有跳跃
 
+        this.clip            = null; //裁剪的图形对象
+
         //创建好context
         this.context         = this._createContext( opt );
 
         this.type            = opt.type || "DisplayObject";
 
         this.id              = opt.id || Utils.createId( this.type );
+
+        this._trackList      = []; //一个元素可以追踪另外元素的变动
 
         this.init.apply(this , arguments);
 
@@ -56,6 +60,12 @@ export default class DisplayObject extends EventDispatcher
     init()
     {
 
+    }
+
+    clipTo( node )
+    {
+        this.clip = node;
+        node.isClip = true;
     }
 
     _createContext( opt )
@@ -159,6 +169,22 @@ export default class DisplayObject extends EventDispatcher
 
         //执行init之前，应该就根据参数，把context组织好线
         return Observe( _contextATTRS );
+    }
+
+
+    //TODO:track目前还没测试过,需要的时候再测试
+    track( el )
+    {
+        if( _.indexOf( this._trackList, el ) == -1 ){
+            this._trackList.push( el );
+        }
+    }
+
+    untrack( el ){
+        var ind = _.indexOf( this._trackList, el );
+        if( ind > -1 ){
+            this._trackList.splice( ind , 1 );
+        };
     }
 
     /* @myself 是否生成自己的镜像 
@@ -470,6 +496,29 @@ export default class DisplayObject extends EventDispatcher
 
         if( this.graphics ){
             result = this.containsPoint( {x: x , y: y} );
+        };
+
+        if( this.type == "text" ){
+            //文本框的先单独处理
+            var _rect = this.getRect();
+            if(!_rect.width || !_rect.height) {
+                return false;
+            };
+            //正式开始第一步的矩形范围判断
+            if ( x    >= _rect.x
+                &&  x <= (_rect.x + _rect.width)
+                &&  (
+                    (_rect.height>= 0 && y >= _rect.y && y <= (_rect.y + _rect.height) ) ||
+                    (_rect.height < 0 && y <= _rect.y && y >= (_rect.y + _rect.height) )
+                    )
+            ) {
+                //那么就在这个元素的矩形范围内
+                result = true;
+            } else {
+                //如果连矩形内都不是，那么肯定的，这个不是我们要找的shap
+                result = false;
+            };
+            return result;
         };
 
         return result;

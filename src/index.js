@@ -26,6 +26,8 @@ import AnimationFrame from "./animation/AnimationFrame"
 
 import _ from "./utils/underscore"
 
+import utils from "./utils/index"
+
 var Canvax = {
     App: Application
 };
@@ -61,5 +63,7 @@ Canvax.Event = {
 Canvax.AnimationFrame = AnimationFrame;
 
 Canvax._ = _;
+
+Canvax.utils = utils;
 
 export default Canvax;

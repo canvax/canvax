@@ -12,7 +12,7 @@ export default class CanvasGraphicsRenderer
      * @param displayObject
      * @stage 也可以displayObject.getStage()获取。
      */
-    render(displayObject , stage, globalAlpha)
+    render(displayObject , stage, globalAlpha, isClip)
     {
         const renderer = this.renderer;
         const graphicsData = displayObject.graphics.graphicsData;
@@ -26,8 +26,8 @@ export default class CanvasGraphicsRenderer
             const fillStyle = data.fillStyle;
             const strokeStyle = data.strokeStyle;
 
-            const fill = data.hasFill() && data.fillAlpha;
-            const line = data.hasLine() && data.lineAlpha;
+            const fill = data.hasFill() && data.fillAlpha && !isClip;
+            const line = data.hasLine() && data.lineAlpha && !isClip;
 
             ctx.lineWidth = data.lineWidth;
 
@@ -35,7 +35,7 @@ export default class CanvasGraphicsRenderer
             {
                 ctx.beginPath();
 
-                this.renderPolygon(shape.points, shape.closed, ctx);
+                this.renderPolygon(shape.points, shape.closed, ctx, isClip);
 
                 if ( fill )
                 {
@@ -52,6 +52,13 @@ export default class CanvasGraphicsRenderer
             }
             else if (data.type === SHAPES.RECT)
             {
+                if( isClip ){
+                    //ctx.beginPath();
+                    //rect本身已经是个close的path
+                    ctx.rect( shape.x, shape.y, shape.width, shape.height );
+                    //ctx.closePath();
+                };
+                
                 if ( fill )
                 {
                     ctx.globalAlpha = data.fillAlpha * globalAlpha;
@@ -128,7 +135,7 @@ export default class CanvasGraphicsRenderer
         }
     }
 
-    renderPolygon(points, close, ctx)
+    renderPolygon(points, close, ctx, isClip)
     {
         ctx.moveTo(points[0], points[1]);
 
@@ -137,7 +144,7 @@ export default class CanvasGraphicsRenderer
             ctx.lineTo(points[j * 2], points[(j * 2) + 1]);
         }
 
-        if (close)
+        if (close || isClip)
         {
             ctx.closePath();
         }

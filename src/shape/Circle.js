@@ -50,7 +50,11 @@ export default class Circle extends Shape
 
     draw( graphics ) 
     {
-        graphics.drawCircle(0, 0, this.context.$model.r);
+        var r = this.context.$model.r;
+        if( r < 0 ){
+            r = 0;
+        };
+        graphics.drawCircle(0, 0, r);
     }
 
 }
