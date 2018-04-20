@@ -824,7 +824,7 @@ var $ = {
     createView: function createView(_width, _height, id) {
         var view = document.createElement("div");
         view.className = "canvax-view";
-        view.style.cssText += "position:relative;width:" + _width + "px;height:" + _height + "px;";
+        view.style.cssText += "position:relative;width:100%;height:100%;";
 
         var stageView = document.createElement("div");
         stageView.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height + "px;";
@@ -4539,8 +4539,9 @@ var Application = function (_DisplayObjectContain) {
             this.width = parseInt(opt && "width" in opt || this.el.offsetWidth, 10);
             this.height = parseInt(opt && "height" in opt || this.el.offsetHeight, 10);
 
-            this.view.style.width = this.width + "px";
-            this.view.style.height = this.height + "px";
+            //this.view  width height都一直设置为100%
+            //this.view.style.width  = this.width +"px";
+            //this.view.style.height = this.height+"px";
 
             this.viewOffset = $.offset(this.view);
             this.context.$model.width = this.width;

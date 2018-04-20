@@ -109,7 +109,7 @@ export default {
     createView: function(_width , _height, id){
         var view = document.createElement("div");
         view.className = "canvax-view";
-        view.style.cssText += "position:relative;width:" + _width + "px;height:" + _height +"px;"
+        view.style.cssText += "position:relative;width:100%;height:100%;"
 
         var stageView = document.createElement("div");
         stageView.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height +"px;"
