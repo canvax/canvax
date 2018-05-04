@@ -1,8 +1,8 @@
 {
-    "name": "canvax2d",
+    "name": "canvax",
     "title": "Canvax.JS",
     "description": "A javascript canvas 2d rendering engine",
-    "version": "1.0.38",
+    "version": "2.0.0",
     "homepage": "http://canvax.org",
     "license": "MIT",
     "keywords": [
