@@ -1,393 +1,202 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta http-equiv="Content-Type"content="text/html; charset=UTF-8">
-<meta name="viewport"content="user-scalable=no, width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1, maximum-scale=1"/>
-<title>Canvax</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="user-scalable=no, width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1, maximum-scale=1" />
+    <title>Canvax</title>
 
-<style type="text/css">
-body {
-    margin: 0;
-    padding: 0;
-    font-size: 12px;
-    background-color: #eee;
-    padding: 10px 100px 100px;
-}
-//canvas {
-    background: #999
-}
-</style>
+    <style type="text/css">
+        body{margin:0;padding:0;font-size:12px;background-color:#eee;padding:10px 100px 100px;}
+      
+    </style>
 
-<script type="text/javascript"src="http://g.tbcdn.cn/kissy/k/1.3.1/seed-min.js"></script>
-<script src="http://seajs.github.io/examples/sea-modules/seajs/seajs/2.1.1/sea.js"></script>
+    <!--
+    <script type="text/javascript" src="http://seajs.github.io/examples/sea-modules/seajs/seajs/2.1.1/sea.js"></script>
+    -->
+
+    <script type="text/javascript" src="../dist/canvax.js"></script>
+    <script src="./js/jquery-1.11.1.min.js"></script>
+    <script src="./js/color.js"></script>
+    <script src="./js/underscore.js"></script>
 
 </head>
 
 <body onload="pageload()">
-<div id="ready"></div>
-<script>
+    <div id="ready"></div>
+    <script>
 
-/*       
-          ## 通用模块定义
-          Universal Module Definition
-          兼容 AMD KISSY CMD
-          For KISSY 1.4
-          http://docs.kissyui.com/1.4/docs/html/guideline/kmd.html
-          兼容kissy部分代码来自@墨智在项目中使用的UMD代码
-          传送门--> http://gitlab.alibaba-inc.com/mm/zuanshi/blob/master/indexbp.js
-          Author @释剑
-          */
-if (!window.define) {
-    if(KISSY) {
-        window.define = function define(id, dependencies, factory) {
-            // KISSY.add(name?, factory?, deps)
-            function proxy() {
-                var slice = [].slice;
-                var args = slice.call(arguments, 1, arguments.length);
-                return factory.apply(window, args)
+    var pageload = function(){
+        var Shapes = Canvax.Shapes;
+        var colorInd=1;
+
+
+        var box = $("#canvasTest");
+        window.app = new Canvax.App({
+            id : "canvax",
+            el : box,
+            webGL : false
+        });
+
+        app.registEvent();
+
+        stage = new Canvax.Display.Stage({
+            id : "chart0"
+        });
+        sprite = new Canvax.Display.Sprite({
+            context : {
+                y : 250,
+                x : 50
             }
-            switch (arguments.length) {
-                case 2:
-                factory = dependencies;
-                dependencies = id;
-                KISSY.add(proxy ,{
-                    requires: dependencies
-                });
-                break;
+        });
+ 
 
-                case 3:
-                KISSY.add(id, proxy ,{
-                    requires: dependencies
-                });
-                break;
+
+
+var pointList = [
+    [
+    0,
+    -122.55508999999999
+    ],
+    [
+    55,
+    -148.96399
+    ],
+    [
+    110,
+    -176.81377
+    ],
+    [
+    165,
+    -52.43154
+    ],
+    [
+    220,
+    -107.2414
+    ],
+    [
+    275,
+    -50.82574
+    ],
+    [
+    330,
+    -116.80459
+    ],
+    [
+    385,
+    -138.30278
+    ],
+    [
+    440,
+    -164.10842
+    ],
+    [
+    495,
+    -213.33704
+    ],
+    [
+    550,
+    -52.405499999999996
+    ],
+    [
+    605,
+    -113.84037000000001
+    ],
+    [
+    661,
+    -192.46164000000002
+    ],
+    [
+    716,
+    -187.06051
+    ],
+    [
+    771,
+    -167.46541000000002
+    ],
+    [
+    826,
+    -191.53288
+    ],
+    [
+    881,
+    -116.47692
+    ],
+    [
+    936,
+    -48.62102
+    ],
+    [
+    991,
+    -32.14421
+    ],
+    [
+    1046,
+    -118.42558
+    ],
+    [
+    1101,
+    -201.63423
+    ],
+    [
+    1156,
+    -122.26431
+    ],
+    [
+    1211,
+    -110.47904
+    ],
+    [
+    1267,
+    -65.2085
+    ]
+]
+        var line = new Shapes.BrokenLine({
+            id:"map1",
+            context : {
+                y: 0,
+                pointList : pointList,
+                lineWidth: 2,
+                strokeStyle : "red",
+                smooth : false
             }
-        }
-        ;
+        });
 
-        window.define.kmd = {
-        }
-    }
-}
-if(typeof define == "function" && define.cmd) {
-    var cmdDefine = define
-    window.define = function(id, deps, factory) {
-        //只有固定的一些包是按照amd规范写的才需要转换。
-        //比如canvax项目，是按照amd规范的，但是这个包是给业务项目中去使用的。
-        //而这个业务使用seajs规范，所以业务中自己的本身的module肯定是按照seajs来编写的不需要转换
-        if(typeof id == "string" && id.indexOf("canvax/") >= 0) {
-            //只有canvax包下面的才需要做转换，因为canvax的module是安装amd格式编写的
-            return cmdDefine(id, deps, function(require, exports, module) {
-                var depList = []
-                for(var i = 0, l = deps.length;
-                i<l;
-
-                i++) {
-                    depList.push(require(deps[i]))
-                }
-                //return factory.apply(window, depList);
-                //其实用上面的直接return也是可以的
-                //但是为了遵循cmd的规范，还是给module的exports赋值
-                module.exports = factory.apply(window, depList)
+        var pathStr = "M0 -122.55508999999999 L55 -148.96399 L110 -176.81377 L165 -52.43154 L220 -107.2414 L275 -50.82574 L330 -116.80459 L385 -138.30278 L440 -164.10842 L495 -213.33704 L550 -52.405499999999996 L605 -113.84037000000001 L661 -192.46164000000002 L716 -187.06051 L771 -167.46541000000002 L826 -191.53288 L881 -116.47692 L936 -48.62102 L991 -32.14421 L1046 -118.42558 L1101 -201.63423 L1156 -122.26431 L1211 -110.47904 L1267 -65.2085 L1267 0 L0 0 z";     
+        var path = new Shapes.Path({
+            context: {
+                y: 0,
+                path : pathStr,
+                fillStyle : "blue",
+                globalAlpha : 0.3
             }
-            );
-        }
-        else {
-            return cmdDefine.apply(window, arguments)
-        }
+        });
+
+        sprite.addChild(line);
+        sprite.addChild(path);
+
+        stage.addChild(sprite);
+        app.addChild(stage); 
+
+        setInterval( function(){
+            app.heartBeat();
+        } , 300)
+
     }
-}
-if(typeof define == "function" && define.amd) {
-    //额，本来就是按照amd规范来开发的，就不需要改造了。
-}
-var baseUrl ="./";
-var configs = {
-    packages:[ {
-        name: "canvax", path:baseUrl
-    }
-    ], alias: {
-        "canvax":baseUrl
-    }
-    , paths: {
-        "canvax":baseUrl
-    }
-}
-window.KISSY && KISSY.config( {
-    packages: configs.packages
-}
-);
-
-window.seajs && seajs.config( {
-    alias: configs.alias
-}
-);
-
-window.requirejs && requirejs.config( {
-    paths: configs.paths
-}
-);
-
-var pageload = function() {
-
-    /*
-    KISSY.config({
-        debug:true,
-        //base : "./",
-        packages:[
-        {
-            name : "canvax",
-            path : "../"
-        }
-        ]
-    });
-
-    seajs.config({
-        base: "../",
-        alias: {
-            "canvax": "../"
-        }
-    });
-    */
-    seajs.config( {
-        base: "../"
-    }
-    );
-    var colorInd=0;
-    window.stage=null;
-    var S = KISSY;
-
-    KISSY.use("node", function(S) {
-        seajs.use(["canvax/index", "canvax/shape/Shapes", "canvax/animation/Tween", "canvax/library/color"], function(Canvax, Shapes, Tween, color) {
-            //KISSY.use("canvax/index, canvax/shape/Shapes, canvax/animation/Tween, canvax/library/color, node", function(S, Canvax, Shapes, Tween, color) {
-                S.all("#ready").html("ready")
 
 
 
-                var box = S.one("#canvasTest");
-                var width = box.width();
-                var height = box.height();
-
-                canvax = new Canvax( {
-                    id: "canvax", el:box
-                }
-                )
-                stage = new Canvax.Display.Stage( {
-                    id:"chart0", context: {
-                        width: width, height:height,
-                    }
-                }
-                );
-
-
-                var box1 = S.one("#canvasTest1");
-                var width1 = box1.width();
-                var height1 = box1.height();
-
-                canvax1 = new Canvax( {
-                    id: "canvax", el:box1
-                }
-                );
-                stage1 = new Canvax.Display.Stage( {
-                    id:"chart0", context: {
-                        width: width1, height:height1,
-                    }
-                }
-                );
-
-                window.sprite = new Canvax.Display.Sprite( {
-                    context: {
-                        x:10, y:10, width:300, height:300, rotation:15, scaleX:1.2, scaleOrigin: {
-                            x: 50, y:50
-                        }
-                        , rotateOrigin: {
-                            x: 150, y:150
-                        }
-                    }
-                }
-                );
-
-                sprite.on("mousemove", function(e) {
-                }
-                )
-
-                stage.addChild(sprite);
-                //box.append(stage.get("canvas"));
-                var path3Path ="M508.214279-125.706635c-79.5815 0-144.087653-6.631024-144.087653-14.776542 0-8.16496 64.506153-14.776542 144.087653-14.776542 79.580476 0 144.096862 6.612605 144.096862 14.776542C652.311141-132.337659 587.793732-125.706635 508.214279-125.706635zM405.528572 426.778428c0-57.289798 46.450938-103.749946 103.749946-103.749946 57.299007 0 103.750969 46.460148 103.750969 103.749946 0 57.308217-46.451962 103.749946-103.750969 103.749946C451.97951 530.528374 405.528572 484.086645 405.528572 426.778428zM385.182174 47.006985c67.648726-71.205739 123.368772-120.137171 123.368772-120.137171s55.535851 49.275263 123.021871 120.674407c-20.778232 11.288091-62.369489 24.591071-123.012661 24.591071C447.474916 72.135292 405.796678 58.621511 385.182174 47.006985zM804.285414 585.671275c-1.678222 3.238764-4.590552 3.795443-7.446599 2.204202-1.830695-1.01512-102.69594-55.468312-102.69594-55.468312s-4.915963-3.009544-2.692319-7.284917c15.027252-28.960589 23.430642-60.412928 23.430642-95.315856 0-114.13855-92.529393-206.655663-206.66692-206.655663-114.139573 0-206.656687 92.517113-206.656687 206.655663s92.518137 206.656687 206.656687 206.656687c49.105395 0 94.197382-17.154705 129.653919-45.77044 3.786233-2.894933 6.814196-1.49505 8.366551-0.805342 1.372254 0.593518 88.052428 47.437405 108.551298 58.516742 2.721994 1.474584 3.728928 4.714372 1.77339 6.852058C695.609273 723.557692 606.971513 766.63479 508.224512 766.63479c-183.819562 0-332.841597-149.012825-332.841597-332.832388 0-37.172621 6.189979-72.880891 17.430998-106.250906 23.613814-74.55809 86.126566-159.832242 149.357679-232.628198 39.23356 27.869744 105.053638 40.998763 166.387541 40.998763 79.771835 0 134.455271-17.269315 166.637228-41.114396 65.156976 74.866105 129.375579 163.1498 150.851707 239.930511 9.745968 31.281447 14.998599 64.564481 14.998599 99.064226C841.04769 489.127452 828.110029 539.72892 804.285414 585.671275z";
-                var ps1 ="M 100 100 L 200 200 A 50 50 0 1 1 200 250 z";
-                var ps2 ="M10 10 H 100 H 150 M10 315 L 110 215 A 30 50 0 0 1 162.55 162.45 L 172.55 152.45 A 30 50 -45 0 1 215.1 109.9 L 315 10 v 60 Q 350 100 350 130 C 350 230 450 130 450 230 z";
-                var ps3 ="M366,310, L323,427, L422,350, L310,349, L409,427 z";
-                var ps4 = "M 0 50 C 50 50 75 -16.666666666666668 0 -70";
-
-                window.path1 = new Shapes.Path( {
-                    id:"path3", context: {
-                        x: 500, y:0, 
-                        path:ps1, 
-                        lineWidth:1,
-                        fillStyle:color.getColor(colorInd++), 
-                        strokeStyle:color.getColor(colorInd++)
-                    }
-                }
-                );
-
-                path1.on("mouseover", function() {
-                    this.context.lineWidth = 5;
-                }
-                )
-                path1.on("mouseout", function() {
-                    this.context.lineWidth = 1;
-                }
-                )
-                stage.addChild(path1);
-            
-
-                setTimeout(function() {
-                    _.each(path1.context.pointList, function(p) {
-                        //debugger
-                        _.each(p, function(point) {
-                            console.log(point[0]+"|"+point[1])
-                            stage.addChild(new Shapes.Circle( {
-                                context: {
-                                    r: 1, 
-                                    x:point[0]+500,
-                                    y:point[1], 
-                                    fillStyle:"blue"
-                                }
-                            }
-                            ));
-                        }
-                        );
-                    }
-                    );
-                }
-                , 1000)
+    
 
 
 
-                window.path2 = new Shapes.Path( {
-                    id:"path3", context: {
-                        x: 0, y:0, 
-                        path:ps2, 
-                        lineWidth:1, 
-                        fillStyle:"RGBA(0,0,0,0.03)",
-                        strokeStyle:color.getColor(colorInd++)
-                    }
-                }
-                );
 
-                path2.on("mouseover", function() {
-                    this.context.lineWidth = 5;
-                }
-                )
-                path2.on("mouseout", function() {
-                    this.context.lineWidth = 1;
-                }
-                )
-                stage.addChild(path2);
-
-                setTimeout(function() {
-                    
-                    _.each(path2.context.pointList, function(p) {
-                        //debugger
-                        _.each(p, function(point) {
-                            console.log(point[0]+"|"+point[1])
-                            stage.addChild(new Shapes.Circle( {
-                                context: {
-                                    r: 1, x:point[0], y:point[1], fillStyle:"blue"
-                                }
-                            }
-                            ));
-                        }
-                        );
-                    }
-                    );
-                }
-                , 1000)
-
-
-                window.path3 = new Shapes.Path( {
-                    id:"path3", context: {
-                        x: 0, y:0, path:ps3, lineWidth:1, fillStyle:color.getColor(colorInd++), strokeStyle:color.getColor(colorInd++)
-                    }
-                }
-                );
-
-                path3.on("mouseover", function() {
-                    this.context.lineWidth = 5;
-                }
-                )
-                path3.on("mouseout", function() {
-                    this.context.lineWidth = 1;
-                }
-                )
-                stage.addChild(path3);
-
-                setTimeout(function() {
-                    _.each(path3.context.pointList, function(p) {
-                        //debugger
-                        _.each(p, function(point) {
-                            console.log(point[0]+"|"+point[1])
-                            stage.addChild(new Shapes.Circle( {
-                                context: {
-                                    r: 1, x:point[0], y:point[1], fillStyle:"blue"
-                                }
-                            }
-                            ));
-                        }
-                        );
-                    }
-                    );
-                }
-                , 1000);
-
-
-                window.path4 = new Shapes.Path( {
-                    id:"path3", context: {
-                        x: 480, y:90, path:ps4, lineWidth:1, fillStyle:color.getColor(colorInd++), strokeStyle:color.getColor(colorInd++)
-                    }
-                }
-                );
-
-                path4.on("mouseover", function() {
-                    this.context.lineWidth = 5;
-                }
-                )
-                path4.on("mouseout", function() {
-                    this.context.lineWidth = 1;
-                }
-                )
-                stage1.addChild(path4);
-
-                setTimeout(function() {
-                    _.each(path4.context.pointList, function(p) {
-                        //debugger
-                        _.each(p, function(point) {
-                            console.log(point[0]+"|"+point[1])
-                            stage1.addChild(new Shapes.Circle( {
-                                context: {
-                                    r: 1, x:point[0]+480, y:point[1]+90, fillStyle:"blue"
-                                }
-                            }
-                            ));
-                        }
-                        );
-                    }
-                    );
-                }
-                , 1000);
-
-                canvax.addChild(stage);
-                canvax1.addChild(stage1);
-
-            }
-            )
-        }
-        )
-    }
-    ;
-    </script>
+</script>
 
 
 
-    <div id="canvasTest"style='background:#f3f5f4;width:1200px;height:500px;'></div>
-    <div id="canvasTest1"style='background:#f3f5f4;width:1200px;height:500px;'></div>
-    </body>
-    </html>
+<div id="canvasTest" style='width:1356px;height:280px;'></div>
+</body>
+</html>
+
+
+

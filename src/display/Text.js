@@ -24,6 +24,9 @@ export default class Text extends DisplayObject
             fontSize: 13, //字体大小默认13
             fontWeight: "normal",
             fontFamily: "微软雅黑,sans-serif",
+            textBaseline: "top",
+            textAlign: "left",
+            
             textDecoration: null,
             fillStyle: 'blank',
             strokeStyle: null,
