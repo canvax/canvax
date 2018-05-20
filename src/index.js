@@ -25,6 +25,7 @@ import Sector from "./shape/Sector";
 import AnimationFrame from "./animation/AnimationFrame"
 
 import _ from "./utils/underscore"
+import $ from "./utils/dom"
 
 import utils from "./utils/index"
 
@@ -63,7 +64,7 @@ Canvax.Event = {
 Canvax.AnimationFrame = AnimationFrame;
 
 Canvax._ = _;
-
+Canvax.$ = $;
 Canvax.utils = utils;
 
 export default Canvax;

@@ -123,13 +123,14 @@ export default class DisplayObjectContainer extends DisplayObject
         };
         this.fire("destroy");
         */
-        this._destroy();
+        
         //依次销毁所有子元素
         for (var i=0,l=this.children.length ; i<l ; i++){
             this.getChildAt(i).destroy();
             i--;
             l--;
         };
+        this._destroy();
     }
 
     /*

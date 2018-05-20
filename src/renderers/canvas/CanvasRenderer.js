@@ -44,7 +44,7 @@ export default class CanvasRenderer extends SystemRenderer
 
         var $MC = displayObject.context.$model;
 
-        if( !displayObject.worldTransform || displayObject._transformChange || displayObject.parent._transformChange ){
+        if( !displayObject.worldTransform || displayObject._transformChange || (displayObject.parent && displayObject.parent._transformChange) ){
             displayObject.setWorldTransform();
             displayObject._transformChange = true;
         };

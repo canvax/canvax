@@ -4,11 +4,12 @@
  * @author 释剑 (李涛, litao.lt@alibaba-inc.com 
 */
 import _ from "../utils/underscore";
+import $ from "./dom"
 
 var Utils = {
     mainFrameRate   : 60,//默认主帧率
     now : 0,
-    /*像素检测专用*/
+    /*给文本检测高宽专用*/
     _pixelCtx   : null,
     __emptyFunc : function(){},
     //retina 屏幕优化
@@ -31,6 +32,7 @@ var Utils = {
         if( window.FlashCanvas && FlashCanvas.initElement){
             FlashCanvas.initElement( canvas );
         }
+        return canvas;
     },
     
     /**
@@ -99,5 +101,7 @@ var Utils = {
         return opt;
     }
 };
+
+Utils._pixelCtx = Utils.initElement($.createCanvas(1, 1, "_pixelCanvas")).getContext('2d');
 
 export default Utils;

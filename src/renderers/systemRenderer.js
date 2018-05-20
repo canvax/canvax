@@ -61,7 +61,7 @@ export default class SystemRenderer
         if( self._heartBeat ){
 
             //var _begin = new Date().getTime();
-            self.render( this.app );
+            this.app.children.length && self.render( this.app );
             //var _end = new Date().getTime();
             //$(document.body).append( "<br />render："+ (_end - _begin) );
             

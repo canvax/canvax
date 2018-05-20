@@ -18,7 +18,6 @@ import Stage from "./display/Stage";
 import autoRenderer from "./renderers/autoRenderer";
 import Matrix from "./geom/Matrix";
 
-
 //utils
 import _ from "./utils/underscore";
 import $ from "./utils/dom";
@@ -54,8 +53,6 @@ export default class Application extends DisplayObjectContainer
 
         this.event = null;
 
-        
-
         //是否阻止浏览器默认事件的执行
         this.preventDefault = true;
         if( opt.preventDefault === false ){
@@ -68,14 +65,9 @@ export default class Application extends DisplayObjectContainer
         this.context.$model.width  = this.width;
         this.context.$model.height = this.height; 
 
-
         //然后创建一个用于绘制激活 shape 的 stage 到activation
         this._bufferStage = null;
         this._creatHoverStage();
-
-
-        //创建一个如果要用像素检测的时候的容器
-        this._createPixelContext();
 
         //设置一个默认的matrix做为app的世界根节点坐标
         this.worldTransform = new Matrix().identity();
@@ -87,6 +79,24 @@ export default class Application extends DisplayObjectContainer
         this.event = new EventHandler( this , opt);;
         this.event.init();
         return this.event;
+    }
+
+    destroy()
+    {
+        for( var i=0,l=this.children.length; i<l; i++ ){
+            var stage = this.children[i];
+            stage.destroy();
+            stage.canvas = null;
+            stage.ctx = null;
+            stage = null;
+            i--,l--;
+        };
+        this.view.removeChild( this.stageView );
+        this.view.removeChild( this.domView );
+        this.el.removeChild( this.view );
+        this.el.innerHTML = "";
+        this.event = null;
+        this._bufferStage = null;
     }
 
     resize( opt )
@@ -144,42 +154,12 @@ export default class Application extends DisplayObjectContainer
         this.addChild( this._bufferStage );
     }
 
-    /**
-     * 用来检测文本width height 
-     * @return {Object} 上下文
-    */
-    _createPixelContext() 
-    {
-        var _pixelCanvas = $.query("_pixelCanvas");
-        if(!_pixelCanvas){
-            _pixelCanvas = $.createCanvas(0, 0, "_pixelCanvas");
-        } else {
-            //如果有的话 就不需要在创建了，但是最好获取一下context,因为可能同时存在chartx1.0的图表
-            Utils._pixelCtx = _pixelCanvas.getContext('2d');
-            return;
-        };
-        document.body.appendChild( _pixelCanvas );
-        Utils.initElement( _pixelCanvas );
-        if( Utils.canvasSupport() ){
-            //canvas的话，哪怕是display:none的页可以用来左像素检测和measureText文本width检测
-            _pixelCanvas.style.display    = "none";
-        } else {
-            //flashCanvas 的话，swf如果display:none了。就做不了measureText 文本宽度 检测了
-            _pixelCanvas.style.zIndex     = -1;
-            _pixelCanvas.style.position   = "absolute";
-            _pixelCanvas.style.left       = -this.context.$model.width  + "px";
-            _pixelCanvas.style.top        = -this.context.$model.height + "px";
-            _pixelCanvas.style.visibility = "hidden";
-        }
-        Utils._pixelCtx = _pixelCanvas.getContext('2d');
-    }
-
     updateViewOffset()
     {
         var now = new Date().getTime();
         if( now - this.lastGetRO > 1000 ){
-            this.viewOffset      = $.offset(this.view);
-            this.lastGetRO       = now;
+            this.viewOffset = $.offset(this.view);
+            this.lastGetRO  = now;
         }
     }
     
@@ -227,14 +207,11 @@ export default class Application extends DisplayObjectContainer
 
     toDataURL()
     {
-        //var canvas = Base._createCanvas( "curr_base64_canvas" , this.width , this.height );
         var canvas = $.createCanvas( this.width , this.height, "curr_base64_canvas" );
         var ctx = canvas.getContext("2d");
-
         _.each( this.children , function( stage ){
             ctx.drawImage( stage.canvas , 0 , 0 );
         } );
-        
         return canvas.toDataURL();
     }
 }

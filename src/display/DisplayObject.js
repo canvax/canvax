@@ -457,7 +457,7 @@ export default class DisplayObject extends EventDispatcher
         //if( !this.worldTransform ){
         var cm = new Matrix();
         cm.concat( this._transform );
-        cm.concat( this.parent.worldTransform );
+        this.parent && cm.concat( this.parent.worldTransform );
         this.worldTransform = cm;
         //};
         return this.worldTransform;
@@ -567,6 +567,10 @@ export default class DisplayObject extends EventDispatcher
         if( !context ){
             context = this.context;
         };
+        if( !context ){
+            //这个时候如果还是找不到context说明这个 el 已经被destroy了
+            return;
+        };
 
         var to = toContent;
         var from = null;
@@ -627,6 +631,7 @@ export default class DisplayObject extends EventDispatcher
         options.onComplete = function( status ){
             compFun.apply(self , arguments)
         };
+        options.desc = "tweenType:DisplayObject.animate__id:"+this.id+"__objectType:"+this.type;
         tween = AnimationFrame.registTween( options );
         return tween;
     }

@@ -90,6 +90,7 @@ function destroyFrame( $frame ) {
  * @result tween
  */
 function registTween(options) {
+    
     var opt = _.extend({
         from: null,
         to: null,
@@ -143,7 +144,6 @@ function registTween(options) {
         tween.start();
 
         function animate() {
-
             if ( tween._isCompleteed || tween._isStoped ) {
                 tween = null;
                 return;
@@ -156,7 +156,6 @@ function registTween(options) {
             });
         };
         animate();
-
     };
     return tween;
 };
@@ -172,5 +171,7 @@ export default {
     registFrame: registFrame,
     destroyFrame: destroyFrame,
     registTween: registTween,
-    destroyTween: destroyTween
+    destroyTween: destroyTween,
+    Tween: Tween,
+    taskList: _taskList
 };
