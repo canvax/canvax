@@ -99,11 +99,11 @@ each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp'], function(n
   };
 });
 
-if (!_.isArguments(arguments)) {
+//if (!_.isArguments(arguments)) {
   _.isArguments = function (obj) {
     return !!(obj && _.has(obj, 'callee'));
   };
-}
+//}
 
 if (typeof (/./) !== 'function') {
   _.isFunction = function(obj) {
