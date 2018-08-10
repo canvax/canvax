@@ -4381,7 +4381,7 @@ var CanvasRenderer = function (_SystemRenderer) {
 
             globalAlpha *= $MC.globalAlpha;
 
-            if (!$MC.visible || !globalAlpha || displayObject.isClip) {
+            if (!$MC.visible || displayObject.isClip) {
                 return;
             }
 
@@ -4419,7 +4419,12 @@ var CanvasRenderer = function (_SystemRenderer) {
                     //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
                     displayObject._draw(displayObject.graphics); //_draw会完成绘制准备好 graphicsData
                 }
-                this.CGR.render(displayObject, stage, globalAlpha);
+
+                //globalAlpha == 0 的话，只是不需要render，但是graphics的graphicsData还是要计算的
+                //事件检测的时候需要用到graphics.graphicsData
+                if (!!globalAlpha) {
+                    this.CGR.render(displayObject, stage, globalAlpha);
+                }
             }
 
             if (displayObject.type == "text") {
