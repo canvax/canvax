@@ -162,25 +162,30 @@ var pointList = [
         });
 
         var pathStr = "M0 -122.55508999999999 L55 -148.96399 L110 -176.81377 L165 -52.43154 L220 -107.2414 L275 -50.82574 L330 -116.80459 L385 -138.30278 L440 -164.10842 L495 -213.33704 L550 -52.405499999999996 L605 -113.84037000000001 L661 -192.46164000000002 L716 -187.06051 L771 -167.46541000000002 L826 -191.53288 L881 -116.47692 L936 -48.62102 L991 -32.14421 L1046 -118.42558 L1101 -201.63423 L1156 -122.26431 L1211 -110.47904 L1267 -65.2085 L1267 0 L0 0 z";     
+        var pathStr = "M400.5 334.8630396904959 A114.29160600337623 114.29160600337623 0 0 1 400.5 156.55374830275161 A114.29160600337623 114.29160600337623 0 0 1 400.5 334.8630396904959 z"
+        var pathStr1 = "M10 10 H 100 H 150 M10 315 L 110 215 A 30 50 0 0 1 162.55 162.45 L 172.55 152.45 A 30 50 -45 0 1 215.1 109.9 L 315 10 v 60 Q 350 100 350 130 C 350 230 450 130 450 230 z"
         var path = new Shapes.Path({
             context: {
-                y: 0,
+                
                 path : pathStr,
                 fillStyle : "blue",
-                globalAlpha : 0.3
+                strokeStyle : "red",
+                lineWidth : 3
             }
         });
 
-        sprite.addChild(line);
-        sprite.addChild(path);
+
+        //sprite.addChild(line);
+        stage.addChild(path);
 
         stage.addChild(sprite);
         app.addChild(stage); 
 
+        /*
         setInterval( function(){
             app.heartBeat();
         } , 300)
-
+*/
     }
 
 
@@ -194,7 +199,7 @@ var pointList = [
 
 
 
-<div id="canvasTest" style='width:1356px;height:280px;'></div>
+<div id="canvasTest" style='width:1000px;height:1000px;'></div>
 </body>
 </html>
 
