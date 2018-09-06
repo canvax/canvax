@@ -2,7 +2,7 @@
     "name": "canvax",
     "title": "Canvax.JS",
     "description": "A javascript canvas 2d rendering engine",
-    "version": "2.0.5",
+    "version": "2.0.6",
     "homepage": "http://canvax.org",
     "license": "MIT",
     "keywords": [

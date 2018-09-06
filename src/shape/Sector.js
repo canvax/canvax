@@ -43,6 +43,7 @@ export default class Sector extends Shape
     {
         if ( name == "r0" || name == "r" || name == "startAngle" || name =="endAngle" || name =="clockwise" ) {
             //因为这里的graphs不一样。
+            this.isRing = false;//是否为一个圆环，这里也要开始初始化一下
             this.graphics.clear();
         };
     }
