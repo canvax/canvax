@@ -3130,6 +3130,12 @@ var DisplayObject = function (_EventDispatcher) {
 
         //所有属性准备好了后，先要计算一次this._updateTransform()得到_tansform
         _this._updateTransform();
+
+        _this._tweens = [];
+        var me = _this;
+        _this.on("destory", function () {
+            me.cleanAnimates();
+        });
         return _this;
     }
 
@@ -3657,7 +3663,12 @@ var DisplayObject = function (_EventDispatcher) {
                     //如果是个object
                     continue;
                 }
-                if (isNaN(to[p]) && to[p] !== '' && to[p] !== null && to[p] !== undefined) {
+                //if( isNaN(to[p]) && to[p] !== '' && to[p] !== null && to[p] !== undefined ){
+                if (isNaN(to[p]) && to[p] !== '' && to[p] !== null) {
+                    //undefined已经被isNaN过滤了
+                    //只有number才能继续走下去执行tween，而非number则直接赋值完事，
+                    //TODO:不能用_.isNumber 因为 '1212' 这样的其实可以计算
+                    context[p] = to[p];
                     delete to[p];
                     continue;
                 }
@@ -3705,10 +3716,49 @@ var DisplayObject = function (_EventDispatcher) {
             }
             options.onComplete = function (status) {
                 compFun.apply(self, arguments);
+                self._removeTween(tween);
+            };
+            options.onStop = function () {
+                self._removeTween(tween);
             };
             options.desc = "tweenType:DisplayObject.animate__id:" + this.id + "__objectType:" + this.type;
             tween = AnimationFrame.registTween(options);
+            this._tweens.push(tween);
             return tween;
+        }
+    }, {
+        key: "_removeTween",
+        value: function _removeTween(tween) {
+            for (var i = 0; i < this._tweens.length; i++) {
+                if (tween == this._tweens[i]) {
+                    this._tweens.splice(i, 1);
+                    break;
+                }
+            }
+        }
+    }, {
+        key: "removeAnimate",
+        value: function removeAnimate(animate) {
+            animate.stop();
+            this._removeTween(animate);
+        }
+
+        //清楚所有的动画
+
+    }, {
+        key: "cleanAnimates",
+        value: function cleanAnimates() {
+            this._cleanAnimates();
+        }
+
+        //清楚所有的动画
+
+    }, {
+        key: "_cleanAnimates",
+        value: function _cleanAnimates() {
+            while (this._tweens.length) {
+                this._tweens.shift().stop();
+            }
         }
 
         //从树中删除
@@ -3879,6 +3929,18 @@ var DisplayObjectContainer = function (_DisplayObject) {
             this._destroy();
         }
 
+        //集合类的自我销毁
+
+    }, {
+        key: "cleanAnimates",
+        value: function cleanAnimates() {
+            //依次销毁所有子元素
+            for (var i = 0, l = this.children.length; i < l; i++) {
+                this.getChildAt(i).cleanAnimates();
+            }
+            this._cleanAnimates();
+        }
+
         /*
          *@id 元素的id
          *@boolen 是否深度查询，默认就在第一层子元素中查询
@@ -3993,13 +4055,10 @@ var Stage = function (_DisplayObjectContain) {
         return _this;
     }
 
+    //由canvax的afterAddChild 回调
+
+
     createClass(Stage, [{
-        key: "init",
-        value: function init() {}
-
-        //由canvax的afterAddChild 回调
-
-    }, {
         key: "initStage",
         value: function initStage(canvas, width, height) {
             var self = this;

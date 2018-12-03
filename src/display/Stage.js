@@ -26,10 +26,6 @@ export default class Stage extends DisplayObjectContainer
         this._isReady = false;
     }
 
-    init()
-    {
-
-    }
 
     //由canvax的afterAddChild 回调
     initStage( canvas , width , height )

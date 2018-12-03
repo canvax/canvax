@@ -133,6 +133,17 @@ export default class DisplayObjectContainer extends DisplayObject
         this._destroy();
     }
 
+
+    //集合类的自我销毁
+    cleanAnimates()
+    {
+        //依次销毁所有子元素
+        for (var i=0,l=this.children.length ; i<l ; i++){
+            this.getChildAt(i).cleanAnimates();
+        };
+        this._cleanAnimates();
+    }
+
     /*
      *@id 元素的id
      *@boolen 是否深度查询，默认就在第一层子元素中查询

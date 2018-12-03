@@ -53,8 +53,15 @@ export default class DisplayObject extends EventDispatcher
 
         this.init.apply(this , arguments);
 
+
         //所有属性准备好了后，先要计算一次this._updateTransform()得到_tansform
         this._updateTransform();
+
+        this._tweens = [];
+        var me = this;
+        this.on("destory" , function(){
+            me.cleanAnimates();
+        });
     }
 
     init()
@@ -582,7 +589,12 @@ export default class DisplayObject extends EventDispatcher
                 //如果是个object
                 continue;
             };
-            if( isNaN(to[p]) && to[p] !== '' && to[p] !== null && to[p] !== undefined ){
+            //if( isNaN(to[p]) && to[p] !== '' && to[p] !== null && to[p] !== undefined ){
+            if( isNaN(to[p]) && to[p] !== '' && to[p] !== null ){
+                //undefined已经被isNaN过滤了
+                //只有number才能继续走下去执行tween，而非number则直接赋值完事，
+                //TODO:不能用_.isNumber 因为 '1212' 这样的其实可以计算
+                context[ p ] = to[ p ];
                 delete to[p];
                 continue;
             };
@@ -629,11 +641,42 @@ export default class DisplayObject extends EventDispatcher
             compFun = options.onComplete;
         };
         options.onComplete = function( status ){
-            compFun.apply(self , arguments)
+            compFun.apply(self , arguments);
+            self._removeTween( tween );
+        };
+        options.onStop = function(){
+            self._removeTween( tween );
         };
         options.desc = "tweenType:DisplayObject.animate__id:"+this.id+"__objectType:"+this.type;
         tween = AnimationFrame.registTween( options );
+        this._tweens.push( tween );
         return tween;
+    }
+
+    _removeTween( tween ){
+        for( var i=0; i<this._tweens.length; i++ ){
+            if( tween == this._tweens[i] ){
+                this._tweens.splice( i , 1 );
+                break;
+            }
+        }
+    }
+
+    removeAnimate( animate ){
+        animate.stop();
+        this._removeTween( animate );
+    }
+
+    //清楚所有的动画
+    cleanAnimates(){
+        this._cleanAnimates();
+    }
+
+    //清楚所有的动画
+    _cleanAnimates(){
+        while( this._tweens.length ){
+            this._tweens.shift().stop();
+        };
     }
 
     //从树中删除

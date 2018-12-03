@@ -447,7 +447,11 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
                 //delay: 1 * 80,
                 //id: line.id
             })
-        } , 3000)
+        } , 1000);
+
+        setTimeout(function(){
+            //line.cleanAnimates();
+        },2000)
 
         window.text = new Canvax.Display.Text( "我的大刀已饥渴难耐" , {
             context : {
