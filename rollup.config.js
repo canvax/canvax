@@ -7,7 +7,8 @@ rollup.rollup({
     input: 'src/index.js',
     plugins: [
       babel({
-        exclude: 'node_modules/**'
+        //exclude: 'node_modules/**'
+        include : ['./src/**','node_modules/mmvis/**']
       }),
       resolve({ jsnext: true, main: true, browser: true}), 
       commonjs()
@@ -23,9 +24,9 @@ rollup.rollup({
 
 
     bundle.write({
-        format: 'umd',
-        name: 'Chartx',
-        file: 'dist/index.js',
+        format: 'iife',
+        name: 'Canvax',
+        file: 'dist/canvax.js',
         //sourceMap: 'inline'
     });
 
