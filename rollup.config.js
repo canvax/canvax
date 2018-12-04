@@ -21,13 +21,6 @@ rollup.rollup({
     // iife – 使用于<script> 标签引用的方式
     // umd – 适用于CommonJs和AMD风格通用模式
 
-    bundle.write({
-        format: 'es',
-        name: 'Chartx',
-        file: 'dist/index.es.js',
-        //sourceMap: 'inline'
-    });
-
 
     bundle.write({
         format: 'umd',

@@ -2,7 +2,7 @@
     "name": "canvax",
     "title": "Canvax.JS",
     "description": "A javascript canvas 2d rendering engine",
-    "version": "2.0.11",
+    "version": "2.0.12",
     "homepage": "http://canvax.org",
     "license": "MIT",
     "keywords": [
@@ -18,7 +18,7 @@
     },
     "repository": "git",
     "main": "./dist/index.js",
-    "module": "./dist/index.es.js",
+    "module": "./src/index.js",
     "devDependencies": {
         "babel-core": "^6.13.0",
         "babel-preset-es2015-rollup": "^1.1.1",
@@ -34,7 +34,7 @@
         "earcut": "^2.0.7",
         "@tweenjs/tween.js": "17.1.0",
         "pixi-gl-core": "^1.0.3",
-        "mmvis": "^0.0.16"
+        "mmvis": "^0.0.17"
     },
     "scripts": {
         "rollup": "node rollup.config.js",
