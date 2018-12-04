@@ -6,7 +6,7 @@
  * 把canvax元素的context实现监听属性改动
  * 来给整个引擎提供心跳包的触发机制
  */
-import _ from "../utils/underscore";
+import {_} from "mmvis";
 
 function Observe(scope) {
 

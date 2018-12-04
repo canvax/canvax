@@ -14,7 +14,7 @@
  */
 import Polygon from "./Polygon";
 import Utils from "../utils/index";
-import _ from "../utils/underscore";
+import {_} from "mmvis";
 import _Math from "../geom/Math"
 
 export default class Isogon extends Polygon

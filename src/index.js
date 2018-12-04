@@ -1,7 +1,5 @@
 
 import Application from "./Application";
-import EventDispatcher from "./event/EventDispatcher";
-import EventManager from "./event/EventManager";
 import DisplayObject from "./display/DisplayObject";
 import DisplayObjectContainer from "./display/DisplayObjectContainer";
 import Stage from "./display/Stage";
@@ -23,9 +21,6 @@ import Rect from "./shape/Rect";
 import Sector from "./shape/Sector";
 
 import AnimationFrame from "./animation/AnimationFrame"
-
-import _ from "./utils/underscore"
-import $ from "./utils/dom"
 
 import utils from "./utils/index"
 
@@ -56,15 +51,8 @@ Canvax.Shapes = {
     Sector : Sector
 }
 
-Canvax.Event = {
-    EventDispatcher : EventDispatcher,
-    EventManager    : EventManager
-}
-
 Canvax.AnimationFrame = AnimationFrame;
 
-Canvax._ = _;
-Canvax.$ = $;
 Canvax.utils = utils;
 
 export default Canvax;

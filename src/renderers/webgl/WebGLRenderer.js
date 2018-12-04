@@ -2,7 +2,7 @@ import SystemRenderer from '../SystemRenderer';
 import { RENDERER_TYPE } from '../../const';
 import Settings from '../../settings';
 import WebGLStageRenderer from "./WebGLStageRenderer";
-import _ from "../../utils/underscore";
+import {_} from "mmvis";
 
 export default class WebGLRenderer extends SystemRenderer
 {

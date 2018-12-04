@@ -2,7 +2,7 @@ import { RENDERER_TYPE } from '../const';
 import settings from '../settings';
 import AnimationFrame from "../animation/AnimationFrame";
 import Utils from "../utils/index";
-import _ from "../utils/underscore";
+import {_} from "mmvis";
 
 export default class SystemRenderer
 {

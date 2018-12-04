@@ -1,7 +1,7 @@
 import Tween from "@tweenjs/tween.js";
 //import Tween from "./Tween"
 import Utils from "../utils/index";
-import _ from "../utils/underscore";
+import {_} from "mmvis";
 
 /**
  * 设置 AnimationFrame begin

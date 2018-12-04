@@ -7,7 +7,7 @@
  **/
 import DisplayObject from "./DisplayObject";
 import Utils from "../utils/index";
-import _ from "../utils/underscore";
+import {_} from "mmvis";
 
 export default class Text extends DisplayObject
 {

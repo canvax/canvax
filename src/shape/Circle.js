@@ -12,7 +12,7 @@
  **/
 import Shape from "../display/Shape";
 import Utils from "../utils/index";
-import _ from "../utils/underscore";
+import {_} from "mmvis";
 
 export default class Circle extends Shape
 {

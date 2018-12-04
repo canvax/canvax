@@ -1,4 +1,4 @@
-import { hex2rgb } from '../../../utils/color';
+import { color } from 'mmvis';
 
 export default function buildLine(graphicsData, webGLData)
 {
@@ -36,7 +36,7 @@ export default function buildLine(graphicsData, webGLData)
 
     const width = graphicsData.lineWidth / 2;
 
-    const color = hex2rgb(graphicsData.strokeStyle);
+    const color = color.hexTorgb(graphicsData.strokeStyle);
     const alpha = graphicsData.lineAlpha;
     const r = color[0] * alpha;
     const g = color[1] * alpha;

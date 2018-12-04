@@ -1,4 +1,4 @@
-import { hex2rgb } from '../../utils/color';
+import { color } from 'mmvis';
 import { SHAPES } from '../../const';
 import WebGLRenderer from '../../renderers/webgl/WebGLRenderer';
 import WebGLGraphicsData from './WebGLGraphicsData';
@@ -67,7 +67,7 @@ export default class GraphicsRenderer
             renderer.bindShader(shaderTemp);
 
             shaderTemp.uniforms.translationMatrix = displayObject.worldTransform.toArray(true);
-            shaderTemp.uniforms.tint = hex2rgb(graphics.tint);
+            shaderTemp.uniforms.tint = color.hexTorgb(graphics.tint);
             shaderTemp.uniforms.alpha = graphics.worldAlpha;
 
             renderer.bindVao(webGLData.vao);

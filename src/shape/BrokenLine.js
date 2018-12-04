@@ -10,7 +10,7 @@
  **/
 import Shape from "../display/Shape";
 import Utils from "../utils/index";
-import _ from "../utils/underscore";
+import {_} from "mmvis";
 import _Math from "../geom/Math"
 
 export default class BrokenLine extends Shape

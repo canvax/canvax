@@ -5,8 +5,7 @@
  *
  * 模拟as3 DisplayList 的 现实对象基类
  */
-import _ from "../utils/underscore";
-import EventDispatcher from "../event/EventDispatcher";
+import {_,event} from "mmvis";
 import Matrix from "../geom/Matrix";
 import Point from "./Point";
 import Utils from "../utils/index";
@@ -16,7 +15,7 @@ import {CONTEXT_DEFAULT, TRANSFORM_PROPS} from "../const";
 import InsideLine from '../geom/InsideLine';
 import Settings from '../settings';
 
-export default class DisplayObject extends EventDispatcher
+export default class DisplayObject extends event.Dispatcher
 {
     constructor( opt )
     {

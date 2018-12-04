@@ -8,7 +8,7 @@ import GraphicsData from './GraphicsData';
 import { Rectangle, Ellipse, Polygon, Circle } from '../math/index';
 import { SHAPES } from '../const';
 import bezierCurveTo from './utils/bezierCurveTo';
-import _ from "../utils/underscore";
+import {_} from "mmvis";
 
 export default class Graphics 
 {

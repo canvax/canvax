@@ -12,15 +12,12 @@
  **/
 
 import Utils from "./utils/index";
-import EventHandler from "./event/EventHandler";
 import DisplayObjectContainer from "./display/DisplayObjectContainer";
 import Stage from "./display/Stage";
 import autoRenderer from "./renderers/autoRenderer";
 import Matrix from "./geom/Matrix";
 
-//utils
-import _ from "./utils/underscore";
-import $ from "./utils/dom";
+import {_,$,event} from "mmvis";
 
 export default class Application extends DisplayObjectContainer
 {
@@ -76,7 +73,7 @@ export default class Application extends DisplayObjectContainer
     registEvent(opt)
     {
         //初始化事件委托到root元素上面
-        this.event = new EventHandler( this , opt);;
+        this.event = new event.Handler( this , opt);;
         this.event.init();
         return this.event;
     }

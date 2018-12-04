@@ -4,12 +4,12 @@ var commonjs = require('rollup-plugin-commonjs');
 var resolve = require('rollup-plugin-node-resolve');
 
 rollup.rollup({
-    entry: 'src/index.js',
+    input: 'src/index.js',
     plugins: [
       babel({
         exclude: 'node_modules/**'
       }),
-      resolve({ jsnext: true, main: true, browser: true, }), 
+      resolve({ jsnext: true, main: true, browser: true}), 
       commonjs()
     ]
 }).then(function(bundle) {
@@ -22,32 +22,17 @@ rollup.rollup({
     // umd – 适用于CommonJs和AMD风格通用模式
 
     bundle.write({
-        format: 'iife',
-        moduleName: 'Canvax',
-        dest: 'dist/canvax.js',
+        format: 'es',
+        name: 'Chartx',
+        file: 'dist/index.es.js',
         //sourceMap: 'inline'
     });
 
-
-    bundle.write({
-        format: 'amd',
-        moduleName: 'Canvax',
-        dest: 'dist/amd/canvax.js',
-        //sourceMap: 'inline'
-    });
 
     bundle.write({
         format: 'umd',
-        moduleName: 'Canvax',
-        dest: 'dist/umd/canvax.js',
-        //sourceMap: 'inline'
-    });
-
-
-    bundle.write({
-        format: 'cjs',
-        moduleName: 'Canvax',
-        dest: 'dist/cjs/canvax.js',
+        name: 'Chartx',
+        file: 'dist/index.js',
         //sourceMap: 'inline'
     });
 

@@ -5,7 +5,7 @@
  *
  * 模拟as3的DisplayList 中的容器类
  */
-import _ from "../utils/underscore";
+import {_} from "mmvis";
 import DisplayObject from "./DisplayObject";
 import Point from "./Point";
 

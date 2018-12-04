@@ -11,7 +11,7 @@
  **/
 import Path from "./Path";
 import Utils from "../utils/index";
-import _ from "../utils/underscore";
+import {_} from "mmvis";
 
 export default class Droplet extends Path
 {

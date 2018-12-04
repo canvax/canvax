@@ -1,6 +1,6 @@
 import buildLine from './buildLine';
 import { SHAPES } from '../../../const';
-import { hex2rgb } from '../../../utils/color';
+import { color } from 'mmvis';
 
 export default function buildCircle(graphicsData, webGLData)
 {
@@ -29,7 +29,7 @@ export default function buildCircle(graphicsData, webGLData)
 
     if (graphicsData.hasFill() && graphicsData.fillAlpha)
     {
-        const color = hex2rgb(graphicsData.fillStyle);
+        const color = color.hexTorgb(graphicsData.fillStyle);
         const alpha = graphicsData.fillAlpha;
 
         const r = color[0] * alpha;
