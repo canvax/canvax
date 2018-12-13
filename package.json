@@ -5,6 +5,9 @@
     "version": "2.0.13",
     "homepage": "http://canvax.org",
     "license": "MIT",
+    "magixCliConfig": {
+        "cloudBuild": true
+    },
     "keywords": [
         "2d",
         "canvas",
