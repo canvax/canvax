@@ -1,8 +1,5 @@
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global.Chartx = factory());
-}(this, (function () { 'use strict';
+var Canvax = (function () {
+  'use strict';
 
   var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
     return typeof obj;
@@ -8719,4 +8716,4 @@
 
   return Canvax;
 
-})));
+}());

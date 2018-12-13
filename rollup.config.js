@@ -26,7 +26,14 @@ rollup.rollup({
     bundle.write({
         format: 'iife',
         name: 'Canvax',
-        file: 'dist/canvax.js',
+        file: 'dist/index.js',
+        //sourceMap: 'inline'
+    });
+
+    bundle.write({
+        format: 'umd',
+        name: 'Canvax',
+        file: 'dist/umd.js',
         //sourceMap: 'inline'
     });
 
