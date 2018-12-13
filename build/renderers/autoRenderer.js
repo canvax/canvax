@@ -1,0 +1,1 @@
+define("renderers/autoRenderer",["./canvas/CanvasRenderer"],function(e,n,r){"use strict";n.__esModule=!0;var a=e("./canvas/CanvasRenderer");n.default=function(e,n){return new a.default(e,n)}});
