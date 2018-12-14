@@ -11,7 +11,6 @@ export default class SystemRenderer
     	this.type = type; //2canvas,1webgl
         this.app = app;
 
-        //prepare options
         if ( options )
         {
             for (const i in settings.RENDER_OPTIONS)
