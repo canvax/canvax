@@ -197,12 +197,11 @@ export default class DisplayObjectContainer extends DisplayObject
         for(var i = this.children.length - 1; i >= 0; i--) {
             var child = this.children[i];
 
-            if( child == null ||
-                (!child._eventEnabled && !child.dragEnabled) || 
-                !child.context.$model.visible 
-            ) {
+            if( child == null || !child.context.$model.visible ) {
+                //不管是集合还是非集合，如果不显示的都不接受点击检测
                 continue;
-            }
+            };
+
             if( child instanceof DisplayObjectContainer ) {
                 //是集合
                 if (child.mouseChildren && child.getNumChildren() > 0){
@@ -212,6 +211,9 @@ export default class DisplayObjectContainer extends DisplayObject
                    }
                 }       
             } else {
+                if( !child._eventEnabled && !child.dragEnabled ) {
+                    continue;
+                };
                 //非集合，可以开始做getChildInPoint了
                 if (child.getChildInPoint( point )) {
                     result.push(child);

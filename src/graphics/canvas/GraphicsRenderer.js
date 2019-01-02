@@ -33,7 +33,8 @@ export default class CanvasGraphicsRenderer
 
             if (data.type === SHAPES.POLY)
             {
-                ctx.beginPath();
+                //只第一次需要beginPath()
+                !i && ctx.beginPath();
 
                 this.renderPolygon(shape.points, shape.closed, ctx, isClip);
 

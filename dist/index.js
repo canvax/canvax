@@ -4482,7 +4482,7 @@ var canvax = (function () {
 
       var me = _assertThisInitialized(_assertThisInitialized(_this));
 
-      _this.on("destory", function () {
+      _this.on("destroy", function () {
         me.cleanAnimates();
       });
 
@@ -5352,7 +5352,8 @@ var canvax = (function () {
         for (var i = this.children.length - 1; i >= 0; i--) {
           var child = this.children[i];
 
-          if (child == null || !child._eventEnabled && !child.dragEnabled || !child.context.$model.visible) {
+          if (child == null || !child.context.$model.visible) {
+            //不管是集合还是非集合，如果不显示的都不接受点击检测
             continue;
           }
 
@@ -5366,7 +5367,10 @@ var canvax = (function () {
               }
             }
           } else {
-            //非集合，可以开始做getChildInPoint了
+            if (!child._eventEnabled && !child.dragEnabled) {
+              continue;
+            }
+
             if (child.getChildInPoint(point)) {
               result.push(child);
 
@@ -5639,7 +5643,8 @@ var canvax = (function () {
           ctx.lineWidth = data.lineWidth;
 
           if (data.type === SHAPES.POLY) {
-            ctx.beginPath();
+            //只第一次需要beginPath()
+            !i && ctx.beginPath();
             this.renderPolygon(shape.points, shape.closed, ctx, isClip);
 
             if (fill) {

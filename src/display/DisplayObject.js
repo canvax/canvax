@@ -58,7 +58,7 @@ export default class DisplayObject extends event.Dispatcher
 
         this._tweens = [];
         var me = this;
-        this.on("destory" , function(){
+        this.on("destroy" , function(){
             me.cleanAnimates();
         });
     }
