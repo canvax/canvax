@@ -6,6 +6,7 @@ import {_} from "mmvis";
 /**
  * 设置 AnimationFrame begin
  */
+var globalDuration;
 var lastTime = 0;
 var vendors = ['ms', 'moz', 'webkit', 'o'];
 for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
@@ -105,6 +106,10 @@ function registTween(options) {
         desc: '' //动画描述，方便查找bug
     }, options);
 
+    if( globalDuration != undefined && globalDuration != null && !isNaN( globalDuration ) ){
+        opt.duration = globalDuration;
+    };
+
     var tween = {};
     var tid = "tween_" + Utils.getUID();
     opt.id && ( tid = tid+"_"+opt.id );
@@ -173,5 +178,8 @@ export default {
     registTween: registTween,
     destroyTween: destroyTween,
     Tween: Tween,
-    taskList: _taskList
+    taskList: _taskList,
+    setGlobalDuration: function( duration ){
+        globalDuration = duration;
+    }
 };
