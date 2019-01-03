@@ -2,7 +2,7 @@
     "name": "canvax",
     "title": "Canvax.JS",
     "description": "A javascript canvas 2d rendering engine",
-    "version": "2.0.19",
+    "version": "2.0.20",
     "homepage": "http://canvax.org",
     "license": "MIT",
     "magixCliConfig": {
@@ -38,7 +38,7 @@
         "earcut": "2.0.7",
         "@tweenjs/tween.js": "17.2.0",
         "pixi-gl-core": "1.0.3",
-        "mmvis": "^0.0.19"
+        "mmvis": "^0.0.28"
     },
     "scripts": {
         "build": "rollup -c",

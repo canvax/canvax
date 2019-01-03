@@ -1,13 +1,11 @@
 import Tween from "@tweenjs/tween.js";
 //import Tween from "./Tween"
 import Utils from "../utils/index";
-import {_} from "mmvis";
+import {_,global} from "mmvis";
 
 /**
  * 设置 AnimationFrame begin
  */
-
-var _globalAnimaEnabled = true; //是否全局启用动画，为false(禁用)的话，所有的duration=0 delay=0
 
 var lastTime = 0;
 
@@ -116,7 +114,7 @@ function registTween(options) {
         desc: '' //动画描述，方便查找bug
     }, options);
 
-    if( !_globalAnimaEnabled ){
+    if( !global.animation ){
         //如果全局动画被禁用，那么下面两项强制设置为0
         //TODO:其实应该直接执行回调函数的
         opt.duration = 0;
@@ -191,8 +189,5 @@ export default {
     registTween: registTween,
     destroyTween: destroyTween,
     Tween: Tween,
-    taskList: _taskList,
-    setEnabled : function( bool ){
-        _globalAnimaEnabled = !!bool;
-    }
+    taskList: _taskList
 };
