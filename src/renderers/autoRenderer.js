@@ -1,4 +1,3 @@
-import utils from '../utils/index';
 import CanvasRenderer from './canvas/CanvasRenderer';
 //import WebGLRenderer from './webgl/WebGLRenderer';
 

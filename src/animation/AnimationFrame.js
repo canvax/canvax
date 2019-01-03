@@ -7,6 +7,7 @@ import {_,global} from "mmvis";
  * 设置 AnimationFrame begin
  */
 
+
 var lastTime = 0;
 
 var requestAnimationFrame,cancelAnimationFrame;
@@ -114,7 +115,7 @@ function registTween(options) {
         desc: '' //动画描述，方便查找bug
     }, options);
 
-    if( !global.animation ){
+    if( !global.getAnimationEnabled() ){
         //如果全局动画被禁用，那么下面两项强制设置为0
         //TODO:其实应该直接执行回调函数的
         opt.duration = 0;

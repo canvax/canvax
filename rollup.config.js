@@ -1,8 +1,7 @@
-var rollup = require('rollup');
+
 var babel = require('rollup-plugin-babel');
 var commonjs = require('rollup-plugin-commonjs');
 var resolve = require('rollup-plugin-node-resolve');
-var { uglify } = require('rollup-plugin-uglify');
 
 // output format - 'amd', 'cjs', 'es6', 'iife', 'umd'
 // amd – 使用像requirejs一样的银木块定义
@@ -19,6 +18,7 @@ export default {
         format: "iife"
     }
     
+    /*
     ,{
         file : "dist/cjs.js",
         name : "canvax",
@@ -36,11 +36,12 @@ export default {
         name : "canvax",
         format: "umd"
     }
+    */
     
     ],
     plugins: [
         babel({
-            exclude: /node_modules\/(?!.*@(mmvis|canvax)\/).*/,
+            exclude: /node_modules\/(?!.*(mmvis)\/).*/,
             externalHelpers: true,
             babelrc: false,
             presets: [
@@ -58,6 +59,5 @@ export default {
         }),
         resolve({ jsnext: true, main: true, browser: true }), 
         commonjs()
-        //uglify()
     ]
 }

@@ -1,6 +1,5 @@
 import SystemRenderer from '../SystemRenderer';
 import { RENDERER_TYPE } from '../../const';
-import Settings from '../../settings';
 import CGR from "../../graphics/canvas/GraphicsRenderer";
 import {_} from "mmvis";
 
