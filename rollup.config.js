@@ -18,25 +18,25 @@ export default {
         name : "canvax",
         format: "iife"
     }
-    /*
+    
     ,{
         file : "dist/cjs.js",
-        name : "Chartx",
+        name : "canvax",
         format: "cjs"
     },{
         file : "dist/amd.js",
-        name : "Chartx",
+        name : "canvax",
         format: "amd"
     },{
         file : "dist/es.js",
-        name : "Chartx",
+        name : "canvax",
         format: "es"
     },{
         file : "dist/umd.js",
-        name : "Chartx",
+        name : "canvax",
         format: "umd"
     }
-    */
+    
     ],
     plugins: [
         babel({

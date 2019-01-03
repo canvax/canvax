@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="user-scalable=no, width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1, maximum-scale=1" />
-    <title>Canvax</title>
+    <title>canvax</title>
 
     <style type="text/css">
         body{margin:0;padding:0;font-size:12px;background-color:#eee;padding:10px 100px 100px;}
@@ -14,7 +14,7 @@
     <script type="text/javascript" src="http://seajs.github.io/examples/sea-modules/seajs/seajs/2.1.1/sea.js"></script>
     -->
 
-    <script type="text/javascript" src="../dist/canvax.js"></script>
+    <script type="text/javascript" src="../dist/index.js"></script>
     <script src="./js/jquery-1.11.1.min.js"></script>
     <script src="./js/color.js"></script>
     <script src="./js/underscore.js"></script>
@@ -26,12 +26,12 @@
     <script>
 
     var pageload = function(){
-        var Shapes = Canvax.Shapes;
+        var Shapes = canvax.Shapes;
         var colorInd=1;
 
 
         var box = $("#canvasTest");
-        window.app = new Canvax.App({
+        window.app = new canvax.App({
             id : "canvax",
             el : box,
             webGL : false
@@ -39,11 +39,11 @@
 
         app.registEvent();
 
-        stage = new Canvax.Display.Stage({
+        stage = new canvax.Display.Stage({
             id : "chart0"
         });
 
-        window.sprite = new Canvax.Display.Sprite({
+        window.sprite = new canvax.Display.Sprite({
             context : {
                 x    : 150,
                 y    : 100,
@@ -66,7 +66,7 @@
 
             }
         });
-        window.sprite1 = new Canvax.Display.Sprite({
+        window.sprite1 = new canvax.Display.Sprite({
             context : {
                 x    : 30,
                 y    : 30,
@@ -90,7 +90,7 @@
         stage.addChild( sprite );
         sprite.addChild( sprite1 );
 
-        var clipRect = new Canvax.Shapes.Rect({
+        var clipRect = new canvax.Shapes.Rect({
             id : "cliprect",
             context : {
                 x : 0,y: 0,
@@ -454,7 +454,7 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
             //line.cleanAnimates();
         },2000)
 
-        window.text = new Canvax.Display.Text( "我的大刀已饥渴难耐" , {
+        window.text = new canvax.Display.Text( "我的大刀已饥渴难耐" , {
             context : {
                 x :500,
                 y :500,
@@ -484,7 +484,7 @@ debugger
         stage.addChild(polygon);
         stage.addChild(droplet);
 
-        window.textStage = new Canvax.Display.Stage({
+        window.textStage = new canvax.Display.Stage({
             id : "text"               
         });
 

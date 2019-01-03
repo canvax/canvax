@@ -1,5 +1,4 @@
-var canvax = (function () {
-  'use strict';
+define(function () { 'use strict';
 
   function _typeof(obj) {
     if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
@@ -9010,4 +9009,4 @@ var canvax = (function () {
 
   return Canvax;
 
-}());
+});

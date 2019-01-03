@@ -6,18 +6,28 @@ import {_} from "mmvis";
 /**
  * 设置 AnimationFrame begin
  */
-var globalDuration;
+
+var _globalAnimaEnabled = true; //是否全局启用动画，为false(禁用)的话，所有的duration=0 delay=0
+
 var lastTime = 0;
-var vendors = ['ms', 'moz', 'webkit', 'o'];
-for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-    window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
-    window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
+
+var requestAnimationFrame,cancelAnimationFrame;
+
+if( typeof (window) !== 'undefined' ){
+    requestAnimationFrame = window.requestAnimationFrame;
+    cancelAnimationFrame  = window.cancelAnimationFrame;
+    var vendors = ['ms', 'moz', 'webkit', 'o'];
+    for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+        requestAnimationFrame = window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
+        cancelAnimationFrame = window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
+    };
 };
-if (!window.requestAnimationFrame) {
-    window.requestAnimationFrame = function(callback, element) {
+
+if (!requestAnimationFrame) {
+    requestAnimationFrame = function(callback, element) {
         var currTime = new Date().getTime();
         var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-        var id = window.setTimeout(function() {
+        var id = setTimeout(function() {
                 callback(currTime + timeToCall);
             },
             timeToCall);
@@ -25,8 +35,8 @@ if (!window.requestAnimationFrame) {
         return id;
     };
 };
-if (!window.cancelAnimationFrame) {
-    window.cancelAnimationFrame = function(id) {
+if (!cancelAnimationFrame) {
+    cancelAnimationFrame = function(id) {
         clearTimeout(id);
     };
 };
@@ -106,8 +116,11 @@ function registTween(options) {
         desc: '' //动画描述，方便查找bug
     }, options);
 
-    if( globalDuration != undefined && globalDuration != null && !isNaN( globalDuration ) ){
-        opt.duration = globalDuration;
+    if( !_globalAnimaEnabled ){
+        //如果全局动画被禁用，那么下面两项强制设置为0
+        //TODO:其实应该直接执行回调函数的
+        opt.duration = 0;
+        opt.delay = 0;
     };
 
     var tween = {};
@@ -179,7 +192,7 @@ export default {
     destroyTween: destroyTween,
     Tween: Tween,
     taskList: _taskList,
-    setGlobalDuration: function( duration ){
-        globalDuration = duration;
+    setEnabled : function( bool ){
+        _globalAnimaEnabled = !!bool;
     }
 };
