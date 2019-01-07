@@ -806,7 +806,7 @@ var canvax = (function () {
             }
 
             if (arr.length == 1) {
-              arr.push(arr[0] * 2);
+              arr.push(arr[0] * .5);
             }
 
             if (this.waterLine) {
@@ -2635,11 +2635,10 @@ var canvax = (function () {
   }; //这样的好处是document.compareDocumentPosition只会在定义的时候执行一次。
 
 
-  var contains = document.compareDocumentPosition ? function (parent, child) {
+  var contains = document && document.compareDocumentPosition ? function (parent, child) {
     if (!child) {
       return false;
     }
-
     return !!(parent.compareDocumentPosition(child) & 16);
   } : function (parent, child) {
     if (!child) {
@@ -4396,15 +4395,12 @@ var canvax = (function () {
 
     }, options);
 
-    console.log(global$1.getAnimationEnabled());
-
     if (!global$1.getAnimationEnabled()) {
       //如果全局动画被禁用，那么下面两项强制设置为0
       //TODO:其实应该直接执行回调函数的
       opt.duration = 0;
       opt.delay = 0;
     }
-    debugger;
     var tween = {};
     var tid = "tween_" + Utils.getUID();
     opt.id && (tid = tid + "_" + opt.id);
