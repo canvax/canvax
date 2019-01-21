@@ -40,8 +40,10 @@ export default {
     
     ],
     plugins: [
+        resolve({ jsnext: true, main: true, browser: true }), 
+        commonjs(),
         babel({
-            exclude: /node_modules\/(?!.*(mmvis)\/).*/,
+            exclude: /node_modules\/(?!.*@*(mmvis)\/).*/,
             externalHelpers: true,
             babelrc: false,
             presets: [
@@ -53,11 +55,8 @@ export default {
                 ]
             ],
             plugins: [
-                "@babel/plugin-external-helpers",
-                "@babel/plugin-proposal-class-properties"
+                "@babel/plugin-external-helpers"
             ]
-        }),
-        resolve({ jsnext: true, main: true, browser: true }), 
-        commonjs()
+        })
     ]
 }

@@ -209,7 +209,7 @@ export default class DisplayObjectContainer extends DisplayObject
                    if (objs.length > 0){
                       result = result.concat( objs );
                    }
-                }       
+                }
             } else {
                 if( !child._eventEnabled && !child.dragEnabled ) {
                     continue;

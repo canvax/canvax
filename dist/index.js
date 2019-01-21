@@ -508,7 +508,7 @@ var canvax = (function () {
           src = target[name];
           copy = options[name];
 
-          if (target === copy) {
+          if (target === copy || copy === undefined) {
             continue;
           }
 
@@ -661,14 +661,96 @@ var canvax = (function () {
     }
   };
 
+  var cloneOptions = function cloneOptions(opt) {
+    return _.clone(opt);
+  };
+
+  var cloneData = function cloneData(data) {
+    return JSON.parse(JSON.stringify(data));
+  };
+
+  var getDefaultProps = function getDefaultProps(dProps) {
+    var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+    for (var p in dProps) {
+      if (!!p.indexOf("_")) {
+        if (!dProps[p] || !dProps[p].propertys) {
+          //如果这个属性没有子属性了，那么就说明这个已经是叶子节点了
+          if (_.isObject(dProps[p]) && !_.isFunction(dProps[p]) && !_.isArray(dProps[p])) {
+            target[p] = dProps[p].default;
+          } else {
+            target[p] = dProps[p];
+          }
+        } else {
+          target[p] = {};
+          getDefaultProps(dProps[p].propertys, target[p]);
+        }
+      }
+    }
+
+    return target;
+  };
+
   var axis =
   /*#__PURE__*/
   function () {
+    _createClass(axis, null, [{
+      key: "defaultProps",
+      value: function defaultProps() {
+        return {
+          layoutType: {
+            detail: '布局方式',
+            default: 'proportion'
+          },
+          dataSection: {
+            detail: '轴数据集',
+            default: []
+          },
+          sectionHandler: {
+            detail: '自定义dataSection的计算公式',
+            default: null
+          },
+          waterLine: {
+            detail: '水位线',
+            default: null,
+            documentation: '水位data，需要混入 计算 dataSection， 如果有设置waterLine， dataSection的最高水位不会低于这个值'
+          },
+          middleweight: {
+            detail: '区间等分线',
+            default: null,
+            documentation: '如果middleweight有设置的话 dataSectionGroup 为被middleweight分割出来的n个数组>..[ [0,50 , 100],[100,500,1000] ]'
+          },
+          symmetric: {
+            detail: '自动正负对称',
+            default: false,
+            documentation: 'proportion下，是否需要设置数据为正负对称的数据，比如 [ 0,5,10 ] = > [ -10, 0 10 ]，象限坐标系的时候需要'
+          },
+          origin: {
+            detail: '轴的起源值',
+            default: null,
+            documentation: '\
+                    1，如果数据中又正数和负数，则默认为0 <br />\
+                    2，如果dataSection最小值小于0，则baseNumber为最小值<br />\
+                    3，如果dataSection最大值大于0，则baseNumber为最大值<br />\
+                    4，也可以由用户在第2、3种情况下强制配置为0，则section会补充满从0开始的刻度值\
+                '
+          },
+          sort: {
+            detail: '排序',
+            default: null
+          },
+          posParseToInt: {
+            detail: '是否位置计算取整',
+            default: false,
+            documentation: '比如在柱状图中，有得时候需要高精度的能间隔1px的柱子，那么x轴的计算也必须要都是整除的'
+          }
+        };
+      }
+    }]);
+
     function axis(opt, dataOrg) {
       _classCallCheck(this, axis);
 
-      //super();
-      this.layoutType = opt.layoutType || "proportion"; // rule , peak, proportion
       //源数据
       //这个是一个一定会有两层数组的数据结构，是一个标准的dataFrame数据
       // [ 
@@ -680,45 +762,28 @@ var canvax = (function () {
       //        [1,2,3] 
       //    ]   
       // ]
-
       this._opt = _.clone(opt);
-      this.dataOrg = dataOrg || [];
-      this.sectionHandler = null;
-      this.dataSection = []; //从原数据 dataOrg 中 结果 datasection 重新计算后的数据
+      this.dataOrg = dataOrg || []; //3d中有引用到
 
       this.dataSectionLayout = []; //和dataSection一一对应的，每个值的pos，//get xxx OfPos的时候，要先来这里做一次寻找
       //轴总长
+      //3d中有引用到
 
       this.axisLength = 1;
       this._cellCount = null;
       this._cellLength = null; //数据变动的时候要置空
-      //下面三个目前yAxis中实现了，后续统一都会实现
-      //水位data，需要混入 计算 dataSection， 如果有设置waterLine， dataSection的最高水位不会低于这个值
-      //这个值主要用于第三方的markline等组件， 自己的y值超过了yaxis的范围的时候，需要纳入来修复yaxis的section区间
+      //默认的 dataSectionGroup = [ dataSection ], dataSection 其实就是 dataSectionGroup 去重后的一维版本
 
-      this.waterLine = null; //默认的 dataSectionGroup = [ dataSection ], dataSection 其实就是 dataSectionGroup 去重后的一维版本
-
-      this.dataSectionGroup = []; //如果middleweight有设置的话 dataSectionGroup 为被middleweight分割出来的n个数组>..[ [0,50 , 100],[100,500,1000] ]
-
-      this.middleweight = null;
-      this.symmetric = false; //proportion下，是否需要设置数据为正负对称的数据，比如 [ 0,5,10 ] = > [ -10, 0 10 ]，象限坐标系的时候需要
-      //1，如果数据中又正数和负数，则默认为0，
-      //2，如果dataSection最小值小于0，则baseNumber为最小值，
-      //3，如果dataSection最大值大于0，则baseNumber为最大值
-      //也可以由用户在第2、3种情况下强制配置为0，则section会补充满从0开始的刻度值
-
-      this.origin = null;
+      this.dataSectionGroup = [];
       this.originPos = 0; //value为 origin 对应的pos位置
 
       this._originTrans = 0; //当设置的 origin 和datasection的min不同的时候，
       //min,max不需要外面配置，没意义
 
       this._min = null;
-      this._max = null; //"asc" 排序，默认从小到大, desc为从大到小
-      //之所以不设置默认值为asc，是要用 null 来判断用户是否进行了配置
+      this._max = null;
 
-      this.sort = null;
-      this.posParseToInt = false; //比如在柱状图中，有得时候需要高精度的能间隔1px的柱子，那么x轴的计算也必须要都是整除的
+      _.extend(true, this, getDefaultProps(axis.defaultProps()), opt);
     }
 
     _createClass(axis, [{
@@ -1565,17 +1630,38 @@ var canvax = (function () {
     }
   };
 
-  var cloneOptions = function cloneOptions(opt) {
-    return _.clone(opt);
-  };
+  var parse = {
+    _eval: function _eval(code, target, paramName, paramValue) {
+      return paramName ? new Function(paramName, code + "; return ".concat(target, ";"))(paramValue) : new Function(code + "; return ".concat(target, ";"))();
+    },
+    parse: function parse(code, range, data, variablesFromComponent) {
+      try {
+        var isVariablesDefined = range && range.length && range.length === 2 && range[1] > range[0]; // 若未定义
 
-  var cloneData = function cloneData(data) {
-    return JSON.parse(JSON.stringify(data));
-  };
+        if (!isVariablesDefined) {
+          return this._eval(code, 'options');
+        }
 
-  var is3dOpt = function is3dOpt(opt) {
-    var chartx3dCoordTypes = ["box", "polar3d"];
-    return opt.coord && opt.coord.type && chartx3dCoordTypes.indexOf(opt.coord.type) > -1;
+        var variablesInCode = this._eval(code, 'variables');
+
+        if (typeof variablesInCode === 'function') {
+          variablesInCode = variablesInCode(data) || {};
+        }
+
+        var variables = {};
+
+        if (variablesFromComponent !== undefined) {
+          variables = typeof variablesFromComponent === 'function' ? variablesFromComponent(data) : variablesFromComponent;
+        }
+
+        variables = _.extend(true, {}, variablesInCode, variables);
+        var codeWithoutVariables = code.slice(0, range[0]) + code.slice(range[1]);
+        return this._eval(codeWithoutVariables, 'options', 'variables', variables);
+      } catch (e) {
+        console.log('parse error');
+        return {};
+      }
+    }
   };
 
   //图表皮肤
@@ -1607,9 +1693,9 @@ var canvax = (function () {
         delete me.instances[chart_id];
       }
 
-      var dimension = 2;
+      var dimension = 2; //3d图表的话，本地调试的时候自己在全局chartx3d上面提供is3dOpt变量
 
-      if (is3dOpt(_opt)) {
+      if (me.__dimension == 3 || me.is3dOpt && me.is3dOpt(_opt)) {
         dimension = 3;
       }
 
@@ -1658,7 +1744,7 @@ var canvax = (function () {
         suffix: '_JSON_FUN_SUFFIX]]'
       };
 
-      var parse = function parse(string) {
+      var parse$$1 = function parse$$1(string) {
         return JSON.parse(string, function (key, value) {
           if (typeof value === 'string' && value.indexOf(JsonSerialize.suffix) > 0 && value.indexOf(JsonSerialize.prefix) == 0) {
             return new Function('return ' + value.replace(JsonSerialize.prefix, '').replace(JsonSerialize.suffix, ''))();
@@ -1667,7 +1753,22 @@ var canvax = (function () {
         }) || {};
       };
 
-      var opt = parse(decodeURIComponent(this.options[chartPark_cid] || {}));
+      var opt = parse$$1(decodeURIComponent(this.options[chartPark_cid] || {}));
+
+      if (userOptions) {
+        opt = _.extend(true, opt, userOptions);
+      }
+      return opt;
+    },
+    getOptionsNew: function getOptionsNew(chartPark_cid, userOptions, data, variables) {
+      if (!this.options[chartPark_cid]) {
+        return userOptions || {};
+      }
+      var chartConfig = this.options[chartPark_cid] || {};
+      var code = decodeURIComponent(chartConfig.code);
+      var range = chartConfig.range; // var code = decodeURIComponent(this.options[chartPark_cid]);
+
+      var opt = parse.parse(code, range, data, variables);
 
       if (userOptions) {
         opt = _.extend(true, opt, userOptions);
@@ -2099,86 +2200,80 @@ var canvax = (function () {
 
         return points;
       }
-    }], [{
-      key: "filterPointsInRect",
-      value: function filterPointsInRect(points, origin, width, height) {
-        for (var i = 0, l = points.length; i < l; i++) {
-          if (!Polar.checkPointInRect(points[i], origin, width, height)) {
-            //该点不在root rect范围内，去掉
-            points.splice(i, 1);
-            i--, l--;
-          }
-        }
-        return points;
-      }
-    }, {
-      key: "checkPointInRect",
-      value: function checkPointInRect(p, origin, width, height) {
-        var _tansRoot = {
-          x: p.x + origin.x,
-          y: p.y + origin.y
-        };
-        return !(_tansRoot.x < 0 || _tansRoot.x > width || _tansRoot.y < 0 || _tansRoot.y > height);
-      } //检查由n个相交点分割出来的圆弧是否在rect内
-
-    }, {
-      key: "checkArcInRect",
-      value: function checkArcInRect(arc, r, origin, width, height) {
-        var start = arc[0];
-        var to = arc[1];
-        var differenceR = to.radian - start.radian;
-
-        if (to.radian < start.radian) {
-          differenceR = Math.PI * 2 + to.radian - start.radian;
-        }
-        var middleR = (start.radian + differenceR / 2) % (Math.PI * 2);
-        return Polar.checkPointInRect(Polar.getPointInRadianOfR(middleR, r), origin, width, height);
-      } //获取某个点相对圆心的弧度值
-
-    }, {
-      key: "getRadianInPoint",
-      value: function getRadianInPoint(point) {
-        var pi2 = Math.PI * 2;
-        return (Math.atan2(point.y, point.x) + pi2) % pi2;
-      } //获取某个弧度方向，半径为r的时候的point坐标点位置
-
-    }, {
-      key: "getPointInRadianOfR",
-      value: function getPointInRadianOfR(radian, r) {
-        var pi = Math.PI;
-        var x = Math.cos(radian) * r;
-
-        if (radian == pi / 2 || radian == pi * 3 / 2) {
-          //90度或者270度的时候
-          x = 0;
-        }
-        var y = Math.sin(radian) * r;
-
-        if (radian % pi == 0) {
-          y = 0;
-        }
-        return {
-          x: x,
-          y: y
-        };
-      }
-    }, {
-      key: "getROfNum",
-      value: function getROfNum(num, dataSection, width, height) {
-        var r = 0;
-
-        var maxNum = _.max(dataSection);
-
-        var minNum = 0; //Math.min( this.rAxis.dataSection );
-
-        var maxR = parseInt(Math.max(width, height) / 2);
-        r = maxR * ((num - minNum) / (maxNum - minNum));
-        return r;
-      }
     }]);
 
     return Polar;
   }();
+
+  Polar.filterPointsInRect = function (points, origin, width, height) {
+    for (var i = 0, l = points.length; i < l; i++) {
+      if (!Polar.checkPointInRect(points[i], origin, width, height)) {
+        //该点不在root rect范围内，去掉
+        points.splice(i, 1);
+        i--, l--;
+      }
+    }
+    return points;
+  };
+
+  Polar.checkPointInRect = function (p, origin, width, height) {
+    var _tansRoot = {
+      x: p.x + origin.x,
+      y: p.y + origin.y
+    };
+    return !(_tansRoot.x < 0 || _tansRoot.x > width || _tansRoot.y < 0 || _tansRoot.y > height);
+  }; //检查由n个相交点分割出来的圆弧是否在rect内
+
+
+  Polar.checkArcInRect = function (arc, r, origin, width, height) {
+    var start = arc[0];
+    var to = arc[1];
+    var differenceR = to.radian - start.radian;
+
+    if (to.radian < start.radian) {
+      differenceR = Math.PI * 2 + to.radian - start.radian;
+    }
+    var middleR = (start.radian + differenceR / 2) % (Math.PI * 2);
+    return Polar.checkPointInRect(Polar.getPointInRadianOfR(middleR, r), origin, width, height);
+  }; //获取某个点相对圆心的弧度值
+
+
+  Polar.getRadianInPoint = function (point) {
+    var pi2 = Math.PI * 2;
+    return (Math.atan2(point.y, point.x) + pi2) % pi2;
+  }; //获取某个弧度方向，半径为r的时候的point坐标点位置
+
+
+  Polar.getPointInRadianOfR = function (radian, r) {
+    var pi = Math.PI;
+    var x = Math.cos(radian) * r;
+
+    if (radian == pi / 2 || radian == pi * 3 / 2) {
+      //90度或者270度的时候
+      x = 0;
+    }
+    var y = Math.sin(radian) * r;
+
+    if (radian % pi == 0) {
+      y = 0;
+    }
+    return {
+      x: x,
+      y: y
+    };
+  };
+
+  Polar.getROfNum = function (num, dataSection, width, height) {
+    var r = 0;
+
+    var maxNum = _.max(dataSection);
+
+    var minNum = 0; //Math.min( this.rAxis.dataSection );
+
+    var maxR = parseInt(Math.max(width, height) / 2);
+    r = maxR * ((num - minNum) / (maxNum - minNum));
+    return r;
+  };
 
   /**
    * Canvax

@@ -2,7 +2,7 @@
     "name": "canvax",
     "title": "Canvax.JS",
     "description": "A javascript canvas 2d rendering engine",
-    "version": "2.0.23",
+    "version": "2.0.26",
     "homepage": "http://canvax.org",
     "license": "MIT",
     "magixCliConfig": {
@@ -23,22 +23,21 @@
     "main": "./dist/index.js",
     "module": "./src/index.js",
     "devDependencies": {
-        "@babel/core": "7.2.0",
+        "@babel/core": "7.2.2",
         "@babel/plugin-external-helpers": "7.2.0",
-        "@babel/plugin-proposal-class-properties": "7.2.1",
-        "@babel/preset-env": "7.2.0",
-        "rollup": "0.67.4",
-        "rollup-plugin-babel": "4.1.0",
+        "@babel/preset-env": "7.2.3",
+        "rollup": "1.1.0",
+        "rollup-plugin-babel": "4.3.0",
         "rollup-plugin-commonjs": "9.2.0",
         "rollup-plugin-node-resolve": "4.0.0",
-        "rollup-plugin-uglify": "6.0.0",
+        "rollup-plugin-uglify": "6.0.1",
         "rollup-watch": "4.3.1"
     },
     "dependencies": {
         "earcut": "2.0.7",
         "@tweenjs/tween.js": "17.2.0",
         "pixi-gl-core": "1.0.3",
-        "mmvis": "^0.0.36"
+        "mmvis": "^0.0.50"
     },
     "scripts": {
         "build": "rollup -c",
