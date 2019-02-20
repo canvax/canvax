@@ -9287,7 +9287,7 @@ var canvax = (function () {
         var toX = model.point.x;
         var toY = model.point.y; // 计算各角度和对应的P2,P3坐标 
 
-        var angle = "angle" in model ? model.angle - 180 : Math.atan2(fromY - toY, fromX - toX) * 180 / Math.PI,
+        var angle = model.angle != null ? model.angle - 180 : Math.atan2(fromY - toY, fromX - toX) * 180 / Math.PI,
             angle1 = (angle + model.theta) * Math.PI / 180,
             angle2 = (angle - model.theta) * Math.PI / 180,
             topX = model.headlen * Math.cos(angle1),
