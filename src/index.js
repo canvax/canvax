@@ -8,7 +8,6 @@ import Shape from "./display/Shape";
 import Point from "./display/Point";
 import Text from "./display/Text";
 
-
 //shapes
 import BrokenLine from "./shape/BrokenLine";
 import Circle from "./shape/Circle";
@@ -20,6 +19,7 @@ import Path from "./shape/Path";
 import Polygon from "./shape/Polygon";
 import Rect from "./shape/Rect";
 import Sector from "./shape/Sector";
+import Arrow from "./shape/arrow";
 
 import AnimationFrame from "./animation/AnimationFrame"
 
@@ -49,7 +49,8 @@ Canvax.Shapes = {
     Path : Path,
     Polygon : Polygon,
     Rect : Rect,
-    Sector : Sector
+    Sector : Sector,
+    Arrow  : Arrow
 }
 
 Canvax.AnimationFrame = AnimationFrame;

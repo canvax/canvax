@@ -50,12 +50,6 @@ export default class Application extends DisplayObjectContainer
 
         this.event = null;
 
-        //是否阻止浏览器默认事件的执行
-        this.preventDefault = true;
-        if( opt.preventDefault === false ){
-            this.preventDefault = false
-        };
-
         //该属性在systenRender里面操作，每帧由心跳上报的 需要重绘的stages 列表
         this.convertStages = {};
 

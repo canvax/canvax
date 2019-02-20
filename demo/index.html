@@ -313,7 +313,7 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
                 lineWidth : 1,
                 fillStyle:colors.getColor(colorInd++),
                 strokeStyle:colors.getColor(colorInd++),
-                globalAlpha: 0.8,
+                globalAlpha: 0.5,
                 lineType : "dashed"
             }
         });
@@ -324,6 +324,12 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
         map1.on("mouseout" , function(){
             this.context.lineWidth = 1;
         })
+        map1.on("wheel" , function(e){
+            console.log(e.deltaY);
+            debugger
+            e.preventDefault();
+        })
+
 
 
         //规则多边形
@@ -424,12 +430,19 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
         
         line.once("mouseover" , function(){
             this.context.lineWidth = 3;
-            this.context.start.x = 20
+            //this.context.start.x = 20
         });
 
         line.once("mouseout" , function(){
             this.context.lineWidth = 2;
-            this.context.start.x = 10
+            //this.context.start.x = 10
+        });
+
+        line.on("render", function(){
+            console.log("line render")
+        });
+        line.on("transform", function(){
+            console.log("line transform")
         });
 
         setTimeout(function(){

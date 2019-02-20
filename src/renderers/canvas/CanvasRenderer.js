@@ -43,8 +43,14 @@ export default class CanvasRenderer extends SystemRenderer
 
         var $MC = displayObject.context.$model;
 
+        if( !displayObject.worldTransform ){
+            //第一次在舞台中渲染
+            displayObject.fire("render");
+        };
+
         if( !displayObject.worldTransform || displayObject._transformChange || (displayObject.parent && displayObject.parent._transformChange) ){
             displayObject.setWorldTransform();
+            displayObject.fire( "transform" );
             displayObject._transformChange = true;
         };
 
@@ -54,7 +60,6 @@ export default class CanvasRenderer extends SystemRenderer
             return;
         };
 
-        
         ctx.setTransform.apply( ctx , displayObject.worldTransform.toArray() );
 
         var isClipSave = false;
@@ -84,7 +89,7 @@ export default class CanvasRenderer extends SystemRenderer
 
         //因为已经采用了setTransform了， 非shape元素已经不需要执行transform 和 render
         if( displayObject.graphics ){
-            //如果 graphicsData.length==0 的情况下才需要执行_draw来组织graphics数据
+            //如果 graphicsData.length==0 的情况下才需要执行_draw来组织 graphics 数据
             if( !displayObject.graphics.graphicsData.length ){
                 //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
                 displayObject._draw( displayObject.graphics );//_draw会完成绘制准备好 graphicsData
@@ -93,6 +98,13 @@ export default class CanvasRenderer extends SystemRenderer
             //globalAlpha == 0 的话，只是不需要render，但是graphics的graphicsData还是要计算的
             //事件检测的时候需要用到graphics.graphicsData
             if( !!globalAlpha ){
+
+                //默认要设置为实线
+                ctx.setLineDash([]);
+                //然后如果发现这个描边非实线的话，就设置为虚线
+                if( $MC.lineType && $MC.lineType != 'solid' ){
+                    ctx.setLineDash( $MC.lineDash );
+                };
                 this.CGR.render( displayObject , stage, globalAlpha );
             };
         };

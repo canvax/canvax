@@ -2,7 +2,7 @@
  * Canvax
  *
  * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
- *
+ * 事件 destroy addToStage transformChange 
  * 模拟as3 DisplayList 的 现实对象基类
  */
 import {_,event} from "mmvis";
@@ -11,7 +11,7 @@ import Point from "./Point";
 import Utils from "../utils/index";
 import AnimationFrame from "../animation/AnimationFrame";
 import Observe from "../utils/observe";
-import {CONTEXT_DEFAULT, TRANSFORM_PROPS} from "../const";
+import {TRANSFORM_PROPS} from "../const";
 import InsideLine from '../geom/InsideLine';
 import Settings from '../settings';
 
@@ -99,21 +99,7 @@ export default class DisplayObject extends event.Dispatcher
             visible       : optCtx.visible || true,
             globalAlpha   : optCtx.globalAlpha || 1
 
-
-
             //样式部分迁移到shape中
-            //cursor        : optCtx.cursor || "default",
-            //fillAlpha     : optCtx.fillAlpha || 1,//context2d里没有，自定义
-            //fillStyle     : optCtx.fillStyle || null,//"#000000",
-
-            //lineCap       : optCtx.lineCap || null,//默认都是直角
-            //lineJoin      : optCtx.lineJoin || null,//这两个目前webgl里面没实现
-            //miterLimit    : optCtx.miterLimit || null,//miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
-
-            //lineAlpha     : optCtx.lineAlpha || 1,//context2d里没有，自定义
-            //strokeStyle   : optCtx.strokeStyle || null,
-            //lineType      : optCtx.lineType || "solid", //context2d里没有，自定义线条的type，默认为实线
-            //lineWidth     : optCtx.lineWidth || null
         }
         
 
@@ -460,12 +446,13 @@ export default class DisplayObject extends event.Dispatcher
     //世界坐标是从上而下的，所以只要和parent的直接坐标相乘就好了
     setWorldTransform()
     {
-        //if( !this.worldTransform ){
+       
         var cm = new Matrix();
         cm.concat( this._transform );
         this.parent && cm.concat( this.parent.worldTransform );
+
         this.worldTransform = cm;
-        //};
+        
         return this.worldTransform;
     }
 

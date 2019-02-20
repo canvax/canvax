@@ -18,18 +18,6 @@ export default class Circle extends Shape
 {
     constructor( opt )
     {
-        //opt = Utils.checkOpt( opt );
-        //默认情况下面，circle不需要把xy进行parentInt转换
-        /*
-        var opt = {
-            type : "circle",
-            xyToInt : false,
-            context : {
-                r : 0
-            }
-        };
-        */
-
         opt = _.extend( true, {
             type : "circle",
             xyToInt : false,

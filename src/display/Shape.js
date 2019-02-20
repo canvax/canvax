@@ -28,6 +28,7 @@ export default class Shape extends DisplayObject
             lineAlpha     : opt.context.lineAlpha  || 1,//context2d里没有，自定义
             strokeStyle   : opt.context.strokeStyle|| null,
             lineType      : opt.context.lineType   || "solid", //context2d里没有，自定义线条的type，默认为实线
+            lineDash      : opt.context.lineDash   || [6,3],
             lineWidth     : opt.context.lineWidth  || null
         };
          
@@ -109,26 +110,4 @@ export default class Shape extends DisplayObject
         return this.graphics.updateLocalBounds().Bound
     }
 
-   /*
-    * 画虚线
-    */
-   dashedLineTo(graphics, x1, y1, x2, y2, dashLength ) 
-   {
-         dashLength = typeof dashLength == 'undefined'
-                      ? 3 : dashLength;
-         dashLength = Math.max( dashLength , this.context.$model.lineWidth );
-         var deltaX = x2 - x1;
-         var deltaY = y2 - y1;
-         var numDashes = Math.floor(
-             Math.sqrt(deltaX * deltaX + deltaY * deltaY) / dashLength
-         );
-         for (var i = 0; i < numDashes; ++i) {
-             var x = parseInt(x1 + (deltaX / numDashes) * i);
-             var y = parseInt(y1 + (deltaY / numDashes) * i);
-             graphics[i % 2 === 0 ? 'moveTo' : 'lineTo']( x , y );
-             if( i == (numDashes-1) && i%2 === 0){
-                 graphics.lineTo( x2 , y2 );
-             }
-         }
-   }
 }

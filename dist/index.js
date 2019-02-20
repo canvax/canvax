@@ -1734,11 +1734,7 @@ var canvax = (function () {
       }
     },
     //第二个参数是用户要用来覆盖chartpark中的配置的options
-    getOptions: function getOptions(chartPark_cid, userOptions) {
-      //chartPark_cid,chartpark中的图表id
-      if (!this.options[chartPark_cid]) {
-        return userOptions || {};
-      }
+    getOptionsOld: function getOptionsOld(chartPark_cid) {
       var JsonSerialize = {
         prefix: '[[JSON_FUN_PREFIX_',
         suffix: '_JSON_FUN_SUFFIX]]'
@@ -1753,27 +1749,38 @@ var canvax = (function () {
         }) || {};
       };
 
-      var opt = parse$$1(decodeURIComponent(this.options[chartPark_cid] || {}));
-
-      if (userOptions) {
-        opt = _.extend(true, opt, userOptions);
-      }
-      return opt;
+      return parse$$1(decodeURIComponent(this.options[chartPark_cid] || '%7B%7D'));
     },
-    getOptionsNew: function getOptionsNew(chartPark_cid, userOptions, data, variables) {
+    getOptionsNew: function getOptionsNew(chartPark_cid, data, variables) {
+      var chartConfig = this.options[chartPark_cid];
+      var code = decodeURIComponent(chartConfig.code);
+      var range = chartConfig.range;
+      return parse.parse(code, range, data, variables);
+    },
+
+    /** 
+     * 获取图表配置并解析
+     * 
+     * @param {int} chartPark_cid  chartpark图表id
+     * @param {Object} userOptions 用户自定义图表options，若无chartPark_cid时默认使用该配置，否则使用该配置覆盖原chartpark中的图表配置
+     * @param {Array} data 绘制图表使用的数据
+     * @param {Object | Function} variables 用于覆盖chartpark图表配置的变量，为Function时，其返回值必须为Object
+     * @returns {Object} 正常情况返回图表配置，否则返回{}
+    */
+    getOptions: function getOptions(chartPark_cid, userOptions, data, variables) {
       if (!this.options[chartPark_cid]) {
         return userOptions || {};
       }
-      var chartConfig = this.options[chartPark_cid] || {};
-      var code = decodeURIComponent(chartConfig.code);
-      var range = chartConfig.range; // var code = decodeURIComponent(this.options[chartPark_cid]);
-
-      var opt = parse.parse(code, range, data, variables);
+      var chartConfig = this.options[chartPark_cid];
+      var optionsFromChartPark = typeof chartConfig === 'string' ? this.getOptionsOld(chartPark_cid) : this.getOptionsNew(chartPark_cid, data || [], variables || {});
 
       if (userOptions) {
-        opt = _.extend(true, opt, userOptions);
+        optionsFromChartPark = _.extend(true, optionsFromChartPark, userOptions);
       }
-      return opt;
+      return optionsFromChartPark;
+    },
+    calculateOptions: function calculateOptions(chartPark_cid, data, variables) {
+      return this.getOptions(chartPark_cid, undefined, data, variables);
     },
     components: {
       c_2d: {
@@ -2292,18 +2299,33 @@ var canvax = (function () {
 
     if (_.isObject(evt) && evt.type) {
       eventType = evt.type;
+
+      _.extend(this, evt);
     }
     this.target = null;
     this.currentTarget = null;
     this.type = eventType;
     this.point = null;
+    var me = this;
     this._stopPropagation = false; //默认不阻止事件冒泡
-  };
 
-  Event.prototype = {
-    stopPropagation: function stopPropagation() {
-      this._stopPropagation = true;
-    }
+    this.stopPropagation = function () {
+      me._stopPropagation = true;
+
+      if (_.isObject(evt)) {
+        evt._stopPropagation = true;
+      }
+    };
+
+    this._preventDefault = false; //是否组织事件冒泡
+
+    this.preventDefault = function () {
+      me._preventDefault = true;
+
+      if (_.isObject(evt)) {
+        evt._preventDefault = true;
+      }
+    };
   };
 
   /**
@@ -2313,7 +2335,7 @@ var canvax = (function () {
    *
    * canvas 上委托的事件管理
    */
-  var _mouseEvents = 'mousedown mouseup mouseover mousemove mouseout click dblclick';
+  var _mouseEvents = 'mousedown mouseup mouseover mousemove mouseout click dblclick wheel';
   var types = {
     _types: _mouseEvents.split(/,| /),
     register: function register(evts) {
@@ -2861,7 +2883,7 @@ var canvax = (function () {
         me._cursorHander(child);
       }
 
-      if (root.preventDefault) {
+      if (root.preventDefault || e._preventDefault) {
         //阻止默认浏览器动作(W3C) 
         if (e && e.preventDefault) {
           e.preventDefault();
@@ -4911,16 +4933,6 @@ var canvax = (function () {
           },
           visible: optCtx.visible || true,
           globalAlpha: optCtx.globalAlpha || 1 //样式部分迁移到shape中
-          //cursor        : optCtx.cursor || "default",
-          //fillAlpha     : optCtx.fillAlpha || 1,//context2d里没有，自定义
-          //fillStyle     : optCtx.fillStyle || null,//"#000000",
-          //lineCap       : optCtx.lineCap || null,//默认都是直角
-          //lineJoin      : optCtx.lineJoin || null,//这两个目前webgl里面没实现
-          //miterLimit    : optCtx.miterLimit || null,//miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
-          //lineAlpha     : optCtx.lineAlpha || 1,//context2d里没有，自定义
-          //strokeStyle   : optCtx.strokeStyle || null,
-          //lineType      : optCtx.lineType || "solid", //context2d里没有，自定义线条的type，默认为实线
-          //lineWidth     : optCtx.lineWidth || null
           //平凡的clone数据非常的耗时，还是走回原来的路
           //var _contextATTRS = _.extend( true , _.clone(CONTEXT_DEFAULT), opt.context );
 
@@ -5292,12 +5304,10 @@ var canvax = (function () {
     }, {
       key: "setWorldTransform",
       value: function setWorldTransform() {
-        //if( !this.worldTransform ){
         var cm = new Matrix();
         cm.concat(this._transform);
         this.parent && cm.concat(this.parent.worldTransform);
-        this.worldTransform = cm; //};
-
+        this.worldTransform = cm;
         return this.worldTransform;
       } //显示对象的选取检测处理函数
 
@@ -6196,8 +6206,14 @@ var canvax = (function () {
         }
         var $MC = displayObject.context.$model;
 
+        if (!displayObject.worldTransform) {
+          //第一次在舞台中渲染
+          displayObject.fire("render");
+        }
+
         if (!displayObject.worldTransform || displayObject._transformChange || displayObject.parent && displayObject.parent._transformChange) {
           displayObject.setWorldTransform();
+          displayObject.fire("transform");
           displayObject._transformChange = true;
         }
         globalAlpha *= $MC.globalAlpha;
@@ -6232,7 +6248,7 @@ var canvax = (function () {
         }
 
         if (displayObject.graphics) {
-          //如果 graphicsData.length==0 的情况下才需要执行_draw来组织graphics数据
+          //如果 graphicsData.length==0 的情况下才需要执行_draw来组织 graphics 数据
           if (!displayObject.graphics.graphicsData.length) {
             //当渲染器开始渲染app的时候，app下面的所有displayObject都已经准备好了对应的世界矩阵
             displayObject._draw(displayObject.graphics); //_draw会完成绘制准备好 graphicsData
@@ -6241,6 +6257,12 @@ var canvax = (function () {
           //事件检测的时候需要用到graphics.graphicsData
 
           if (!!globalAlpha) {
+            //默认要设置为实线
+            ctx.setLineDash([]); //然后如果发现这个描边非实线的话，就设置为虚线
+
+            if ($MC.lineType && $MC.lineType != 'solid') {
+              ctx.setLineDash($MC.lineDash);
+            }
             this.CGR.render(displayObject, stage, globalAlpha);
           }
         }
@@ -6316,13 +6338,7 @@ var canvax = (function () {
 
       _this.webGL = opt.webGL;
       _this.renderer = autoRenderer(_assertThisInitialized(_assertThisInitialized(_this)), options);
-      _this.event = null; //是否阻止浏览器默认事件的执行
-
-      _this.preventDefault = true;
-
-      if (opt.preventDefault === false) {
-        _this.preventDefault = false;
-      }
+      _this.event = null; //该属性在systenRender里面操作，每帧由心跳上报的 需要重绘的stages 列表
 
       _this.convertStages = {};
       _this.context.$model.width = _this.width;
@@ -7622,6 +7638,7 @@ var canvax = (function () {
         strokeStyle: opt.context.strokeStyle || null,
         lineType: opt.context.lineType || "solid",
         //context2d里没有，自定义线条的type，默认为实线
+        lineDash: opt.context.lineDash || [6, 3],
         lineWidth: opt.context.lineWidth || null
       };
 
@@ -7701,29 +7718,6 @@ var canvax = (function () {
       key: "getBound",
       value: function getBound() {
         return this.graphics.updateLocalBounds().Bound;
-      }
-      /*
-       * 画虚线
-       */
-
-    }, {
-      key: "dashedLineTo",
-      value: function dashedLineTo(graphics, x1, y1, x2, y2, dashLength) {
-        dashLength = typeof dashLength == 'undefined' ? 3 : dashLength;
-        dashLength = Math.max(dashLength, this.context.$model.lineWidth);
-        var deltaX = x2 - x1;
-        var deltaY = y2 - y1;
-        var numDashes = Math.floor(Math.sqrt(deltaX * deltaX + deltaY * deltaY) / dashLength);
-
-        for (var i = 0; i < numDashes; ++i) {
-          var x = parseInt(x1 + deltaX / numDashes * i);
-          var y = parseInt(y1 + deltaY / numDashes * i);
-          graphics[i % 2 === 0 ? 'moveTo' : 'lineTo'](x, y);
-
-          if (i == numDashes - 1 && i % 2 === 0) {
-            graphics.lineTo(x2, y2);
-          }
-        }
       }
     }]);
 
@@ -8373,76 +8367,18 @@ var canvax = (function () {
 
         for (var i = 0, l = pointList.length; i < l; i++) {
           var point = pointList[i];
-          var nextPoint = pointList[i + 1];
 
           if (myMath.isValibPoint(point)) {
-            if (!context.lineType || context.lineType == 'solid') {
-              //实线的绘制
-              if (!beginPath) {
-                graphics.moveTo(point[0], point[1]);
-              } else {
-                graphics.lineTo(point[0], point[1]);
-              }
-            } else if (context.lineType == 'dashed' || context.lineType == 'dotted') {
-              //如果是虚线
-              //如果是曲线
-              if (context.smooth) {
-                //就直接做间隔好了
-                //TODO: 这个情况会有点稀疏，要优化
-                if (!beginPath) {
-                  graphics.moveTo(point[0], point[1]);
-                } else {
-                  graphics.lineTo(point[0], point[1]);
-                  beginPath = false;
-                  i++; //跳过下一个点
-
-                  continue;
-                }
-              } else {
-                //point 有效，而且 next也有效的话
-                //直线的虚线
-                if (myMath.isValibPoint(nextPoint)) {
-                  this.dashedLineTo(graphics, point[0], point[1], nextPoint[0], nextPoint[1], 5);
-                }
-              }
+            if (!beginPath) {
+              graphics.moveTo(point[0], point[1]);
+            } else {
+              graphics.lineTo(point[0], point[1]);
             }
             beginPath = true;
           } else {
             beginPath = false;
           }
         }
-        /*
-        if (!context.lineType || context.lineType == 'solid') {
-            //默认为实线
-            //TODO:目前如果 有设置smooth 的情况下是不支持虚线的
-            graphics.moveTo(pointList[0][0], pointList[0][1]);
-            for (var i = 1, l = pointList.length; i < l; i++) {
-                graphics.lineTo(pointList[i][0], pointList[i][1]);
-            };
-          } else if (context.lineType == 'dashed' || context.lineType == 'dotted') {
-            if (context.smooth) {
-                for (var si = 0, sl = pointList.length; si < sl; si++) {
-                    if (si == sl-1) {
-                        break;
-                    };
-                    graphics.moveTo( pointList[si][0] , pointList[si][1] );
-                    graphics.lineTo( pointList[si+1][0] , pointList[si+1][1] );
-                    si+=1;
-                  };
-            } else {
-                //画虚线的方法  
-                for (var i = 1, l = pointList.length; i < l; i++) {
-                    var fromX = pointList[i - 1][0];
-                    var toX = pointList[i][0];
-                    var fromY = pointList[i - 1][1];
-                    var toY = pointList[i][1];
-                    this.dashedLineTo(graphics, fromX, fromY, toX, toY, 5);
-                };
-            }
-            
-        };
-        */
-
 
         return this;
       }
@@ -9129,13 +9065,8 @@ var canvax = (function () {
       key: "draw",
       value: function draw(graphics) {
         var model = this.context.$model;
-
-        if (!model.lineType || model.lineType == 'solid') {
-          graphics.moveTo(model.start.x, model.start.y);
-          graphics.lineTo(model.end.x, model.end.y);
-        } else if (model.lineType == 'dashed' || model.lineType == 'dotted') {
-          this.dashedLineTo(graphics, model.start.x, model.start.y, model.end.x, model.end.y, model.dashLength);
-        }
+        graphics.moveTo(model.start.x, model.start.y);
+        graphics.lineTo(model.end.x, model.end.y);
         return this;
       }
     }]);
