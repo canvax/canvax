@@ -4,10 +4,6 @@
  * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
  *
  * 线条 类
- *
- *
- * 对应context的属性有
- * @lineType  可选 虚线 实现 的 类型
  **/
 import Shape from "../display/Shape";
 import {_} from "mmvis";

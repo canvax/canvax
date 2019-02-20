@@ -63,36 +63,6 @@ export default class Polygon extends Shape
         };
         graphics.closePath();
 
-        //如果为虚线
-        if (context.lineType == 'dashed' || context.lineType == 'dotted') {
-            //首先把前面的draphicsData设置为fill only
-            //也就是把line强制设置为false，这点很重要，否则你虚线画不出来，会和这个实现重叠了
-            graphics.currentPath.line = false;
-
-            if (context.smooth) {
-                //如果是smooth，本身已经被用曲率打散过了，不需要采用间隔法
-                for (var si = 0, sl = pointList.length; si < sl; si++) {
-                    if (si == sl-1) {
-                        break;
-                    };
-                    graphics.moveTo( pointList[si][0] , pointList[si][1] );
-                    graphics.lineTo( pointList[si+1][0] , pointList[si+1][1] );
-                    si+=1;
-                };
-            } else {
-                //画虚线的方法  
-                graphics.moveTo(pointList[0][0], pointList[0][1]);
-                for (var i = 1, l = pointList.length; i < l; i++) {
-                    var fromX = pointList[i - 1][0];
-                    var toX = pointList[i][0];
-                    var fromY = pointList[i - 1][1];
-                    var toY = pointList[i][1];
-                    this.dashedLineTo(graphics, fromX, fromY, toX, toY, 5);
-                };
-            }
-        };
-
-        graphics.closePath();
         return;
     }
 };

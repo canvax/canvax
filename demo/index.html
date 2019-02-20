@@ -80,10 +80,9 @@
                 //    y:50
                 //},
                 rotateOrigin : {
-                    x:150,
-                    y:150
+                    x: 150,
+                    y: 150
                 }
-
             }
         });
 
@@ -408,6 +407,20 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
             }
         });
 
+        window.arrow = new Shapes.Arrow({
+            context : {
+                control: {
+                    x: 10,
+                    y: 300
+                },
+                point : {
+                    x: 300,
+                    y: 300
+                },
+                angle : 45
+            }
+        });
+        stage.addChild( arrow );
 
 
         window.line = new Shapes.Line({
@@ -446,6 +459,7 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
         });
 
         setTimeout(function(){
+            
             line.animate({
                 start : {
                     x : 10,
@@ -461,7 +475,7 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
                 //delay: 1 * 80,
                 //id: line.id
             })
-        } , 1000);
+        } , 3000);
 
         setTimeout(function(){
             //line.cleanAnimates();

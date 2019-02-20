@@ -8395,18 +8395,6 @@ var canvax = (function () {
     function Circle(opt) {
       _classCallCheck(this, Circle);
 
-      //opt = Utils.checkOpt( opt );
-      //默认情况下面，circle不需要把xy进行parentInt转换
-
-      /*
-      var opt = {
-          type : "circle",
-          xyToInt : false,
-          context : {
-              r : 0
-          }
-      };
-      */
       opt = _.extend(true, {
         type: "circle",
         xyToInt: false,
@@ -8943,36 +8931,6 @@ var canvax = (function () {
         for (var i = 1, l = pointList.length; i < l; i++) {
           graphics.lineTo(pointList[i][0], pointList[i][1]);
         }
-        graphics.closePath(); //如果为虚线
-
-        if (context.lineType == 'dashed' || context.lineType == 'dotted') {
-          //首先把前面的draphicsData设置为fill only
-          //也就是把line强制设置为false，这点很重要，否则你虚线画不出来，会和这个实现重叠了
-          graphics.currentPath.line = false;
-
-          if (context.smooth) {
-            //如果是smooth，本身已经被用曲率打散过了，不需要采用间隔法
-            for (var si = 0, sl = pointList.length; si < sl; si++) {
-              if (si == sl - 1) {
-                break;
-              }
-              graphics.moveTo(pointList[si][0], pointList[si][1]);
-              graphics.lineTo(pointList[si + 1][0], pointList[si + 1][1]);
-              si += 1;
-            }
-          } else {
-            //画虚线的方法  
-            graphics.moveTo(pointList[0][0], pointList[0][1]);
-
-            for (var i = 1, l = pointList.length; i < l; i++) {
-              var fromX = pointList[i - 1][0];
-              var toX = pointList[i][0];
-              var fromY = pointList[i - 1][1];
-              var toY = pointList[i][1];
-              this.dashedLineTo(graphics, fromX, fromY, toX, toY, 5);
-            }
-          }
-        }
         graphics.closePath();
         return;
       }
@@ -9030,8 +8988,6 @@ var canvax = (function () {
       _classCallCheck(this, Line);
 
       var _context = _.extend({
-        lineType: null,
-        //可选 虚线 实现 的 类型
         start: {
           x: 0,
           // 必须，起点横坐标
@@ -9043,9 +8999,7 @@ var canvax = (function () {
           // 必须，终点横坐标
           y: 0 // 必须，终点纵坐标
 
-        },
-        dashLength: 3 // 虚线间隔
-
+        }
       }, opt.context);
 
       opt.context = _context;
@@ -9279,6 +9233,84 @@ var canvax = (function () {
     return Sector;
   }(Shape);
 
+  var Line$1 =
+  /*#__PURE__*/
+  function (_Shape) {
+    _inherits(Line, _Shape);
+
+    function Line(opt) {
+      _classCallCheck(this, Line);
+
+      var _context = _.extend({
+        control: {
+          x: 0,
+          // 必须，起点横坐标
+          y: 0 // 必须，起点纵坐标
+
+        },
+        point: {
+          x: 0,
+          // 必须，终点横坐标
+          y: 0 // 必须，终点纵坐标
+
+        },
+        angle: null,
+        // control的存在，也就是为了计算出来这个angle
+        theta: 30,
+        // 箭头夹角
+        headlen: 10,
+        // 斜边长度
+        lineWidth: 1,
+        strokeStyle: '#666',
+        fillStyle: null
+      }, opt.context);
+
+      opt.context = _context;
+      opt.type = "arrow";
+      return _possibleConstructorReturn(this, _getPrototypeOf(Line).call(this, opt));
+    }
+
+    _createClass(Line, [{
+      key: "watch",
+      value: function watch(name, value, preValue) {
+        //并不清楚是start.x 还是end.x， 当然，这并不重要
+        if (name == "x" || name == "y" || name == "theta" || name == "headlen" || name == "angle") {
+          this.graphics.clear();
+        }
+      }
+    }, {
+      key: "draw",
+      value: function draw(graphics) {
+        var model = this.context.$model;
+        var fromX = model.control.x;
+        var fromY = model.control.y;
+        var toX = model.point.x;
+        var toY = model.point.y; // 计算各角度和对应的P2,P3坐标 
+
+        var angle = "angle" in model ? model.angle - 180 : Math.atan2(fromY - toY, fromX - toX) * 180 / Math.PI,
+            angle1 = (angle + model.theta) * Math.PI / 180,
+            angle2 = (angle - model.theta) * Math.PI / 180,
+            topX = model.headlen * Math.cos(angle1),
+            topY = model.headlen * Math.sin(angle1),
+            botX = model.headlen * Math.cos(angle2),
+            botY = model.headlen * Math.sin(angle2);
+        var arrowX = toX + topX;
+        var arrowY = toY + topY;
+        graphics.moveTo(arrowX, arrowY);
+        graphics.lineTo(toX, toY);
+        graphics.lineTo(toX + botX, toY + botY);
+
+        if (model.fillStyle) {
+          graphics.lineTo(arrowX, arrowY);
+          graphics.closePath();
+        }
+        return this;
+      }
+    }]);
+
+    return Line;
+  }(Shape);
+
   var Canvax = {
     App: Application
   };
@@ -9301,7 +9333,8 @@ var canvax = (function () {
     Path: Path,
     Polygon: Polygon$1,
     Rect: Rect,
-    Sector: Sector
+    Sector: Sector,
+    Arrow: Line$1
   };
   Canvax.AnimationFrame = AnimationFrame;
   Canvax.utils = Utils;
