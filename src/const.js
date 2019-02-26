@@ -65,7 +65,7 @@ export const SHAPE_CONTEXT_DEFAULT = {
     lineJoin      : null,//这两个目前webgl里面没实现
     miterLimit    : null,//miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
 
-    lineAlpha     : 1,//context2d里没有，自定义
+    strokeAlpha     : 1,//context2d里没有，自定义
     strokeStyle   : null,
     lineType      : "solid", //context2d里没有，自定义线条的type，默认为实线
     lineWidth     : null
@@ -86,7 +86,7 @@ export const TRANSFORM_PROPS = [
 //appha 有 自己的 处理方式
 export const STYLE_PROPS = [
     "lineWidth",
-    "lineAlpha",
+    "strokeAlpha",
     "strokeStyle",
     "fillStyle",
     "fillAlpha",

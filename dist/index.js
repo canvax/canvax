@@ -715,10 +715,14 @@ var canvax = (function () {
             default: null,
             documentation: '水位data，需要混入 计算 dataSection， 如果有设置waterLine， dataSection的最高水位不会低于这个值'
           },
-          middleweight: {
-            detail: '区间等分线',
+          middleWeight: {
+            detail: '区间分隔线',
             default: null,
             documentation: '如果middleweight有设置的话 dataSectionGroup 为被middleweight分割出来的n个数组>..[ [0,50 , 100],[100,500,1000] ]'
+          },
+          middleWeightPos: {
+            detail: '区间分隔线的物理位置，百分比,默认 0.5 ',
+            default: null
           },
           symmetric: {
             detail: '自动正负对称',
@@ -942,6 +946,8 @@ var canvax = (function () {
           this.dataSection = _dataSection || this._opt.dataSection;
           this.dataSectionGroup = [this.dataSection];
         }
+
+        this._middleWeightPos();
       }
     }, {
       key: "_getDataSection",
@@ -1077,10 +1083,11 @@ var canvax = (function () {
     }, {
       key: "_middleweight",
       value: function _middleweight() {
-        if (this.middleweight) {
+
+        if (this.middleWeight) {
           //支持多个量级的设置
-          if (!_.isArray(this.middleweight)) {
-            this.middleweight = [this.middleweight];
+          if (!_.isArray(this.middleWeight)) {
+            this.middleWeight = [this.middleWeight];
           }
 
           var dMin = _.min(this.dataSection);
@@ -1090,18 +1097,18 @@ var canvax = (function () {
           var newDS = [dMin];
           var newDSG = [];
 
-          for (var i = 0, l = this.middleweight.length; i < l; i++) {
+          for (var i = 0, l = this.middleWeight.length; i < l; i++) {
             var preMiddleweight = dMin;
 
             if (i > 0) {
-              preMiddleweight = this.middleweight[i - 1];
+              preMiddleweight = this.middleWeight[i - 1];
             }
-            var middleVal = preMiddleweight + parseInt((this.middleweight[i] - preMiddleweight) / 2);
+            var middleVal = preMiddleweight + parseInt((this.middleWeight[i] - preMiddleweight) / 2);
             newDS.push(middleVal);
-            newDS.push(this.middleweight[i]);
-            newDSG.push([preMiddleweight, middleVal, this.middleweight[i]]);
+            newDS.push(this.middleWeight[i]);
+            newDSG.push([preMiddleweight, middleVal, this.middleWeight[i]]);
           }
-          var lastMW = this.middleweight.slice(-1)[0];
+          var lastMW = this.middleWeight.slice(-1)[0];
 
           if (dMax > lastMW) {
             newDS.push(lastMW + (dMax - lastMW) / 2);
@@ -1113,17 +1120,68 @@ var canvax = (function () {
           this.dataSection = newDS;
           this.dataSectionGroup = newDSG;
         }
+      }
+    }, {
+      key: "_middleWeightPos",
+      value: function _middleWeightPos() {
+        var me = this;
+
+        if (this.middleWeightPos) {
+          if (!_.isArray(this.middleWeightPos)) {
+            this.middleWeightPos = [this.middleWeightPos];
+          }
+          //如果大于1了则默认按照均分设置
+
+          var _count = 0;
+
+          _.each(this.middleWeightPos, function (pos) {
+            _count += pos;
+          });
+
+          if (_count < 1) {
+            this.middleWeightPos.push(1 - _count);
+          }
+
+          if (_count > 1) {
+            this.middleWeightPos = null;
+          }
+        }
+
+        if (this.middleWeight) {
+          if (!this.middleWeightPos) {
+            this.middleWeightPos = [];
+            var _prePos = 0;
+
+            _.each(this.middleWeight, function () {
+              var _pos = 1 / (me.middleWeight.length + 1);
+
+              _prePos += _pos;
+              me.middleWeightPos.push(_pos);
+            });
+
+            this.middleWeightPos.push(1 - _prePos);
+          }
+        } else {
+          this.middleWeightPos = [1];
+        }
       } //origin 对应 this.origin 的值
 
     }, {
       key: "_getOriginTrans",
       value: function _getOriginTrans(origin) {
         var pos = 0;
-        var dsgLen = this.dataSectionGroup.length;
-        var groupLength = this.axisLength / dsgLen;
+        var dsgLen = this.dataSectionGroup.length; //var groupLength = this.axisLength / dsgLen;
 
         for (var i = 0, l = dsgLen; i < l; i++) {
           var ds = this.dataSectionGroup[i];
+          var groupLength = this.axisLength * this.middleWeightPos[i];
+          var preGroupLenth = 0;
+
+          _.each(this.middleWeightPos, function (mp, mi) {
+            if (mi < i) {
+              preGroupLenth += me.axisLength * mp;
+            }
+          });
 
           if (this.layoutType == "proportion") {
             var min = _.min(ds);
@@ -1133,7 +1191,7 @@ var canvax = (function () {
             var amountABS = Math.abs(max - min);
 
             if (origin >= min && origin <= max) {
-              pos = (origin - min) / amountABS * groupLength + i * groupLength;
+              pos = (origin - min) / amountABS * groupLength + preGroupLenth;
               break;
             }
           }
@@ -1201,17 +1259,25 @@ var canvax = (function () {
     }, {
       key: "getPosOf",
       value: function getPosOf(opt) {
+        var me = this;
         var pos;
 
         var cellCount = this._getCellCount(); //dataOrg上面的真实数据节点数，把轴分成了多少个节点
 
 
         if (this.layoutType == "proportion") {
-          var dsgLen = this.dataSectionGroup.length;
-          var groupLength = this.axisLength / dsgLen;
+          var dsgLen = this.dataSectionGroup.length; //var groupLength = this.axisLength / dsgLen;
 
           for (var i = 0, l = dsgLen; i < l; i++) {
             var ds = this.dataSectionGroup[i];
+            var groupLength = this.axisLength * this.middleWeightPos[i];
+            var preGroupLenth = 0;
+
+            _.each(this.middleWeightPos, function (mp, mi) {
+              if (mi < i) {
+                preGroupLenth += me.axisLength * mp;
+              }
+            });
 
             var min = _.min(ds);
 
@@ -1228,10 +1294,10 @@ var canvax = (function () {
               var maxGroupDisABS = Math.max(Math.abs(max - _origin), Math.abs(_origin - min));
               var amountABS = Math.abs(max - min);
               var h = maxGroupDisABS / amountABS * groupLength;
-              pos = (val - _origin) / maxGroupDisABS * h + i * groupLength;
+              pos = (val - _origin) / maxGroupDisABS * h + preGroupLenth;
 
               if (isNaN(pos)) {
-                pos = parseInt(i * groupLength);
+                pos = parseInt(preGroupLenth);
               }
               break;
             }
@@ -1317,15 +1383,24 @@ var canvax = (function () {
         var val;
 
         if (this.layoutType == "proportion") {
-          var groupLength = this.axisLength / this.dataSectionGroup.length;
+          var dsgLen = this.dataSectionGroup.length; //var groupLength = this.axisLength / dsgLen;
 
           _.each(this.dataSectionGroup, function (ds, i) {
+            var groupLength = me.axisLength * me.middleWeightPos[i];
+            var preGroupLenth = 0;
+
+            _.each(me.middleWeightPos, function (mp, mi) {
+              if (mi < i) {
+                preGroupLenth += me.axisLength * mp;
+              }
+            });
+
             if (parseInt(ind / groupLength) == i || i == me.dataSectionGroup.length - 1) {
               var min = _.min(ds);
 
               var max = _.max(ds);
 
-              val = min + (max - min) / groupLength * (ind - groupLength * i);
+              val = min + (max - min) / groupLength * (ind - preGroupLenth);
               return false;
             }
           });
@@ -2508,6 +2583,7 @@ var canvax = (function () {
 
       if (map) {
         if (!e.target) e.target = this;
+        if (!e.currentTarget) e.currentTarget = this;
         map = map.slice();
 
         for (var i = 0; i < map.length; i++) {
@@ -2604,15 +2680,13 @@ var canvax = (function () {
           for (var p in params) {
             if (p != "type") {
               e[p] = params[p];
-            } //然后，currentTarget要修正为自己
-
-
-            e.currentTarget = this;
+            }
           }
         }
         var me = this;
 
         _.each(eventType.split(" "), function (eType) {
+          //然后，currentTarget要修正为自己
           e.currentTarget = me;
           me.dispatchEvent(e);
         });
@@ -2806,11 +2880,10 @@ var canvax = (function () {
       //所以放在了下面的me.__getcurPointsTarget( e , curMousePoint );常规mousemove中执行
 
       var curMousePoint = me.curPoints[0];
-      var curMouseTarget = me.curPointsTarget[0]; //模拟drag,mouseover,mouseout 部分代码 begin-------------------------------------------------
-      //mousedown的时候 如果 curMouseTarget.dragEnabled 为true。就要开始准备drag了
+      var curMouseTarget = me.curPointsTarget[0];
 
-      if (e.type == "mousedown") {
-        //如果curTarget 的数组为空或者第一个为false ，，，
+      if ( //这几个事件触发过来，是一定需要检测 curMouseTarget 的
+      _.indexOf(['mousedown', 'mouseover', 'click'], e.type) > -1 && !curMouseTarget) {
         if (!curMouseTarget) {
           var obj = root.getObjectsUnderPoint(curMousePoint, 1)[0];
 
@@ -2819,7 +2892,11 @@ var canvax = (function () {
           }
         }
         curMouseTarget = me.curPointsTarget[0];
+      }
+      //mousedown的时候 如果 curMouseTarget.dragEnabled 为true。就要开始准备drag了
 
+      if (e.type == "mousedown") {
+        //如果curTarget 的数组为空或者第一个为false ，，，
         if (curMouseTarget && curMouseTarget.dragEnabled) {
           //鼠标事件已经摸到了一个
           me._touching = true;
@@ -3075,20 +3152,16 @@ var canvax = (function () {
       }
 
       var me = this;
-      var hasChild = false;
 
       _.each(childs, function (child, i) {
         if (child) {
-          hasChild = true;
-          var ce = new Event(e);
-          ce.target = ce.currentTarget = child || this;
+          var ce = new Event(e); //ce.target = ce.currentTarget = child || this;
+
           ce.stagePoint = me.curPoints[i];
-          ce.point = ce.target.globalToLocal(ce.stagePoint);
+          ce.point = child.globalToLocal(ce.stagePoint);
           child.dispatchEvent(ce);
         }
       });
-
-      return hasChild;
     },
     //克隆一个元素到hover stage中去
     _clone2hoverStage: function _clone2hoverStage(target, i) {
@@ -4749,7 +4822,7 @@ var canvax = (function () {
   var TRANSFORM_PROPS = ["x", "y", "scaleX", "scaleY", "rotation", "scaleOrigin", "rotateOrigin"]; //所有和样式相关的属性
   //appha 有 自己的 处理方式
 
-  var STYLE_PROPS = ["lineWidth", "lineAlpha", "strokeStyle", "fillStyle", "fillAlpha", "globalAlpha"];
+  var STYLE_PROPS = ["lineWidth", "strokeAlpha", "strokeStyle", "fillStyle", "fillAlpha", "globalAlpha"];
 
   /**
    * 线段包含判断
@@ -5241,22 +5314,18 @@ var canvax = (function () {
 
         _transform.identity();
 
-        var context = this.context; //是否需要Transform
+        var context = this.context; //是否需要scale
 
         if (context.scaleX !== 1 || context.scaleY !== 1) {
           //如果有缩放
           //缩放的原点坐标
           var origin = new Point(context.scaleOrigin);
 
-          if (origin.x || origin.y) {
-            _transform.translate(-origin.x, -origin.y);
-          }
+          _transform.translate(-origin.x, -origin.y);
 
           _transform.scale(context.scaleX, context.scaleY);
 
-          if (origin.x || origin.y) {
-            _transform.translate(origin.x, origin.y);
-          }
+          _transform.translate(origin.x, origin.y);
         }
         var rotation = context.rotation;
 
@@ -5265,15 +5334,11 @@ var canvax = (function () {
           //旋转的原点坐标
           var origin = new Point(context.rotateOrigin);
 
-          if (origin.x || origin.y) {
-            _transform.translate(-origin.x, -origin.y);
-          }
+          _transform.translate(-origin.x, -origin.y);
 
           _transform.rotate(rotation % 360 * Math.PI / 180);
 
-          if (origin.x || origin.y) {
-            _transform.translate(origin.x, origin.y);
-          }
+          _transform.translate(origin.x, origin.y);
         }
 
         var x, y;
@@ -6039,7 +6104,7 @@ var canvax = (function () {
           var fillStyle = data.fillStyle;
           var strokeStyle = data.strokeStyle;
           var fill = data.hasFill() && data.fillAlpha && !isClip;
-          var line = data.hasLine() && data.lineAlpha && !isClip;
+          var line = data.hasLine() && data.strokeAlpha && !isClip;
           ctx.lineWidth = data.lineWidth;
 
           if (data.type === SHAPES.POLY) {
@@ -6054,7 +6119,7 @@ var canvax = (function () {
             }
 
             if (line) {
-              ctx.globalAlpha = data.lineAlpha * globalAlpha;
+              ctx.globalAlpha = data.strokeAlpha * globalAlpha;
               ctx.strokeStyle = strokeStyle;
               ctx.stroke();
             }
@@ -6072,7 +6137,7 @@ var canvax = (function () {
             }
 
             if (line) {
-              ctx.globalAlpha = data.lineAlpha * globalAlpha;
+              ctx.globalAlpha = data.strokeAlpha * globalAlpha;
               ctx.strokeStyle = strokeStyle;
               ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
             }
@@ -6089,7 +6154,7 @@ var canvax = (function () {
             }
 
             if (line) {
-              ctx.globalAlpha = data.lineAlpha * globalAlpha;
+              ctx.globalAlpha = data.strokeAlpha * globalAlpha;
               ctx.strokeStyle = strokeStyle;
               ctx.stroke();
             }
@@ -6126,7 +6191,7 @@ var canvax = (function () {
             }
 
             if (line) {
-              ctx.globalAlpha = data.lineAlpha * globalAlpha;
+              ctx.globalAlpha = data.strokeAlpha * globalAlpha;
               ctx.strokeStyle = strokeStyle;
               ctx.stroke();
             }
@@ -6519,12 +6584,12 @@ var canvax = (function () {
   var GraphicsData =
   /*#__PURE__*/
   function () {
-    function GraphicsData(lineWidth, strokeStyle, lineAlpha, fillStyle, fillAlpha, shape) {
+    function GraphicsData(lineWidth, strokeStyle, strokeAlpha, fillStyle, fillAlpha, shape) {
       _classCallCheck(this, GraphicsData);
 
       this.lineWidth = lineWidth;
       this.strokeStyle = strokeStyle;
-      this.lineAlpha = lineAlpha;
+      this.strokeAlpha = strokeAlpha;
       this.fillStyle = fillStyle;
       this.fillAlpha = fillAlpha;
       this.shape = shape;
@@ -6539,7 +6604,7 @@ var canvax = (function () {
     _createClass(GraphicsData, [{
       key: "clone",
       value: function clone() {
-        var cloneGraphicsData = new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, this.shape);
+        var cloneGraphicsData = new GraphicsData(this.lineWidth, this.strokeStyle, this.strokeAlpha, this.fillStyle, this.fillAlpha, this.shape);
         cloneGraphicsData.fill = this.fill;
         cloneGraphicsData.line = this.line;
         return cloneGraphicsData;
@@ -6558,7 +6623,7 @@ var canvax = (function () {
         if (this.line) {
           this.lineWidth = style.lineWidth;
           this.strokeStyle = style.strokeStyle;
-          this.lineAlpha = style.lineAlpha;
+          this.strokeAlpha = style.strokeAlpha;
         }
 
         if (this.fill) {
@@ -7152,7 +7217,7 @@ var canvax = (function () {
 
       this.lineWidth = 1;
       this.strokeStyle = null;
-      this.lineAlpha = 1;
+      this.strokeAlpha = 1;
       this.fillStyle = null;
       this.fillAlpha = 1; //比如path m 0 0 l 0 0 m 1 1 l 1 1
       //就会有两条graphicsData数据产生
@@ -7182,7 +7247,7 @@ var canvax = (function () {
         var model = context.$model;
         this.lineWidth = model.lineWidth;
         this.strokeStyle = model.strokeStyle;
-        this.lineAlpha = model.lineAlpha * model.globalAlpha;
+        this.strokeAlpha = model.strokeAlpha * model.globalAlpha;
         this.fillStyle = model.fillStyle;
         this.fillAlpha = model.fillAlpha * model.globalAlpha;
         var g = this; //一般都是先设置好style的，所以 ， 当后面再次设置新的style的时候
@@ -7451,7 +7516,7 @@ var canvax = (function () {
 
 
         this.beginPath();
-        var data = new GraphicsData(this.lineWidth, this.strokeStyle, this.lineAlpha, this.fillStyle, this.fillAlpha, shape);
+        var data = new GraphicsData(this.lineWidth, this.strokeStyle, this.strokeAlpha, this.fillStyle, this.fillAlpha, shape);
         this.graphicsData.push(data);
 
         if (data.type === SHAPES.POLY) {
@@ -7633,7 +7698,7 @@ var canvax = (function () {
         //这两个目前webgl里面没实现
         miterLimit: opt.context.miterLimit || null,
         //miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
-        lineAlpha: opt.context.lineAlpha || 1,
+        strokeAlpha: opt.context.strokeAlpha || 1,
         //context2d里没有，自定义
         strokeStyle: opt.context.strokeStyle || null,
         lineType: opt.context.lineType || "solid",
@@ -9196,11 +9261,11 @@ var canvax = (function () {
               G.closePath();
               G.currentPath.lineWidth = 0;
               G.currentPath.strokeStyle = null;
-              G.currentPath.lineAlpha = 0;
+              G.currentPath.strokeAlpha = 0;
               G.currentPath.line = false;
             }
 
-            if (model.lineWidth && model.strokeStyle && model.lineAlpha) {
+            if (model.lineWidth && model.strokeStyle && model.strokeAlpha) {
               G.beginPath();
               G.arc(0, 0, r, startAngle, endAngle, model.clockwise);
               G.closePath();
@@ -9258,7 +9323,7 @@ var canvax = (function () {
         // control的存在，也就是为了计算出来这个angle
         theta: 30,
         // 箭头夹角
-        headlen: 10,
+        headlen: 6,
         // 斜边长度
         lineWidth: 1,
         strokeStyle: '#666',

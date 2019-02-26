@@ -53,6 +53,7 @@ Canvax.Shapes = {
     Arrow  : Arrow
 }
 
+
 Canvax.AnimationFrame = AnimationFrame;
 
 Canvax.utils = utils;

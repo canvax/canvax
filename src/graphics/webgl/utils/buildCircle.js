@@ -59,7 +59,7 @@ export default function buildCircle(graphicsData, webGLData)
         indices.push(vecPos - 1);
     }
 
-    if (graphicsData.hasLine() && graphicsData.lineAlpha)
+    if (graphicsData.hasLine() && graphicsData.strokeAlpha)
     {
         const tempPoints = graphicsData.points;
 

@@ -58,7 +58,7 @@ export default function buildPoly(graphicsData, webGLData)
         }
     }
 
-    if (graphicsData.hasLine() && graphicsData.lineAlpha )
+    if (graphicsData.hasLine() && graphicsData.strokeAlpha )
     {
         buildLine(graphicsData, webGLData);
     }

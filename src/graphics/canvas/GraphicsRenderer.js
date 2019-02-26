@@ -27,7 +27,7 @@ export default class CanvasGraphicsRenderer
             const strokeStyle = data.strokeStyle;
 
             const fill = data.hasFill() && data.fillAlpha && !isClip;
-            const line = data.hasLine() && data.lineAlpha && !isClip;
+            const line = data.hasLine() && data.strokeAlpha && !isClip;
 
             ctx.lineWidth = data.lineWidth;
 
@@ -46,7 +46,7 @@ export default class CanvasGraphicsRenderer
                 }
                 if ( line )
                 {
-                    ctx.globalAlpha = data.lineAlpha * globalAlpha;
+                    ctx.globalAlpha = data.strokeAlpha * globalAlpha;
                     ctx.strokeStyle = strokeStyle;
                     ctx.stroke();
                 }
@@ -68,7 +68,7 @@ export default class CanvasGraphicsRenderer
                 }
                 if ( line ) 
                 {
-                    ctx.globalAlpha = data.lineAlpha * globalAlpha;
+                    ctx.globalAlpha = data.strokeAlpha * globalAlpha;
                     ctx.strokeStyle = strokeStyle;
                     ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
                 }
@@ -89,7 +89,7 @@ export default class CanvasGraphicsRenderer
                 }
                 if ( line )
                 {
-                    ctx.globalAlpha = data.lineAlpha * globalAlpha;
+                    ctx.globalAlpha = data.strokeAlpha * globalAlpha;
                     ctx.strokeStyle = strokeStyle;
                     ctx.stroke();
                 }
@@ -128,7 +128,7 @@ export default class CanvasGraphicsRenderer
                 }
                 if ( line )
                 {
-                    ctx.globalAlpha = data.lineAlpha * globalAlpha;
+                    ctx.globalAlpha = data.strokeAlpha * globalAlpha;
                     ctx.strokeStyle = strokeStyle;
                     ctx.stroke();
                 }

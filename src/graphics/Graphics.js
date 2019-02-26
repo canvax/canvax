@@ -16,7 +16,7 @@ export default class Graphics
     {
         this.lineWidth = 1;
         this.strokeStyle = null;
-        this.lineAlpha = 1;
+        this.strokeAlpha = 1;
         this.fillStyle = null;
         this.fillAlpha = 1;
 
@@ -43,7 +43,7 @@ export default class Graphics
         const model = context.$model;
         this.lineWidth = model.lineWidth;
         this.strokeStyle = model.strokeStyle;
-        this.lineAlpha = model.lineAlpha * model.globalAlpha;
+        this.strokeAlpha = model.strokeAlpha * model.globalAlpha;
 
         this.fillStyle = model.fillStyle;
         this.fillAlpha = model.fillAlpha * model.globalAlpha;
@@ -383,7 +383,7 @@ export default class Graphics
         const data = new GraphicsData(
             this.lineWidth,
             this.strokeStyle,
-            this.lineAlpha,
+            this.strokeAlpha,
             this.fillStyle,
             this.fillAlpha,
             shape

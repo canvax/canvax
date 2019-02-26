@@ -1,10 +1,10 @@
 export default class GraphicsData
 {
-    constructor(lineWidth, strokeStyle, lineAlpha, fillStyle, fillAlpha, shape)
+    constructor(lineWidth, strokeStyle, strokeAlpha, fillStyle, fillAlpha, shape)
     {
         this.lineWidth = lineWidth;
         this.strokeStyle = strokeStyle;
-        this.lineAlpha = lineAlpha;
+        this.strokeAlpha = strokeAlpha;
 
         this.fillStyle = fillStyle;
         this.fillAlpha = fillAlpha;
@@ -26,7 +26,7 @@ export default class GraphicsData
         var cloneGraphicsData = new GraphicsData(
             this.lineWidth,
             this.strokeStyle,
-            this.lineAlpha,
+            this.strokeAlpha,
             this.fillStyle,
             this.fillAlpha,
             this.shape
@@ -49,7 +49,7 @@ export default class GraphicsData
         if( this.line ){
             this.lineWidth = style.lineWidth;
             this.strokeStyle = style.strokeStyle;
-            this.lineAlpha = style.lineAlpha;
+            this.strokeAlpha = style.strokeAlpha;
         }
 
         if( this.fill ){

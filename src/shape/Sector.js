@@ -92,10 +92,10 @@ export default class Sector extends Shape
                     G.closePath();
                     G.currentPath.lineWidth = 0;
                     G.currentPath.strokeStyle = null;
-                    G.currentPath.lineAlpha = 0;
+                    G.currentPath.strokeAlpha = 0;
                     G.currentPath.line = false;
                 }
-                if( model.lineWidth && model.strokeStyle && model.lineAlpha ){
+                if( model.lineWidth && model.strokeStyle && model.strokeAlpha ){
                     G.beginPath()
                     G.arc( 0 , 0 , r, startAngle, endAngle, model.clockwise);
                     G.closePath();

@@ -25,7 +25,7 @@ export default class Shape extends DisplayObject
             lineJoin      : opt.context.lineJoin   || "round",//这两个目前webgl里面没实现
             miterLimit    : opt.context.miterLimit || null,//miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
 
-            lineAlpha     : opt.context.lineAlpha  || 1,//context2d里没有，自定义
+            strokeAlpha     : opt.context.strokeAlpha  || 1,//context2d里没有，自定义
             strokeStyle   : opt.context.strokeStyle|| null,
             lineType      : opt.context.lineType   || "solid", //context2d里没有，自定义线条的type，默认为实线
             lineDash      : opt.context.lineDash   || [6,3],

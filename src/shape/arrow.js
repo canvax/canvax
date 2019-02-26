@@ -4,6 +4,7 @@
  * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
  *
  **/
+
 import Shape from "../display/Shape";
 import {_} from "mmvis";
 
@@ -22,7 +23,7 @@ export default class Line extends Shape
             },
             angle : null,// control的存在，也就是为了计算出来这个angle
             theta: 30,   // 箭头夹角
-            headlen: 10, // 斜边长度
+            headlen: 6, // 斜边长度
 
             lineWidth: 1,
             strokeStyle: '#666',

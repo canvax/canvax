@@ -41,7 +41,7 @@ export default function buildRectangle(graphicsData, webGLData)
         indices.push(vertPos, vertPos, vertPos + 1, vertPos + 2, vertPos + 3, vertPos + 3);
     }
 
-    if (graphicsData.hasLine() && graphicsData.lineAlpha)
+    if (graphicsData.hasLine() && graphicsData.strokeAlpha)
     {
         const tempPoints = graphicsData.points;
 

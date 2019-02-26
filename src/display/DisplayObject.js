@@ -390,18 +390,18 @@ export default class DisplayObject extends event.Dispatcher
         var _transform = new Matrix();
         _transform.identity();
         var context = this.context;
-        //是否需要Transform
+
+        //是否需要scale
         if(context.scaleX !== 1 || context.scaleY !==1 ){
             //如果有缩放
             //缩放的原点坐标
+            
             var origin = new Point(context.scaleOrigin);
-            if( origin.x || origin.y ){
-                _transform.translate( -origin.x , -origin.y );
-            }
+
+            _transform.translate( -origin.x , -origin.y );
             _transform.scale( context.scaleX , context.scaleY );
-            if( origin.x || origin.y ){
-                _transform.translate( origin.x , origin.y );
-            };
+            _transform.translate( origin.x , origin.y );
+            
         };
 
         var rotation = context.rotation;
@@ -409,13 +409,11 @@ export default class DisplayObject extends event.Dispatcher
             //如果有旋转
             //旋转的原点坐标
             var origin = new Point(context.rotateOrigin);
-            if( origin.x || origin.y ){
-                _transform.translate( -origin.x , -origin.y );
-            }
+            
+            _transform.translate( -origin.x , -origin.y );
             _transform.rotate( rotation % 360 * Math.PI/180 );
-            if( origin.x || origin.y ){
-                _transform.translate( origin.x , origin.y );
-            }
+            _transform.translate( origin.x , origin.y );
+            
         };
 
         //如果有位移
@@ -434,10 +432,11 @@ export default class DisplayObject extends event.Dispatcher
             x = context.x;
             y = context.y;
         };
-
         if( x != 0 || y != 0 ){
             _transform.translate( x , y );
         };
+
+        
         this._transform = _transform;
         return _transform;
     }
@@ -477,7 +476,7 @@ export default class DisplayObject extends event.Dispatcher
             
             var inverseMatrix = this.worldTransform.clone().invert();
             var originPos = [
-                x * Settings.RESOLUTION, 
+                x * Settings.RESOLUTION,
                 y * Settings.RESOLUTION
             ];
 

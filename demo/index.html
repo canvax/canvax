@@ -160,7 +160,8 @@
                 lineWidth : 4
             }
         });
-        droplet.on("mouseover" , function(){
+        droplet.on("mouseover" , function(e){
+            debugger
             this.context.lineWidth = 8;
         });
         droplet.on("mouseout" , function(){
@@ -380,13 +381,17 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
                 y  : 100,
                 width : 100,
                 height: 100,
+                
                 rotation : 45,
-                //scaleX : 2,
-                //scaleOrigin:{
-                //    x:50,
-                //    y:50
-                //},
                 rotateOrigin : {x : 50,y:50},
+
+                scaleX : 2,
+                scaleY : 2,
+                scaleOrigin:{
+                    x:50,
+                    y:50
+                },
+                
                 //scaleY : 0.5,
                 cursor:"pointer",
 
@@ -521,6 +526,8 @@ debugger
 
         sprite.addChild(sector_rect);
         sprite1.addChild(rect);
+
+        stage.addChild( rect.clone() )
 
         stage.addChild(line);
         app.addChild(stage); 
