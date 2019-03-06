@@ -15,6 +15,7 @@
  * Matrix 矩阵库 用于整个系统的几何变换计算
  */
 
+
 var Matrix = function(a, b, c, d, tx, ty){
     this.a = a != undefined ? a : 1;
     this.b = b != undefined ? b : 0;
@@ -122,6 +123,10 @@ Matrix.prototype = {
         if( arguments.length == 0 )
         {
             //canvas2d 中不会有任何的参数传入
+            if(isNaN( this.a ) || isNaN( this.b ) || isNaN( this.c ) || isNaN( this.d )|| isNaN( this.tx )|| isNaN( this.ty ) ){
+                //不是一个合格的矩阵
+                return null;
+            };
             return [ this.a , this.b , this.c , this.d , this.tx , this.ty ];
         }
 

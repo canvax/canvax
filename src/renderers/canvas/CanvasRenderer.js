@@ -60,7 +60,14 @@ export default class CanvasRenderer extends SystemRenderer
             return;
         };
 
-        ctx.setTransform.apply( ctx , displayObject.worldTransform.toArray() );
+        var worldMatrixArr = displayObject.worldTransform.toArray();
+        if( worldMatrixArr ){
+            ctx.setTransform.apply( ctx , worldMatrixArr );
+        } else {
+            //如果这个displayObject的世界矩阵有问题，那么就不绘制了
+            return;
+        };
+        
 
         var isClipSave = false;
         if( displayObject.clip && displayObject.clip.graphics ){
