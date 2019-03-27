@@ -21,6 +21,7 @@
     },
     "repository": "git",
     "main": "./dist/index.cjs.js",
+    "module": "./src/index.js",
     "devDependencies": {
         "@babel/core": "7.2.2",
         "@babel/plugin-external-helpers": "7.2.0",
@@ -36,7 +37,7 @@
         "earcut": "2.0.7",
         "@tweenjs/tween.js": "17.2.0",
         "pixi-gl-core": "1.0.3",
-        "mmvis": "^0.0.60"
+        "mmvis": "^0.0.61"
     },
     "scripts": {
         "build": "rollup -c",

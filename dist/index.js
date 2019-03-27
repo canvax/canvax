@@ -84,1198 +84,1188 @@ var canvax = (function () {
     return _assertThisInitialized(self);
   }
 
-  var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+  var _ = {};
+  var breaker = {};
+  var ArrayProto = Array.prototype,
+      ObjProto = Object.prototype,
+      FuncProto = Function.prototype; // Create quick reference variables for speed access to core prototypes.
 
-  function unwrapExports (x) {
-  	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x.default : x;
-  }
+  var push = ArrayProto.push,
+      slice = ArrayProto.slice,
+      concat = ArrayProto.concat,
+      toString = ObjProto.toString,
+      hasOwnProperty = ObjProto.hasOwnProperty; // All **ECMAScript 5** native function implementations that we hope to use
+  // are declared here.
 
-  function createCommonjsModule(fn, module) {
-  	return module = { exports: {} }, fn(module, module.exports), module.exports;
-  }
+  var nativeForEach = ArrayProto.forEach,
+      nativeMap = ArrayProto.map,
+      nativeFilter = ArrayProto.filter,
+      nativeEvery = ArrayProto.every,
+      nativeSome = ArrayProto.some,
+      nativeIndexOf = ArrayProto.indexOf,
+      nativeIsArray = Array.isArray,
+      nativeKeys = Object.keys,
+      nativeBind = FuncProto.bind;
 
-  var dist = createCommonjsModule(function (module, exports) {
-
-    Object.defineProperty(exports, '__esModule', {
-      value: true
-    });
-
-    function _typeof$$1(obj) {
-      if (typeof Symbol === "function" && _typeof(Symbol.iterator) === "symbol") {
-        _typeof$$1 = function _typeof$$1(obj) {
-          return _typeof(obj);
-        };
-      } else {
-        _typeof$$1 = function _typeof$$1(obj) {
-          return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : _typeof(obj);
-        };
-      }
-
-      return _typeof$$1(obj);
-    }
-
-    function _classCallCheck$$1(instance, Constructor) {
-      if (!(instance instanceof Constructor)) {
-        throw new TypeError("Cannot call a class as a function");
-      }
-    }
-
-    function _defineProperties(target, props) {
-      for (var i = 0; i < props.length; i++) {
-        var descriptor = props[i];
-        descriptor.enumerable = descriptor.enumerable || false;
-        descriptor.configurable = true;
-        if ("value" in descriptor) descriptor.writable = true;
-        Object.defineProperty(target, descriptor.key, descriptor);
-      }
-    }
-
-    function _createClass$$1(Constructor, protoProps, staticProps) {
-      if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-      if (staticProps) _defineProperties(Constructor, staticProps);
-      return Constructor;
-    }
-
-    function _inherits$$1(subClass, superClass) {
-      if (typeof superClass !== "function" && superClass !== null) {
-        throw new TypeError("Super expression must either be null or a function");
-      }
-
-      subClass.prototype = Object.create(superClass && superClass.prototype, {
-        constructor: {
-          value: subClass,
-          writable: true,
-          configurable: true
-        }
-      });
-      if (superClass) _setPrototypeOf$$1(subClass, superClass);
-    }
-
-    function _getPrototypeOf$$1(o) {
-      _getPrototypeOf$$1 = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf$$1(o) {
-        return o.__proto__ || Object.getPrototypeOf(o);
-      };
-      return _getPrototypeOf$$1(o);
-    }
-
-    function _setPrototypeOf$$1(o, p) {
-      _setPrototypeOf$$1 = Object.setPrototypeOf || function _setPrototypeOf$$1(o, p) {
-        o.__proto__ = p;
-        return o;
-      };
-
-      return _setPrototypeOf$$1(o, p);
-    }
-
-    function _assertThisInitialized$$1(self) {
-      if (self === void 0) {
-        throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-      }
-
-      return self;
-    }
-
-    function _possibleConstructorReturn$$1(self, call) {
-      if (call && (_typeof(call) === "object" || typeof call === "function")) {
-        return call;
-      }
-
-      return _assertThisInitialized$$1(self);
-    }
-
-    var _ = {};
-    var breaker = {};
-    var ArrayProto = Array.prototype,
-        ObjProto = Object.prototype,
-        FuncProto = Function.prototype; // Create quick reference variables for speed access to core prototypes.
-
-    var push = ArrayProto.push,
-        slice = ArrayProto.slice,
-        concat = ArrayProto.concat,
-        toString = ObjProto.toString,
-        hasOwnProperty = ObjProto.hasOwnProperty; // All **ECMAScript 5** native function implementations that we hope to use
-    // are declared here.
-
-    var nativeForEach = ArrayProto.forEach,
-        nativeMap = ArrayProto.map,
-        nativeFilter = ArrayProto.filter,
-        nativeEvery = ArrayProto.every,
-        nativeSome = ArrayProto.some,
-        nativeIndexOf = ArrayProto.indexOf,
-        nativeIsArray = Array.isArray,
-        nativeKeys = Object.keys,
-        nativeBind = FuncProto.bind;
-
-    var shallowProperty = function shallowProperty(key) {
-      return function (obj) {
-        return obj == null ? void 0 : obj[key];
-      };
+  var shallowProperty = function shallowProperty(key) {
+    return function (obj) {
+      return obj == null ? void 0 : obj[key];
     };
+  };
 
-    var MAX_ARRAY_INDEX = Math.pow(2, 53) - 1;
-    var getLength = shallowProperty('length');
+  var MAX_ARRAY_INDEX = Math.pow(2, 53) - 1;
+  var getLength = shallowProperty('length');
 
-    var isArrayLike = function isArrayLike(collection) {
-      var length = getLength(collection);
-      return typeof length == 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
-    };
+  var isArrayLike = function isArrayLike(collection) {
+    var length = getLength(collection);
+    return typeof length == 'number' && length >= 0 && length <= MAX_ARRAY_INDEX;
+  };
 
-    _.values = function (obj) {
+  _.values = function (obj) {
+    var keys = _.keys(obj);
+
+    var length = keys.length;
+    var values = new Array(length);
+
+    for (var i = 0; i < length; i++) {
+      values[i] = obj[keys[i]];
+    }
+
+    return values;
+  };
+
+  _.keys = nativeKeys || function (obj) {
+    if (obj !== Object(obj)) throw new TypeError('Invalid object');
+    var keys = [];
+
+    for (var key in obj) {
+      if (_.has(obj, key)) keys.push(key);
+    }
+
+    return keys;
+  };
+
+  _.has = function (obj, key) {
+    return hasOwnProperty.call(obj, key);
+  };
+
+  var each = _.each = _.forEach = function (obj, iterator, context) {
+    if (obj == null) return;
+
+    if (nativeForEach && obj.forEach === nativeForEach) {
+      obj.forEach(iterator, context);
+    } else if (obj.length === +obj.length) {
+      for (var i = 0, length = obj.length; i < length; i++) {
+        if (iterator.call(context, obj[i], i, obj) === breaker) return;
+      }
+    } else {
       var keys = _.keys(obj);
 
-      var length = keys.length;
-      var values = new Array(length);
-
-      for (var i = 0; i < length; i++) {
-        values[i] = obj[keys[i]];
+      for (var i = 0, length = keys.length; i < length; i++) {
+        if (iterator.call(context, obj[keys[i]], keys[i], obj) === breaker) return;
       }
+    }
+  };
 
-      return values;
+  _.compact = function (array) {
+    return _.filter(array, _.identity);
+  };
+
+  _.filter = _.select = function (obj, iterator, context) {
+    var results = [];
+    if (obj == null) return results;
+    if (nativeFilter && obj.filter === nativeFilter) return obj.filter(iterator, context);
+    each(obj, function (value, index, list) {
+      if (iterator.call(context, value, index, list)) results.push(value);
+    });
+    return results;
+  };
+
+  each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp'], function (name) {
+    _['is' + name] = function (obj) {
+      return toString.call(obj) == '[object ' + name + ']';
     };
+  }); //if (!_.isArguments(arguments)) {
 
-    _.keys = nativeKeys || function (obj) {
-      if (obj !== Object(obj)) throw new TypeError('Invalid object');
-      var keys = [];
+  _.isArguments = function (obj) {
+    return !!(obj && _.has(obj, 'callee'));
+  }; //}
 
-      for (var key in obj) {
-        if (_.has(obj, key)) keys.push(key);
-      }
 
-      return keys;
+  {
+    _.isFunction = function (obj) {
+      return typeof obj === 'function';
     };
+  }
 
-    _.has = function (obj, key) {
-      return hasOwnProperty.call(obj, key);
-    };
+  _.isFinite = function (obj) {
+    return isFinite(obj) && !isNaN(parseFloat(obj));
+  };
 
-    var each = _.each = _.forEach = function (obj, iterator, context) {
-      if (obj == null) return;
+  _.isNaN = function (obj) {
+    return _.isNumber(obj) && obj != +obj;
+  };
 
-      if (nativeForEach && obj.forEach === nativeForEach) {
-        obj.forEach(iterator, context);
-      } else if (obj.length === +obj.length) {
-        for (var i = 0, length = obj.length; i < length; i++) {
-          if (iterator.call(context, obj[i], i, obj) === breaker) return;
-        }
-      } else {
-        var keys = _.keys(obj);
+  _.isBoolean = function (obj) {
+    return obj === true || obj === false || toString.call(obj) == '[object Boolean]';
+  };
 
-        for (var i = 0, length = keys.length; i < length; i++) {
-          if (iterator.call(context, obj[keys[i]], keys[i], obj) === breaker) return;
-        }
-      }
-    };
+  _.isNull = function (obj) {
+    return obj === null;
+  };
 
-    _.compact = function (array) {
-      return _.filter(array, _.identity);
-    };
+  _.isEmpty = function (obj) {
+    if (obj == null) return true;
+    if (_.isArray(obj) || _.isString(obj)) return obj.length === 0;
 
-    _.filter = _.select = function (obj, iterator, context) {
-      var results = [];
-      if (obj == null) return results;
-      if (nativeFilter && obj.filter === nativeFilter) return obj.filter(iterator, context);
-      each(obj, function (value, index, list) {
-        if (iterator.call(context, value, index, list)) results.push(value);
-      });
-      return results;
-    };
-
-    each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp'], function (name) {
-      _['is' + name] = function (obj) {
-        return toString.call(obj) == '[object ' + name + ']';
-      };
-    }); //if (!_.isArguments(arguments)) {
-
-    _.isArguments = function (obj) {
-      return !!(obj && _.has(obj, 'callee'));
-    }; //}
-
-
-    {
-      _.isFunction = function (obj) {
-        return typeof obj === 'function';
-      };
+    for (var key in obj) {
+      if (_.has(obj, key)) return false;
     }
 
-    _.isFinite = function (obj) {
-      return isFinite(obj) && !isNaN(parseFloat(obj));
-    };
+    return true;
+  };
 
-    _.isNaN = function (obj) {
-      return _.isNumber(obj) && obj != +obj;
-    };
+  _.isElement = function (obj) {
+    return !!(obj && obj.nodeType === 1);
+  };
 
-    _.isBoolean = function (obj) {
-      return obj === true || obj === false || toString.call(obj) == '[object Boolean]';
-    };
+  _.isArray = nativeIsArray || function (obj) {
+    return toString.call(obj) == '[object Array]';
+  };
 
-    _.isNull = function (obj) {
-      return obj === null;
-    };
+  _.isObject = function (obj) {
+    return obj === Object(obj);
+  };
 
-    _.isEmpty = function (obj) {
-      if (obj == null) return true;
-      if (_.isArray(obj) || _.isString(obj)) return obj.length === 0;
+  _.identity = function (value) {
+    return value;
+  };
 
-      for (var key in obj) {
-        if (_.has(obj, key)) return false;
+  _.indexOf = function (array, item, isSorted) {
+    if (array == null) return -1;
+    var i = 0,
+        length = array.length;
+
+    if (isSorted) {
+      if (typeof isSorted == 'number') {
+        i = isSorted < 0 ? Math.max(0, length + isSorted) : isSorted;
+      } else {
+        i = _.sortedIndex(array, item);
+        return array[i] === item ? i : -1;
       }
+    }
 
-      return true;
+    if (nativeIndexOf && array.indexOf === nativeIndexOf) return array.indexOf(item, isSorted);
+
+    for (; i < length; i++) {
+      if (array[i] === item) return i;
+    }
+
+    return -1;
+  };
+
+  _.isWindow = function (obj) {
+    return obj != null && obj == obj.window;
+  }; // Internal implementation of a recursive `flatten` function.
+
+
+  var flatten = function flatten(input, shallow, output) {
+    if (shallow && _.every(input, _.isArray)) {
+      return concat.apply(output, input);
+    }
+
+    each(input, function (value) {
+      if (_.isArray(value) || _.isArguments(value)) {
+        shallow ? push.apply(output, value) : flatten(value, shallow, output);
+      } else {
+        output.push(value);
+      }
+    });
+    return output;
+  }; // Flatten out an array, either recursively (by default), or just one level.
+
+
+  _.flatten = function (array, shallow) {
+    return flatten(array, shallow, []);
+  };
+
+  _.every = _.all = function (obj, iterator, context) {
+    iterator || (iterator = _.identity);
+    var result = true;
+    if (obj == null) return result;
+    if (nativeEvery && obj.every === nativeEvery) return obj.every(iterator, context);
+    each(obj, function (value, index, list) {
+      if (!(result = result && iterator.call(context, value, index, list))) return breaker;
+    });
+    return !!result;
+  }; // Return the minimum element (or element-based computation).
+
+
+  _.min = function (obj, iterator, context) {
+    if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
+      return Math.min.apply(Math, obj);
+    }
+
+    if (!iterator && _.isEmpty(obj)) return Infinity;
+    var result = {
+      computed: Infinity,
+      value: Infinity
     };
+    each(obj, function (value, index, list) {
+      var computed = iterator ? iterator.call(context, value, index, list) : value;
+      computed < result.computed && (result = {
+        value: value,
+        computed: computed
+      });
+    });
+    return result.value;
+  }; // Return the maximum element or (element-based computation).
+  // Can't optimize arrays of integers longer than 65,535 elements.
+  // See [WebKit Bug 80797](https://bugs.webkit.org/show_bug.cgi?id=80797)
 
-    _.isElement = function (obj) {
-      return !!(obj && obj.nodeType === 1);
+
+  _.max = function (obj, iterator, context) {
+    if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
+      return Math.max.apply(Math, obj);
+    }
+
+    if (!iterator && _.isEmpty(obj)) return -Infinity;
+    var result = {
+      computed: -Infinity,
+      value: -Infinity
     };
+    each(obj, function (value, index, list) {
+      var computed = iterator ? iterator.call(context, value, index, list) : value;
+      computed > result.computed && (result = {
+        value: value,
+        computed: computed
+      });
+    });
+    return result.value;
+  }; // Return the first value which passes a truth test. Aliased as `detect`.
 
-    _.isArray = nativeIsArray || function (obj) {
-      return toString.call(obj) == '[object Array]';
-    };
 
-    _.isObject = function (obj) {
-      return obj === Object(obj);
-    };
+  _.find = _.detect = function (obj, iterator, context) {
+    var result;
+    any(obj, function (value, index, list) {
+      if (iterator.call(context, value, index, list)) {
+        result = value;
+        return true;
+      }
+    });
+    return result;
+  }; // Determine if at least one element in the object matches a truth test.
+  // Delegates to **ECMAScript 5**'s native `some` if available.
+  // Aliased as `any`.
 
-    _.identity = function (value) {
-      return value;
-    };
 
-    _.indexOf = function (array, item, isSorted) {
-      if (array == null) return -1;
-      var i = 0,
-          length = array.length;
+  var any = _.some = _.any = function (obj, iterator, context) {
+    iterator || (iterator = _.identity);
+    var result = false;
+    if (obj == null) return result;
+    if (nativeSome && obj.some === nativeSome) return obj.some(iterator, context);
+    each(obj, function (value, index, list) {
+      if (result || (result = iterator.call(context, value, index, list))) return breaker;
+    });
+    return !!result;
+  }; // Return a version of the array that does not contain the specified value(s).
 
-      if (isSorted) {
-        if (typeof isSorted == 'number') {
-          i = isSorted < 0 ? Math.max(0, length + isSorted) : isSorted;
-        } else {
-          i = _.sortedIndex(array, item);
-          return array[i] === item ? i : -1;
+
+  _.without = function (array) {
+    return _.difference(array, slice.call(arguments, 1));
+  }; // Take the difference between one array and a number of other arrays.
+  // Only the elements present in just the first array will remain.
+
+
+  _.difference = function (array) {
+    var rest = concat.apply(ArrayProto, slice.call(arguments, 1));
+    return _.filter(array, function (value) {
+      return !_.contains(rest, value);
+    });
+  }; // Produce a duplicate-free version of the array. If the array has already
+  // been sorted, you have the option of using a faster algorithm.
+  // Aliased as `unique`.
+
+
+  _.uniq = _.unique = function (array, isSorted, iterator, context) {
+    if (_.isFunction(isSorted)) {
+      context = iterator;
+      iterator = isSorted;
+      isSorted = false;
+    }
+
+    var initial = iterator ? _.map(array, iterator, context) : array;
+    var results = [];
+    var seen = [];
+    each(initial, function (value, index) {
+      if (isSorted ? !index || seen[seen.length - 1] !== value : !_.contains(seen, value)) {
+        seen.push(value);
+        results.push(array[index]);
+      }
+    });
+    return results;
+  }; // Return the results of applying the iterator to each element.
+  // Delegates to **ECMAScript 5**'s native `map` if available.
+
+
+  _.map = _.collect = function (obj, iterator, context) {
+    var results = [];
+    if (obj == null) return results;
+    if (nativeMap && obj.map === nativeMap) return obj.map(iterator, context);
+    each(obj, function (value, index, list) {
+      results.push(iterator.call(context, value, index, list));
+    });
+    return results;
+  }; // Determine if the array or object contains a given value (using `===`).
+  // Aliased as `include`.
+
+
+  _.contains = _.include = function (obj, target) {
+    if (obj == null) return false;
+    if (nativeIndexOf && obj.indexOf === nativeIndexOf) return obj.indexOf(target) != -1;
+    return any(obj, function (value) {
+      return value === target;
+    });
+  }; // Convenience version of a common use case of `map`: fetching a property.
+
+
+  _.pluck = function (obj, key) {
+    return _.map(obj, function (value) {
+      return value[key];
+    });
+  }; // Return a random integer between min and max (inclusive).
+
+
+  _.random = function (min, max) {
+    if (max == null) {
+      max = min;
+      min = 0;
+    }
+
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }; // Shuffle a collection.
+
+
+  _.shuffle = function (obj) {
+    return _.sample(obj, Infinity);
+  };
+
+  _.sample = function (obj, n, guard) {
+    if (n == null || guard) {
+      if (!isArrayLike(obj)) obj = _.values(obj);
+      return obj[_.random(obj.length - 1)];
+    }
+
+    var sample = isArrayLike(obj) ? _.clone(obj) : _.values(obj);
+    var length = getLength(sample);
+    n = Math.max(Math.min(n, length), 0);
+    var last = length - 1;
+
+    for (var index = 0; index < n; index++) {
+      var rand = _.random(index, last);
+
+      var temp = sample[index];
+      sample[index] = sample[rand];
+      sample[rand] = temp;
+    }
+
+    return sample.slice(0, n);
+  };
+  /**
+  *
+  *如果是深度extend，第一个参数就设置为true
+  */
+
+
+  _.extend = function () {
+    var options,
+        name,
+        src,
+        copy,
+        target = arguments[0] || {},
+        i = 1,
+        length = arguments.length,
+        deep = false;
+
+    if (typeof target === "boolean") {
+      deep = target;
+      target = arguments[1] || {};
+      i = 2;
+    }
+
+    if (_typeof(target) !== "object" && !_.isFunction(target)) {
+      target = {};
+    }
+
+    if (length === i) {
+      target = this;
+      --i;
+    }
+
+    for (; i < length; i++) {
+      if ((options = arguments[i]) != null) {
+        for (name in options) {
+          src = target[name];
+          copy = options[name];
+
+          if (target === copy || copy === undefined) {
+            continue;
+          }
+
+          if (deep && copy && _.isObject(copy) && copy.constructor === Object) {
+            target[name] = _.extend(deep, src, copy);
+          } else {
+            target[name] = copy;
+          }
         }
       }
+    }
 
-      if (nativeIndexOf && array.indexOf === nativeIndexOf) return array.indexOf(item, isSorted);
+    return target;
+  };
 
-      for (; i < length; i++) {
-        if (array[i] === item) return i;
+  _.clone = function (obj) {
+    if (!_.isObject(obj)) return obj;
+    return _.isArray(obj) ? obj.slice() : _.extend(true, {}, obj);
+  }; //********补存一些数学常用方法,暂放在这里文件下,后期多了单独成立一个类库  */
+  // compute euclidian modulo of m % n
+  // https://en.wikipedia.org/wiki/Modulo_operation
+
+
+  _.euclideanModulo = function (n, m) {
+    return (n % m + m) % m;
+  };
+
+  _.DEG2RAD = Math.PI / 180;
+  _.RAD2DEG = 180 / Math.PI;
+
+  _.degToRad = function (degrees) {
+    return degrees * _.DEG2RAD;
+  };
+
+  _.radToDeg = function (radians) {
+    return radians * _.RAD2DEG;
+  };
+
+  function normalizeTickInterval(interval, magnitude) {
+    var normalized, i; // var multiples = [1, 2, 2.5, 5, 10];
+
+    var multiples = [1, 2, 5, 10]; // round to a tenfold of 1, 2, 2.5 or 5
+
+    normalized = interval / magnitude; // normalize the interval to the nearest multiple
+
+    for (var i = 0; i < multiples.length; i++) {
+      interval = multiples[i];
+
+      if (normalized <= (multiples[i] + (multiples[i + 1] || multiples[i])) / 2) {
+        break;
       }
-
-      return -1;
-    };
-
-    _.isWindow = function (obj) {
-      return obj != null && obj == obj.window;
-    }; // Internal implementation of a recursive `flatten` function.
+    } // multiply back to the correct magnitude
 
 
-    var flatten = function flatten(input, shallow, output) {
-      if (shallow && _.every(input, _.isArray)) {
-        return concat.apply(output, input);
+    interval *= magnitude;
+    return interval;
+  }
+
+  function correctFloat(num) {
+    return parseFloat(num.toPrecision(14));
+  }
+
+  function getLinearTickPositions(arr, $maxPart, $cfg) {
+    arr = _.without(arr, undefined, null, "");
+    var scale = $cfg && $cfg.scale ? parseFloat($cfg.scale) : 1; //返回的数组中的值 是否都为整数(思霏)  防止返回[8, 8.2, 8.4, 8.6, 8.8, 9]   应该返回[8, 9]
+
+    var isInt = $cfg && $cfg.isInt ? 1 : 0;
+
+    if (isNaN(scale)) {
+      scale = 1;
+    }
+
+    var max = _.max(arr);
+
+    var initMax = max;
+    max *= scale;
+
+    var min = _.min(arr);
+
+    if (min == max) {
+      if (max > 0) {
+        min = 0;
+        return [min, max]; // min= Math.round(max/2);
+      } else if (max < 0) {
+        return [max, 0]; //min = max*2;
+      } else {
+        max = 1;
+        return [0, max];
       }
+    }
 
-      each(input, function (value) {
-        if (_.isArray(value) || _.isArguments(value)) {
-          shallow ? push.apply(output, value) : flatten(value, shallow, output);
-        } else {
-          output.push(value);
-        }
-      });
-      return output;
-    }; // Flatten out an array, either recursively (by default), or just one level.
+    var length = max - min;
 
+    if (length) {
+      var tempmin = min; //保证min>0的时候不会出现负数
 
-    _.flatten = function (array, shallow) {
-      return flatten(array, shallow, []);
-    };
+      min -= length * 0.05; // S.log(min +":"+ tempmin)
 
-    _.every = _.all = function (obj, iterator, context) {
-      iterator || (iterator = _.identity);
-      var result = true;
-      if (obj == null) return result;
-      if (nativeEvery && obj.every === nativeEvery) return obj.every(iterator, context);
-      each(obj, function (value, index, list) {
-        if (!(result = result && iterator.call(context, value, index, list))) return breaker;
-      });
-      return !!result;
-    }; // Return the minimum element (or element-based computation).
-
-
-    _.min = function (obj, iterator, context) {
-      if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
-        return Math.min.apply(Math, obj);
-      }
-
-      if (!iterator && _.isEmpty(obj)) return Infinity;
-      var result = {
-        computed: Infinity,
-        value: Infinity
-      };
-      each(obj, function (value, index, list) {
-        var computed = iterator ? iterator.call(context, value, index, list) : value;
-        computed < result.computed && (result = {
-          value: value,
-          computed: computed
-        });
-      });
-      return result.value;
-    }; // Return the maximum element or (element-based computation).
-    // Can't optimize arrays of integers longer than 65,535 elements.
-    // See [WebKit Bug 80797](https://bugs.webkit.org/show_bug.cgi?id=80797)
-
-
-    _.max = function (obj, iterator, context) {
-      if (!iterator && _.isArray(obj) && obj[0] === +obj[0] && obj.length < 65535) {
-        return Math.max.apply(Math, obj);
-      }
-
-      if (!iterator && _.isEmpty(obj)) return -Infinity;
-      var result = {
-        computed: -Infinity,
-        value: -Infinity
-      };
-      each(obj, function (value, index, list) {
-        var computed = iterator ? iterator.call(context, value, index, list) : value;
-        computed > result.computed && (result = {
-          value: value,
-          computed: computed
-        });
-      });
-      return result.value;
-    }; // Return the first value which passes a truth test. Aliased as `detect`.
-
-
-    _.find = _.detect = function (obj, iterator, context) {
-      var result;
-      any(obj, function (value, index, list) {
-        if (iterator.call(context, value, index, list)) {
-          result = value;
-          return true;
-        }
-      });
-      return result;
-    }; // Determine if at least one element in the object matches a truth test.
-    // Delegates to **ECMAScript 5**'s native `some` if available.
-    // Aliased as `any`.
-
-
-    var any = _.some = _.any = function (obj, iterator, context) {
-      iterator || (iterator = _.identity);
-      var result = false;
-      if (obj == null) return result;
-      if (nativeSome && obj.some === nativeSome) return obj.some(iterator, context);
-      each(obj, function (value, index, list) {
-        if (result || (result = iterator.call(context, value, index, list))) return breaker;
-      });
-      return !!result;
-    }; // Return a version of the array that does not contain the specified value(s).
-
-
-    _.without = function (array) {
-      return _.difference(array, slice.call(arguments, 1));
-    }; // Take the difference between one array and a number of other arrays.
-    // Only the elements present in just the first array will remain.
-
-
-    _.difference = function (array) {
-      var rest = concat.apply(ArrayProto, slice.call(arguments, 1));
-      return _.filter(array, function (value) {
-        return !_.contains(rest, value);
-      });
-    }; // Produce a duplicate-free version of the array. If the array has already
-    // been sorted, you have the option of using a faster algorithm.
-    // Aliased as `unique`.
-
-
-    _.uniq = _.unique = function (array, isSorted, iterator, context) {
-      if (_.isFunction(isSorted)) {
-        context = iterator;
-        iterator = isSorted;
-        isSorted = false;
-      }
-
-      var initial = iterator ? _.map(array, iterator, context) : array;
-      var results = [];
-      var seen = [];
-      each(initial, function (value, index) {
-        if (isSorted ? !index || seen[seen.length - 1] !== value : !_.contains(seen, value)) {
-          seen.push(value);
-          results.push(array[index]);
-        }
-      });
-      return results;
-    }; // Return the results of applying the iterator to each element.
-    // Delegates to **ECMAScript 5**'s native `map` if available.
-
-
-    _.map = _.collect = function (obj, iterator, context) {
-      var results = [];
-      if (obj == null) return results;
-      if (nativeMap && obj.map === nativeMap) return obj.map(iterator, context);
-      each(obj, function (value, index, list) {
-        results.push(iterator.call(context, value, index, list));
-      });
-      return results;
-    }; // Determine if the array or object contains a given value (using `===`).
-    // Aliased as `include`.
-
-
-    _.contains = _.include = function (obj, target) {
-      if (obj == null) return false;
-      if (nativeIndexOf && obj.indexOf === nativeIndexOf) return obj.indexOf(target) != -1;
-      return any(obj, function (value) {
-        return value === target;
-      });
-    }; // Convenience version of a common use case of `map`: fetching a property.
-
-
-    _.pluck = function (obj, key) {
-      return _.map(obj, function (value) {
-        return value[key];
-      });
-    }; // Return a random integer between min and max (inclusive).
-
-
-    _.random = function (min, max) {
-      if (max == null) {
-        max = min;
+      if (min < 0 && tempmin >= 0) {
         min = 0;
       }
 
-      return min + Math.floor(Math.random() * (max - min + 1));
-    }; // Shuffle a collection.
-
-
-    _.shuffle = function (obj) {
-      return _.sample(obj, Infinity);
-    };
-
-    _.sample = function (obj, n, guard) {
-      if (n == null || guard) {
-        if (!isArrayLike(obj)) obj = _.values(obj);
-        return obj[_.random(obj.length - 1)];
-      }
-
-      var sample = isArrayLike(obj) ? _.clone(obj) : _.values(obj);
-      var length = getLength(sample);
-      n = Math.max(Math.min(n, length), 0);
-      var last = length - 1;
-
-      for (var index = 0; index < n; index++) {
-        var rand = _.random(index, last);
-
-        var temp = sample[index];
-        sample[index] = sample[rand];
-        sample[rand] = temp;
-      }
-
-      return sample.slice(0, n);
-    };
-    /**
-    *
-    *如果是深度extend，第一个参数就设置为true
-    */
-
-
-    _.extend = function () {
-      var options,
-          name,
-          src,
-          copy,
-          target = arguments[0] || {},
-          i = 1,
-          length = arguments.length,
-          deep = false;
-
-      if (typeof target === "boolean") {
-        deep = target;
-        target = arguments[1] || {};
-        i = 2;
-      }
-
-      if (_typeof$$1(target) !== "object" && !_.isFunction(target)) {
-        target = {};
-      }
-
-      if (length === i) {
-        target = this;
-        --i;
-      }
-
-      for (; i < length; i++) {
-        if ((options = arguments[i]) != null) {
-          for (name in options) {
-            src = target[name];
-            copy = options[name];
-
-            if (target === copy || copy === undefined) {
-              continue;
-            }
-
-            if (deep && copy && _.isObject(copy) && copy.constructor === Object) {
-              target[name] = _.extend(deep, src, copy);
-            } else {
-              target[name] = copy;
-            }
-          }
-        }
-      }
-
-      return target;
-    };
-
-    _.clone = function (obj) {
-      if (!_.isObject(obj)) return obj;
-      return _.isArray(obj) ? obj.slice() : _.extend(true, {}, obj);
-    }; //********补存一些数学常用方法,暂放在这里文件下,后期多了单独成立一个类库  */
-    // compute euclidian modulo of m % n
-    // https://en.wikipedia.org/wiki/Modulo_operation
-
-
-    _.euclideanModulo = function (n, m) {
-      return (n % m + m) % m;
-    };
-
-    _.DEG2RAD = Math.PI / 180;
-    _.RAD2DEG = 180 / Math.PI;
-
-    _.degToRad = function (degrees) {
-      return degrees * _.DEG2RAD;
-    };
-
-    _.radToDeg = function (radians) {
-      return radians * _.RAD2DEG;
-    };
-
-    function normalizeTickInterval(interval, magnitude) {
-      var normalized, i; // var multiples = [1, 2, 2.5, 5, 10];
-
-      var multiples = [1, 2, 5, 10]; // round to a tenfold of 1, 2, 2.5 or 5
-
-      normalized = interval / magnitude; // normalize the interval to the nearest multiple
-
-      for (var i = 0; i < multiples.length; i++) {
-        interval = multiples[i];
-
-        if (normalized <= (multiples[i] + (multiples[i + 1] || multiples[i])) / 2) {
-          break;
-        }
-      } // multiply back to the correct magnitude
-
-
-      interval *= magnitude;
-      return interval;
+      max += length * 0.05;
     }
 
-    function correctFloat(num) {
-      return parseFloat(num.toPrecision(14));
+    var tickInterval = (max - min) * 0.3; //72 / 365;
+
+    var magnitude = Math.pow(10, Math.floor(Math.log(tickInterval) / Math.LN10));
+    tickInterval = normalizeTickInterval(tickInterval, magnitude);
+
+    if (isInt) {
+      tickInterval = Math.ceil(tickInterval);
     }
 
-    function getLinearTickPositions(arr, $maxPart, $cfg) {
-      arr = _.without(arr, undefined, null, "");
-      var scale = $cfg && $cfg.scale ? parseFloat($cfg.scale) : 1; //返回的数组中的值 是否都为整数(思霏)  防止返回[8, 8.2, 8.4, 8.6, 8.8, 9]   应该返回[8, 9]
+    var pos,
+        lastPos,
+        roundedMin = correctFloat(Math.floor(min / tickInterval) * tickInterval),
+        roundedMax = correctFloat(Math.ceil(max / tickInterval) * tickInterval),
+        tickPositions = []; // Populate the intermediate values
 
-      var isInt = $cfg && $cfg.isInt ? 1 : 0;
+    pos = roundedMin;
 
-      if (isNaN(scale)) {
-        scale = 1;
-      }
+    while (pos <= roundedMax) {
+      // Place the tick on the rounded value
+      tickPositions.push(pos); // Always add the raw tickInterval, not the corrected one.
 
-      var max = _.max(arr);
+      pos = correctFloat(pos + tickInterval); // If the interval is not big enough in the current min - max range to actually increase
+      // the loop variable, we need to break out to prevent endless loop. Issue #619
 
-      var initMax = max;
-      max *= scale;
-
-      var min = _.min(arr);
-
-      if (min == max) {
-        if (max > 0) {
-          min = 0;
-          return [min, max]; // min= Math.round(max/2);
-        } else if (max < 0) {
-          return [max, 0]; //min = max*2;
-        } else {
-          max = 1;
-          return [0, max];
-        }
-      }
-
-      var length = max - min;
-
-      if (length) {
-        var tempmin = min; //保证min>0的时候不会出现负数
-
-        min -= length * 0.05; // S.log(min +":"+ tempmin)
-
-        if (min < 0 && tempmin >= 0) {
-          min = 0;
-        }
-
-        max += length * 0.05;
-      }
-
-      var tickInterval = (max - min) * 0.3; //72 / 365;
-
-      var magnitude = Math.pow(10, Math.floor(Math.log(tickInterval) / Math.LN10));
-      tickInterval = normalizeTickInterval(tickInterval, magnitude);
-
-      if (isInt) {
-        tickInterval = Math.ceil(tickInterval);
-      }
-
-      var pos,
-          lastPos,
-          roundedMin = correctFloat(Math.floor(min / tickInterval) * tickInterval),
-          roundedMax = correctFloat(Math.ceil(max / tickInterval) * tickInterval),
-          tickPositions = []; // Populate the intermediate values
-
-      pos = roundedMin;
-
-      while (pos <= roundedMax) {
-        // Place the tick on the rounded value
-        tickPositions.push(pos); // Always add the raw tickInterval, not the corrected one.
-
-        pos = correctFloat(pos + tickInterval); // If the interval is not big enough in the current min - max range to actually increase
-        // the loop variable, we need to break out to prevent endless loop. Issue #619
-
-        if (pos === lastPos) {
-          break;
-        } // Record the last value
+      if (pos === lastPos) {
+        break;
+      } // Record the last value
 
 
-        lastPos = pos;
-      }
-
-      if (tickPositions.length >= 3) {
-        if (tickPositions[tickPositions.length - 2] >= initMax) {
-          tickPositions.pop();
-        }
-      }
-
-      return tickPositions;
+      lastPos = pos;
     }
 
-    var dataSection = {
-      section: function section($arr, $maxPart, $cfg) {
-        return _.uniq(getLinearTickPositions($arr, $maxPart, $cfg));
+    if (tickPositions.length >= 3) {
+      if (tickPositions[tickPositions.length - 2] >= initMax) {
+        tickPositions.pop();
       }
-    };
+    }
 
-    var cloneOptions = function cloneOptions(opt) {
-      return _.clone(opt);
-    };
+    return tickPositions;
+  }
 
-    var cloneData = function cloneData(data) {
-      return JSON.parse(JSON.stringify(data));
-    };
+  var dataSection = {
+    section: function section($arr, $maxPart, $cfg) {
+      return _.uniq(getLinearTickPositions($arr, $maxPart, $cfg));
+    }
+  };
 
-    var getDefaultProps = function getDefaultProps(dProps) {
-      var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var cloneOptions = function cloneOptions(opt) {
+    return _.clone(opt);
+  };
 
-      for (var p in dProps) {
-        if (!!p.indexOf("_")) {
-          if (!dProps[p] || !dProps[p].propertys) {
-            //如果这个属性没有子属性了，那么就说明这个已经是叶子节点了
-            if (_.isObject(dProps[p]) && !_.isFunction(dProps[p]) && !_.isArray(dProps[p])) {
-              target[p] = dProps[p].default;
-            } else {
-              target[p] = dProps[p];
-            }
+  var cloneData = function cloneData(data) {
+    return JSON.parse(JSON.stringify(data));
+  };
+
+  var getDefaultProps = function getDefaultProps(dProps) {
+    var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+    for (var p in dProps) {
+      if (!!p.indexOf("_")) {
+        if (!dProps[p] || !dProps[p].propertys) {
+          //如果这个属性没有子属性了，那么就说明这个已经是叶子节点了
+          if (_.isObject(dProps[p]) && !_.isFunction(dProps[p]) && !_.isArray(dProps[p])) {
+            target[p] = dProps[p].default;
           } else {
-            target[p] = {};
-            getDefaultProps(dProps[p].propertys, target[p]);
+            target[p] = dProps[p];
           }
+        } else {
+          target[p] = {};
+          getDefaultProps(dProps[p].propertys, target[p]);
         }
       }
+    }
 
-      return target;
-    };
+    return target;
+  };
 
-    var axis =
-    /*#__PURE__*/
-    function () {
-      _createClass$$1(axis, null, [{
-        key: "defaultProps",
-        value: function defaultProps() {
-          return {
-            layoutType: {
-              detail: '布局方式',
-              default: 'proportion'
-            },
-            dataSection: {
-              detail: '轴数据集',
-              default: []
-            },
-            sectionHandler: {
-              detail: '自定义dataSection的计算公式',
-              default: null
-            },
-            waterLine: {
-              detail: '水位线',
-              default: null,
-              documentation: '水位data，需要混入 计算 dataSection， 如果有设置waterLine， dataSection的最高水位不会低于这个值'
-            },
-            middleWeight: {
-              detail: '区间分隔线',
-              default: null,
-              documentation: '如果middleweight有设置的话 dataSectionGroup 为被middleweight分割出来的n个数组>..[ [0,50 , 100],[100,500,1000] ]'
-            },
-            middleWeightPos: {
-              detail: '区间分隔线的物理位置，百分比,默认 0.5 ',
-              default: null
-            },
-            symmetric: {
-              detail: '自动正负对称',
-              default: false,
-              documentation: 'proportion下，是否需要设置数据为正负对称的数据，比如 [ 0,5,10 ] = > [ -10, 0 10 ]，象限坐标系的时候需要'
-            },
-            origin: {
-              detail: '轴的起源值',
-              default: null,
-              documentation: '\
+  var axis =
+  /*#__PURE__*/
+  function () {
+    _createClass(axis, null, [{
+      key: "defaultProps",
+      value: function defaultProps() {
+        return {
+          layoutType: {
+            detail: '布局方式',
+            default: 'proportion'
+          },
+          dataSection: {
+            detail: '轴数据集',
+            default: []
+          },
+          sectionHandler: {
+            detail: '自定义dataSection的计算公式',
+            default: null
+          },
+          waterLine: {
+            detail: '水位线',
+            default: null,
+            documentation: '水位data，需要混入 计算 dataSection， 如果有设置waterLine， dataSection的最高水位不会低于这个值'
+          },
+          middleWeight: {
+            detail: '区间分隔线',
+            default: null,
+            documentation: '如果middleweight有设置的话 dataSectionGroup 为被middleweight分割出来的n个数组>..[ [0,50 , 100],[100,500,1000] ]'
+          },
+          middleWeightPos: {
+            detail: '区间分隔线的物理位置，百分比,默认 0.5 ',
+            default: null
+          },
+          symmetric: {
+            detail: '自动正负对称',
+            default: false,
+            documentation: 'proportion下，是否需要设置数据为正负对称的数据，比如 [ 0,5,10 ] = > [ -10, 0 10 ]，象限坐标系的时候需要'
+          },
+          origin: {
+            detail: '轴的起源值',
+            default: null,
+            documentation: '\
                     1，如果数据中又正数和负数，则默认为0 <br />\
                     2，如果dataSection最小值小于0，则baseNumber为最小值<br />\
                     3，如果dataSection最大值大于0，则baseNumber为最大值<br />\
                     4，也可以由用户在第2、3种情况下强制配置为0，则section会补充满从0开始的刻度值\
                 '
-            },
-            sort: {
-              detail: '排序',
-              default: null
-            },
-            posParseToInt: {
-              detail: '是否位置计算取整',
-              default: false,
-              documentation: '比如在柱状图中，有得时候需要高精度的能间隔1px的柱子，那么x轴的计算也必须要都是整除的'
-            }
-          };
-        }
-      }]);
-
-      function axis(opt, dataOrg) {
-        _classCallCheck$$1(this, axis); //源数据
-        //这个是一个一定会有两层数组的数据结构，是一个标准的dataFrame数据
-        // [ 
-        //    [   
-        //        [1,2,3],  
-        //        [1,2,3]    //这样有堆叠的数据只会出现在proportion的axis里，至少目前是这样
-        //    ] 
-        //   ,[    
-        //        [1,2,3] 
-        //    ]   
-        // ]
-
-
-        this._opt = _.clone(opt);
-        this.dataOrg = dataOrg || []; //3d中有引用到
-
-        this.dataSectionLayout = []; //和dataSection一一对应的，每个值的pos，//get xxx OfPos的时候，要先来这里做一次寻找
-        //轴总长
-        //3d中有引用到
-
-        this.axisLength = 1;
-        this._cellCount = null;
-        this._cellLength = null; //数据变动的时候要置空
-        //默认的 dataSectionGroup = [ dataSection ], dataSection 其实就是 dataSectionGroup 去重后的一维版本
-
-        this.dataSectionGroup = [];
-        this.originPos = 0; //value为 origin 对应的pos位置
-
-        this._originTrans = 0; //当设置的 origin 和datasection的min不同的时候，
-        //min,max不需要外面配置，没意义
-
-        this._min = null;
-        this._max = null;
-
-        _.extend(true, this, getDefaultProps(axis.defaultProps()), opt);
+          },
+          sort: {
+            detail: '排序',
+            default: null
+          },
+          posParseToInt: {
+            detail: '是否位置计算取整',
+            default: false,
+            documentation: '比如在柱状图中，有得时候需要高精度的能间隔1px的柱子，那么x轴的计算也必须要都是整除的'
+          }
+        };
       }
+    }]);
 
-      _createClass$$1(axis, [{
-        key: "resetDataOrg",
-        value: function resetDataOrg(dataOrg) {
-          //配置和数据变化
-          this.dataSection = [];
-          this.dataSectionGroup = [];
-          this.dataOrg = dataOrg;
-          this._cellCount = null;
-          this._cellLength = null;
-        }
-      }, {
-        key: "setAxisLength",
-        value: function setAxisLength(length) {
-          this.axisLength = length;
-          this.calculateProps();
-        }
-      }, {
-        key: "calculateProps",
-        value: function calculateProps() {
-          var me = this;
+    function axis(opt, dataOrg) {
+      _classCallCheck(this, axis);
 
-          if (this.layoutType == "proportion") {
-            if (this._min == null) {
-              this._min = _.min(this.dataSection);
-            }
+      //源数据
+      //这个是一个一定会有两层数组的数据结构，是一个标准的dataFrame数据
+      // [ 
+      //    [   
+      //        [1,2,3],  
+      //        [1,2,3]    //这样有堆叠的数据只会出现在proportion的axis里，至少目前是这样
+      //    ] 
+      //   ,[    
+      //        [1,2,3] 
+      //    ]   
+      // ]
+      this._opt = _.clone(opt);
+      this.dataOrg = dataOrg || []; //3d中有引用到
 
-            if (this._max == null) {
-              this._max = _.max(this.dataSection);
-            } //如果用户设置了origin，那么就已用户的设置为准
+      this.dataSectionLayout = []; //和dataSection一一对应的，每个值的pos，//get xxx OfPos的时候，要先来这里做一次寻找
+      //轴总长
+      //3d中有引用到
 
+      this.axisLength = 1;
+      this._cellCount = null;
+      this._cellLength = null; //数据变动的时候要置空
+      //默认的 dataSectionGroup = [ dataSection ], dataSection 其实就是 dataSectionGroup 去重后的一维版本
 
-            if (!("origin" in this._opt)) {
-              this.origin = 0; //this.dataSection[0];//_.min( this.dataSection );
+      this.dataSectionGroup = [];
+      this.originPos = 0; //value为 origin 对应的pos位置
 
-              if (_.max(this.dataSection) < 0) {
-                this.origin = _.max(this.dataSection);
-              }
+      this._originTrans = 0; //当设置的 origin 和datasection的min不同的时候，
+      //min,max不需要外面配置，没意义
 
-              if (_.min(this.dataSection) > 0) {
-                this.origin = _.min(this.dataSection);
-              }
-            }
+      this._min = null;
+      this._max = null;
 
-            this._originTrans = this._getOriginTrans(this.origin);
-            this.originPos = this.getPosOfVal(this.origin);
+      _.extend(true, this, getDefaultProps(axis.defaultProps()), opt);
+    }
+
+    _createClass(axis, [{
+      key: "resetDataOrg",
+      value: function resetDataOrg(dataOrg) {
+        //配置和数据变化
+        this.dataSection = [];
+        this.dataSectionGroup = [];
+        this.dataOrg = dataOrg;
+        this._cellCount = null;
+        this._cellLength = null;
+      }
+    }, {
+      key: "setAxisLength",
+      value: function setAxisLength(length) {
+        this.axisLength = length;
+        this.calculateProps();
+      }
+    }, {
+      key: "calculateProps",
+      value: function calculateProps() {
+        var me = this;
+
+        if (this.layoutType == "proportion") {
+          if (this._min == null) {
+            this._min = _.min(this.dataSection);
           }
 
-          this.dataSectionLayout = [];
+          if (this._max == null) {
+            this._max = _.max(this.dataSection);
+          }
+          //如果用户设置了origin，那么就已用户的设置为准
 
-          _.each(this.dataSection, function (val, i) {
-            var ind = i;
+          if (!("origin" in this._opt)) {
+            this.origin = 0; //this.dataSection[0];//_.min( this.dataSection );
 
-            if (me.layoutType == "proportion") {
-              ind = me.getIndexOfVal(val);
+            if (_.max(this.dataSection) < 0) {
+              this.origin = _.max(this.dataSection);
             }
 
-            var pos = parseInt(me.getPosOf({
-              ind: i,
-              val: val
-            }), 10);
-            me.dataSectionLayout.push({
-              val: val,
-              ind: ind,
-              pos: pos
-            });
+            if (_.min(this.dataSection) > 0) {
+              this.origin = _.min(this.dataSection);
+            }
+          }
+          this._originTrans = this._getOriginTrans(this.origin);
+          this.originPos = this.getPosOfVal(this.origin);
+        }
+
+        this.dataSectionLayout = [];
+
+        _.each(this.dataSection, function (val, i) {
+          var ind = i;
+
+          if (me.layoutType == "proportion") {
+            ind = me.getIndexOfVal(val);
+          }
+          var pos = parseInt(me.getPosOf({
+            ind: i,
+            val: val
+          }), 10);
+          me.dataSectionLayout.push({
+            val: val,
+            ind: ind,
+            pos: pos
           });
-        }
-      }, {
-        key: "getDataSection",
-        value: function getDataSection() {
-          //对外返回的dataSection
-          return this.dataSection;
-        }
-      }, {
-        key: "setDataSection",
-        value: function setDataSection(_dataSection) {
-          var me = this; //如果用户没有配置dataSection，或者用户传了，但是传了个空数组，则自己组装dataSection
+        });
+      }
+    }, {
+      key: "getDataSection",
+      value: function getDataSection() {
+        //对外返回的dataSection
+        return this.dataSection;
+      }
+    }, {
+      key: "setDataSection",
+      value: function setDataSection(_dataSection) {
+        var me = this; //如果用户没有配置dataSection，或者用户传了，但是传了个空数组，则自己组装dataSection
 
-          if (_.isEmpty(_dataSection) && _.isEmpty(this._opt.dataSection)) {
-            if (this.layoutType == "proportion") {
-              var arr = this._getDataSection();
+        if (_.isEmpty(_dataSection) && _.isEmpty(this._opt.dataSection)) {
+          if (this.layoutType == "proportion") {
+            var arr = this._getDataSection();
 
-              if ("origin" in me._opt) {
-                arr.push(me._opt.origin);
-              }
-
-              if (arr.length == 1) {
-                arr.push(arr[0] * .5);
-              }
-
-              if (this.waterLine) {
-                arr.push(this.waterLine);
-              }
-
-              if (this.symmetric) {
-                //如果需要处理为对称数据
-                var _min = _.min(arr);
-
-                var _max = _.max(arr);
-
-                if (Math.abs(_min) > Math.abs(_max)) {
-                  arr.push(Math.abs(_min));
-                } else {
-                  arr.push(-Math.abs(_max));
-                }
-              }
-
-              for (var ai = 0, al = arr.length; ai < al; ai++) {
-                arr[ai] = Number(arr[ai]);
-
-                if (isNaN(arr[ai])) {
-                  arr.splice(ai, 1);
-                  ai--;
-                  al--;
-                }
-              }
-
-              if (_.isFunction(this.sectionHandler)) {
-                this.dataSection = this.sectionHandler(arr);
-              }
-
-              if (!this.dataSection || !this.dataSection.length) {
-                this.dataSection = dataSection.section(arr, 3);
-              }
-
-              if (this.symmetric) {
-                //可能得到的区间是偶数， 非对称，强行补上
-                var _min = _.min(this.dataSection);
-
-                var _max = _.max(this.dataSection);
-
-                if (Math.abs(_min) > Math.abs(_max)) {
-                  this.dataSection.push(Math.abs(_min));
-                } else {
-                  this.dataSection.unshift(-Math.abs(_max));
-                }
-              }
-
-              if (this.dataSection.length == 0) {
-                this.dataSection = [0];
-              }
-
-              this.dataSectionGroup = [_.clone(this.dataSection)];
-
-              this._middleweight(); //如果有middleweight配置，需要根据配置来重新矫正下datasection
-
-
-              this._sort();
-            } else {
-              //非proportion 也就是 rule peak 模式下面
-              this.dataSection = _.flatten(this.dataOrg); //this._getDataSection();
-
-              this.dataSectionGroup = [this.dataSection];
+            if ("origin" in me._opt) {
+              arr.push(me._opt.origin);
             }
+
+            if (arr.length == 1) {
+              arr.push(arr[0] * .5);
+            }
+
+            if (this.waterLine) {
+              arr.push(this.waterLine);
+            }
+
+            if (this.symmetric) {
+              //如果需要处理为对称数据
+              var _min = _.min(arr);
+
+              var _max = _.max(arr);
+
+              if (Math.abs(_min) > Math.abs(_max)) {
+                arr.push(Math.abs(_min));
+              } else {
+                arr.push(-Math.abs(_max));
+              }
+            }
+
+            for (var ai = 0, al = arr.length; ai < al; ai++) {
+              arr[ai] = Number(arr[ai]);
+
+              if (isNaN(arr[ai])) {
+                arr.splice(ai, 1);
+                ai--;
+                al--;
+              }
+            }
+
+            if (_.isFunction(this.sectionHandler)) {
+              this.dataSection = this.sectionHandler(arr);
+            }
+
+            if (!this.dataSection || !this.dataSection.length) {
+              this.dataSection = dataSection.section(arr, 3);
+            }
+
+            if (this.symmetric) {
+              //可能得到的区间是偶数， 非对称，强行补上
+              var _min = _.min(this.dataSection);
+
+              var _max = _.max(this.dataSection);
+
+              if (Math.abs(_min) > Math.abs(_max)) {
+                this.dataSection.push(Math.abs(_min));
+              } else {
+                this.dataSection.unshift(-Math.abs(_max));
+              }
+            }
+
+            if (this.dataSection.length == 0) {
+              this.dataSection = [0];
+            }
+
+            this.dataSectionGroup = [_.clone(this.dataSection)];
+
+            this._middleweight(); //如果有middleweight配置，需要根据配置来重新矫正下datasection
+
+
+            this._sort();
           } else {
-            this.dataSection = _dataSection || this._opt.dataSection;
+            //非proportion 也就是 rule peak 模式下面
+            this.dataSection = _.flatten(this.dataOrg); //this._getDataSection();
+
             this.dataSectionGroup = [this.dataSection];
           }
-
-          this._middleWeightPos();
+        } else {
+          this.dataSection = _dataSection || this._opt.dataSection;
+          this.dataSectionGroup = [this.dataSection];
         }
-      }, {
-        key: "_getDataSection",
-        value: function _getDataSection() {
-          //如果有堆叠，比如[ ["uv","pv"], "click" ]
-          //那么这个 this.dataOrg， 也是个对应的结构
-          //vLen就会等于2
-          var vLen = 1;
 
-          _.each(this.dataOrg, function (arr) {
-            vLen = Math.max(arr.length, vLen);
-          });
+        this._middleWeightPos();
+      }
+    }, {
+      key: "_getDataSection",
+      value: function _getDataSection() {
+        //如果有堆叠，比如[ ["uv","pv"], "click" ]
+        //那么这个 this.dataOrg， 也是个对应的结构
+        //vLen就会等于2
+        var vLen = 1;
 
-          if (vLen == 1) {
-            return this._oneDimensional();
-          }
+        _.each(this.dataOrg, function (arr) {
+          vLen = Math.max(arr.length, vLen);
+        });
 
-          if (vLen > 1) {
-            return this._twoDimensional();
-          }
+        if (vLen == 1) {
+          return this._oneDimensional();
         }
-      }, {
-        key: "_oneDimensional",
-        value: function _oneDimensional() {
-          var arr = _.flatten(this.dataOrg); //_.flatten( data.org );
+
+        if (vLen > 1) {
+          return this._twoDimensional();
+        }
+      }
+    }, {
+      key: "_oneDimensional",
+      value: function _oneDimensional() {
+        var arr = _.flatten(this.dataOrg); //_.flatten( data.org );
 
 
-          for (var i = 0, il = arr.length; i < il; i++) {
-            arr[i] = arr[i] || 0;
+        for (var i = 0, il = arr.length; i < il; i++) {
+          arr[i] = arr[i] || 0;
+        }
+        return arr;
+      } //二维的yAxis设置，肯定是堆叠的比如柱状图，后续也会做堆叠的折线图， 就是面积图
+
+    }, {
+      key: "_twoDimensional",
+      value: function _twoDimensional() {
+        var d = this.dataOrg;
+        var arr = [];
+        var min;
+
+        _.each(d, function (d, i) {
+          if (!d.length) {
+            return;
           }
 
-          return arr;
-        } //二维的yAxis设置，肯定是堆叠的比如柱状图，后续也会做堆叠的折线图， 就是面积图
+          if (!_.isArray(d[0])) {
+            arr.push(d);
+            return;
+          }
+          var varr = [];
+          var len = d[0].length;
+          var vLen = d.length;
 
-      }, {
-        key: "_twoDimensional",
-        value: function _twoDimensional() {
-          var d = this.dataOrg;
-          var arr = [];
-          var min;
+          for (var i = 0; i < len; i++) {
+            var up_count = 0;
+            var up_i = 0;
+            var down_count = 0;
+            var down_i = 0;
 
-          _.each(d, function (d, i) {
-            if (!d.length) {
-              return;
-            }
+            for (var ii = 0; ii < vLen; ii++) {
+              var _val = d[ii][i];
 
-            if (!_.isArray(d[0])) {
-              arr.push(d);
-              return;
-            }
-
-            var varr = [];
-            var len = d[0].length;
-            var vLen = d.length;
-
-            for (var i = 0; i < len; i++) {
-              var up_count = 0;
-              var up_i = 0;
-              var down_count = 0;
-              var down_i = 0;
-
-              for (var ii = 0; ii < vLen; ii++) {
-                var _val = d[ii][i];
-
-                if (!_val && _val !== 0) {
-                  continue;
-                }
-
-                min == undefined && (min = _val);
-                min = Math.min(min, _val);
-
-                if (_val >= 0) {
-                  up_count += _val;
-                  up_i++;
-                } else {
-                  down_count += _val;
-                  down_i++;
-                }
+              if (!_val && _val !== 0) {
+                continue;
               }
+              min == undefined && (min = _val);
+              min = Math.min(min, _val);
 
-              up_i && varr.push(up_count);
-              down_i && varr.push(down_count);
-            }
-
-            arr.push(varr);
-          });
-
-          arr.push(min);
-          return _.flatten(arr);
-        } //val 要被push到datasection 中去的 值
-        //主要是用在markline等组件中，当自己的y值超出了yaxis的范围
-
-      }, {
-        key: "setWaterLine",
-        value: function setWaterLine(val) {
-          if (val <= this.waterLine) return;
-          this.waterLine = val;
-
-          if (val < _.min(this.dataSection) || val > _.max(this.dataSection)) {
-            //waterLine不再当前section的区间内，需要重新计算整个datasection    
-            this.setDataSection();
-            this.calculateProps();
-          }
-        }
-      }, {
-        key: "_sort",
-        value: function _sort() {
-          if (this.sort) {
-            var sort = this._getSortType();
-
-            if (sort == "desc") {
-              this.dataSection.reverse(); //dataSectionGroup 从里到外全部都要做一次 reverse， 这样就可以对应上 dataSection.reverse()
-
-              _.each(this.dataSectionGroup, function (dsg, i) {
-                dsg.reverse();
-              });
-
-              this.dataSectionGroup.reverse(); //dataSectionGroup reverse end
-            }
-          }
-        }
-      }, {
-        key: "_getSortType",
-        value: function _getSortType() {
-          var _sort;
-
-          if (_.isString(this.sort)) {
-            _sort = this.sort;
-          }
-
-          if (!_sort) {
-            _sort = "asc";
-          }
-
-          return _sort;
-        }
-      }, {
-        key: "_middleweight",
-        value: function _middleweight() {
-          if (this.middleWeight) {
-            //支持多个量级的设置
-            if (!_.isArray(this.middleWeight)) {
-              this.middleWeight = [this.middleWeight];
-            }
-
-            var dMin = _.min(this.dataSection);
-
-            var dMax = _.max(this.dataSection);
-
-            var newDS = [dMin];
-            var newDSG = [];
-
-            for (var i = 0, l = this.middleWeight.length; i < l; i++) {
-              var preMiddleweight = dMin;
-
-              if (i > 0) {
-                preMiddleweight = this.middleWeight[i - 1];
+              if (_val >= 0) {
+                up_count += _val;
+                up_i++;
+              } else {
+                down_count += _val;
+                down_i++;
               }
-
-              var middleVal = preMiddleweight + parseInt((this.middleWeight[i] - preMiddleweight) / 2);
-              newDS.push(middleVal);
-              newDS.push(this.middleWeight[i]);
-              newDSG.push([preMiddleweight, middleVal, this.middleWeight[i]]);
             }
 
-            var lastMW = this.middleWeight.slice(-1)[0];
-
-            if (dMax > lastMW) {
-              newDS.push(lastMW + (dMax - lastMW) / 2);
-              newDS.push(dMax);
-              newDSG.push([lastMW, lastMW + (dMax - lastMW) / 2, dMax]);
-            } //好了。 到这里用简单的规则重新拼接好了新的 dataSection
-
-
-            this.dataSection = newDS;
-            this.dataSectionGroup = newDSG;
+            up_i && varr.push(up_count);
+            down_i && varr.push(down_count);
           }
+          arr.push(varr);
+        });
+
+        arr.push(min);
+        return _.flatten(arr);
+      } //val 要被push到datasection 中去的 值
+      //主要是用在markline等组件中，当自己的y值超出了yaxis的范围
+
+    }, {
+      key: "setWaterLine",
+      value: function setWaterLine(val) {
+        if (val <= this.waterLine) return;
+        this.waterLine = val;
+
+        if (val < _.min(this.dataSection) || val > _.max(this.dataSection)) {
+          //waterLine不再当前section的区间内，需要重新计算整个datasection    
+          this.setDataSection();
+          this.calculateProps();
         }
-      }, {
-        key: "_middleWeightPos",
-        value: function _middleWeightPos() {
-          var me = this;
+      }
+    }, {
+      key: "_sort",
+      value: function _sort() {
+        if (this.sort) {
+          var sort = this._getSortType();
 
-          if (this.middleWeightPos) {
-            if (!_.isArray(this.middleWeightPos)) {
-              this.middleWeightPos = [this.middleWeightPos];
-            } //如果大于1了则默认按照均分设置
+          if (sort == "desc") {
+            this.dataSection.reverse(); //dataSectionGroup 从里到外全部都要做一次 reverse， 这样就可以对应上 dataSection.reverse()
 
-
-            var _count = 0;
-
-            _.each(this.middleWeightPos, function (pos) {
-              _count += pos;
+            _.each(this.dataSectionGroup, function (dsg, i) {
+              dsg.reverse();
             });
 
-            if (_count < 1) {
-              this.middleWeightPos.push(1 - _count);
-            }
+            this.dataSectionGroup.reverse(); //dataSectionGroup reverse end
+          }
+        }
+      }
+    }, {
+      key: "_getSortType",
+      value: function _getSortType() {
+        var _sort;
 
-            if (_count > 1) {
-              this.middleWeightPos = null;
-            }
+        if (_.isString(this.sort)) {
+          _sort = this.sort;
+        }
+
+        if (!_sort) {
+          _sort = "asc";
+        }
+
+        return _sort;
+      }
+    }, {
+      key: "_middleweight",
+      value: function _middleweight() {
+
+        if (this.middleWeight) {
+          //支持多个量级的设置
+          if (!_.isArray(this.middleWeight)) {
+            this.middleWeight = [this.middleWeight];
           }
 
-          if (this.middleWeight) {
-            if (!this.middleWeightPos) {
-              this.middleWeightPos = [];
-              var _prePos = 0;
+          var dMin = _.min(this.dataSection);
 
-              _.each(this.middleWeight, function () {
-                var _pos = 1 / (me.middleWeight.length + 1);
+          var dMax = _.max(this.dataSection);
 
-                _prePos += _pos;
-                me.middleWeightPos.push(_pos);
-              });
+          var newDS = [dMin];
+          var newDSG = [];
 
-              this.middleWeightPos.push(1 - _prePos);
+          for (var i = 0, l = this.middleWeight.length; i < l; i++) {
+            var preMiddleweight = dMin;
+
+            if (i > 0) {
+              preMiddleweight = this.middleWeight[i - 1];
             }
-          } else {
-            this.middleWeightPos = [1];
+            var middleVal = preMiddleweight + parseInt((this.middleWeight[i] - preMiddleweight) / 2);
+            newDS.push(middleVal);
+            newDS.push(this.middleWeight[i]);
+            newDSG.push([preMiddleweight, middleVal, this.middleWeight[i]]);
           }
-        } //origin 对应 this.origin 的值
+          var lastMW = this.middleWeight.slice(-1)[0];
 
-      }, {
-        key: "_getOriginTrans",
-        value: function _getOriginTrans(origin) {
-          var pos = 0;
+          if (dMax > lastMW) {
+            newDS.push(lastMW + (dMax - lastMW) / 2);
+            newDS.push(dMax);
+            newDSG.push([lastMW, lastMW + (dMax - lastMW) / 2, dMax]);
+          } //好了。 到这里用简单的规则重新拼接好了新的 dataSection
+
+
+          this.dataSection = newDS;
+          this.dataSectionGroup = newDSG;
+        }
+      }
+    }, {
+      key: "_middleWeightPos",
+      value: function _middleWeightPos() {
+        var me = this;
+
+        if (this.middleWeightPos) {
+          if (!_.isArray(this.middleWeightPos)) {
+            this.middleWeightPos = [this.middleWeightPos];
+          }
+          //如果大于1了则默认按照均分设置
+
+          var _count = 0;
+
+          _.each(this.middleWeightPos, function (pos) {
+            _count += pos;
+          });
+
+          if (_count < 1) {
+            this.middleWeightPos.push(1 - _count);
+          }
+
+          if (_count > 1) {
+            this.middleWeightPos = null;
+          }
+        }
+
+        if (this.middleWeight) {
+          if (!this.middleWeightPos) {
+            this.middleWeightPos = [];
+            var _prePos = 0;
+
+            _.each(this.middleWeight, function () {
+              var _pos = 1 / (me.middleWeight.length + 1);
+
+              _prePos += _pos;
+              me.middleWeightPos.push(_pos);
+            });
+
+            this.middleWeightPos.push(1 - _prePos);
+          }
+        } else {
+          this.middleWeightPos = [1];
+        }
+      } //origin 对应 this.origin 的值
+
+    }, {
+      key: "_getOriginTrans",
+      value: function _getOriginTrans(origin) {
+        var pos = 0;
+        var dsgLen = this.dataSectionGroup.length; //var groupLength = this.axisLength / dsgLen;
+
+        for (var i = 0, l = dsgLen; i < l; i++) {
+          var ds = this.dataSectionGroup[i];
+          var groupLength = this.axisLength * this.middleWeightPos[i];
+          var preGroupLenth = 0;
+
+          _.each(this.middleWeightPos, function (mp, mi) {
+            if (mi < i) {
+              preGroupLenth += me.axisLength * mp;
+            }
+          });
+
+          if (this.layoutType == "proportion") {
+            var min = _.min(ds);
+
+            var max = _.max(ds);
+
+            var amountABS = Math.abs(max - min);
+
+            if (origin >= min && origin <= max) {
+              pos = (origin - min) / amountABS * groupLength + preGroupLenth;
+              break;
+            }
+          }
+        }
+
+        if (this.sort == "desc") {
+          //如果是倒序的
+          pos = -(groupLength - pos);
+        }
+        return parseInt(pos);
+      } //opt { val ind pos } 一次只能传一个
+
+    }, {
+      key: "_getLayoutDataOf",
+      value: function _getLayoutDataOf(opt) {
+        var props = ["val", "ind", "pos"];
+        var prop;
+
+        _.each(props, function (_p) {
+          if (_p in opt) {
+            prop = _p;
+          }
+        });
+
+        var layoutData;
+
+        _.each(this.dataSectionLayout, function (item) {
+          if (item[prop] === opt[prop]) {
+            layoutData = item;
+          }
+        });
+
+        return layoutData || {};
+      }
+    }, {
+      key: "getPosOfVal",
+      value: function getPosOfVal(val) {
+        /* val可能会重复，so 这里得到的会有问题，先去掉
+        //先检查下 dataSectionLayout 中有没有对应的记录
+        var _pos = this._getLayoutDataOf({ val : val }).pos;
+        if( _pos != undefined ){
+            return _pos;
+        };
+        */
+        return this.getPosOf({
+          val: val
+        });
+      }
+    }, {
+      key: "getPosOfInd",
+      value: function getPosOfInd(ind) {
+        //先检查下 dataSectionLayout 中有没有对应的记录
+        var _pos = this._getLayoutDataOf({
+          ind: ind
+        }).pos;
+
+        if (_pos != undefined) {
+          return _pos;
+        }
+        return this.getPosOf({
+          ind: ind
+        });
+      } //opt {val, ind} val 或者ind 一定有一个
+
+    }, {
+      key: "getPosOf",
+      value: function getPosOf(opt) {
+        var me = this;
+        var pos;
+
+        var cellCount = this._getCellCount(); //dataOrg上面的真实数据节点数，把轴分成了多少个节点
+
+
+        if (this.layoutType == "proportion") {
           var dsgLen = this.dataSectionGroup.length; //var groupLength = this.axisLength / dsgLen;
 
           for (var i = 0, l = dsgLen; i < l; i++) {
@@ -1289,2583 +1279,2108 @@ var canvax = (function () {
               }
             });
 
-            if (this.layoutType == "proportion") {
-              var min = _.min(ds);
+            var min = _.min(ds);
 
-              var max = _.max(ds);
+            var max = _.max(ds);
 
+            var val = "val" in opt ? opt.val : this.getValOfInd(opt.ind);
+
+            if (val >= min && val <= max) {
+              var _origin = this.origin; //如果 origin 并不在这个区间
+
+              if (_origin < min || _origin > max) {
+                _origin = min;
+              }
+              var maxGroupDisABS = Math.max(Math.abs(max - _origin), Math.abs(_origin - min));
               var amountABS = Math.abs(max - min);
+              var h = maxGroupDisABS / amountABS * groupLength;
+              pos = (val - _origin) / maxGroupDisABS * h + preGroupLenth;
 
-              if (origin >= min && origin <= max) {
-                pos = (origin - min) / amountABS * groupLength + preGroupLenth;
-                break;
+              if (isNaN(pos)) {
+                pos = parseInt(preGroupLenth);
               }
+              break;
             }
           }
-
-          if (this.sort == "desc") {
-            //如果是倒序的
-            pos = -(groupLength - pos);
-          }
-
-          return parseInt(pos);
-        } //opt { val ind pos } 一次只能传一个
-
-      }, {
-        key: "_getLayoutDataOf",
-        value: function _getLayoutDataOf(opt) {
-          var props = ["val", "ind", "pos"];
-          var prop;
-
-          _.each(props, function (_p) {
-            if (_p in opt) {
-              prop = _p;
-            }
-          });
-
-          var layoutData;
-
-          _.each(this.dataSectionLayout, function (item) {
-            if (item[prop] === opt[prop]) {
-              layoutData = item;
-            }
-          });
-
-          return layoutData || {};
-        }
-      }, {
-        key: "getPosOfVal",
-        value: function getPosOfVal(val) {
-          /* val可能会重复，so 这里得到的会有问题，先去掉
-          //先检查下 dataSectionLayout 中有没有对应的记录
-          var _pos = this._getLayoutDataOf({ val : val }).pos;
-          if( _pos != undefined ){
-              return _pos;
-          };
-          */
-          return this.getPosOf({
-            val: val
-          });
-        }
-      }, {
-        key: "getPosOfInd",
-        value: function getPosOfInd(ind) {
-          //先检查下 dataSectionLayout 中有没有对应的记录
-          var _pos = this._getLayoutDataOf({
-            ind: ind
-          }).pos;
-
-          if (_pos != undefined) {
-            return _pos;
-          }
-
-          return this.getPosOf({
-            ind: ind
-          });
-        } //opt {val, ind} val 或者ind 一定有一个
-
-      }, {
-        key: "getPosOf",
-        value: function getPosOf(opt) {
-          var me = this;
-          var pos;
-
-          var cellCount = this._getCellCount(); //dataOrg上面的真实数据节点数，把轴分成了多少个节点
-
-
-          if (this.layoutType == "proportion") {
-            var dsgLen = this.dataSectionGroup.length; //var groupLength = this.axisLength / dsgLen;
-
-            for (var i = 0, l = dsgLen; i < l; i++) {
-              var ds = this.dataSectionGroup[i];
-              var groupLength = this.axisLength * this.middleWeightPos[i];
-              var preGroupLenth = 0;
-
-              _.each(this.middleWeightPos, function (mp, mi) {
-                if (mi < i) {
-                  preGroupLenth += me.axisLength * mp;
-                }
-              });
-
-              var min = _.min(ds);
-
-              var max = _.max(ds);
-
-              var val = "val" in opt ? opt.val : this.getValOfInd(opt.ind);
-
-              if (val >= min && val <= max) {
-                var _origin = this.origin; //如果 origin 并不在这个区间
-
-                if (_origin < min || _origin > max) {
-                  _origin = min;
-                }
-
-                var maxGroupDisABS = Math.max(Math.abs(max - _origin), Math.abs(_origin - min));
-                var amountABS = Math.abs(max - min);
-                var h = maxGroupDisABS / amountABS * groupLength;
-                pos = (val - _origin) / maxGroupDisABS * h + preGroupLenth;
-
-                if (isNaN(pos)) {
-                  pos = parseInt(preGroupLenth);
-                }
-
-                break;
-              }
-            }
+        } else {
+          if (cellCount == 1) {
+            //如果只有一数据，那么就全部默认在正中间
+            pos = this.axisLength / 2;
           } else {
-            if (cellCount == 1) {
-              //如果只有一数据，那么就全部默认在正中间
-              pos = this.axisLength / 2;
-            } else {
-              //TODO 这里在非proportion情况下，如果没有opt.ind 那么getIndexOfVal 其实是有风险的，
-              //因为可能有多个数据的val一样
-              var valInd = "ind" in opt ? opt.ind : this.getIndexOfVal(opt.val);
+            //TODO 这里在非proportion情况下，如果没有opt.ind 那么getIndexOfVal 其实是有风险的，
+            //因为可能有多个数据的val一样
+            var valInd = "ind" in opt ? opt.ind : this.getIndexOfVal(opt.val);
 
-              if (valInd != -1) {
-                if (this.layoutType == "rule") {
-                  //line 的xaxis就是 rule
-                  pos = valInd / (cellCount - 1) * this.axisLength;
-                }
+            if (valInd != -1) {
+              if (this.layoutType == "rule") {
+                //line 的xaxis就是 rule
+                pos = valInd / (cellCount - 1) * this.axisLength;
+              }
 
-                if (this.layoutType == "peak") {
-                  //bar的xaxis就是 peak
+              if (this.layoutType == "peak") {
+                //bar的xaxis就是 peak
 
-                  /*
-                  pos = (this.axisLength/cellCount) 
-                        * (valInd+1) 
-                        - (this.axisLength/cellCount)/2;
-                  */
-                  var _cellLength = this.getCellLength();
+                /*
+                pos = (this.axisLength/cellCount) 
+                      * (valInd+1) 
+                      - (this.axisLength/cellCount)/2;
+                */
+                var _cellLength = this.getCellLength();
 
-                  pos = _cellLength * (valInd + 1) - _cellLength / 2;
-                }
+                pos = _cellLength * (valInd + 1) - _cellLength / 2;
               }
             }
           }
-
-          !pos && (pos = 0);
-          pos = Number(pos.toFixed(1)) + this._originTrans;
-          return Math.abs(pos);
         }
-      }, {
-        key: "getValOfPos",
-        value: function getValOfPos(pos) {
-          //先检查下 dataSectionLayout 中有没有对应的记录
-          var _val = this._getLayoutDataOf({
-            pos: pos
-          }).val;
+        !pos && (pos = 0);
+        pos = Number(pos.toFixed(1)) + this._originTrans;
+        return Math.abs(pos);
+      }
+    }, {
+      key: "getValOfPos",
+      value: function getValOfPos(pos) {
+        //先检查下 dataSectionLayout 中有没有对应的记录
+        var _val = this._getLayoutDataOf({
+          pos: pos
+        }).val;
 
-          if (_val != undefined) {
-            return _val;
-          }
+        if (_val != undefined) {
+          return _val;
+        }
+        return this._getValOfInd(this.getIndexOfPos(pos));
+      } //ds可选
 
-          return this._getValOfInd(this.getIndexOfPos(pos));
-        } //ds可选
+    }, {
+      key: "getValOfInd",
+      value: function getValOfInd(ind) {
+        //先检查下 dataSectionLayout 中有没有对应的记录
+        var _val = this._getLayoutDataOf({
+          ind: ind
+        }).val;
 
-      }, {
-        key: "getValOfInd",
-        value: function getValOfInd(ind) {
-          //先检查下 dataSectionLayout 中有没有对应的记录
-          var _val = this._getLayoutDataOf({
-            ind: ind
-          }).val;
+        if (_val != undefined) {
+          return _val;
+        }
+        return this._getValOfInd(ind);
+        /*
+        if (this.layoutType == "proportion") {
+        
+        } else {
+            //这里的index是直接的对应dataOrg的索引
+            var org = ds ? ds : _.flatten(this.dataOrg);
+            return org[ind];
+        };
+        */
+      } //这里的ind
 
-          if (_val != undefined) {
-            return _val;
-          }
+    }, {
+      key: "_getValOfInd",
+      value: function _getValOfInd(ind, ds) {
+        var me = this;
 
-          return this._getValOfInd(ind);
-          /*
-          if (this.layoutType == "proportion") {
-          
-          } else {
-              //这里的index是直接的对应dataOrg的索引
-              var org = ds ? ds : _.flatten(this.dataOrg);
-              return org[ind];
-          };
-          */
-        } //这里的ind
+        var org = _.flatten(this.dataOrg);
 
-      }, {
-        key: "_getValOfInd",
-        value: function _getValOfInd(ind, ds) {
-          var me = this;
+        var val;
 
-          var org = _.flatten(this.dataOrg);
+        if (this.layoutType == "proportion") {
+          var dsgLen = this.dataSectionGroup.length; //var groupLength = this.axisLength / dsgLen;
 
-          var val;
+          _.each(this.dataSectionGroup, function (ds, i) {
+            var groupLength = me.axisLength * me.middleWeightPos[i];
+            var preGroupLenth = 0;
 
-          if (this.layoutType == "proportion") {
-            var dsgLen = this.dataSectionGroup.length; //var groupLength = this.axisLength / dsgLen;
-
-            _.each(this.dataSectionGroup, function (ds, i) {
-              var groupLength = me.axisLength * me.middleWeightPos[i];
-              var preGroupLenth = 0;
-
-              _.each(me.middleWeightPos, function (mp, mi) {
-                if (mi < i) {
-                  preGroupLenth += me.axisLength * mp;
-                }
-              });
-
-              if (parseInt(ind / groupLength) == i || i == me.dataSectionGroup.length - 1) {
-                var min = _.min(ds);
-
-                var max = _.max(ds);
-
-                val = min + (max - min) / groupLength * (ind - preGroupLenth);
-                return false;
+            _.each(me.middleWeightPos, function (mp, mi) {
+              if (mi < i) {
+                preGroupLenth += me.axisLength * mp;
               }
             });
-          } else {
-            val = org[ind];
+
+            if (parseInt(ind / groupLength) == i || i == me.dataSectionGroup.length - 1) {
+              var min = _.min(ds);
+
+              var max = _.max(ds);
+
+              val = min + (max - min) / groupLength * (ind - preGroupLenth);
+              return false;
+            }
+          });
+        } else {
+          val = org[ind];
+        }
+        return val;
+      }
+    }, {
+      key: "getIndexOfPos",
+      value: function getIndexOfPos(pos) {
+        //先检查下 dataSectionLayout 中有没有对应的记录
+        var _ind = this._getLayoutDataOf({
+          pos: pos
+        }).ind;
+
+        if (_ind != undefined) {
+          return _ind;
+        }
+        var ind = 0;
+        var cellLength = this.getCellLengthOfPos(pos);
+
+        var cellCount = this._getCellCount();
+
+        if (this.layoutType == "proportion") {
+          //proportion中的index以像素为单位 所以，传入的像素值就是index
+          return pos;
+        } else {
+          if (this.layoutType == "peak") {
+            ind = parseInt(pos / cellLength);
+
+            if (ind == cellCount) {
+              ind = cellCount - 1;
+            }
           }
 
-          return val;
+          if (this.layoutType == "rule") {
+            ind = parseInt((pos + cellLength / 2) / cellLength);
+
+            if (cellCount == 1) {
+              //如果只有一个数据
+              ind = 0;
+            }
+          }
         }
-      }, {
-        key: "getIndexOfPos",
-        value: function getIndexOfPos(pos) {
+        return ind;
+      }
+    }, {
+      key: "getIndexOfVal",
+      value: function getIndexOfVal(val) {
+        var valInd = -1;
+
+        if (this.layoutType == "proportion") {
           //先检查下 dataSectionLayout 中有没有对应的记录
           var _ind = this._getLayoutDataOf({
-            pos: pos
+            val: val
           }).ind;
 
           if (_ind != undefined) {
             return _ind;
           }
+          //所以这里要返回pos
 
-          var ind = 0;
-          var cellLength = this.getCellLengthOfPos(pos);
+          valInd = this.getPosOfVal(val);
+        } else {
+          _.each(this.dataOrg, function (arr) {
+            _.each(arr, function (list) {
+              var _ind = _.indexOf(list, val);
 
-          var cellCount = this._getCellCount();
-
-          if (this.layoutType == "proportion") {
-            //proportion中的index以像素为单位 所以，传入的像素值就是index
-            return pos;
-          } else {
-            if (this.layoutType == "peak") {
-              ind = parseInt(pos / cellLength);
-
-              if (ind == cellCount) {
-                ind = cellCount - 1;
+              if (_ind != -1) {
+                valInd = _ind;
               }
-            }
+            });
+          });
+        }
+
+        return valInd;
+      }
+    }, {
+      key: "getCellLength",
+      value: function getCellLength() {
+        if (this._cellLength !== null) {
+          return this._cellLength;
+        }
+
+        var axisLength = this.axisLength;
+        var cellLength = axisLength;
+
+        var cellCount = this._getCellCount();
+
+        if (cellCount) {
+          if (this.layoutType == "proportion") {
+            cellLength = 1;
+          } else {
+            //默认按照 peak 也就是柱状图的需要的布局方式
+            cellLength = axisLength / cellCount;
 
             if (this.layoutType == "rule") {
-              ind = parseInt((pos + cellLength / 2) / cellLength);
-
               if (cellCount == 1) {
-                //如果只有一个数据
-                ind = 0;
+                cellLength = axisLength / 2;
+              } else {
+                cellLength = axisLength / (cellCount - 1);
               }
             }
-          }
 
-          return ind;
-        }
-      }, {
-        key: "getIndexOfVal",
-        value: function getIndexOfVal(val) {
-          var valInd = -1;
-
-          if (this.layoutType == "proportion") {
-            //先检查下 dataSectionLayout 中有没有对应的记录
-            var _ind = this._getLayoutDataOf({
-              val: val
-            }).ind;
-
-            if (_ind != undefined) {
-              return _ind;
-            } //所以这里要返回pos
-
-
-            valInd = this.getPosOfVal(val);
-          } else {
-            _.each(this.dataOrg, function (arr) {
-              _.each(arr, function (list) {
-                var _ind = _.indexOf(list, val);
-
-                if (_ind != -1) {
-                  valInd = _ind;
-                }
-              });
-            });
-          }
-
-          return valInd;
-        }
-      }, {
-        key: "getCellLength",
-        value: function getCellLength() {
-          if (this._cellLength !== null) {
-            return this._cellLength;
-          }
-
-          var axisLength = this.axisLength;
-          var cellLength = axisLength;
-
-          var cellCount = this._getCellCount();
-
-          if (cellCount) {
-            if (this.layoutType == "proportion") {
-              cellLength = 1;
-            } else {
-              //默认按照 peak 也就是柱状图的需要的布局方式
-              cellLength = axisLength / cellCount;
-
-              if (this.layoutType == "rule") {
-                if (cellCount == 1) {
-                  cellLength = axisLength / 2;
-                } else {
-                  cellLength = axisLength / (cellCount - 1);
-                }
-              }
-
-              if (this.posParseToInt) {
-                cellLength = parseInt(cellLength);
-              }
+            if (this.posParseToInt) {
+              cellLength = parseInt(cellLength);
             }
           }
-
-          this._cellLength = cellLength;
-          return cellLength;
-        } //这个getCellLengthOfPos接口主要是给tips用，因为tips中只有x信息
-
-      }, {
-        key: "getCellLengthOfPos",
-        value: function getCellLengthOfPos(pos) {
-          return this.getCellLength();
-        } //pos目前没用到，给后续的高级功能预留接口
-
-      }, {
-        key: "getCellLengthOfInd",
-        value: function getCellLengthOfInd(pos) {
-          return this.getCellLength();
         }
-      }, {
-        key: "_getCellCount",
-        value: function _getCellCount() {
-          if (this._cellCount !== null) {
-            return this._cellCount;
-          }
+        this._cellLength = cellLength;
+        return cellLength;
+      } //这个getCellLengthOfPos接口主要是给tips用，因为tips中只有x信息
 
-          var cellCount = 0;
+    }, {
+      key: "getCellLengthOfPos",
+      value: function getCellLengthOfPos(pos) {
+        return this.getCellLength();
+      } //pos目前没用到，给后续的高级功能预留接口
 
-          if (this.layoutType == "proportion") {
-            cellCount = this.axisLength;
-          } else {
-            if (this.dataOrg.length && this.dataOrg[0].length && this.dataOrg[0][0].length) {
-              cellCount = this.dataOrg[0][0].length;
-            }
-          }
-
-          this._cellCount = cellCount;
-          return cellCount;
+    }, {
+      key: "getCellLengthOfInd",
+      value: function getCellLengthOfInd(pos) {
+        return this.getCellLength();
+      }
+    }, {
+      key: "_getCellCount",
+      value: function _getCellCount() {
+        if (this._cellCount !== null) {
+          return this._cellCount;
         }
-      }]);
 
-      return axis;
-    }();
-    /**
-    * 把原始的数据
-    * field1 field2 field3
-    *   1      2      3
-    *   2      3      4
-    * 这样的数据格式转换为内部的
-    * [{field:'field1',index:0,data:[1,2]} ......]
-    * 这样的结构化数据格式。
-    */
+        var cellCount = 0;
 
+        if (this.layoutType == "proportion") {
+          cellCount = this.axisLength;
+        } else {
+          if (this.dataOrg.length && this.dataOrg[0].length && this.dataOrg[0][0].length) {
+            cellCount = this.dataOrg[0][0].length;
+          }
+        }
+        this._cellCount = cellCount;
+        return cellCount;
+      }
+    }]);
 
-    function parse2MatrixData(list) {
-      if (list === undefined || list === null) {
-        list = [];
+    return axis;
+  }();
+
+  /**
+  * 把原始的数据
+  * field1 field2 field3
+  *   1      2      3
+  *   2      3      4
+  * 这样的数据格式转换为内部的
+  * [{field:'field1',index:0,data:[1,2]} ......]
+  * 这样的结构化数据格式。
+  */
+
+  var RESOLUTION = typeof window !== 'undefined' ? window.devicePixelRatio : 1;
+
+  var addOrRmoveEventHand = function addOrRmoveEventHand(domHand, ieHand) {
+    if (document[domHand]) {
+      var eventDomFn = function eventDomFn(el, type, fn) {
+        if (el.length) {
+          for (var i = 0; i < el.length; i++) {
+            eventDomFn(el[i], type, fn);
+          }
+        } else {
+          el[domHand](type, fn, false);
+        }
+      };
+      return eventDomFn;
+    } else {
+      var eventFn = function eventFn(el, type, fn) {
+        if (el.length) {
+          for (var i = 0; i < el.length; i++) {
+            eventFn(el[i], type, fn);
+          }
+        } else {
+          el[ieHand]("on" + type, function () {
+            return fn.call(el, window.event);
+          });
+        }
+      };
+      return eventFn;
+    }
+  };
+
+  var $ = {
+    // dom操作相关代码
+    query: function query(el) {
+      if (_.isString(el)) {
+        return document.getElementById(el);
       }
 
-      if (list.length > 0 && !_.isArray(list[0])) {
-        var newArr = [];
-        var fields = [];
-        var fieldNum = 0;
+      if (el.nodeType == 1) {
+        //则为一个element本身
+        return el;
+      }
 
-        for (var i = 0, l = list.length; i < l; i++) {
-          var row = list[i];
+      if (el.length) {
+        return el[0];
+      }
 
-          if (i == 0) {
-            for (var f in row) {
-              fields.push(f);
-            }
+      return null;
+    },
+    offset: function offset(el) {
+      var box = el.getBoundingClientRect(),
+          doc = el.ownerDocument,
+          body = doc.body,
+          docElem = doc.documentElement,
+          // for ie  
+      clientTop = docElem.clientTop || body.clientTop || 0,
+          clientLeft = docElem.clientLeft || body.clientLeft || 0,
+          // In Internet Explorer 7 getBoundingClientRect property is treated as physical, 
+      // while others are logical. Make all logical, like in IE8. 
+      zoom = 1;
 
-            newArr.push(fields);
-            fieldNum = fields.length;
-          }
+      if (body.getBoundingClientRect) {
+        var bound = body.getBoundingClientRect();
+        zoom = (bound.right - bound.left) / body.clientWidth;
+      }
 
-          var _rowData = [];
+      if (zoom > 1) {
+        clientTop = 0;
+        clientLeft = 0;
+      }
 
-          for (var ii = 0; ii < fieldNum; ii++) {
-            _rowData.push(row[fields[ii]]);
-          }
+      var top = box.top / zoom + (window.pageYOffset || docElem && docElem.scrollTop / zoom || body.scrollTop / zoom) - clientTop,
+          left = box.left / zoom + (window.pageXOffset || docElem && docElem.scrollLeft / zoom || body.scrollLeft / zoom) - clientLeft;
+      return {
+        top: top,
+        left: left
+      };
+    },
+    addEvent: addOrRmoveEventHand("addEventListener", "attachEvent"),
+    removeEvent: addOrRmoveEventHand("removeEventListener", "detachEvent"),
+    pageX: function pageX(e) {
+      if (e.pageX) return e.pageX;else if (e.clientX) return e.clientX + (document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft);else return null;
+    },
+    pageY: function pageY(e) {
+      if (e.pageY) return e.pageY;else if (e.clientY) return e.clientY + (document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop);else return null;
+    },
 
-          newArr.push(_rowData);
+    /**
+     * 创建dom
+     * @param {string} id dom id 待用
+     * @param {string} type : dom type， such as canvas, div etc.
+     */
+    createCanvas: function createCanvas(_width, _height, id) {
+      var canvas = document.createElement("canvas");
+      canvas.style.position = 'absolute';
+      canvas.style.width = _width + 'px';
+      canvas.style.height = _height + 'px';
+      canvas.style.left = 0;
+      canvas.style.top = 0;
+      canvas.setAttribute('width', _width * RESOLUTION);
+      canvas.setAttribute('height', _height * RESOLUTION);
+      canvas.setAttribute('id', id);
+      return canvas;
+    },
+    createView: function createView(_width, _height, id) {
+      var view = document.createElement("div");
+      view.className = "canvax-view";
+      view.style.cssText += "position:relative;width:100%;height:100%;";
+      var stageView = document.createElement("div");
+      stageView.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height + "px;"; //用来存放一些dom元素
+
+      var domView = document.createElement("div");
+      domView.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height + "px;";
+      view.appendChild(stageView);
+      view.appendChild(domView);
+      return {
+        view: view,
+        stageView: stageView,
+        domView: domView
+      };
+    } //dom相关代码结束
+
+  };
+
+  /**
+   * 系统皮肤
+   */
+  var _colors = ["#ff8533", "#73ace6", "#82d982", "#e673ac", "#cd6bed", "#8282d9", "#c0e650", "#e6ac73", "#6bcded", "#73e6ac", "#ed6bcd", "#9966cc"];
+  var globalTheme = {
+    colors: _colors,
+    set: function set(colors) {
+      this.colors = colors;
+      /*
+      var me = this;
+      _.each( colors, function( color , i ){
+          me.colors[i] = color;
+      } );
+      */
+
+      return this.colors;
+    },
+    get: function get() {
+      return this.colors;
+    }
+  };
+
+  var parse = {
+    _eval: function _eval(code, target, paramName, paramValue) {
+      return paramName ? new Function(paramName, code + "; return ".concat(target, ";"))(paramValue) : new Function(code + "; return ".concat(target, ";"))();
+    },
+    parse: function parse(code, range, data, variablesFromComponent) {
+      try {
+        var isVariablesDefined = range && range.length && range.length === 2 && range[1] > range[0]; // 若未定义
+
+        if (!isVariablesDefined) {
+          return this._eval(code, 'options');
         }
 
-        return newArr;
-      } else {
-        return list;
+        var variablesInCode = this._eval(code, 'variables');
+
+        if (typeof variablesInCode === 'function') {
+          variablesInCode = variablesInCode(data) || {};
+        }
+
+        var variables = {};
+
+        if (variablesFromComponent !== undefined) {
+          variables = typeof variablesFromComponent === 'function' ? variablesFromComponent(data) : variablesFromComponent;
+        }
+
+        variables = _.extend(true, {}, variablesInCode, variables);
+        var codeWithoutVariables = code.slice(0, range[0]) + code.slice(range[1]);
+        return this._eval(codeWithoutVariables, 'options', 'variables', variables);
+      } catch (e) {
+        console.log('parse error');
+        return {};
       }
     }
+  };
 
-    function dataFrame(data, opt) {
-      //数据做一份拷贝，避免污染源数据
-      data = JSON.parse(JSON.stringify(data));
-      var dataFrame = {
-        //数据框架集合
-        length: 0,
-        org: [],
-        //最原始的数据，一定是个行列式，因为如果发现是json格式数据，会自动转换为行列式
-        data: [],
-        //最原始的数据转化后的数据格式：[o,o,o] o={field:'val1',index:0,data:[1,2,3]}
-        getRowDataAt: _getRowDataAt,
-        getRowDataOf: _getRowDataOf,
-        getFieldData: _getFieldData,
-        getDataOrg: getDataOrg,
-        fields: [],
-        range: {
-          start: 0,
-          end: 0
+  //图表皮肤
+  var globalAnimationEnabled = true; //是否开启全局的动画开关
+
+  var global$1 = {
+    create: function create(el, _data, _opt) {
+      var chart = null;
+      var me = this;
+      var data = cloneData(_data);
+      var opt = cloneOptions(_opt);
+
+      var _destroy = function _destroy() {
+        me.instances[chart.id] = null;
+        delete me.instances[chart.id];
+      }; //这个el如果之前有绘制过图表，那么就要在instances中找到图表实例，然后销毁
+
+
+      var chart_id = $.query(el).getAttribute("chart_id");
+
+      if (chart_id != undefined) {
+        var _chart = me.instances[chart_id];
+
+        if (_chart) {
+          _chart.destroy();
+
+          _chart.off && _chart.off("destroy", _destroy);
+        }
+        delete me.instances[chart_id];
+      }
+
+      var dimension = 2; //3d图表的话，本地调试的时候自己在全局chartx3d上面提供is3dOpt变量
+
+      if (me.__dimension == 3 || me.is3dOpt && me.is3dOpt(_opt)) {
+        dimension = 3;
+      }
+
+      var componentModules = me._getComponentModules(dimension); //如果用户没有配置coord，说明这个图表是一个默认目标系的图表，比如标签云
+
+
+      var Chart = me._getComponentModule('chart', dimension); //try {
+
+
+      chart = new Chart(el, data, opt, componentModules);
+
+      if (chart) {
+        chart.draw();
+        me.instances[chart.id] = chart;
+        chart.on("destroy", _destroy);
+      }
+      //    throw "Chatx Error：" + err
+      //};
+
+      return chart;
+    },
+    setGlobalTheme: function setGlobalTheme(colors) {
+      globalTheme.set(colors);
+    },
+    getGlobalTheme: function getGlobalTheme() {
+      return globalTheme.get();
+    },
+    instances: {},
+    getChart: function getChart(chartId) {
+      return this.instances[chartId];
+    },
+    resize: function resize() {
+      //调用全局的这个resize方法，会把当前所有的 chart instances 都执行一遍resize
+      for (var c in this.instances) {
+        this.instances[c].resize();
+      }
+    },
+    //第二个参数是用户要用来覆盖chartpark中的配置的options
+    getOptionsOld: function getOptionsOld(chartPark_cid) {
+      var JsonSerialize = {
+        prefix: '[[JSON_FUN_PREFIX_',
+        suffix: '_JSON_FUN_SUFFIX]]'
+      };
+
+      var parse$$1 = function parse$$1(string) {
+        return JSON.parse(string, function (key, value) {
+          if (typeof value === 'string' && value.indexOf(JsonSerialize.suffix) > 0 && value.indexOf(JsonSerialize.prefix) == 0) {
+            return new Function('return ' + value.replace(JsonSerialize.prefix, '').replace(JsonSerialize.suffix, ''))();
+          }
+          return value;
+        }) || {};
+      };
+
+      return parse$$1(decodeURIComponent(this.options[chartPark_cid] || '%7B%7D'));
+    },
+    getOptionsNew: function getOptionsNew(chartPark_cid, data, variables) {
+      var chartConfig = this.options[chartPark_cid];
+      var code = decodeURIComponent(chartConfig.code);
+      var range = chartConfig.range;
+      return parse.parse(code, range, data, variables);
+    },
+
+    /** 
+     * 获取图表配置并解析
+     * 
+     * @param {int} chartPark_cid  chartpark图表id
+     * @param {Object} userOptions 用户自定义图表options，若无chartPark_cid时默认使用该配置，否则使用该配置覆盖原chartpark中的图表配置
+     * @param {Array} data 绘制图表使用的数据
+     * @param {Object | Function} variables 用于覆盖chartpark图表配置的变量，为Function时，其返回值必须为Object
+     * @returns {Object} 正常情况返回图表配置，否则返回{}
+    */
+    getOptions: function getOptions(chartPark_cid, userOptions, data, variables) {
+      if (!this.options[chartPark_cid]) {
+        return userOptions || {};
+      }
+      var chartConfig = this.options[chartPark_cid];
+      var optionsFromChartPark = typeof chartConfig === 'string' ? this.getOptionsOld(chartPark_cid) : this.getOptionsNew(chartPark_cid, data || [], variables || {});
+
+      if (userOptions) {
+        optionsFromChartPark = _.extend(true, optionsFromChartPark, userOptions);
+      }
+      return optionsFromChartPark;
+    },
+    calculateOptions: function calculateOptions(chartPark_cid, data, variables) {
+      return this.getOptions(chartPark_cid, undefined, data, variables);
+    },
+    components: {
+      c_2d: {
+        /*
+        modules:{
+            coord : {
+                empty : ..,
+                rect  : ..,
+                ...
+            },
+            graphs : {
+                //empty : .., //一般只有coord才会有empty
+                bar   : ..,
+                ...
+            }
+        },
+        get: function( name, type ){}
+        */
+      },
+      c_3d: {//所有3d组件,同上
+      }
+    },
+    _getComponentModules: function _getComponentModules(dimension) {
+      var comps = this.components.c_2d;
+
+      if (dimension == 3) {
+        comps = this.components.c_3d;
+      }
+
+      if (!comps.modules) {
+        comps.modules = {};
+      }
+
+      if (!comps.get) {
+        comps.get = function (name, type) {
+          if (!type) {
+            type = "empty";
+          }
+          name = name.toLowerCase();
+          type = type.toLowerCase();
+          var _module = comps.modules[name];
+
+          if (_module && _module[type]) {
+            return _module[type];
+          }
+        };
+      }
+      return comps;
+    },
+
+    /**
+     * @param {compModule} 要注册进去的模块名称
+     * @param {name} 要获取的comp名称
+     * @param { dimension,type } 后面可以传传两个参数 
+     * @param { dimension } 如果有四个参数，那么第三个肯定是type，第四个肯定是dimension 
+     */
+    registerComponent: function registerComponent(compModule, name) {
+      var dimension = 2;
+      var type = "empty";
+
+      if (arguments.length == 3) {
+        var arg2 = arguments[2];
+
+        if (_.isNumber(arg2)) {
+          if (arg2 == 3) {
+            dimension = 3;
+          }
+        }
+
+        if (_.isString(arg2)) {
+          type = arg2;
+        }
+      }
+
+      if (arguments.length == 4) {
+        //那么肯定是有传 type  dimension 两个值
+        type = arguments[2];
+
+        if (arguments[3] == 3) {
+          dimension = 3;
+        }
+      }
+
+      var comps = this._getComponentModules(dimension).modules;
+
+      name = name.toLowerCase();
+      type = type.toLowerCase();
+      var _comp = comps[name];
+
+      if (!_comp) {
+        _comp = comps[name] = {};
+      }
+
+      if (!_comp[type]) {
+        _comp[type] = compModule;
+      }
+      return comps;
+    },
+
+    /**
+     * 
+     * @param {name} 要获取的comp名称
+     * @param { dimension,type } 后面可以传传两个参数 
+     * @param { dimension } 如果有三个参数，那么第二个肯定是type，第三个肯定是dimension 
+     */
+    _getComponentModule: function _getComponentModule(name) {
+      var dimension = 2;
+      var type = "empty";
+
+      if (arguments.length == 2) {
+        var arg1 = arguments[1];
+
+        if (_.isNumber(arg1)) {
+          if (arg1 == 3) {
+            dimension = 3;
+          }
+        }
+
+        if (_.isString(arg1)) {
+          type = arg1;
+        }
+      }
+
+      if (arguments.length == 3) {
+        //那么肯定是有传 type  dimension 两个值
+        type = arguments[1];
+
+        if (arguments[2] == 3) {
+          dimension = 3;
+        }
+      }
+      name = name.toLowerCase();
+      type = type.toLowerCase();
+
+      var _comp = this._getComponentModules(dimension).modules[name];
+
+      return _comp ? _comp[type] : undefined;
+    },
+    setAnimationEnabled: function setAnimationEnabled(bool) {
+      globalAnimationEnabled = bool;
+    },
+    getAnimationEnabled: function getAnimationEnabled(bool) {
+      return globalAnimationEnabled;
+    },
+    //所有布局算法
+    layout: {},
+    registerLayout: function registerLayout(name, algorithm) {
+      this.layout[name] = algorithm;
+    },
+    props: {},
+    getProps: function getProps() {
+      //计算全量的 props 属性用来提供智能提示 begin
+      //这部分代码没必要部署到 打包的环境， 只是chartpark需要用来做智能提示， 自动化测试
+      var allProps = {};
+
+      var allModules = this._getComponentModules().modules;
+
+      var _loop = function _loop() {
+        if (n == 'chart') return "continue";
+        allProps[n] = {
+          detail: n,
+          propertys: {} //typeMap: {}
+
+        };
+
+        if (n == 'graphs') {
+          _graphNames = _.map(allModules.graphs, function (val, key) {
+            return key;
+          });
+          allProps.graphs.documentation = "可选的graphs类型有：\n" + _graphNames.join('\n');
+        }
+        allConstructorProps = {}; //整个原型链路上面的 defaultProps
+
+        protoModule = null;
+
+        for (mn in allModules[n]) {
+          if (protoModule) break;
+          protoModule = allModules[n][mn].prototype;
+        }
+
+        function _setProps(m) {
+          var constructorModule = m.constructor.__proto__; //m.constructor;
+
+          if (!constructorModule._isComponentRoot) {
+            _setProps(constructorModule.prototype);
+          }
+
+          if (constructorModule.defaultProps && _.isFunction(constructorModule.defaultProps)) {
+            var _dprops = constructorModule.defaultProps();
+
+            _.extend(allConstructorProps, _dprops);
+          }
+        }
+
+        _setProps(protoModule);
+
+        allProps[n].propertys = _.extend(allConstructorProps, allProps[n].propertys);
+
+        var _loop2 = function _loop2() {
+          module = allModules[n][mn];
+          moduleProps = module.defaultProps ? module.defaultProps() : {}; //处理props上面所有的 _props 依赖 begin
+
+          function setChildProps(p) {
+            if (p._props) {
+              var _propsIsArray = _.isArray(p._props);
+
+              for (var k in p._props) {
+                if (!_propsIsArray) {
+                  p[k] = {
+                    detail: k,
+                    propertys: {}
+                  };
+                }
+                var _module = p._props[k];
+
+                if (_module.defaultProps) {
+                  var _moduleProps;
+
+                  var allConstructorProps;
+
+                  (function () {
+                    var _setProps = function _setProps(m) {
+                      if (m.__proto__.__proto__) {
+                        _setProps(m.__proto__);
+                      }
+
+                      if (m.defaultProps && _.isFunction(m.defaultProps)) {
+                        var _dprops = m.defaultProps();
+
+                        if (_dprops._props) {
+                          //如果子元素还有 _props 依赖， 那么就继续处理
+                          setChildProps(_dprops);
+                        }
+                        _dprops && _.extend(allConstructorProps, _dprops);
+                      }
+                    };
+
+                    _moduleProps = _module.defaultProps(); //先把ta原型上面的所有属性都添加到 _moduleProps 
+
+                    allConstructorProps = {};
+
+                    _setProps(_module.__proto__);
+
+                    _moduleProps = _.extend(allConstructorProps, _moduleProps);
+
+                    if (_propsIsArray) {
+                      _.extend(p, _moduleProps);
+                    } else {
+                      p[k].propertys = _moduleProps;
+                      setChildProps(p[k].propertys);
+                    }
+                  })();
+                }
+              }
+            }
+          }
+          setChildProps(moduleProps); //处理props上面所有的 _props 依赖 end
+          //这里不能用下面的 extend 方法，
+
+          moduleProps = _.extend({}, allConstructorProps, moduleProps); //如果原型上面是有type 属性的，那么说明，自己是type分类路由的一个分支，放到typeMap下面
+
+          if (allConstructorProps.type) {
+            if (!allProps[n].typeMap) allProps[n].typeMap = {};
+
+            if (n == 'graphs') {
+              moduleProps.type.values = _graphNames;
+              moduleProps.type.documentation = "可选的graphs类型有：\n" + _graphNames.join('\n');
+            }
+            allProps[n].typeMap[mn] = moduleProps;
+          } else {
+            _.extend(allProps[n].propertys, moduleProps);
+          }
+        };
+
+        for (mn in allModules[n]) {
+          _loop2();
         }
       };
 
-      if (!data || data.length == 0) {
-        return dataFrame;
+      for (var n in allModules) {
+        var _graphNames;
+
+        var allConstructorProps;
+        var protoModule;
+        var mn;
+        var mn;
+        var module;
+        var moduleProps;
+
+        var _ret = _loop();
+
+        if (_ret === "continue") continue;
       }
+      this.props = allProps; //计算全量的 props 属性用来提供智能提示 begin
 
-      if (data.length > 0 && !_.isArray(data[0])) {
-        data = parse2MatrixData(data);
-      }
+      return this.props;
+    }
+  };
 
-      dataFrame.length = data.length - 1; //设置好数据区间end值
+  //十六进制颜色值的正则表达式
 
-      dataFrame.range.end = dataFrame.length - 1; //然后检查opts中是否有dataZoom.range
+  var aRound = 360; //一圈的度数
 
-      if (opt && opt.dataZoom && opt.dataZoom.range) {
-        _.extend(dataFrame.range, opt.dataZoom.range);
-      }
+  var Cos = Math.cos;
+  var Sin = Math.sin;
 
-      if (data.length && data[0].length && !~data[0].indexOf("__index__")) {
-        //如果数据中没有用户自己设置的__index__，那么就主动添加一个__index__，来记录元数据中的index
-        for (var i = 0, l = data.length; i < l; i++) {
-          if (!i) {
-            data[0].push("__index__");
-          } else {
-            data[i].push(i - 1);
-          }
-        }
-      }
+  var Polar =
+  /*#__PURE__*/
+  function () {
+    function Polar() {
+      var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var dataFrame = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
 
-      dataFrame.org = data;
-      dataFrame.fields = data[0] ? data[0] : []; //所有的字段集合;
+      _classCallCheck(this, Polar);
 
-      var total = []; //已经处理成[o,o,o]   o={field:'val1',index:0,data:[1,2,3]}
+      this._opt = _.clone(opt);
+      this.dataFrame = dataFrame;
+      this.axisLength = 1;
+      this.dataOrg = [];
+      this.startAngle = this._opt.startAngle;
+      this.allAngles = Math.min(360, this._opt.allAngles);
+      this.sort = this._opt.sort;
+      this.layoutData = []; //和dataSection一一对应的，每个值的pos,agend,dregg,centerPos
 
-      for (var a = 0, al = dataFrame.fields.length; a < al; a++) {
-        var o = {};
-        o.field = dataFrame.fields[a];
-        o.index = a;
-        o.data = [];
-        total.push(o);
-      }
+      this.maxRadius = 0; //最大半径值
 
-      dataFrame.data = total; //填充好total的data并且把属于yAxis的设置为number
+      this.minRadius = 0; //最小半径值 
+    }
 
-      for (var a = 1, al = data.length; a < al; a++) {
-        for (var b = 0, bl = data[a].length; b < bl; b++) {
-          var _val = data[a][b]; //如果用户传入的数据是个number，那么就转换为真正的Number吧
-          //‘223’ --》 223
+    _createClass(Polar, [{
+      key: "calculateProps",
+      value: function calculateProps() {
+        var _this = this;
 
-          if (!isNaN(_val) && _val !== "" && _val !== null) {
-            _val = Number(_val);
-          }
+        var axisLength = 0;
+        var percentage = 0;
+        var currentAngle = 0;
+        var opt = this._opt;
+        var angle, endAngle, cosV, sinV, midAngle, quadrant;
+        var percentFixedNum = 2;
+        var outRadius = opt.node.outRadius;
+        var innerRadius = opt.node.innerRadius;
+        var moveDis = opt.node.moveDis;
+        this.layoutData.forEach(function (item, i) {
+          if (!item.enabled) return;
+          axisLength += isNaN(+item.value) ? 0 : +item.value;
 
-          total[b].data.push(_val); //total[b].data.push( data[a][b] );
-        }
-      }
-
-      function getDataOrg($field, format, totalList, lev) {
-        if (!lev) lev = 0;
-        var arr = totalList || total;
-
-        if (!arr) {
-          return;
-        }
-
-        if (!format) {
-          format = function format(e) {
-            return e;
-          };
-        }
-
-        function _format(data) {
-          for (var i = 0, l = data.length; i < l; i++) {
-            data[i] = format(data[i]);
-          }
-
-          return data;
-        }
-
-        if (!_.isArray($field)) {
-          $field = [$field];
-        }
-
-        var newData = [];
-
-        for (var i = 0, l = $field.length; i < l; i++) {
-          if (_.isArray($field[i])) {
-            newData.push(getDataOrg($field[i], format, totalList, lev + 1));
-          } else {
-            var _fieldData = newData;
-
-            if (!lev) {
-              _fieldData = [];
-            }
-
-            for (var ii = 0, iil = arr.length; ii < iil; ii++) {
-              if ($field[i] == arr[ii].field) {
-                _fieldData.push(_format(arr[ii].data.slice(dataFrame.range.start, dataFrame.range.end + 1)));
-
-                break;
-              }
-            }
-
-            if (!lev) {
-              newData.push(_fieldData);
-            }
-          }
-        }
-
-        return newData;
-      }
-      /*
-       * 获取某一行数据
-      */
-
-
-      function _getRowDataAt(index) {
-        var o = {};
-        var data = dataFrame.data;
-
-        for (var a = 0; a < data.length; a++) {
-          o[data[a].field] = data[a].data[dataFrame.range.start + index];
-        }
-
-        return o;
-      }
-      /**
-       * obj => {uv: 100, pv: 10 ...}
-       */
-
-
-      function _getRowDataOf(obj) {
-        !obj && (obj = {});
-        var arr = [];
-        var expCount = 0;
-
-        for (var p in obj) {
-          expCount++;
-        }
-
-        if (expCount) {
-          for (var i = dataFrame.range.start; i <= dataFrame.range.end; i++) {
-            var matchNum = 0;
-
-            _.each(dataFrame.data, function (fd) {
-              if (fd.field in obj && fd.data[i] == obj[fd.field]) {
-                matchNum++;
-              }
-            });
-
-            if (matchNum == expCount) {
-              //说明这条数据是完全和查询
-              arr.push(_getRowDataAt(i));
-            }
-          }
-        }
-
-        return arr;
-      }
-
-      function _getFieldData(field) {
-        var data;
-
-        _.each(dataFrame.data, function (d) {
-          if (d.field == field) {
-            data = d;
+          if (item.radiusField) {
+            _this.maxRadius = Math.max(item.radiusValue, axisLength);
+            _this.minRadius = Math.min(item.radiusValue, axisLength);
           }
         });
+        this.axisLength = axisLength;
 
-        if (data) {
-          return data.data.slice(dataFrame.range.start, dataFrame.range.end + 1);
-        } else {
-          return [];
-        }
-      }
+        if (axisLength > 0) {
+          //原始算法
+          // currentAngle = + opt.startAngle % 360;
+          // limitAngle = opt.allAngles + me.startAngle % me.allAngles;
+          //新的算法
+          //这里只是计算每个扇区的初始位置,所以这里求模就可以啦
+          currentAngle = _.euclideanModulo(this.startAngle, aRound); // opt.allAngles = opt.allAngles > 0 ? opt.allAngles : aRound;
+          // limitAngle = opt.allAngles + _.euclideanModulo(opt.startAngle, opt.allAngles);
 
-      return dataFrame;
-    }
+          this.layoutData.forEach(function (item, i) {
+            percentage = item.value / axisLength; //enabled为false的sec，比率就设置为0
 
-    var RESOLUTION = typeof window !== 'undefined' ? window.devicePixelRatio : 1;
-
-    var addOrRmoveEventHand = function addOrRmoveEventHand(domHand, ieHand) {
-      if (document[domHand]) {
-        var eventDomFn = function eventDomFn(el, type, fn) {
-          if (el.length) {
-            for (var i = 0; i < el.length; i++) {
-              eventDomFn(el[i], type, fn);
+            if (!item.enabled) {
+              percentage = 0;
             }
-          } else {
-            el[domHand](type, fn, false);
-          }
-        };
+            angle = _this.allAngles * percentage; //旧的算法
+            // endAngle = currentAngle + angle > limitAngle ? limitAngle : me.currentAngle + angle;
 
-        return eventDomFn;
-      } else {
-        var eventFn = function eventFn(el, type, fn) {
-          if (el.length) {
-            for (var i = 0; i < el.length; i++) {
-              eventFn(el[i], type, fn);
+            endAngle = currentAngle + angle;
+            midAngle = currentAngle + angle * 0.5;
+            cosV = Cos(_.degToRad(midAngle));
+            sinV = Sin(_.degToRad(midAngle));
+            cosV = cosV.toFixed(5);
+            sinV = sinV.toFixed(5);
+            quadrant = _this.getAuadrant(midAngle); //如果用户在配置中制定了半径字段,这里需要计算相对的半径比例值
+
+            if (!!item.radiusField) {
+              // var _rr = Number(item.rowData[opt.node.radius]);
+              outRadius = parseInt((opt.node.outRadius - opt.node.innerRadius) * ((item.radiusValue - _this.minRadius) / (_this.maxRadius - _this.minRadius)) + opt.node.innerRadius);
             }
-          } else {
-            el[ieHand]("on" + type, function () {
-              return fn.call(el, window.event);
+
+            _.extend(item, {
+              outRadius: outRadius,
+              innerRadius: innerRadius,
+              startAngle: currentAngle,
+              //起始角度
+              endAngle: endAngle,
+              //结束角度
+              midAngle: midAngle,
+              //中间角度
+              moveDis: moveDis,
+              outOffsetx: moveDis * 0.7 * cosV,
+              //focus的事实外扩后圆心的坐标x
+              outOffsety: moveDis * 0.7 * sinV,
+              //focus的事实外扩后圆心的坐标y
+              centerx: outRadius * cosV,
+              centery: outRadius * sinV,
+              outx: (outRadius + moveDis) * cosV,
+              outy: (outRadius + moveDis) * sinV,
+              edgex: (outRadius + moveDis) * cosV,
+              edgey: (outRadius + moveDis) * sinV,
+              orginPercentage: percentage,
+              percentage: (percentage * 100).toFixed(percentFixedNum),
+              quadrant: quadrant,
+              //象限
+              isRightSide: quadrant == 1 || quadrant == 4 ? 1 : 0,
+              cosV: cosV,
+              sinV: sinV
             });
-          }
-        };
 
-        return eventFn;
+            currentAngle += angle;
+          });
+        }
       }
-    };
-
-    var $ = {
-      // dom操作相关代码
-      query: function query(el) {
-        if (_.isString(el)) {
-          return document.getElementById(el);
-        }
-
-        if (el.nodeType == 1) {
-          //则为一个element本身
-          return el;
-        }
-
-        if (el.length) {
-          return el[0];
-        }
-
-        return null;
-      },
-      offset: function offset(el) {
-        var box = el.getBoundingClientRect(),
-            doc = el.ownerDocument,
-            body = doc.body,
-            docElem = doc.documentElement,
-            // for ie  
-        clientTop = docElem.clientTop || body.clientTop || 0,
-            clientLeft = docElem.clientLeft || body.clientLeft || 0,
-            // In Internet Explorer 7 getBoundingClientRect property is treated as physical, 
-        // while others are logical. Make all logical, like in IE8. 
-        zoom = 1;
-
-        if (body.getBoundingClientRect) {
-          var bound = body.getBoundingClientRect();
-          zoom = (bound.right - bound.left) / body.clientWidth;
-        }
-
-        if (zoom > 1) {
-          clientTop = 0;
-          clientLeft = 0;
-        }
-
-        var top = box.top / zoom + (window.pageYOffset || docElem && docElem.scrollTop / zoom || body.scrollTop / zoom) - clientTop,
-            left = box.left / zoom + (window.pageXOffset || docElem && docElem.scrollLeft / zoom || body.scrollLeft / zoom) - clientLeft;
-        return {
-          top: top,
-          left: left
-        };
-      },
-      addEvent: addOrRmoveEventHand("addEventListener", "attachEvent"),
-      removeEvent: addOrRmoveEventHand("removeEventListener", "detachEvent"),
-      pageX: function pageX(e) {
-        if (e.pageX) return e.pageX;else if (e.clientX) return e.clientX + (document.documentElement.scrollLeft ? document.documentElement.scrollLeft : document.body.scrollLeft);else return null;
-      },
-      pageY: function pageY(e) {
-        if (e.pageY) return e.pageY;else if (e.clientY) return e.clientY + (document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop);else return null;
-      },
-
       /**
-       * 创建dom
-       * @param {string} id dom id 待用
-       * @param {string} type : dom type， such as canvas, div etc.
+       *  重设数据后,需要调用setDataFrame与calculateProps 重新计算layoutData
+       * @param {ArryObject} dataFrame 
        */
-      createCanvas: function createCanvas(_width, _height, id) {
-        var canvas = document.createElement("canvas");
-        canvas.style.position = 'absolute';
-        canvas.style.width = _width + 'px';
-        canvas.style.height = _height + 'px';
-        canvas.style.left = 0;
-        canvas.style.top = 0;
-        canvas.setAttribute('width', _width * RESOLUTION);
-        canvas.setAttribute('height', _height * RESOLUTION);
-        canvas.setAttribute('id', id);
-        return canvas;
-      },
-      createView: function createView(_width, _height, id) {
-        var view = document.createElement("div");
-        view.className = "canvax-view";
-        view.style.cssText += "position:relative;width:100%;height:100%;";
-        var stageView = document.createElement("div");
-        stageView.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height + "px;"; //用来存放一些dom元素
 
-        var domView = document.createElement("div");
-        domView.style.cssText += "position:absolute;width:" + _width + "px;height:" + _height + "px;";
-        view.appendChild(stageView);
-        view.appendChild(domView);
-        return {
-          view: view,
-          stageView: stageView,
-          domView: domView
-        };
-      } //dom相关代码结束
-
-    };
-    /**
-     * 系统皮肤
-     */
-
-    var _colors = ["#ff8533", "#73ace6", "#82d982", "#e673ac", "#cd6bed", "#8282d9", "#c0e650", "#e6ac73", "#6bcded", "#73e6ac", "#ed6bcd", "#9966cc"];
-    var globalTheme = {
-      colors: _colors,
-      set: function set(colors) {
-        this.colors = colors;
-        /*
-        var me = this;
-        _.each( colors, function( color , i ){
-            me.colors[i] = color;
-        } );
-        */
-
-        return this.colors;
-      },
-      get: function get() {
-        return this.colors;
-      }
-    };
-    var parse = {
-      _eval: function _eval(code, target, paramName, paramValue) {
-        return paramName ? new Function(paramName, code + "; return ".concat(target, ";"))(paramValue) : new Function(code + "; return ".concat(target, ";"))();
-      },
-      parse: function parse(code, range, data, variablesFromComponent) {
-        try {
-          var isVariablesDefined = range && range.length && range.length === 2 && range[1] > range[0]; // 若未定义
-
-          if (!isVariablesDefined) {
-            return this._eval(code, 'options');
-          }
-
-          var variablesInCode = this._eval(code, 'variables');
-
-          if (typeof variablesInCode === 'function') {
-            variablesInCode = variablesInCode(data) || {};
-          }
-
-          var variables = {};
-
-          if (variablesFromComponent !== undefined) {
-            variables = typeof variablesFromComponent === 'function' ? variablesFromComponent(data) : variablesFromComponent;
-          }
-
-          variables = _.extend(true, {}, variablesInCode, variables);
-          var codeWithoutVariables = code.slice(0, range[0]) + code.slice(range[1]);
-          return this._eval(codeWithoutVariables, 'options', 'variables', variables);
-        } catch (e) {
-          console.log('parse error');
-          return {};
-        }
-      }
-    }; //图表皮肤
-
-    var globalAnimationEnabled = true; //是否开启全局的动画开关
-
-    var global = {
-      create: function create(el, _data, _opt) {
-        var chart = null;
-        var me = this;
-        var data = cloneData(_data);
-        var opt = cloneOptions(_opt);
-
-        var _destroy = function _destroy() {
-          me.instances[chart.id] = null;
-          delete me.instances[chart.id];
-        }; //这个el如果之前有绘制过图表，那么就要在instances中找到图表实例，然后销毁
-
-
-        var chart_id = $.query(el).getAttribute("chart_id");
-
-        if (chart_id != undefined) {
-          var _chart = me.instances[chart_id];
-
-          if (_chart) {
-            _chart.destroy();
-
-            _chart.off && _chart.off("destroy", _destroy);
-          }
-
-          delete me.instances[chart_id];
-        }
-
-        var dimension = 2; //3d图表的话，本地调试的时候自己在全局chartx3d上面提供is3dOpt变量
-
-        if (me.__dimension == 3 || me.is3dOpt && me.is3dOpt(_opt)) {
-          dimension = 3;
-        }
-
-        var componentModules = me._getComponentModules(dimension); //如果用户没有配置coord，说明这个图表是一个默认目标系的图表，比如标签云
-
-
-        var Chart = me._getComponentModule('chart', dimension); //try {
-
-
-        chart = new Chart(el, data, opt, componentModules);
-
-        if (chart) {
-          chart.draw();
-          me.instances[chart.id] = chart;
-          chart.on("destroy", _destroy);
-        } //    throw "Chatx Error：" + err
-        //};
-
-
-        return chart;
-      },
-      setGlobalTheme: function setGlobalTheme(colors) {
-        globalTheme.set(colors);
-      },
-      getGlobalTheme: function getGlobalTheme() {
-        return globalTheme.get();
-      },
-      instances: {},
-      getChart: function getChart(chartId) {
-        return this.instances[chartId];
-      },
-      resize: function resize() {
-        //调用全局的这个resize方法，会把当前所有的 chart instances 都执行一遍resize
-        for (var c in this.instances) {
-          this.instances[c].resize();
-        }
-      },
-      //第二个参数是用户要用来覆盖chartpark中的配置的options
-      getOptionsOld: function getOptionsOld(chartPark_cid) {
-        var JsonSerialize = {
-          prefix: '[[JSON_FUN_PREFIX_',
-          suffix: '_JSON_FUN_SUFFIX]]'
-        };
-
-        var parse$$1 = function parse$$1(string) {
-          return JSON.parse(string, function (key, value) {
-            if (typeof value === 'string' && value.indexOf(JsonSerialize.suffix) > 0 && value.indexOf(JsonSerialize.prefix) == 0) {
-              return new Function('return ' + value.replace(JsonSerialize.prefix, '').replace(JsonSerialize.suffix, ''))();
-            }
-
-            return value;
-          }) || {};
-        };
-
-        return parse$$1(decodeURIComponent(this.options[chartPark_cid] || '%7B%7D'));
-      },
-      getOptionsNew: function getOptionsNew(chartPark_cid, data, variables) {
-        var chartConfig = this.options[chartPark_cid];
-        var code = decodeURIComponent(chartConfig.code);
-        var range = chartConfig.range;
-        return parse.parse(code, range, data, variables);
-      },
-
-      /** 
-       * 获取图表配置并解析
-       * 
-       * @param {int} chartPark_cid  chartpark图表id
-       * @param {Object} userOptions 用户自定义图表options，若无chartPark_cid时默认使用该配置，否则使用该配置覆盖原chartpark中的图表配置
-       * @param {Array} data 绘制图表使用的数据
-       * @param {Object | Function} variables 用于覆盖chartpark图表配置的变量，为Function时，其返回值必须为Object
-       * @returns {Object} 正常情况返回图表配置，否则返回{}
-      */
-      getOptions: function getOptions(chartPark_cid, userOptions, data, variables) {
-        if (!this.options[chartPark_cid]) {
-          return userOptions || {};
-        }
-
-        var chartConfig = this.options[chartPark_cid];
-        var optionsFromChartPark = typeof chartConfig === 'string' ? this.getOptionsOld(chartPark_cid) : this.getOptionsNew(chartPark_cid, data || [], variables || {});
-
-        if (userOptions) {
-          optionsFromChartPark = _.extend(true, optionsFromChartPark, userOptions);
-        }
-
-        return optionsFromChartPark;
-      },
-      calculateOptions: function calculateOptions(chartPark_cid, data, variables) {
-        return this.getOptions(chartPark_cid, undefined, data, variables);
-      },
-      components: {
-        c_2d: {
-          /*
-          modules:{
-              coord : {
-                  empty : ..,
-                  rect  : ..,
-                  ...
-              },
-              graphs : {
-                  //empty : .., //一般只有coord才会有empty
-                  bar   : ..,
-                  ...
-              }
-          },
-          get: function( name, type ){}
-          */
-        },
-        c_3d: {//所有3d组件,同上
-        }
-      },
-      _getComponentModules: function _getComponentModules(dimension) {
-        var comps = this.components.c_2d;
-
-        if (dimension == 3) {
-          comps = this.components.c_3d;
-        }
-
-        if (!comps.modules) {
-          comps.modules = {};
-        }
-
-        if (!comps.get) {
-          comps.get = function (name, type) {
-            if (!type) {
-              type = "empty";
-            }
-
-            name = name.toLowerCase();
-            type = type.toLowerCase();
-            var _module = comps.modules[name];
-
-            if (_module && _module[type]) {
-              return _module[type];
-            }
-          };
-        }
-
-        return comps;
-      },
-
-      /**
-       * @param {compModule} 要注册进去的模块名称
-       * @param {name} 要获取的comp名称
-       * @param { dimension,type } 后面可以传传两个参数 
-       * @param { dimension } 如果有四个参数，那么第三个肯定是type，第四个肯定是dimension 
-       */
-      registerComponent: function registerComponent(compModule, name) {
-        var dimension = 2;
-        var type = "empty";
-
-        if (arguments.length == 3) {
-          var arg2 = arguments[2];
-
-          if (_.isNumber(arg2)) {
-            if (arg2 == 3) {
-              dimension = 3;
-            }
-          }
-
-          if (_.isString(arg2)) {
-            type = arg2;
-          }
-        }
-
-        if (arguments.length == 4) {
-          //那么肯定是有传 type  dimension 两个值
-          type = arguments[2];
-
-          if (arguments[3] == 3) {
-            dimension = 3;
-          }
-        }
-
-        var comps = this._getComponentModules(dimension).modules;
-
-        name = name.toLowerCase();
-        type = type.toLowerCase();
-        var _comp = comps[name];
-
-        if (!_comp) {
-          _comp = comps[name] = {};
-        }
-
-        if (!_comp[type]) {
-          _comp[type] = compModule;
-        }
-
-        return comps;
-      },
-
-      /**
-       * 
-       * @param {name} 要获取的comp名称
-       * @param { dimension,type } 后面可以传传两个参数 
-       * @param { dimension } 如果有三个参数，那么第二个肯定是type，第三个肯定是dimension 
-       */
-      _getComponentModule: function _getComponentModule(name) {
-        var dimension = 2;
-        var type = "empty";
-
-        if (arguments.length == 2) {
-          var arg1 = arguments[1];
-
-          if (_.isNumber(arg1)) {
-            if (arg1 == 3) {
-              dimension = 3;
-            }
-          }
-
-          if (_.isString(arg1)) {
-            type = arg1;
-          }
-        }
-
-        if (arguments.length == 3) {
-          //那么肯定是有传 type  dimension 两个值
-          type = arguments[1];
-
-          if (arguments[2] == 3) {
-            dimension = 3;
-          }
-        }
-
-        name = name.toLowerCase();
-        type = type.toLowerCase();
-
-        var _comp = this._getComponentModules(dimension).modules[name];
-
-        return _comp ? _comp[type] : undefined;
-      },
-      setAnimationEnabled: function setAnimationEnabled(bool) {
-        globalAnimationEnabled = bool;
-      },
-      getAnimationEnabled: function getAnimationEnabled(bool) {
-        return globalAnimationEnabled;
-      },
-      //所有布局算法
-      layout: {},
-      registerLayout: function registerLayout(name, algorithm) {
-        this.layout[name] = algorithm;
-      },
-      props: {},
-      getProps: function getProps() {
-        //计算全量的 props 属性用来提供智能提示 begin
-        //这部分代码没必要部署到 打包的环境， 只是chartpark需要用来做智能提示， 自动化测试
-        var allProps = {};
-
-        var allModules = this._getComponentModules().modules;
-
-        var _loop = function _loop() {
-          if (n == 'chart') return "continue";
-          allProps[n] = {
-            detail: n,
-            propertys: {} //typeMap: {}
-
-          };
-
-          if (n == 'graphs') {
-            _graphNames = _.map(allModules.graphs, function (val, key) {
-              return key;
-            });
-            allProps.graphs.documentation = "可选的graphs类型有：\n" + _graphNames.join('\n');
-          }
-
-          allConstructorProps = {}; //整个原型链路上面的 defaultProps
-
-          protoModule = null;
-
-          for (mn in allModules[n]) {
-            if (protoModule) break;
-            protoModule = allModules[n][mn].prototype;
-          }
-
-          function _setProps(m) {
-            var constructorModule = m.constructor.__proto__; //m.constructor;
-
-            if (!constructorModule._isComponentRoot) {
-              _setProps(constructorModule.prototype);
-            }
-
-            if (constructorModule.defaultProps && _.isFunction(constructorModule.defaultProps)) {
-              var _dprops = constructorModule.defaultProps();
-
-              _.extend(allConstructorProps, _dprops);
-            }
-          }
-
-          _setProps(protoModule);
-
-          allProps[n].propertys = _.extend(allConstructorProps, allProps[n].propertys);
-
-          var _loop2 = function _loop2() {
-            module = allModules[n][mn];
-            moduleProps = module.defaultProps ? module.defaultProps() : {}; //处理props上面所有的 _props 依赖 begin
-
-            function setChildProps(p) {
-              if (p._props) {
-                var _propsIsArray = _.isArray(p._props);
-
-                for (var k in p._props) {
-                  if (!_propsIsArray) {
-                    p[k] = {
-                      detail: k,
-                      propertys: {}
-                    };
-                  }
-
-                  var _module = p._props[k];
-
-                  if (_module.defaultProps) {
-                    var _moduleProps;
-
-                    var allConstructorProps;
-
-                    (function () {
-                      var _setProps = function _setProps(m) {
-                        if (m.__proto__.__proto__) {
-                          _setProps(m.__proto__);
-                        }
-
-                        if (m.defaultProps && _.isFunction(m.defaultProps)) {
-                          var _dprops = m.defaultProps();
-
-                          if (_dprops._props) {
-                            //如果子元素还有 _props 依赖， 那么就继续处理
-                            setChildProps(_dprops);
-                          }
-
-                          _dprops && _.extend(allConstructorProps, _dprops);
-                        }
-                      };
-
-                      _moduleProps = _module.defaultProps(); //先把ta原型上面的所有属性都添加到 _moduleProps 
-
-                      allConstructorProps = {};
-
-                      _setProps(_module.__proto__);
-
-                      _moduleProps = _.extend(allConstructorProps, _moduleProps);
-
-                      if (_propsIsArray) {
-                        _.extend(p, _moduleProps);
-                      } else {
-                        p[k].propertys = _moduleProps;
-                        setChildProps(p[k].propertys);
-                      }
-                    })();
-                  }
-                }
-              }
-            }
-
-            setChildProps(moduleProps); //处理props上面所有的 _props 依赖 end
-            //这里不能用下面的 extend 方法，
-
-            moduleProps = _.extend({}, allConstructorProps, moduleProps); //如果原型上面是有type 属性的，那么说明，自己是type分类路由的一个分支，放到typeMap下面
-
-            if (allConstructorProps.type) {
-              if (!allProps[n].typeMap) allProps[n].typeMap = {};
-
-              if (n == 'graphs') {
-                moduleProps.type.values = _graphNames;
-                moduleProps.type.documentation = "可选的graphs类型有：\n" + _graphNames.join('\n');
-              }
-
-              allProps[n].typeMap[mn] = moduleProps;
-            } else {
-              _.extend(allProps[n].propertys, moduleProps);
-            }
-          };
-
-          for (mn in allModules[n]) {
-            _loop2();
-          }
-        };
-
-        for (var n in allModules) {
-          var _graphNames;
-
-          var allConstructorProps;
-          var protoModule;
-          var mn;
-          var mn;
-          var module;
-          var moduleProps;
-
-          var _ret = _loop();
-
-          if (_ret === "continue") continue;
-        }
-
-        this.props = allProps; //计算全量的 props 属性用来提供智能提示 begin
-
-        return this.props;
-      }
-    }; //十六进制颜色值的正则表达式 
-
-    var reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/;
-    /*16进制颜色转为RGB格式*/
-
-    function colorRgb(hex) {
-      var sColor = hex.toLowerCase();
-
-      if (sColor && reg.test(sColor)) {
-        if (sColor.length === 4) {
-          var sColorNew = "#";
-
-          for (var i = 1; i < 4; i += 1) {
-            sColorNew += sColor.slice(i, i + 1).concat(sColor.slice(i, i + 1));
-          }
-
-          sColor = sColorNew;
-        } //处理六位的颜色值  
-
-
-        var sColorChange = [];
-
-        for (var i = 1; i < 7; i += 2) {
-          sColorChange.push(parseInt("0x" + sColor.slice(i, i + 2)));
-        }
-
-        return "RGB(" + sColorChange.join(",") + ")";
-      } else {
-        return sColor;
-      }
-    }
-
-    function colorRgba(hex, a) {
-      return colorRgb(hex).replace(')', ',' + a + ')').replace('RGB', 'RGBA');
-    }
-
-    function hexTorgb(hex, out) {
-      //hex可能是“#ff0000” 也可能是 0xff0000
-      if (hex.replace) {
-        hex = parseInt(hex.replace("#", "0X"), 16);
-      }
-
-      out = out || [];
-      out[0] = (hex >> 16 & 0xFF) / 255;
-      out[1] = (hex >> 8 & 0xFF) / 255;
-      out[2] = (hex & 0xFF) / 255;
-      return out;
-    }
-
-    function hexTostring(hex) {
-      hex = hex.toString(16);
-      hex = '000000'.substr(0, 6 - hex.length) + hex;
-      return "#".concat(hex);
-    }
-
-    function rgbTohex(rgb) {
-      return (rgb[0] * 255 << 16) + (rgb[1] * 255 << 8) + rgb[2] * 255;
-    }
-
-    var color =
-    /*#__PURE__*/
-    Object.freeze({
-      colorRgb: colorRgb,
-      colorRgba: colorRgba,
-      hexTorgb: hexTorgb,
-      hexTostring: hexTostring,
-      rgbTohex: rgbTohex
-    });
-    var aRound = 360; //一圈的度数
-
-    var Cos = Math.cos;
-    var Sin = Math.sin;
-
-    var Polar =
-    /*#__PURE__*/
-    function () {
-      function Polar() {
-        var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-        var dataFrame = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-
-        _classCallCheck$$1(this, Polar);
-
-        this._opt = _.clone(opt);
-        this.dataFrame = dataFrame;
+    }, {
+      key: "resetData",
+      value: function resetData(dataFrame) {
+        this.dataFrame = dataFrame || [];
         this.axisLength = 1;
         this.dataOrg = [];
+        this.startAngle = this._opt.startAngle || -90;
+        this.allAngles = this._opt.allAngles || 360;
+        this.layoutData = [];
+      }
+    }, {
+      key: "setOption",
+      value: function setOption() {
+        var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+        Object.assign(this._opt, opt);
         this.startAngle = this._opt.startAngle;
         this.allAngles = Math.min(360, this._opt.allAngles);
         this.sort = this._opt.sort;
-        this.layoutData = []; //和dataSection一一对应的，每个值的pos,agend,dregg,centerPos
-
-        this.maxRadius = 0; //最大半径值
-
-        this.minRadius = 0; //最小半径值 
       }
+    }, {
+      key: "setDataFrame",
+      value: function setDataFrame(dataFrame) {
+        var _this2 = this;
 
-      _createClass$$1(Polar, [{
-        key: "calculateProps",
-        value: function calculateProps() {
-          var _this = this;
+        var data = [];
+        var opt = this._opt;
+        var field = opt.field;
+        var labelField = opt.groupField || opt.label.field || opt.field;
+        var radiusField = opt.node.radius;
+        dataFrame = dataFrame || this.dataFrame;
+        this.dataFrame = dataFrame;
+        this.dataOrg = [];
 
-          var axisLength = 0;
-          var percentage = 0;
-          var currentAngle = 0;
-          var opt = this._opt;
-          var angle, endAngle, cosV, sinV, midAngle, quadrant;
-          var percentFixedNum = 2;
-          var outRadius = opt.node.outRadius;
-          var innerRadius = opt.node.innerRadius;
-          var moveDis = opt.node.moveDis;
-          this.layoutData.forEach(function (item, i) {
-            if (!item.enabled) return;
-            axisLength += isNaN(+item.value) ? 0 : +item.value;
+        for (var i = 0, l = dataFrame.length; i < l; i++) {
+          var rowData = dataFrame.getRowDataAt(i);
+          var layoutData = {
+            rowData: rowData,
+            //把这一行数据给到layoutData引用起来
+            enabled: true,
+            //是否启用，显示在列表中
+            value: rowData[field],
+            label: rowData[labelField],
+            iNode: i
+          };
+          this.dataOrg.push(rowData[field]);
 
-            if (item.radiusField) {
-              _this.maxRadius = Math.max(item.radiusValue, axisLength);
-              _this.minRadius = Math.min(item.radiusValue, axisLength);
-            }
-          });
-          this.axisLength = axisLength;
-
-          if (axisLength > 0) {
-            //原始算法
-            // currentAngle = + opt.startAngle % 360;
-            // limitAngle = opt.allAngles + me.startAngle % me.allAngles;
-            //新的算法
-            //这里只是计算每个扇区的初始位置,所以这里求模就可以啦
-            currentAngle = _.euclideanModulo(this.startAngle, aRound); // opt.allAngles = opt.allAngles > 0 ? opt.allAngles : aRound;
-            // limitAngle = opt.allAngles + _.euclideanModulo(opt.startAngle, opt.allAngles);
-
-            this.layoutData.forEach(function (item, i) {
-              percentage = item.value / axisLength; //enabled为false的sec，比率就设置为0
-
-              if (!item.enabled) {
-                percentage = 0;
-              }
-
-              angle = _this.allAngles * percentage; //旧的算法
-              // endAngle = currentAngle + angle > limitAngle ? limitAngle : me.currentAngle + angle;
-
-              endAngle = currentAngle + angle;
-              midAngle = currentAngle + angle * 0.5;
-              cosV = Cos(_.degToRad(midAngle));
-              sinV = Sin(_.degToRad(midAngle));
-              cosV = cosV.toFixed(5);
-              sinV = sinV.toFixed(5);
-              quadrant = _this.getAuadrant(midAngle); //如果用户在配置中制定了半径字段,这里需要计算相对的半径比例值
-
-              if (!!item.radiusField) {
-                // var _rr = Number(item.rowData[opt.node.radius]);
-                outRadius = parseInt((opt.node.outRadius - opt.node.innerRadius) * ((item.radiusValue - _this.minRadius) / (_this.maxRadius - _this.minRadius)) + opt.node.innerRadius);
-              }
-
-              _.extend(item, {
-                outRadius: outRadius,
-                innerRadius: innerRadius,
-                startAngle: currentAngle,
-                //起始角度
-                endAngle: endAngle,
-                //结束角度
-                midAngle: midAngle,
-                //中间角度
-                moveDis: moveDis,
-                outOffsetx: moveDis * 0.7 * cosV,
-                //focus的事实外扩后圆心的坐标x
-                outOffsety: moveDis * 0.7 * sinV,
-                //focus的事实外扩后圆心的坐标y
-                centerx: outRadius * cosV,
-                centery: outRadius * sinV,
-                outx: (outRadius + moveDis) * cosV,
-                outy: (outRadius + moveDis) * sinV,
-                edgex: (outRadius + moveDis) * cosV,
-                edgey: (outRadius + moveDis) * sinV,
-                orginPercentage: percentage,
-                percentage: (percentage * 100).toFixed(percentFixedNum),
-                quadrant: quadrant,
-                //象限
-                isRightSide: quadrant == 1 || quadrant == 4 ? 1 : 0,
-                cosV: cosV,
-                sinV: sinV
-              });
-
-              currentAngle += angle;
-            });
+          if (this._isFiled(radiusField, layoutData)) {
+            layoutData.radiusField = radiusField;
+            layoutData.radiusValue = rowData[radiusField];
           }
-        }
-        /**
-         *  重设数据后,需要调用setDataFrame与calculateProps 重新计算layoutData
-         * @param {ArryObject} dataFrame 
-         */
 
-      }, {
-        key: "resetData",
-        value: function resetData(dataFrame) {
-          this.dataFrame = dataFrame || [];
-          this.axisLength = 1;
+          data.push(layoutData);
+        }
+
+        if (this.sort) {
           this.dataOrg = [];
-          this.startAngle = this._opt.startAngle || -90;
-          this.allAngles = this._opt.allAngles || 360;
-          this.layoutData = [];
-        }
-      }, {
-        key: "setOption",
-        value: function setOption() {
-          var opt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-          Object.assign(this._opt, opt);
-          this.startAngle = this._opt.startAngle;
-          this.allAngles = Math.min(360, this._opt.allAngles);
-          this.sort = this._opt.sort;
-        }
-      }, {
-        key: "setDataFrame",
-        value: function setDataFrame(dataFrame) {
-          var _this2 = this;
-
-          var data = [];
-          var opt = this._opt;
-          var field = opt.field;
-          var labelField = opt.groupField || opt.label.field || opt.field;
-          var radiusField = opt.node.radius;
-          dataFrame = dataFrame || this.dataFrame;
-          this.dataFrame = dataFrame;
-          this.dataOrg = [];
-
-          for (var i = 0, l = dataFrame.length; i < l; i++) {
-            var rowData = dataFrame.getRowDataAt(i);
-            var layoutData = {
-              rowData: rowData,
-              //把这一行数据给到layoutData引用起来
-              enabled: true,
-              //是否启用，显示在列表中
-              value: rowData[field],
-              label: rowData[labelField],
-              iNode: i
-            };
-            this.dataOrg.push(rowData[field]);
-
-            if (this._isFiled(radiusField, layoutData)) {
-              layoutData.radiusField = radiusField;
-              layoutData.radiusValue = rowData[radiusField];
+          data.sort(function (a, b) {
+            if (_this2.sort == 'asc') {
+              return a.value - b.value;
+            } else {
+              return b.value - a.value;
             }
+          }); //重新设定下ind
 
-            data.push(layoutData);
-          }
+          _.each(data, function (d, i) {
+            d.iNode = i;
 
-          if (this.sort) {
-            this.dataOrg = [];
-            data.sort(function (a, b) {
-              if (_this2.sort == 'asc') {
-                return a.value - b.value;
-              } else {
-                return b.value - a.value;
-              }
-            }); //重新设定下ind
-
-            _.each(data, function (d, i) {
-              d.iNode = i;
-
-              _this2.dataOrg.push(d);
-            });
-          }
-
-          this.layoutData = data;
-          return data;
-        }
-      }, {
-        key: "getLayoutData",
-        value: function getLayoutData() {
-          return this.layoutData || [];
-        }
-      }, {
-        key: "_isFiled",
-        value: function _isFiled(field, layoutData) {
-          return field && _.isString(field) && field in layoutData.rowData;
-        }
-      }, {
-        key: "getAuadrant",
-        value: function getAuadrant(ang) {
-          //获取象限
-          ang = _.euclideanModulo(ang, aRound);
-          var angleRatio = parseInt(ang / 90);
-          var _quadrant = 0;
-
-          switch (angleRatio) {
-            case 0:
-              _quadrant = 1;
-              break;
-
-            case 1:
-              _quadrant = 2;
-              break;
-
-            case 2:
-              _quadrant = 3;
-              break;
-
-            case 3:
-            case 4:
-              _quadrant = 4;
-              break;
-          }
-
-          return _quadrant;
-        }
-        /**
-         * 通过值或者索引返回数据集对象
-         * @param {Object} opt {val:xxx} 或 {ind:xxx} 
-         */
-
-      }, {
-        key: "_getLayoutDataOf",
-        value: function _getLayoutDataOf(opt) {
-          //先提供 具体值 和 索引的计算
-          var props = [{
-            val: "value"
-          }, {
-            ind: "iNode"
-          }];
-          var prop = props[Object.keys(opt)[0]];
-          var layoutData;
-
-          _.each(this.layoutData, function (item) {
-            if (item[prop] === opt[prop]) {
-              layoutData = item;
-            }
+            _this2.dataOrg.push(d);
           });
-
-          return layoutData || {};
         }
-      }, {
-        key: "getRadiansAtR",
-        value: function getRadiansAtR() {//基类不实现
-        }
-      }, {
-        key: "getPointsOfR",
-        value: function getPointsOfR(r, angleList) {
-          var points = [];
-
-          _.each(angleList, function (_a) {
-            //弧度
-            var _r = Math.PI * _a / 180;
-
-            var point = Polar.getPointInRadianOfR(_r, r);
-            points.push(point);
-          });
-
-          return points;
-        }
-      }]);
-
-      return Polar;
-    }();
-
-    Polar.filterPointsInRect = function (points, origin, width, height) {
-      for (var i = 0, l = points.length; i < l; i++) {
-        if (!Polar.checkPointInRect(points[i], origin, width, height)) {
-          //该点不在root rect范围内，去掉
-          points.splice(i, 1);
-          i--, l--;
-        }
+        this.layoutData = data;
+        return data;
       }
-
-      return points;
-    };
-
-    Polar.checkPointInRect = function (p, origin, width, height) {
-      var _tansRoot = {
-        x: p.x + origin.x,
-        y: p.y + origin.y
-      };
-      return !(_tansRoot.x < 0 || _tansRoot.x > width || _tansRoot.y < 0 || _tansRoot.y > height);
-    }; //检查由n个相交点分割出来的圆弧是否在rect内
-
-
-    Polar.checkArcInRect = function (arc, r, origin, width, height) {
-      var start = arc[0];
-      var to = arc[1];
-      var differenceR = to.radian - start.radian;
-
-      if (to.radian < start.radian) {
-        differenceR = Math.PI * 2 + to.radian - start.radian;
+    }, {
+      key: "getLayoutData",
+      value: function getLayoutData() {
+        return this.layoutData || [];
       }
-
-      var middleR = (start.radian + differenceR / 2) % (Math.PI * 2);
-      return Polar.checkPointInRect(Polar.getPointInRadianOfR(middleR, r), origin, width, height);
-    }; //获取某个点相对圆心的弧度值
-
-
-    Polar.getRadianInPoint = function (point) {
-      var pi2 = Math.PI * 2;
-      return (Math.atan2(point.y, point.x) + pi2) % pi2;
-    }; //获取某个弧度方向，半径为r的时候的point坐标点位置
-
-
-    Polar.getPointInRadianOfR = function (radian, r) {
-      var pi = Math.PI;
-      var x = Math.cos(radian) * r;
-
-      if (radian == pi / 2 || radian == pi * 3 / 2) {
-        //90度或者270度的时候
-        x = 0;
+    }, {
+      key: "_isFiled",
+      value: function _isFiled(field, layoutData) {
+        return field && _.isString(field) && field in layoutData.rowData;
       }
+    }, {
+      key: "getAuadrant",
+      value: function getAuadrant(ang) {
+        //获取象限
+        ang = _.euclideanModulo(ang, aRound);
+        var angleRatio = parseInt(ang / 90);
+        var _quadrant = 0;
 
-      var y = Math.sin(radian) * r;
+        switch (angleRatio) {
+          case 0:
+            _quadrant = 1;
+            break;
 
-      if (radian % pi == 0) {
-        y = 0;
-      }
+          case 1:
+            _quadrant = 2;
+            break;
 
-      return {
-        x: x,
-        y: y
-      };
-    };
+          case 2:
+            _quadrant = 3;
+            break;
 
-    Polar.getROfNum = function (num, dataSection, width, height) {
-      var r = 0;
-
-      var maxNum = _.max(dataSection);
-
-      var minNum = 0; //Math.min( this.rAxis.dataSection );
-
-      var maxR = parseInt(Math.max(width, height) / 2);
-      r = maxR * ((num - minNum) / (maxNum - minNum));
-      return r;
-    };
-    /**
-     * Canvax
-     *
-     * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
-     *
-     * canvas 上委托的事件管理
-     */
-
-
-    var Event = function Event(evt) {
-      var eventType = "CanvaxEvent";
-
-      if (_.isString(evt)) {
-        eventType = evt;
-      }
-
-      if (_.isObject(evt) && evt.type) {
-        eventType = evt.type;
-
-        _.extend(this, evt);
-      }
-
-      this.target = null;
-      this.currentTarget = null;
-      this.type = eventType;
-      this.point = null;
-      var me = this;
-      this._stopPropagation = false; //默认不阻止事件冒泡
-
-      this.stopPropagation = function () {
-        me._stopPropagation = true;
-
-        if (_.isObject(evt)) {
-          evt._stopPropagation = true;
-        }
-      };
-
-      this._preventDefault = false; //是否组织事件冒泡
-
-      this.preventDefault = function () {
-        me._preventDefault = true;
-
-        if (_.isObject(evt)) {
-          evt._preventDefault = true;
-        }
-      };
-    };
-    /**
-     * Canvax
-     *
-     * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
-     *
-     * canvas 上委托的事件管理
-     */
-
-
-    var _mouseEvents = 'mousedown mouseup mouseover mousemove mouseout click dblclick wheel';
-    var types = {
-      _types: _mouseEvents.split(/,| /),
-      register: function register(evts) {
-        if (!evts) {
-          return;
+          case 3:
+          case 4:
+            _quadrant = 4;
+            break;
         }
 
-        if (_.isString(evts)) {
-          evts = evts.split(/,| /);
-        }
-
-        this._types = _mouseEvents.split(/,| /).concat(evts);
-      },
-      get: function get() {
-        return this._types;
+        return _quadrant;
       }
-    };
-    /**
-     * Canvax
-     *
-     * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
-     *
-     * 事件管理类
-     */
-
-    /**
-     * 构造函数.
-     * @name EventDispatcher
-     * @class EventDispatcher类是可调度事件的类的基类，它允许显示列表上的任何对象都是一个事件目标。
-     */
-
-    var Manager = function Manager() {
-      //事件映射表，格式为：{type1:[listener1, listener2], type2:[listener3, listener4]}
-      this._eventMap = {};
-    };
-
-    Manager.prototype = {
       /**
-       * 判断events里面是否有用户交互事件
+       * 通过值或者索引返回数据集对象
+       * @param {Object} opt {val:xxx} 或 {ind:xxx} 
        */
-      _setEventEnable: function _setEventEnable() {
-        var hasInteractionEvent = false;
 
-        for (var t in this._eventMap) {
-          if (_.indexOf(types.get(), t) > -1) {
-            hasInteractionEvent = true;
+    }, {
+      key: "_getLayoutDataOf",
+      value: function _getLayoutDataOf(opt) {
+        //先提供 具体值 和 索引的计算
+        var props = [{
+          val: "value"
+        }, {
+          ind: "iNode"
+        }];
+        var prop = props[Object.keys(opt)[0]];
+        var layoutData;
+
+        _.each(this.layoutData, function (item) {
+          if (item[prop] === opt[prop]) {
+            layoutData = item;
           }
-        }
-
-        this._eventEnabled = hasInteractionEvent;
-      },
-
-      /*
-       * 注册事件侦听器对象，以使侦听器能够接收事件通知。
-       */
-      _addEventListener: function _addEventListener(_type, listener) {
-        if (typeof listener != "function") {
-          //listener必须是个function呐亲
-          return false;
-        }
-
-        var addResult = true;
-        var self = this;
-        var types$$1 = _type;
-
-        if (_.isString(_type)) {
-          types$$1 = _type.split(/,| /);
-        }
-
-        _.each(types$$1, function (type) {
-          var map = self._eventMap[type];
-
-          if (!map) {
-            map = self._eventMap[type] = [];
-            map.push(listener); //self._eventEnabled = true;
-
-            self._setEventEnable();
-
-            return true;
-          }
-
-          if (_.indexOf(map, listener) == -1) {
-            map.push(listener); //self._eventEnabled = true;
-
-            self._setEventEnable();
-
-            return true;
-          }
-
-          addResult = false;
         });
 
-        return addResult;
-      },
+        return layoutData || {};
+      }
+    }, {
+      key: "getRadiansAtR",
+      value: function getRadiansAtR() {//基类不实现
+      }
+    }, {
+      key: "getPointsOfR",
+      value: function getPointsOfR(r, angleList) {
+        var points = [];
 
-      /**
-       * 删除事件侦听器。
-       */
-      _removeEventListener: function _removeEventListener(type, listener) {
-        if (arguments.length == 1) return this.removeEventListenerByType(type);
-        var map = this._eventMap[type];
+        _.each(angleList, function (_a) {
+          //弧度
+          var _r = Math.PI * _a / 180;
 
-        if (!map) {
-          return false;
+          var point = Polar.getPointInRadianOfR(_r, r);
+          points.push(point);
+        });
+
+        return points;
+      }
+    }]);
+
+    return Polar;
+  }();
+
+  Polar.filterPointsInRect = function (points, origin, width, height) {
+    for (var i = 0, l = points.length; i < l; i++) {
+      if (!Polar.checkPointInRect(points[i], origin, width, height)) {
+        //该点不在root rect范围内，去掉
+        points.splice(i, 1);
+        i--, l--;
+      }
+    }
+    return points;
+  };
+
+  Polar.checkPointInRect = function (p, origin, width, height) {
+    var _tansRoot = {
+      x: p.x + origin.x,
+      y: p.y + origin.y
+    };
+    return !(_tansRoot.x < 0 || _tansRoot.x > width || _tansRoot.y < 0 || _tansRoot.y > height);
+  }; //检查由n个相交点分割出来的圆弧是否在rect内
+
+
+  Polar.checkArcInRect = function (arc, r, origin, width, height) {
+    var start = arc[0];
+    var to = arc[1];
+    var differenceR = to.radian - start.radian;
+
+    if (to.radian < start.radian) {
+      differenceR = Math.PI * 2 + to.radian - start.radian;
+    }
+    var middleR = (start.radian + differenceR / 2) % (Math.PI * 2);
+    return Polar.checkPointInRect(Polar.getPointInRadianOfR(middleR, r), origin, width, height);
+  }; //获取某个点相对圆心的弧度值
+
+
+  Polar.getRadianInPoint = function (point) {
+    var pi2 = Math.PI * 2;
+    return (Math.atan2(point.y, point.x) + pi2) % pi2;
+  }; //获取某个弧度方向，半径为r的时候的point坐标点位置
+
+
+  Polar.getPointInRadianOfR = function (radian, r) {
+    var pi = Math.PI;
+    var x = Math.cos(radian) * r;
+
+    if (radian == pi / 2 || radian == pi * 3 / 2) {
+      //90度或者270度的时候
+      x = 0;
+    }
+    var y = Math.sin(radian) * r;
+
+    if (radian % pi == 0) {
+      y = 0;
+    }
+    return {
+      x: x,
+      y: y
+    };
+  };
+
+  Polar.getROfNum = function (num, dataSection, width, height) {
+    var r = 0;
+
+    var maxNum = _.max(dataSection);
+
+    var minNum = 0; //Math.min( this.rAxis.dataSection );
+
+    var maxR = parseInt(Math.max(width, height) / 2);
+    r = maxR * ((num - minNum) / (maxNum - minNum));
+    return r;
+  };
+
+  /**
+   * Canvax
+   *
+   * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
+   *
+   * canvas 上委托的事件管理
+   */
+
+  var Event = function Event(evt) {
+    var eventType = "CanvaxEvent";
+
+    if (_.isString(evt)) {
+      eventType = evt;
+    }
+
+    if (_.isObject(evt) && evt.type) {
+      eventType = evt.type;
+
+      _.extend(this, evt);
+    }
+    this.target = null;
+    this.currentTarget = null;
+    this.type = eventType;
+    this.point = null;
+    var me = this;
+    this._stopPropagation = false; //默认不阻止事件冒泡
+
+    this.stopPropagation = function () {
+      me._stopPropagation = true;
+
+      if (_.isObject(evt)) {
+        evt._stopPropagation = true;
+      }
+    };
+
+    this._preventDefault = false; //是否组织事件冒泡
+
+    this.preventDefault = function () {
+      me._preventDefault = true;
+
+      if (_.isObject(evt)) {
+        evt._preventDefault = true;
+      }
+    };
+  };
+
+  /**
+   * Canvax
+   *
+   * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
+   *
+   * canvas 上委托的事件管理
+   */
+  var _mouseEvents = 'mousedown mouseup mouseover mousemove mouseout click dblclick wheel';
+  var types = {
+    _types: _mouseEvents.split(/,| /),
+    register: function register(evts) {
+      if (!evts) {
+        return;
+      }
+
+      if (_.isString(evts)) {
+        evts = evts.split(/,| /);
+      }
+      this._types = _mouseEvents.split(/,| /).concat(evts);
+    },
+    get: function get() {
+      return this._types;
+    }
+  };
+
+  /**
+   * Canvax
+   *
+   * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
+   *
+   * 事件管理类
+   */
+  /**
+   * 构造函数.
+   * @name EventDispatcher
+   * @class EventDispatcher类是可调度事件的类的基类，它允许显示列表上的任何对象都是一个事件目标。
+   */
+
+  var Manager = function Manager() {
+    //事件映射表，格式为：{type1:[listener1, listener2], type2:[listener3, listener4]}
+    this._eventMap = {};
+  };
+
+  Manager.prototype = {
+    /**
+     * 判断events里面是否有用户交互事件
+     */
+    _setEventEnable: function _setEventEnable() {
+      var hasInteractionEvent = false;
+
+      for (var t in this._eventMap) {
+        if (_.indexOf(types.get(), t) > -1) {
+          hasInteractionEvent = true;
         }
+      }
+      this._eventEnabled = hasInteractionEvent;
+    },
 
-        for (var i = 0; i < map.length; i++) {
-          var li = map[i];
-
-          if (li === listener) {
-            map.splice(i, 1);
-
-            if (map.length == 0) {
-              delete this._eventMap[type];
-
-              this._setEventEnable(); //如果这个如果这个时候child没有任何事件侦听
-
-              /*
-              if(_.isEmpty(this._eventMap)){
-                  //那么该元素不再接受事件的检测
-                  this._eventEnabled = false;
-              }
-              */
-
-            }
-
-            return true;
-          }
-        }
-
+    /*
+     * 注册事件侦听器对象，以使侦听器能够接收事件通知。
+     */
+    _addEventListener: function _addEventListener(_type, listener) {
+      if (typeof listener != "function") {
+        //listener必须是个function呐亲
         return false;
-      },
+      }
 
-      /**
-       * 删除指定类型的所有事件侦听器。
-       */
-      _removeEventListenerByType: function _removeEventListenerByType(type) {
-        var map = this._eventMap[type];
+      var addResult = true;
+      var self = this;
+      var types$$1 = _type;
+
+      if (_.isString(_type)) {
+        types$$1 = _type.split(/,| /);
+      }
+
+      _.each(types$$1, function (type) {
+        var map = self._eventMap[type];
 
         if (!map) {
-          delete this._eventMap[type];
+          map = self._eventMap[type] = [];
+          map.push(listener); //self._eventEnabled = true;
 
-          this._setEventEnable(); //如果这个如果这个时候child没有任何事件侦听
-
-          /*
-          if(_.isEmpty(this._eventMap)){
-              //那么该元素不再接受事件的检测
-              this._eventEnabled = false;
-          }
-          */
-
+          self._setEventEnable();
 
           return true;
         }
 
+        if (_.indexOf(map, listener) == -1) {
+          map.push(listener); //self._eventEnabled = true;
+
+          self._setEventEnable();
+
+          return true;
+        }
+
+        addResult = false;
+      });
+
+      return addResult;
+    },
+
+    /**
+     * 删除事件侦听器。
+     */
+    _removeEventListener: function _removeEventListener(type, listener) {
+      if (arguments.length == 1) return this.removeEventListenerByType(type);
+      var map = this._eventMap[type];
+
+      if (!map) {
         return false;
-      },
+      }
 
-      /**
-       * 删除所有事件侦听器。
-       */
-      _removeAllEventListeners: function _removeAllEventListeners() {
-        this._eventMap = {};
-        this._eventEnabled = false;
-      },
+      for (var i = 0; i < map.length; i++) {
+        var li = map[i];
 
-      /**
-      * 派发事件，调用事件侦听器。
-      */
-      _dispatchEvent: function _dispatchEvent(e) {
-        var map = this._eventMap[e.type];
+        if (li === listener) {
+          map.splice(i, 1);
 
-        if (map) {
-          if (!e.target) e.target = this;
-          if (!e.currentTarget) e.currentTarget = this;
-          map = map.slice();
+          if (map.length == 0) {
+            delete this._eventMap[type];
 
-          for (var i = 0; i < map.length; i++) {
-            var listener = map[i];
+            this._setEventEnable(); //如果这个如果这个时候child没有任何事件侦听
 
-            if (typeof listener == "function") {
-              listener.call(this, e);
+            /*
+            if(_.isEmpty(this._eventMap)){
+                //那么该元素不再接受事件的检测
+                this._eventEnabled = false;
             }
-          }
-        }
+            */
 
-        if (!e._stopPropagation) {
-          //向上冒泡
-          if (this.parent) {
-            e.currentTarget = this.parent;
-
-            this.parent._dispatchEvent(e);
           }
+
+          return true;
         }
+      }
+
+      return false;
+    },
+
+    /**
+     * 删除指定类型的所有事件侦听器。
+     */
+    _removeEventListenerByType: function _removeEventListenerByType(type) {
+      var map = this._eventMap[type];
+
+      if (!map) {
+        delete this._eventMap[type];
+
+        this._setEventEnable(); //如果这个如果这个时候child没有任何事件侦听
+
+        /*
+        if(_.isEmpty(this._eventMap)){
+            //那么该元素不再接受事件的检测
+            this._eventEnabled = false;
+        }
+        */
+
 
         return true;
-      },
-
-      /**
-         * 检查是否为指定事件类型注册了任何侦听器。
-         */
-      _hasEventListener: function _hasEventListener(type) {
-        var map = this._eventMap[type];
-        return map != null && map.length > 0;
-      }
-    };
-
-    var Dispatcher =
-    /*#__PURE__*/
-    function (_Manager) {
-      _inherits$$1(Dispatcher, _Manager);
-
-      function Dispatcher() {
-        _classCallCheck$$1(this, Dispatcher);
-
-        return _possibleConstructorReturn$$1(this, _getPrototypeOf$$1(Dispatcher).call(this));
       }
 
-      _createClass$$1(Dispatcher, [{
-        key: "on",
-        value: function on(type, listener) {
-          this._addEventListener(type, listener);
+      return false;
+    },
 
-          return this;
+    /**
+     * 删除所有事件侦听器。
+     */
+    _removeAllEventListeners: function _removeAllEventListeners() {
+      this._eventMap = {};
+      this._eventEnabled = false;
+    },
+
+    /**
+    * 派发事件，调用事件侦听器。
+    */
+    _dispatchEvent: function _dispatchEvent(e) {
+      var map = this._eventMap[e.type];
+
+      if (map) {
+        if (!e.target) e.target = this;
+        if (!e.currentTarget) e.currentTarget = this;
+        map = map.slice();
+
+        for (var i = 0; i < map.length; i++) {
+          var listener = map[i];
+
+          if (typeof listener == "function") {
+            listener.call(this, e);
+          }
         }
-      }, {
-        key: "addEventListener",
-        value: function addEventListener(type, listener) {
-          this._addEventListener(type, listener);
+      }
 
-          return this;
+      if (!e._stopPropagation) {
+        //向上冒泡
+        if (this.parent) {
+          e.currentTarget = this.parent;
+
+          this.parent._dispatchEvent(e);
         }
-      }, {
-        key: "un",
-        value: function un(type, listener) {
-          this._removeEventListener(type, listener);
+      }
 
-          return this;
-        }
-      }, {
-        key: "removeEventListener",
-        value: function removeEventListener(type, listener) {
-          this._removeEventListener(type, listener);
+      return true;
+    },
 
-          return this;
-        }
-      }, {
-        key: "removeEventListenerByType",
-        value: function removeEventListenerByType(type) {
-          this._removeEventListenerByType(type);
+    /**
+       * 检查是否为指定事件类型注册了任何侦听器。
+       */
+    _hasEventListener: function _hasEventListener(type) {
+      var map = this._eventMap[type];
+      return map != null && map.length > 0;
+    }
+  };
 
-          return this;
-        }
-      }, {
-        key: "removeAllEventListeners",
-        value: function removeAllEventListeners() {
-          this._removeAllEventListeners();
+  var Dispatcher =
+  /*#__PURE__*/
+  function (_Manager) {
+    _inherits(Dispatcher, _Manager);
 
-          return this;
-        } //params 要传给evt的eventhandler处理函数的参数，会被merge到Canvax event中
+    function Dispatcher() {
+      _classCallCheck(this, Dispatcher);
 
-      }, {
-        key: "fire",
-        value: function fire(eventType, params) {
-          //{currentTarget,point,target,type,_stopPropagation}
-          var e = new Event(eventType);
+      return _possibleConstructorReturn(this, _getPrototypeOf(Dispatcher).call(this));
+    }
 
-          if (params) {
-            for (var p in params) {
-              if (p != "type") {
-                e[p] = params[p];
-              }
+    _createClass(Dispatcher, [{
+      key: "on",
+      value: function on(type, listener) {
+        this._addEventListener(type, listener);
+
+        return this;
+      }
+    }, {
+      key: "addEventListener",
+      value: function addEventListener(type, listener) {
+        this._addEventListener(type, listener);
+
+        return this;
+      }
+    }, {
+      key: "un",
+      value: function un(type, listener) {
+        this._removeEventListener(type, listener);
+
+        return this;
+      }
+    }, {
+      key: "removeEventListener",
+      value: function removeEventListener(type, listener) {
+        this._removeEventListener(type, listener);
+
+        return this;
+      }
+    }, {
+      key: "removeEventListenerByType",
+      value: function removeEventListenerByType(type) {
+        this._removeEventListenerByType(type);
+
+        return this;
+      }
+    }, {
+      key: "removeAllEventListeners",
+      value: function removeAllEventListeners() {
+        this._removeAllEventListeners();
+
+        return this;
+      } //params 要传给evt的eventhandler处理函数的参数，会被merge到Canvax event中
+
+    }, {
+      key: "fire",
+      value: function fire(eventType, params) {
+        //{currentTarget,point,target,type,_stopPropagation}
+        var e = new Event(eventType);
+
+        if (params) {
+          for (var p in params) {
+            if (p != "type") {
+              e[p] = params[p];
             }
           }
-
-          var me = this;
-
-          _.each(eventType.split(" "), function (eType) {
-            //然后，currentTarget要修正为自己
-            e.currentTarget = me;
-            me.dispatchEvent(e);
-          });
-
-          return this;
         }
-      }, {
-        key: "dispatchEvent",
-        value: function dispatchEvent(evt) {
-          //this instanceof DisplayObjectContainer ==> this.children
-          //TODO: 这里import DisplayObjectContainer 的话，在displayObject里面的import EventDispatcher from "../event/EventDispatcher";
-          //会得到一个undefined，感觉是成了一个循环依赖的问题，所以这里换用简单的判断来判断自己是一个容易，拥有children
-          if (this.children && evt.point) {
-            var target = this.getObjectsUnderPoint(evt.point, 1)[0];
+        var me = this;
 
-            if (target) {
-              target.dispatchEvent(evt);
-            }
+        _.each(eventType.split(" "), function (eType) {
+          //然后，currentTarget要修正为自己
+          e.currentTarget = me;
+          me.dispatchEvent(e);
+        });
 
-            return;
+        return this;
+      }
+    }, {
+      key: "dispatchEvent",
+      value: function dispatchEvent(evt) {
+        //this instanceof DisplayObjectContainer ==> this.children
+        //TODO: 这里import DisplayObjectContainer 的话，在displayObject里面的import EventDispatcher from "../event/EventDispatcher";
+        //会得到一个undefined，感觉是成了一个循环依赖的问题，所以这里换用简单的判断来判断自己是一个容易，拥有children
+        if (this.children && evt.point) {
+          var target = this.getObjectsUnderPoint(evt.point, 1)[0];
+
+          if (target) {
+            target.dispatchEvent(evt);
           }
 
-          if (this.context && evt.type == "mouseover") {
-            //记录dispatchEvent之前的心跳
-            var preHeartBeat = this._heartBeatNum;
-            var pregAlpha = this.context.$model.globalAlpha;
+          return;
+        }
 
-            this._dispatchEvent(evt);
-
-            if (preHeartBeat != this._heartBeatNum) {
-              this._hoverClass = true;
-
-              if (this.hoverClone) {
-                var canvax = this.getStage().parent; //然后clone一份obj，添加到_bufferStage 中
-
-                var activShape = this.clone(true);
-                activShape._transform = this.getConcatenatedMatrix();
-
-                canvax._bufferStage.addChildAt(activShape, 0); //然后把自己隐藏了
-                //用一个临时变量_globalAlpha 来存储自己之前的alpha
-
-
-                this._globalAlpha = pregAlpha;
-                this.context.globalAlpha = 0;
-              }
-            }
-
-            return;
-          }
+        if (this.context && evt.type == "mouseover") {
+          //记录dispatchEvent之前的心跳
+          var preHeartBeat = this._heartBeatNum;
+          var pregAlpha = this.context.$model.globalAlpha;
 
           this._dispatchEvent(evt);
 
-          if (this.context && evt.type == "mouseout") {
-            if (this._hoverClass && this.hoverClone) {
-              //说明刚刚over的时候有添加样式
-              var canvax = this.getStage().parent;
-              this._hoverClass = false;
+          if (preHeartBeat != this._heartBeatNum) {
+            this._hoverClass = true;
 
-              canvax._bufferStage.removeChildById(this.id);
+            if (this.hoverClone) {
+              var canvax = this.getStage().parent; //然后clone一份obj，添加到_bufferStage 中
 
-              if (this._globalAlpha) {
-                this.context.globalAlpha = this._globalAlpha;
-                delete this._globalAlpha;
-              }
+              var activShape = this.clone(true);
+              activShape._transform = this.getConcatenatedMatrix();
+
+              canvax._bufferStage.addChildAt(activShape, 0); //然后把自己隐藏了
+              //用一个临时变量_globalAlpha 来存储自己之前的alpha
+
+
+              this._globalAlpha = pregAlpha;
+              this.context.globalAlpha = 0;
             }
           }
 
-          return this;
+          return;
         }
-      }, {
-        key: "hasEvent",
-        value: function hasEvent(type) {
-          return this._hasEventListener(type);
+
+        this._dispatchEvent(evt);
+
+        if (this.context && evt.type == "mouseout") {
+          if (this._hoverClass && this.hoverClone) {
+            //说明刚刚over的时候有添加样式
+            var canvax = this.getStage().parent;
+            this._hoverClass = false;
+
+            canvax._bufferStage.removeChildById(this.id);
+
+            if (this._globalAlpha) {
+              this.context.globalAlpha = this._globalAlpha;
+              delete this._globalAlpha;
+            }
+          }
         }
-      }, {
-        key: "hasEventListener",
-        value: function hasEventListener(type) {
-          return this._hasEventListener(type);
-        }
-      }, {
-        key: "hover",
-        value: function hover(overFun, outFun) {
-          this.on("mouseover", overFun);
-          this.on("mouseout", outFun);
-          return this;
-        }
-      }, {
-        key: "once",
-        value: function once(type, listener) {
-          var me = this;
 
-          var onceHandle = function onceHandle() {
-            listener.apply(me, arguments);
-            this.un(type, onceHandle);
-          };
-
-          this.on(type, onceHandle);
-          return this;
-        }
-      }]);
-
-      return Dispatcher;
-    }(Manager);
-    /**
-     * Canvax
-     *
-     * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
-     *
-     */
-
-
-    var _hammerEventTypes = ["pan", "panstart", "panmove", "panend", "pancancel", "panleft", "panright", "panup", "pandown", "press", "pressup", "swipe", "swipeleft", "swiperight", "swipeup", "swipedown", "tap"];
-
-    var Handler = function Handler(canvax, opt) {
-      this.canvax = canvax;
-      this.curPoints = [{
-        x: 0,
-        y: 0
-      }]; //X,Y 的 point 集合, 在touch下面则为 touch的集合，只是这个touch被添加了对应的x，y
-      //当前激活的点对应的obj，在touch下可以是个数组,和上面的 curPoints 对应
-
-      this.curPointsTarget = [];
-      this._touching = false; //正在拖动，前提是_touching=true
-
-      this._draging = false; //当前的鼠标状态
-
-      this._cursor = "default";
-      this.target = this.canvax.view; //mouse体统中不需要配置drag,touch中会用到第三方的touch库，每个库的事件名称可能不一样，
-      //就要这里配置，默认实现的是hammerjs的,所以默认可以在项目里引入hammerjs http://hammerjs.github.io/
-
-      this.drag = {
-        start: "panstart",
-        move: "panmove",
-        end: "panend"
-      };
-
-      _.extend(true, this, opt);
-    }; //这样的好处是document.compareDocumentPosition只会在定义的时候执行一次。
-
-
-    var contains = document && document.compareDocumentPosition ? function (parent, child) {
-      if (!child) {
-        return false;
+        return this;
       }
-
-      return !!(parent.compareDocumentPosition(child) & 16);
-    } : function (parent, child) {
-      if (!child) {
-        return false;
+    }, {
+      key: "hasEvent",
+      value: function hasEvent(type) {
+        return this._hasEventListener(type);
       }
+    }, {
+      key: "hasEventListener",
+      value: function hasEventListener(type) {
+        return this._hasEventListener(type);
+      }
+    }, {
+      key: "hover",
+      value: function hover(overFun, outFun) {
+        this.on("mouseover", overFun);
+        this.on("mouseout", outFun);
+        return this;
+      }
+    }, {
+      key: "once",
+      value: function once(type, listener) {
+        var me = this;
 
-      return child !== child && (parent.contains ? parent.contains(child) : true);
+        var onceHandle = function onceHandle() {
+          listener.apply(me, arguments);
+          this.un(type, onceHandle);
+        };
+
+        this.on(type, onceHandle);
+        return this;
+      }
+    }]);
+
+    return Dispatcher;
+  }(Manager);
+
+  /**
+   * Canvax
+   *
+   * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
+   *
+   */
+  var _hammerEventTypes = ["pan", "panstart", "panmove", "panend", "pancancel", "panleft", "panright", "panup", "pandown", "press", "pressup", "swipe", "swipeleft", "swiperight", "swipeup", "swipedown", "tap"];
+
+  var Handler = function Handler(canvax, opt) {
+    this.canvax = canvax;
+    this.curPoints = [{
+      x: 0,
+      y: 0
+    }]; //X,Y 的 point 集合, 在touch下面则为 touch的集合，只是这个touch被添加了对应的x，y
+    //当前激活的点对应的obj，在touch下可以是个数组,和上面的 curPoints 对应
+
+    this.curPointsTarget = [];
+    this._touching = false; //正在拖动，前提是_touching=true
+
+    this._draging = false; //当前的鼠标状态
+
+    this._cursor = "default";
+    this.target = this.canvax.view; //mouse体统中不需要配置drag,touch中会用到第三方的touch库，每个库的事件名称可能不一样，
+    //就要这里配置，默认实现的是hammerjs的,所以默认可以在项目里引入hammerjs http://hammerjs.github.io/
+
+    this.drag = {
+      start: "panstart",
+      move: "panmove",
+      end: "panend"
     };
-    Handler.prototype = {
-      init: function init() {
-        //依次添加上浏览器的自带事件侦听
-        var me = this;
 
-        if (me.target.nodeType == undefined) {
-          //如果target.nodeType没有的话， 说明该target为一个jQuery对象 or kissy 对象or hammer对象
-          //即为第三方库，那么就要对接第三方库的事件系统。默认实现hammer的大部分事件系统
-          types.register(_hammerEventTypes);
+    _.extend(true, this, opt);
+  }; //这样的好处是document.compareDocumentPosition只会在定义的时候执行一次。
+
+
+  var contains = document && document.compareDocumentPosition ? function (parent, child) {
+    if (!child) {
+      return false;
+    }
+    return !!(parent.compareDocumentPosition(child) & 16);
+  } : function (parent, child) {
+    if (!child) {
+      return false;
+    }
+
+    return child !== child && (parent.contains ? parent.contains(child) : true);
+  };
+  Handler.prototype = {
+    init: function init() {
+      //依次添加上浏览器的自带事件侦听
+      var me = this;
+
+      if (me.target.nodeType == undefined) {
+        //如果target.nodeType没有的话， 说明该target为一个jQuery对象 or kissy 对象or hammer对象
+        //即为第三方库，那么就要对接第三方库的事件系统。默认实现hammer的大部分事件系统
+        types.register(_hammerEventTypes);
+      }
+
+      _.each(types.get(), function (type) {
+        //不再关心浏览器环境是否 'ontouchstart' in window 
+        //而是直接只管传给事件模块的是一个原生dom还是 jq对象 or hammer对象等
+        if (me.target.nodeType == 1) {
+          $.addEvent(me.target, type, function (e) {
+            me.__mouseHandler(e);
+          });
+        } else {
+          me.target.on(type, function (e) {
+            me.__libHandler(e);
+          });
         }
+      });
+    },
 
-        _.each(types.get(), function (type) {
-          //不再关心浏览器环境是否 'ontouchstart' in window 
-          //而是直接只管传给事件模块的是一个原生dom还是 jq对象 or hammer对象等
-          if (me.target.nodeType == 1) {
-            $.addEvent(me.target, type, function (e) {
-              me.__mouseHandler(e);
-            });
-          } else {
-            me.target.on(type, function (e) {
-              me.__libHandler(e);
-            });
+    /*
+    * 原生事件系统------------------------------------------------begin
+    * 鼠标事件处理函数
+    **/
+    __mouseHandler: function __mouseHandler(e) {
+      var me = this;
+      var root = me.canvax;
+      root.updateViewOffset();
+      me.curPoints = [{
+        x: $.pageX(e) - root.viewOffset.left,
+        y: $.pageY(e) - root.viewOffset.top
+      }]; //理论上来说，这里拿到point了后，就要计算这个point对应的target来push到curPointsTarget里，
+      //但是因为在drag的时候其实是可以不用计算对应target的。
+      //所以放在了下面的me.__getcurPointsTarget( e , curMousePoint );常规mousemove中执行
+
+      var curMousePoint = me.curPoints[0];
+      var curMouseTarget = me.curPointsTarget[0];
+
+      if ( //这几个事件触发过来，是一定需要检测 curMouseTarget 的
+      _.indexOf(['mousedown', 'mouseover', 'click'], e.type) > -1 && !curMouseTarget) {
+        if (!curMouseTarget) {
+          var obj = root.getObjectsUnderPoint(curMousePoint, 1)[0];
+
+          if (obj) {
+            me.curPointsTarget = [obj];
           }
-        });
-      },
+        }
+        curMouseTarget = me.curPointsTarget[0];
+      }
+      //mousedown的时候 如果 curMouseTarget.dragEnabled 为true。就要开始准备drag了
 
-      /*
-      * 原生事件系统------------------------------------------------begin
-      * 鼠标事件处理函数
-      **/
-      __mouseHandler: function __mouseHandler(e) {
-        var me = this;
-        var root = me.canvax;
-        root.updateViewOffset();
-        me.curPoints = [{
-          x: $.pageX(e) - root.viewOffset.left,
-          y: $.pageY(e) - root.viewOffset.top
-        }]; //理论上来说，这里拿到point了后，就要计算这个point对应的target来push到curPointsTarget里，
-        //但是因为在drag的时候其实是可以不用计算对应target的。
-        //所以放在了下面的me.__getcurPointsTarget( e , curMousePoint );常规mousemove中执行
+      if (e.type == "mousedown") {
+        //如果curTarget 的数组为空或者第一个为false ，，，
+        if (curMouseTarget && curMouseTarget.dragEnabled) {
+          //鼠标事件已经摸到了一个
+          me._touching = true;
+        }
+      }
 
-        var curMousePoint = me.curPoints[0];
-        var curMouseTarget = me.curPointsTarget[0];
+      if (e.type == "mouseup" || e.type == "mouseout" && !contains(root.view, e.toElement || e.relatedTarget)) {
+        if (me._draging == true) {
+          //说明刚刚在拖动
+          me._dragEnd(e, curMouseTarget, 0);
 
-        if ( //这几个事件触发过来，是一定需要检测 curMouseTarget 的
-        _.indexOf(['mousedown', 'mouseover', 'click'], e.type) > -1 && !curMouseTarget) {
-          if (!curMouseTarget) {
-            var obj = root.getObjectsUnderPoint(curMousePoint, 1)[0];
+          curMouseTarget.fire("dragend");
+        }
+        me._draging = false;
+        me._touching = false;
+      }
 
-            if (obj) {
-              me.curPointsTarget = [obj];
+      if (e.type == "mouseout") {
+        if (!contains(root.view, e.toElement || e.relatedTarget)) {
+          me.__getcurPointsTarget(e, curMousePoint, true);
+        }
+      } else if (e.type == "mousemove") {
+        //|| e.type == "mousedown" ){
+        //拖动过程中就不在做其他的mouseover检测，drag优先
+        if (me._touching && e.type == "mousemove" && curMouseTarget) {
+          //说明正在拖动啊
+          if (!me._draging) {
+            //begin drag
+            curMouseTarget.fire("dragstart"); //有可能该child没有hover style
+
+            if (!curMouseTarget._globalAlpha) {
+              curMouseTarget._globalAlpha = curMouseTarget.context.$model.globalAlpha;
             }
+
+            curMouseTarget.context.globalAlpha = 0; //然后克隆一个副本到activeStage
+
+            var cloneObject = me._clone2hoverStage(curMouseTarget, 0);
+
+            cloneObject.context.globalAlpha = curMouseTarget._globalAlpha;
+          } else {
+            //drag move ing
+            me._dragIngHander(e, curMouseTarget, 0);
           }
+          me._draging = true;
+        } else {
+          //常规mousemove检测
+          //move事件中，需要不停的搜索target，这个开销挺大，
+          //后续可以优化，加上和帧率相当的延迟处理
+          me.__getcurPointsTarget(e, curMousePoint);
+        }
+      } else {
+        //其他的事件就直接在target上面派发事件
+        var child = curMouseTarget;
 
-          curMouseTarget = me.curPointsTarget[0];
-        } //mousedown的时候 如果 curMouseTarget.dragEnabled 为true。就要开始准备drag了
-
-
-        if (e.type == "mousedown") {
-          //如果curTarget 的数组为空或者第一个为false ，，，
-          if (curMouseTarget && curMouseTarget.dragEnabled) {
-            //鼠标事件已经摸到了一个
-            me._touching = true;
-          }
+        if (!child) {
+          child = root;
         }
 
-        if (e.type == "mouseup" || e.type == "mouseout" && !contains(root.view, e.toElement || e.relatedTarget)) {
-          if (me._draging == true) {
-            //说明刚刚在拖动
-            me._dragEnd(e, curMouseTarget, 0);
+        me.__dispatchEventInChilds(e, [child]);
 
-            curMouseTarget.fire("dragend");
-          }
+        me._cursorHander(child);
+      }
 
-          me._draging = false;
-          me._touching = false;
+      if (root.preventDefault || e._preventDefault) {
+        //阻止默认浏览器动作(W3C) 
+        if (e && e.preventDefault) {
+          e.preventDefault();
+        } else {
+          window.event.returnValue = false;
         }
+      }
+    },
+    //notInRootView 真正的mouseout,鼠标已经不在图表的节点内了
+    __getcurPointsTarget: function __getcurPointsTarget(e, point, notInRootView) {
+      var me = this;
+      var root = me.canvax;
+      var oldObj = me.curPointsTarget[0];
 
-        if (e.type == "mouseout") {
-          if (!contains(root.view, e.toElement || e.relatedTarget)) {
-            me.__getcurPointsTarget(e, curMousePoint, true);
-          }
-        } else if (e.type == "mousemove") {
-          //|| e.type == "mousedown" ){
-          //拖动过程中就不在做其他的mouseover检测，drag优先
-          if (me._touching && e.type == "mousemove" && curMouseTarget) {
-            //说明正在拖动啊
-            if (!me._draging) {
-              //begin drag
-              curMouseTarget.fire("dragstart"); //有可能该child没有hover style
+      if (oldObj && !oldObj.context) {
+        oldObj = null;
+      }
+      var e = new Event(e);
 
-              if (!curMouseTarget._globalAlpha) {
-                curMouseTarget._globalAlpha = curMouseTarget.context.$model.globalAlpha;
+      if (e.type == "mousemove" && oldObj && oldObj._hoverClass && oldObj.hoverClone && oldObj.pointChkPriority && oldObj.getChildInPoint(point)) {
+        //小优化,鼠标move的时候。计算频率太大，所以。做此优化
+        //如果有target存在，而且当前元素正在hoverStage中，而且当前鼠标还在target内,就没必要取检测整个displayList了
+        //开发派发常规mousemove事件
+        e.target = e.currentTarget = oldObj;
+        e.point = oldObj.globalToLocal(point);
+        oldObj.dispatchEvent(e);
+        return;
+      }
+      var obj = notInRootView ? null : root.getObjectsUnderPoint(point, 1)[0];
+
+      if (oldObj && oldObj != obj || e.type == "mouseout") {
+        if (oldObj && oldObj.context) {
+          me.curPointsTarget[0] = null;
+          e.type = "mouseout";
+          e.toTarget = obj;
+          e.target = e.currentTarget = oldObj;
+          e.point = oldObj.globalToLocal(point);
+          oldObj.dispatchEvent(e);
+        }
+      }
+
+      if (obj && oldObj != obj) {
+        me.curPointsTarget[0] = obj;
+        e.type = "mouseover";
+        e.fromTarget = oldObj;
+        e.target = e.currentTarget = obj;
+        e.point = obj.globalToLocal(point);
+        obj.dispatchEvent(e);
+      }
+
+      if (e.type == "mousemove" && obj) {
+        e.target = e.currentTarget = oldObj;
+        e.point = oldObj.globalToLocal(point);
+        oldObj.dispatchEvent(e);
+      }
+
+      me._cursorHander(obj, oldObj);
+    },
+    _cursorHander: function _cursorHander(obj, oldObj) {
+      if (!obj && !oldObj) {
+        this._setCursor("default");
+      }
+
+      if (obj && oldObj != obj && obj.context) {
+        this._setCursor(obj.context.$model.cursor);
+      }
+    },
+    _setCursor: function _setCursor(cursor) {
+      if (this._cursor == cursor) {
+        //如果两次要设置的鼠标状态是一样的
+        return;
+      }
+      this.canvax.view.style.cursor = cursor;
+      this._cursor = cursor;
+    },
+
+    /*
+    * 原生事件系统------------------------------------------------end
+    */
+
+    /*
+     *第三方库的事件系统------------------------------------------------begin
+     *触屏事件处理函数
+     * */
+    __libHandler: function __libHandler(e) {
+      var me = this;
+      var root = me.canvax;
+      root.updateViewOffset(); // touch 下的 curPointsTarget 从touches中来
+      //获取canvax坐标系统里面的坐标
+
+      me.curPoints = me.__getCanvaxPointInTouchs(e);
+
+      if (!me._draging) {
+        //如果在draging的话，target已经是选中了的，可以不用 检测了
+        me.curPointsTarget = me.__getChildInTouchs(me.curPoints);
+      }
+
+      if (me.curPointsTarget.length > 0) {
+        //drag开始
+        if (e.type == me.drag.start) {
+          //dragstart的时候touch已经准备好了target， curPointsTarget 里面只要有一个是有效的
+          //就认为drags开始
+          _.each(me.curPointsTarget, function (child, i) {
+            if (child && child.dragEnabled) {
+              //只要有一个元素就认为正在准备drag了
+              me._draging = true; //有可能该child没有hover style
+
+              if (!child._globalAlpha) {
+                child._globalAlpha = child.context.$model.globalAlpha;
               }
 
-              curMouseTarget.context.globalAlpha = 0; //然后克隆一个副本到activeStage
+              me._clone2hoverStage(child, i); //先把本尊给隐藏了
 
-              var cloneObject = me._clone2hoverStage(curMouseTarget, 0);
 
-              cloneObject.context.globalAlpha = curMouseTarget._globalAlpha;
-            } else {
-              //drag move ing
-              me._dragIngHander(e, curMouseTarget, 0);
+              child.context.globalAlpha = 0;
+              child.fire("dragstart");
+              return false;
             }
-
-            me._draging = true;
-          } else {
-            //常规mousemove检测
-            //move事件中，需要不停的搜索target，这个开销挺大，
-            //后续可以优化，加上和帧率相当的延迟处理
-            me.__getcurPointsTarget(e, curMousePoint);
-          }
-        } else {
-          //其他的事件就直接在target上面派发事件
-          var child = curMouseTarget;
-
-          if (!child) {
-            child = root;
-          }
-
-          me.__dispatchEventInChilds(e, [child]);
-
-          me._cursorHander(child);
+          });
         }
 
-        if (root.preventDefault || e._preventDefault) {
-          //阻止默认浏览器动作(W3C) 
-          if (e && e.preventDefault) {
-            e.preventDefault();
-          } else {
-            window.event.returnValue = false;
-          }
-        }
-      },
-      //notInRootView 真正的mouseout,鼠标已经不在图表的节点内了
-      __getcurPointsTarget: function __getcurPointsTarget(e, point, notInRootView) {
-        var me = this;
-        var root = me.canvax;
-        var oldObj = me.curPointsTarget[0];
-
-        if (oldObj && !oldObj.context) {
-          oldObj = null;
-        }
-
-        var e = new Event(e);
-
-        if (e.type == "mousemove" && oldObj && oldObj._hoverClass && oldObj.hoverClone && oldObj.pointChkPriority && oldObj.getChildInPoint(point)) {
-          //小优化,鼠标move的时候。计算频率太大，所以。做此优化
-          //如果有target存在，而且当前元素正在hoverStage中，而且当前鼠标还在target内,就没必要取检测整个displayList了
-          //开发派发常规mousemove事件
-          e.target = e.currentTarget = oldObj;
-          e.point = oldObj.globalToLocal(point);
-          oldObj.dispatchEvent(e);
-          return;
-        }
-
-        var obj = notInRootView ? null : root.getObjectsUnderPoint(point, 1)[0];
-
-        if (oldObj && oldObj != obj || e.type == "mouseout") {
-          if (oldObj && oldObj.context) {
-            me.curPointsTarget[0] = null;
-            e.type = "mouseout";
-            e.toTarget = obj;
-            e.target = e.currentTarget = oldObj;
-            e.point = oldObj.globalToLocal(point);
-            oldObj.dispatchEvent(e);
-          }
-        }
-
-        if (obj && oldObj != obj) {
-          me.curPointsTarget[0] = obj;
-          e.type = "mouseover";
-          e.fromTarget = oldObj;
-          e.target = e.currentTarget = obj;
-          e.point = obj.globalToLocal(point);
-          obj.dispatchEvent(e);
-        }
-
-        if (e.type == "mousemove" && obj) {
-          e.target = e.currentTarget = oldObj;
-          e.point = oldObj.globalToLocal(point);
-          oldObj.dispatchEvent(e);
-        }
-
-        me._cursorHander(obj, oldObj);
-      },
-      _cursorHander: function _cursorHander(obj, oldObj) {
-        if (!obj && !oldObj) {
-          this._setCursor("default");
-        }
-
-        if (obj && oldObj != obj && obj.context) {
-          this._setCursor(obj.context.$model.cursor);
-        }
-      },
-      _setCursor: function _setCursor(cursor) {
-        if (this._cursor == cursor) {
-          //如果两次要设置的鼠标状态是一样的
-          return;
-        }
-
-        this.canvax.view.style.cursor = cursor;
-        this._cursor = cursor;
-      },
-
-      /*
-      * 原生事件系统------------------------------------------------end
-      */
-
-      /*
-       *第三方库的事件系统------------------------------------------------begin
-       *触屏事件处理函数
-       * */
-      __libHandler: function __libHandler(e) {
-        var me = this;
-        var root = me.canvax;
-        root.updateViewOffset(); // touch 下的 curPointsTarget 从touches中来
-        //获取canvax坐标系统里面的坐标
-
-        me.curPoints = me.__getCanvaxPointInTouchs(e);
-
-        if (!me._draging) {
-          //如果在draging的话，target已经是选中了的，可以不用 检测了
-          me.curPointsTarget = me.__getChildInTouchs(me.curPoints);
-        }
-
-        if (me.curPointsTarget.length > 0) {
-          //drag开始
-          if (e.type == me.drag.start) {
-            //dragstart的时候touch已经准备好了target， curPointsTarget 里面只要有一个是有效的
-            //就认为drags开始
+        if (e.type == me.drag.move) {
+          if (me._draging) {
             _.each(me.curPointsTarget, function (child, i) {
               if (child && child.dragEnabled) {
-                //只要有一个元素就认为正在准备drag了
-                me._draging = true; //有可能该child没有hover style
-
-                if (!child._globalAlpha) {
-                  child._globalAlpha = child.context.$model.globalAlpha;
-                }
-
-                me._clone2hoverStage(child, i); //先把本尊给隐藏了
-
-
-                child.context.globalAlpha = 0;
-                child.fire("dragstart");
-                return false;
+                me._dragIngHander(e, child, i);
               }
             });
           }
-
-          if (e.type == me.drag.move) {
-            if (me._draging) {
-              _.each(me.curPointsTarget, function (child, i) {
-                if (child && child.dragEnabled) {
-                  me._dragIngHander(e, child, i);
-                }
-              });
-            }
-          }
-
-          if (e.type == me.drag.end) {
-            if (me._draging) {
-              _.each(me.curPointsTarget, function (child, i) {
-                if (child && child.dragEnabled) {
-                  me._dragEnd(e, child, 0);
-
-                  child.fire("dragend");
-                }
-              });
-
-              me._draging = false;
-            }
-          }
-
-          me.__dispatchEventInChilds(e, me.curPointsTarget);
-        } else {
-          //如果当前没有一个target，就把事件派发到canvax上面
-          me.__dispatchEventInChilds(e, [root]);
-        }
-      },
-      //从touchs中获取到对应touch , 在上面添加上canvax坐标系统的x，y
-      __getCanvaxPointInTouchs: function __getCanvaxPointInTouchs(e) {
-        var me = this;
-        var root = me.canvax;
-        var curTouchs = [];
-
-        _.each(e.point, function (touch) {
-          curTouchs.push({
-            x: $.pageX(touch) - root.viewOffset.left,
-            y: $.pageY(touch) - root.viewOffset.top
-          });
-        });
-
-        return curTouchs;
-      },
-      __getChildInTouchs: function __getChildInTouchs(touchs) {
-        var me = this;
-        var root = me.canvax;
-        var touchesTarget = [];
-
-        _.each(touchs, function (touch) {
-          touchesTarget.push(root.getObjectsUnderPoint(touch, 1)[0]);
-        });
-
-        return touchesTarget;
-      },
-
-      /*
-      *第三方库的事件系统------------------------------------------------end
-      */
-
-      /*
-       *@param {array} childs 
-       * */
-      __dispatchEventInChilds: function __dispatchEventInChilds(e, childs) {
-        if (!childs && !("length" in childs)) {
-          return false;
         }
 
-        var me = this;
+        if (e.type == me.drag.end) {
+          if (me._draging) {
+            _.each(me.curPointsTarget, function (child, i) {
+              if (child && child.dragEnabled) {
+                me._dragEnd(e, child, 0);
 
-        _.each(childs, function (child, i) {
-          if (child) {
-            var ce = new Event(e); //ce.target = ce.currentTarget = child || this;
+                child.fire("dragend");
+              }
+            });
 
-            ce.stagePoint = me.curPoints[i];
-            ce.point = child.globalToLocal(ce.stagePoint);
-            child.dispatchEvent(ce);
+            me._draging = false;
           }
-        });
-      },
-      //克隆一个元素到hover stage中去
-      _clone2hoverStage: function _clone2hoverStage(target, i) {
-        var me = this;
-        var root = me.canvax;
-
-        var _dragDuplicate = root._bufferStage.getChildById(target.id);
-
-        if (!_dragDuplicate) {
-          _dragDuplicate = target.clone(true);
-          _dragDuplicate._transform = target.getConcatenatedMatrix();
-          /**
-           *TODO: 因为后续可能会有手动添加的 元素到_bufferStage 里面来
-           *比如tips
-           *这类手动添加进来的肯定是因为需要显示在最外层的。在hover元素之上。
-           *所有自动添加的hover元素都默认添加在_bufferStage的最底层
-           **/
-
-          root._bufferStage.addChildAt(_dragDuplicate, 0);
         }
 
-        _dragDuplicate.context.globalAlpha = target._globalAlpha;
-        target._dragPoint = target.globalToLocal(me.curPoints[i]);
-        return _dragDuplicate;
-      },
-      //drag 中 的处理函数
-      _dragIngHander: function _dragIngHander(e, target, i) {
-        var me = this;
-        var root = me.canvax;
-
-        var _point = target.globalToLocal(me.curPoints[i]); //要对应的修改本尊的位置，但是要告诉引擎不要watch这个时候的变化
-
-
-        target._noHeart = true;
-        var _moveStage = target.moveing;
-        target.moveing = true;
-        target.context.x += _point.x - target._dragPoint.x;
-        target.context.y += _point.y - target._dragPoint.y;
-        target.fire("draging");
-        target.moveing = _moveStage;
-        target._noHeart = false; //同步完毕本尊的位置
-        //这里只能直接修改_transform 。 不能用下面的修改x，y的方式。
-
-        var _dragDuplicate = root._bufferStage.getChildById(target.id);
-
-        _dragDuplicate._transform = target.getConcatenatedMatrix(); //worldTransform在renderer的时候计算
-
-        _dragDuplicate.worldTransform = null; //setWorldTransform都统一在render中执行，这里注释掉
-        //_dragDuplicate.setWorldTransform();
-        //直接修改的_transform不会出发心跳上报， 渲染引擎不制动这个stage需要绘制。
-        //所以要手动出发心跳包
-
-        _dragDuplicate.heartBeat();
-      },
-      //drag结束的处理函数
-      //TODO: dragend的还需要处理end的点是否还在元素上面，要恢复hover状态
-      _dragEnd: function _dragEnd(e, target, i) {
-        var me = this;
-        var root = me.canvax; //_dragDuplicate 复制在_bufferStage 中的副本
-
-        var _dragDuplicate = root._bufferStage.getChildById(target.id);
-
-        _dragDuplicate && _dragDuplicate.destroy();
-        target.context.globalAlpha = target._globalAlpha;
+        me.__dispatchEventInChilds(e, me.curPointsTarget);
+      } else {
+        //如果当前没有一个target，就把事件派发到canvax上面
+        me.__dispatchEventInChilds(e, [root]);
       }
-    };
-    var index =
-    /*#__PURE__*/
-    Object.freeze({
-      Event: Event,
-      Dispatcher: Dispatcher,
-      Handler: Handler,
-      Manager: Manager,
-      types: types
-    });
-    exports.axis = axis;
-    exports.dataFrame = dataFrame;
-    exports.dataSection = dataSection;
-    exports._ = _;
-    exports.$ = $;
-    exports.cloneOptions = cloneOptions;
-    exports.cloneData = cloneData;
-    exports.global = global;
-    exports.color = color;
-    exports.getDefaultProps = getDefaultProps;
-    exports.Polar = Polar;
-    exports.event = index;
-  });
-  unwrapExports(dist);
-  var dist_1 = dist.axis;
-  var dist_2 = dist.dataFrame;
-  var dist_3 = dist.dataSection;
-  var dist_4 = dist._;
-  var dist_5 = dist.$;
-  var dist_6 = dist.cloneOptions;
-  var dist_7 = dist.cloneData;
-  var dist_8 = dist.global;
-  var dist_9 = dist.color;
-  var dist_10 = dist.getDefaultProps;
-  var dist_11 = dist.Polar;
-  var dist_12 = dist.event;
+    },
+    //从touchs中获取到对应touch , 在上面添加上canvax坐标系统的x，y
+    __getCanvaxPointInTouchs: function __getCanvaxPointInTouchs(e) {
+      var me = this;
+      var root = me.canvax;
+      var curTouchs = [];
+
+      _.each(e.point, function (touch) {
+        curTouchs.push({
+          x: $.pageX(touch) - root.viewOffset.left,
+          y: $.pageY(touch) - root.viewOffset.top
+        });
+      });
+
+      return curTouchs;
+    },
+    __getChildInTouchs: function __getChildInTouchs(touchs) {
+      var me = this;
+      var root = me.canvax;
+      var touchesTarget = [];
+
+      _.each(touchs, function (touch) {
+        touchesTarget.push(root.getObjectsUnderPoint(touch, 1)[0]);
+      });
+
+      return touchesTarget;
+    },
+
+    /*
+    *第三方库的事件系统------------------------------------------------end
+    */
+
+    /*
+     *@param {array} childs 
+     * */
+    __dispatchEventInChilds: function __dispatchEventInChilds(e, childs) {
+      if (!childs && !("length" in childs)) {
+        return false;
+      }
+
+      var me = this;
+
+      _.each(childs, function (child, i) {
+        if (child) {
+          var ce = new Event(e); //ce.target = ce.currentTarget = child || this;
+
+          ce.stagePoint = me.curPoints[i];
+          ce.point = child.globalToLocal(ce.stagePoint);
+          child.dispatchEvent(ce);
+        }
+      });
+    },
+    //克隆一个元素到hover stage中去
+    _clone2hoverStage: function _clone2hoverStage(target, i) {
+      var me = this;
+      var root = me.canvax;
+
+      var _dragDuplicate = root._bufferStage.getChildById(target.id);
+
+      if (!_dragDuplicate) {
+        _dragDuplicate = target.clone(true);
+        _dragDuplicate._transform = target.getConcatenatedMatrix();
+        /**
+         *TODO: 因为后续可能会有手动添加的 元素到_bufferStage 里面来
+         *比如tips
+         *这类手动添加进来的肯定是因为需要显示在最外层的。在hover元素之上。
+         *所有自动添加的hover元素都默认添加在_bufferStage的最底层
+         **/
+
+        root._bufferStage.addChildAt(_dragDuplicate, 0);
+      }
+
+      _dragDuplicate.context.globalAlpha = target._globalAlpha;
+      target._dragPoint = target.globalToLocal(me.curPoints[i]);
+      return _dragDuplicate;
+    },
+    //drag 中 的处理函数
+    _dragIngHander: function _dragIngHander(e, target, i) {
+      var me = this;
+      var root = me.canvax;
+
+      var _point = target.globalToLocal(me.curPoints[i]); //要对应的修改本尊的位置，但是要告诉引擎不要watch这个时候的变化
+
+
+      target._noHeart = true;
+      var _moveStage = target.moveing;
+      target.moveing = true;
+      target.context.x += _point.x - target._dragPoint.x;
+      target.context.y += _point.y - target._dragPoint.y;
+      target.fire("draging");
+      target.moveing = _moveStage;
+      target._noHeart = false; //同步完毕本尊的位置
+      //这里只能直接修改_transform 。 不能用下面的修改x，y的方式。
+
+      var _dragDuplicate = root._bufferStage.getChildById(target.id);
+
+      _dragDuplicate._transform = target.getConcatenatedMatrix(); //worldTransform在renderer的时候计算
+
+      _dragDuplicate.worldTransform = null; //setWorldTransform都统一在render中执行，这里注释掉
+      //_dragDuplicate.setWorldTransform();
+      //直接修改的_transform不会出发心跳上报， 渲染引擎不制动这个stage需要绘制。
+      //所以要手动出发心跳包
+
+      _dragDuplicate.heartBeat();
+    },
+    //drag结束的处理函数
+    //TODO: dragend的还需要处理end的点是否还在元素上面，要恢复hover状态
+    _dragEnd: function _dragEnd(e, target, i) {
+      var me = this;
+      var root = me.canvax; //_dragDuplicate 复制在_bufferStage 中的副本
+
+      var _dragDuplicate = root._bufferStage.getChildById(target.id);
+
+      _dragDuplicate && _dragDuplicate.destroy();
+      target.context.globalAlpha = target._globalAlpha;
+    }
+  };
 
   /**
    * Canvax
@@ -3968,7 +3483,7 @@ var canvax = (function () {
       return opt;
     }
   };
-  Utils._pixelCtx = Utils.initElement(dist_5.createCanvas(1, 1, "_pixelCanvas")).getContext('2d');
+  Utils._pixelCtx = Utils.initElement($.createCanvas(1, 1, "_pixelCanvas")).getContext('2d');
 
   /**
    * Canvax
@@ -4194,6 +3709,12 @@ var canvax = (function () {
 
     return Point;
   }();
+
+  var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+  function createCommonjsModule(fn, module) {
+  	return module = { exports: {} }, fn(module, module.exports), module.exports;
+  }
 
   var Tween = createCommonjsModule(function (module, exports) {
   /**
@@ -5206,7 +4727,7 @@ var canvax = (function () {
    */
 
   function registTween(options) {
-    var opt = dist_4.extend({
+    var opt = _.extend({
       from: null,
       to: null,
       duration: 500,
@@ -5221,7 +4742,7 @@ var canvax = (function () {
 
     }, options);
 
-    if (!dist_8.getAnimationEnabled()) {
+    if (!global$1.getAnimationEnabled()) {
       //如果全局动画被禁用，那么下面两项强制设置为0
       //TODO:其实应该直接执行回调函数的
       opt.duration = 0;
@@ -5302,14 +4823,14 @@ var canvax = (function () {
     var Publics = _Publics;
 
     function loop(name, val) {
-      if (dist_4.indexOf(_Publics, name) === -1) {
+      if (_.indexOf(_Publics, name) === -1) {
         //非 _Publics 中的值，都要先设置好对应的val到model上
         model[name] = val;
       }
 
       var valueType = _typeof(val);
 
-      if (dist_4.indexOf(Publics, name) > -1) {
+      if (_.indexOf(Publics, name) > -1) {
         return;
       }
 
@@ -5381,7 +4902,7 @@ var canvax = (function () {
     }
     pmodel = defineProperties(pmodel, accessores, Publics); //生成一个空的ViewModel
 
-    dist_4.forEach(Publics, function (name) {
+    _.forEach(Publics, function (name) {
       if (scope[name]) {
         //然后为函数等不被监控的属性赋值
         if (typeof scope[name] == "function") {
@@ -5647,7 +5168,7 @@ var canvax = (function () {
 
         };
 
-        dist_4.extend(true, _contextATTRS, opt.context); //有些引擎内部设置context属性的时候是不用上报心跳的，比如做热点检测的时候
+        _.extend(true, _contextATTRS, opt.context); //有些引擎内部设置context属性的时候是不用上报心跳的，比如做热点检测的时候
 
 
         self._notWatch = false; //不需要发心跳信息
@@ -5668,7 +5189,7 @@ var canvax = (function () {
             obj._globalAlphaChange = true;
           }
 
-          if (dist_4.indexOf(TRANSFORM_PROPS, name) > -1) {
+          if (_.indexOf(TRANSFORM_PROPS, name) > -1) {
             obj._updateTransform();
 
             obj._transformChange = true;
@@ -5704,14 +5225,14 @@ var canvax = (function () {
     }, {
       key: "track",
       value: function track(el) {
-        if (dist_4.indexOf(this._trackList, el) == -1) {
+        if (_.indexOf(this._trackList, el) == -1) {
           this._trackList.push(el);
         }
       }
     }, {
       key: "untrack",
       value: function untrack(el) {
-        var ind = dist_4.indexOf(this._trackList, el);
+        var ind = _.indexOf(this._trackList, el);
 
         if (ind > -1) {
           this._trackList.splice(ind, 1);
@@ -5728,7 +5249,7 @@ var canvax = (function () {
       value: function clone(myself) {
         var conf = {
           id: this.id,
-          context: dist_4.clone(this.context.$model),
+          context: _.clone(this.context.$model),
           isClone: true
         };
         var newObj;
@@ -5862,7 +5383,7 @@ var canvax = (function () {
     }, {
       key: "setEventEnable",
       value: function setEventEnable(bool) {
-        if (dist_4.isBoolean(bool)) {
+        if (_.isBoolean(bool)) {
           this._eventEnabled = bool;
           return true;
         }
@@ -5878,7 +5399,7 @@ var canvax = (function () {
         if (!this.parent) {
           return;
         }
-        return dist_4.indexOf(this.parent.children, this);
+        return _.indexOf(this.parent.children, this);
       }
       /*
        *元素在z轴方向向下移动
@@ -5895,7 +5416,7 @@ var canvax = (function () {
         var fromIndex = this.getIndex();
         var toIndex = 0;
 
-        if (dist_4.isNumber(num)) {
+        if (_.isNumber(num)) {
           if (num == 0) {
             //原地不动
             return;
@@ -5926,7 +5447,7 @@ var canvax = (function () {
         var pcl = this.parent.children.length;
         var toIndex = pcl;
 
-        if (dist_4.isNumber(num)) {
+        if (_.isNumber(num)) {
           if (num == 0) {
             //原地不动
             return;
@@ -6114,9 +5635,9 @@ var canvax = (function () {
         var from = null;
 
         for (var p in to) {
-          if (dist_4.isObject(to[p])) {
+          if (_.isObject(to[p])) {
             //options必须传递一份copy出去，比如到下一个animate
-            this.animate(to[p], dist_4.extend({}, options), context[p]); //如果是个object
+            this.animate(to[p], _.extend({}, options), context[p]); //如果是个object
 
             continue;
           }
@@ -6252,7 +5773,7 @@ var canvax = (function () {
     }]);
 
     return DisplayObject;
-  }(dist_12.Dispatcher);
+  }(Dispatcher);
 
   var DisplayObjectContainer =
   /*#__PURE__*/
@@ -6317,7 +5838,7 @@ var canvax = (function () {
     }, {
       key: "removeChild",
       value: function removeChild(child) {
-        return this.removeChildAt(dist_4.indexOf(this.children, child));
+        return this.removeChildAt(_.indexOf(this.children, child));
       }
     }, {
       key: "removeChildAt",
@@ -6426,14 +5947,14 @@ var canvax = (function () {
     }, {
       key: "getChildIndex",
       value: function getChildIndex(child) {
-        return dist_4.indexOf(this.children, child);
+        return _.indexOf(this.children, child);
       }
     }, {
       key: "setChildIndex",
       value: function setChildIndex(child, index$$1) {
         if (child.parent != this) return;
 
-        var oldIndex = dist_4.indexOf(this.children, child);
+        var oldIndex = _.indexOf(this.children, child);
 
         if (index$$1 == oldIndex) return;
         this.children.splice(oldIndex, 1);
@@ -6616,7 +6137,7 @@ var canvax = (function () {
       value: function _convertCanvax(opt) {
         var me = this;
 
-        dist_4.each(me.app.children, function (stage) {
+        _.each(me.app.children, function (stage) {
           stage.context[opt.name] = opt.value;
         });
       }
@@ -6691,7 +6212,7 @@ var canvax = (function () {
           }
         } else {
           //无条件要求全部刷新，一般用在resize等。
-          dist_4.each(self.app.children, function (stage, i) {
+          _.each(self.app.children, function (stage, i) {
             self.app.convertStages[stage.id] = {
               stage: stage,
               convertShapes: {}
@@ -6875,7 +6396,7 @@ var canvax = (function () {
         var me = this;
         me.app = app;
 
-        dist_4.each(dist_4.values(app.convertStages), function (convertStage) {
+        _.each(_.values(app.convertStages), function (convertStage) {
           me.renderStage(convertStage.stage);
         });
 
@@ -7030,10 +6551,10 @@ var canvax = (function () {
       opt.type = "canvax";
       _this = _possibleConstructorReturn(this, _getPrototypeOf(Application).call(this, opt));
       _this._cid = new Date().getTime() + "_" + Math.floor(Math.random() * 100);
-      _this.el = dist_5.query(opt.el);
+      _this.el = $.query(opt.el);
       _this.width = parseInt("width" in opt || _this.el.offsetWidth, 10);
       _this.height = parseInt("height" in opt || _this.el.offsetHeight, 10);
-      var viewObj = dist_5.createView(_this.width, _this.height, _this._cid);
+      var viewObj = $.createView(_this.width, _this.height, _this._cid);
       _this.view = viewObj.view;
       _this.stageView = viewObj.stageView;
       _this.domView = viewObj.domView;
@@ -7041,7 +6562,7 @@ var canvax = (function () {
 
       _this.el.appendChild(_this.view);
 
-      _this.viewOffset = dist_5.offset(_this.view);
+      _this.viewOffset = $.offset(_this.view);
       _this.lastGetRO = 0; //最后一次获取 viewOffset 的时间
 
       _this.webGL = opt.webGL;
@@ -7065,7 +6586,7 @@ var canvax = (function () {
       key: "registEvent",
       value: function registEvent(opt) {
         //初始化事件委托到root元素上面
-        this.event = new dist_12.Handler(this, opt);
+        this.event = new Handler(this, opt);
         this.event.init();
         return this.event;
       }
@@ -7096,7 +6617,7 @@ var canvax = (function () {
         //this.view.style.width  = this.width +"px";
         //this.view.style.height = this.height+"px";
 
-        this.viewOffset = dist_5.offset(this.view);
+        this.viewOffset = $.offset(this.view);
         this.context.$model.width = this.width;
         this.context.$model.height = this.height;
         var me = this;
@@ -7108,7 +6629,7 @@ var canvax = (function () {
           canvas.setAttribute("height", me.height * Utils._devicePixelRatio);
         };
 
-        dist_4.each(this.children, function (s, i) {
+        _.each(this.children, function (s, i) {
           s.context.$model.width = me.width;
           s.context.$model.height = me.height;
           reSizeCanvas(s.canvas);
@@ -7146,7 +6667,7 @@ var canvax = (function () {
         var now = new Date().getTime();
 
         if (now - this.lastGetRO > 1000) {
-          this.viewOffset = dist_5.offset(this.view);
+          this.viewOffset = $.offset(this.view);
           this.lastGetRO = now;
         }
       }
@@ -7156,7 +6677,7 @@ var canvax = (function () {
         var canvas;
 
         if (!stage.canvas) {
-          canvas = dist_5.createCanvas(this.context.$model.width, this.context.$model.height, stage.id);
+          canvas = $.createCanvas(this.context.$model.width, this.context.$model.height, stage.id);
         } else {
           canvas = stage.canvas;
         }
@@ -7194,10 +6715,10 @@ var canvax = (function () {
     }, {
       key: "toDataURL",
       value: function toDataURL() {
-        var canvas = dist_5.createCanvas(this.width, this.height, "curr_base64_canvas");
+        var canvas = $.createCanvas(this.width, this.height, "curr_base64_canvas");
         var ctx = canvas.getContext("2d");
 
-        dist_4.each(this.children, function (stage) {
+        _.each(this.children, function (stage) {
           ctx.drawImage(stage.canvas, 0, 0);
         });
 
@@ -7898,7 +7419,7 @@ var canvax = (function () {
         //TODO: 后面需要修改, 能精准的确定是修改 graphicsData 中的哪个data
 
         if (this.graphicsData.length) {
-          dist_4.each(this.graphicsData, function (gd, i) {
+          _.each(this.graphicsData, function (gd, i) {
             gd.synsStyle(g);
           });
         }
@@ -8350,7 +7871,7 @@ var canvax = (function () {
         lineWidth: opt.context.lineWidth || null
       };
 
-      var _context = dist_4.extend(true, styleContext, opt.context);
+      var _context = _.extend(true, styleContext, opt.context);
 
       opt.context = _context;
 
@@ -8407,7 +7928,7 @@ var canvax = (function () {
     }, {
       key: "$watch",
       value: function $watch(name, value, preValue) {
-        if (dist_4.indexOf(STYLE_PROPS, name) > -1) {
+        if (_.indexOf(STYLE_PROPS, name) > -1) {
           this.graphics.setStyle(this.context);
         }
 
@@ -8447,7 +7968,7 @@ var canvax = (function () {
       if (text === null || text === undefined) {
         text = "";
       }
-      opt.context = dist_4.extend({
+      opt.context = _.extend({
         font: "",
         fontSize: 13,
         //字体大小默认13
@@ -8477,7 +7998,7 @@ var canvax = (function () {
       key: "$watch",
       value: function $watch(name, value, preValue) {
         //context属性有变化的监听函数
-        if (dist_4.indexOf(this.fontProperts, name) >= 0) {
+        if (_.indexOf(this.fontProperts, name) >= 0) {
           this.context[name] = value; //如果修改的是font的某个内容，就重新组装一遍font的值，
           //然后通知引擎这次对context的修改上报心跳
 
@@ -8492,7 +8013,7 @@ var canvax = (function () {
         // 简单判断不做严格类型检测
         for (var p in style) {
           if (p != "textBaseline" && p in ctx) {
-            if (style[p] || dist_4.isNumber(style[p])) {
+            if (style[p] || _.isNumber(style[p])) {
               if (p == "globalAlpha") {
                 //透明度要从父节点继承
                 //ctx[p] = style[p] * globalAlpha; //render里面已经做过相乘了，不需要重新*
@@ -8561,7 +8082,7 @@ var canvax = (function () {
         var self = this;
         var fontArr = [];
 
-        dist_4.each(this.fontProperts, function (p) {
+        _.each(this.fontProperts, function (p) {
           var fontP = self.context[p];
 
           if (p == "fontSize") {
@@ -8751,10 +8272,10 @@ var canvax = (function () {
     var vx = 0,
         vy = 0;
 
-    if (arguments.length == 1 && dist_4.isObject(x)) {
+    if (arguments.length == 1 && _.isObject(x)) {
       var arg = arguments[0];
 
-      if (dist_4.isArray(arg)) {
+      if (_.isArray(arg)) {
         vx = arg[0];
         vy = arg[1];
       } else if (arg.hasOwnProperty("x") && arg.hasOwnProperty("y")) {
@@ -8844,7 +8365,7 @@ var canvax = (function () {
       var w2 = w * w;
       var w3 = w * w2;
       var rp = [interpolate(p0[0], p1[0], p2[0], p3[0], w, w2, w3), interpolate(p0[1], p1[1], p2[1], p3[1], w, w2, w3)];
-      dist_4.isFunction(smoothFilter) && smoothFilter(rp);
+      _.isFunction(smoothFilter) && smoothFilter(rp);
       ret.push(rp);
     }
 
@@ -8950,7 +8471,7 @@ var canvax = (function () {
     var Len = pList.length;
     var _currList = [];
 
-    dist_4.each(pList, function (point, i) {
+    _.each(pList, function (point, i) {
       if (isNotValibPoint(point)) {
         //undefined , [ number, null] 等结构
         if (_currList.length) {
@@ -8980,7 +8501,7 @@ var canvax = (function () {
       points: pList
     };
 
-    if (dist_4.isFunction(smoothFilter)) {
+    if (_.isFunction(smoothFilter)) {
       obj.smoothFilter = smoothFilter;
     }
 
@@ -8993,7 +8514,7 @@ var canvax = (function () {
   }
 
   function isNotValibPoint(point) {
-    var res = !point || dist_4.isArray(point) && point.length >= 2 && (!dist_4.isNumber(point[0]) || !dist_4.isNumber(point[1])) || "x" in point && !dist_4.isNumber(point.x) || "y" in point && !dist_4.isNumber(point.y);
+    var res = !point || _.isArray(point) && point.length >= 2 && (!_.isNumber(point[0]) || !_.isNumber(point[1])) || "x" in point && !_.isNumber(point.x) || "y" in point && !_.isNumber(point.y);
     return res;
   }
 
@@ -9026,7 +8547,7 @@ var canvax = (function () {
 
       opt = Utils.checkOpt(opt);
 
-      var _context = dist_4.extend({
+      var _context = _.extend({
         lineType: null,
         smooth: false,
         pointList: [],
@@ -9103,7 +8624,7 @@ var canvax = (function () {
     function Circle(opt) {
       _classCallCheck(this, Circle);
 
-      opt = dist_4.extend(true, {
+      opt = _.extend(true, {
         type: "circle",
         xyToInt: false,
         context: {
@@ -9143,7 +8664,7 @@ var canvax = (function () {
     function Path(opt) {
       _classCallCheck(this, Path);
 
-      var _context = dist_4.extend({
+      var _context = _.extend({
         pointList: [],
         //从下面的path中计算得到的边界点的集合
         path: "" //字符串 必须，路径。例如:M 0 0 L 0 10 L 10 10 Z (一个三角形)
@@ -9186,11 +8707,11 @@ var canvax = (function () {
 
         this.__parsePathData = [];
 
-        var paths = dist_4.compact(data.replace(/[Mm]/g, "\\r$&").split('\\r'));
+        var paths = _.compact(data.replace(/[Mm]/g, "\\r$&").split('\\r'));
 
         var me = this;
 
-        dist_4.each(paths, function (pathStr) {
+        _.each(paths, function (pathStr) {
           me.__parsePathData.push(me._parseChildPathData(pathStr));
         });
 
@@ -9510,7 +9031,7 @@ var canvax = (function () {
 
       _classCallCheck(this, Droplet);
 
-      opt = dist_4.extend({
+      opt = _.extend({
         type: "droplet",
         context: {
           hr: 0,
@@ -9554,7 +9075,7 @@ var canvax = (function () {
     function Ellipse(opt) {
       _classCallCheck(this, Ellipse);
 
-      opt = dist_4.extend({
+      opt = _.extend({
         type: "ellipse",
         context: {
           hr: 0,
@@ -9591,7 +9112,7 @@ var canvax = (function () {
     function Polygon(opt) {
       _classCallCheck(this, Polygon);
 
-      var _context = dist_4.extend({
+      var _context = _.extend({
         lineType: null,
         smooth: false,
         pointList: [],
@@ -9655,7 +9176,7 @@ var canvax = (function () {
     function Isogon(opt) {
       _classCallCheck(this, Isogon);
 
-      var _context = dist_4.extend({
+      var _context = _.extend({
         pointList: [],
         //从下面的r和n计算得到的边界值的集合
         r: 0,
@@ -9695,7 +9216,7 @@ var canvax = (function () {
     function Line(opt) {
       _classCallCheck(this, Line);
 
-      var _context = dist_4.extend({
+      var _context = _.extend({
         start: {
           x: 0,
           // 必须，起点横坐标
@@ -9744,7 +9265,7 @@ var canvax = (function () {
     function Rect(opt) {
       _classCallCheck(this, Rect);
 
-      var _context = dist_4.extend({
+      var _context = _.extend({
         width: 0,
         height: 0,
         radius: []
@@ -9824,7 +9345,7 @@ var canvax = (function () {
     function Sector(opt) {
       _classCallCheck(this, Sector);
 
-      var _context = dist_4.extend({
+      var _context = _.extend({
         pointList: [],
         //边界点的集合,私有，从下面的属性计算的来
         r0: 0,
@@ -9949,7 +9470,7 @@ var canvax = (function () {
     function Line(opt) {
       _classCallCheck(this, Line);
 
-      var _context = dist_4.extend({
+      var _context = _.extend({
         control: {
           x: 0,
           // 必须，起点横坐标
