@@ -15,8 +15,12 @@ export default {
     output: [{
         file : "dist/index.js",
         name : "canvax",
+        format: "iife"
+    },{
+        file : "dist/index.cjs.js",
+        name : "canvax",
         format: "cjs"
-    }
+    },
     
     /*
     ,{
