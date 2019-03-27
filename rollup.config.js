@@ -15,7 +15,7 @@ export default {
     output: [{
         file : "dist/index.js",
         name : "canvax",
-        format: "iife"
+        format: "cjs"
     }
     
     /*
@@ -43,7 +43,8 @@ export default {
         resolve({ jsnext: true, main: true, browser: true }), 
         commonjs(),
         babel({
-            exclude: /node_modules\/(?!.*@*(mmvis)\/).*/,
+            //exclude: /node_modules\/(?!.*@*(mmvis)\/).*/,
+            exclude: 'node_modules/**',///node_modules/,
             externalHelpers: true,
             babelrc: false,
             presets: [
