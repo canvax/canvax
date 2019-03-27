@@ -200,6 +200,11 @@ export default class DisplayObjectContainer extends DisplayObject
             };
 
             if( child instanceof DisplayObjectContainer ) {
+                if( !child._eventEnabled ){
+                    //容易一般默认 _eventEnabled == true; 但是如果被设置成了false
+                    //如果容器设置了不接受事件检测，那么下面所有的元素都不接受事件检测
+                    continue;
+                };
                 //是集合
                 if (child.mouseChildren && child.getNumChildren() > 0){
                    var objs = child.getObjectsUnderPoint( point );
