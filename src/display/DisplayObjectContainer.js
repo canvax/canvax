@@ -12,6 +12,7 @@ export default class DisplayObjectContainer extends DisplayObject
 {
     constructor(opt){
         super( opt );
+        
         this.children = [];
         this.mouseChildren = [];
         //所有的容器默认支持event 检测，因为 可能有里面的shape是eventEnable是true的
