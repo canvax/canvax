@@ -12,7 +12,7 @@ export default class Line extends Shape
 {
     constructor(opt)
     {
-        var _context = _.extend({
+        var _context = _.extend(true,{
             control : {
                 x : 0,   // 必须，起点横坐标
                 y : 0    // 必须，起点纵坐标

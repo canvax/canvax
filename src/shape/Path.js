@@ -18,7 +18,7 @@ export default class Path extends Shape
 {
     constructor(opt){
         
-        var _context = _.extend({
+        var _context = _.extend(true,{
             pointList: [], //从下面的path中计算得到的边界点的集合
             path: "" //字符串 必须，路径。例如:M 0 0 L 0 10 L 10 10 Z (一个三角形)
                 //M = moveto

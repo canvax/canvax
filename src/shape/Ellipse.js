@@ -19,7 +19,7 @@ export default class Ellipse extends Shape
 {
     constructor(opt)
     {
-        opt = _.extend({
+        opt = _.extend(true,{
             type : "ellipse",
             context : {
                 hr : 0,  //{number},  // 必须，水滴横宽（中心到水平边缘最宽处距离）

@@ -19,7 +19,7 @@ export default class Rect extends Shape
 {
     constructor(opt)
     {
-        var _context = _.extend({
+        var _context = _.extend(true, {
             width : 0,
             height: 0,
             radius: [],

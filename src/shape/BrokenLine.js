@@ -18,7 +18,7 @@ export default class BrokenLine extends Shape
     constructor(opt){
         opt = Utils.checkOpt( opt );
         
-        var _context = _.extend({
+        var _context = _.extend(true,{
             lineType: null,
             smooth: false,
             pointList: [], //{Array}  // 必须，各个顶角坐标
