@@ -79,7 +79,7 @@ export default class DisplayObject extends event.Dispatcher
         var self = this;
 
         var optCtx = opt.context || {};
-
+        
         var _contextATTRS = {
             width         : optCtx.width  || 0,
             height        : optCtx.height || 0,

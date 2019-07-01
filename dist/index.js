@@ -8562,7 +8562,7 @@ var canvax = (function () {
 
       opt = Utils.checkOpt(opt);
 
-      var _context = _.extend({
+      var _context = _.extend(true, {
         lineType: null,
         smooth: false,
         pointList: [],
@@ -8679,7 +8679,7 @@ var canvax = (function () {
     function Path(opt) {
       _classCallCheck(this, Path);
 
-      var _context = _.extend({
+      var _context = _.extend(true, {
         pointList: [],
         //从下面的path中计算得到的边界点的集合
         path: "" //字符串 必须，路径。例如:M 0 0 L 0 10 L 10 10 Z (一个三角形)
@@ -9046,7 +9046,7 @@ var canvax = (function () {
 
       _classCallCheck(this, Droplet);
 
-      opt = _.extend({
+      opt = _.extend(true, {
         type: "droplet",
         context: {
           hr: 0,
@@ -9090,7 +9090,7 @@ var canvax = (function () {
     function Ellipse(opt) {
       _classCallCheck(this, Ellipse);
 
-      opt = _.extend({
+      opt = _.extend(true, {
         type: "ellipse",
         context: {
           hr: 0,
@@ -9127,7 +9127,7 @@ var canvax = (function () {
     function Polygon(opt) {
       _classCallCheck(this, Polygon);
 
-      var _context = _.extend({
+      var _context = _.extend(true, {
         lineType: null,
         smooth: false,
         pointList: [],
@@ -9191,7 +9191,7 @@ var canvax = (function () {
     function Isogon(opt) {
       _classCallCheck(this, Isogon);
 
-      var _context = _.extend({
+      var _context = _.extend(true, {
         pointList: [],
         //从下面的r和n计算得到的边界值的集合
         r: 0,
@@ -9231,7 +9231,7 @@ var canvax = (function () {
     function Line(opt) {
       _classCallCheck(this, Line);
 
-      var _context = _.extend({
+      var _context = _.extend(true, {
         start: {
           x: 0,
           // 必须，起点横坐标
@@ -9280,7 +9280,7 @@ var canvax = (function () {
     function Rect(opt) {
       _classCallCheck(this, Rect);
 
-      var _context = _.extend({
+      var _context = _.extend(true, {
         width: 0,
         height: 0,
         radius: []
@@ -9360,7 +9360,7 @@ var canvax = (function () {
     function Sector(opt) {
       _classCallCheck(this, Sector);
 
-      var _context = _.extend({
+      var _context = _.extend(true, {
         pointList: [],
         //边界点的集合,私有，从下面的属性计算的来
         r0: 0,
@@ -9485,7 +9485,7 @@ var canvax = (function () {
     function Line(opt) {
       _classCallCheck(this, Line);
 
-      var _context = _.extend({
+      var _context = _.extend(true, {
         control: {
           x: 0,
           // 必须，起点横坐标

@@ -6,8 +6,32 @@
     <title>canvax</title>
 
     <style type="text/css">
-        body{margin:0;padding:0;font-size:12px;background-color:#eee;padding:10px 100px 100px;}
+          body{margin:0;padding:0;font-size:12px;background-color:#eee;padding:10px 100px 100px;}
       
+    
+    @font-face {
+        font-family: 'iconfont';  /* project id 308 */
+        src: url('//at.alicdn.com/t/font_308_f0r75zdxhol.eot');
+        src: url('//at.alicdn.com/t/font_308_f0r75zdxhol.eot?#iefix') format('embedded-opentype'),
+        url('//at.alicdn.com/t/font_308_f0r75zdxhol.woff2') format('woff2'),
+        url('//at.alicdn.com/t/font_308_f0r75zdxhol.woff') format('woff'),
+        url('//at.alicdn.com/t/font_308_f0r75zdxhol.ttf') format('truetype'),
+        url('//at.alicdn.com/t/font_308_f0r75zdxhol.svg#iconfont') format('svg');
+    }
+    .iconfont1 {
+        font-display: fallback;
+        font-family: 'iconfont';
+        line-height: 1;
+        font-size: 16px;
+        font-style: normal;
+        font-variant: normal;
+        font-weight: normal;
+        speak: none;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+     }
+
+  
     </style>
 
     <!--
@@ -23,6 +47,7 @@
 
 <body onload="pageload()">
     <div id="ready"></div>
+   
     <script>
 
     var pageload = function(){
@@ -88,6 +113,11 @@
 
         stage.addChild( sprite );
         sprite.addChild( sprite1 );
+
+
+        window.textStage = new canvax.Display.Stage({
+            id : "text"               
+        });
 
         var clipRect = new canvax.Shapes.Rect({
             id : "cliprect",
@@ -485,23 +515,39 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
             //line.cleanAnimates();
         },2000)
 
-        window.text = new canvax.Display.Text( "我的大刀已饥渴难耐" , {
+        var icon = String.fromCharCode(parseInt('e6a3', 16));
+
+        
+        setTimeout(function(){
+            //text内部要做icon加载的延时
+            window.text = new canvax.Display.Text( icon + "->\ue6a3" , {
+                context : {
+                    x :500,
+                    y :530,
+                    fillStyle : "#fb8400",
+                    fontSize  : 20,
+                    textAlign    : "center",
+                    textBaseline : "middle",
+                    lineWidth: 1,
+                    fontFamily: "iconfont"
+                }
+            })
+            textStage.addChild( text );
+
+        }, 1)
+
+        window.text1 = new canvax.Display.Text( "我的大刀/n已经饥渴难耐" , {
             context : {
-                x :500,
-                y :500,
-                fillStyle : "green",
+                x :550,
+                y :400,
+                fillStyle : "#ccc",
                 fontSize  : 20,
-                textBackgroundColor : "blue",
                 textAlign    : "center",
                 textBaseline : "middle",
                 lineWidth: 1,
-                strokeStyle:"red"
-
+                fontFamily: "iconfont"
             }
         })
-        text.on("click" , function(){
-debugger
-        });
 
 
         //stage.addChild(rect);
@@ -515,11 +561,10 @@ debugger
         stage.addChild(polygon);
         stage.addChild(droplet);
 
-        window.textStage = new canvax.Display.Stage({
-            id : "text"               
-        });
+        
 
-        textStage.addChild( text );
+        
+        textStage.addChild( text1 );
         app.addChild( textStage );
 
         sprite.addChild(sector);
