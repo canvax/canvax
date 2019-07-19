@@ -1798,6 +1798,7 @@ var canvax = (function () {
     getGlobalTheme: function getGlobalTheme() {
       return globalTheme.get();
     },
+    parse: parse,
     instances: {},
     getChart: function getChart(chartId) {
       return this.instances[chartId];
