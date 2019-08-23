@@ -82,9 +82,13 @@ export default class Application extends DisplayObjectContainer
             stage = null;
             i--,l--;
         };
-        this.view.removeChild( this.stageView );
-        this.view.removeChild( this.domView );
-        this.el.removeChild( this.view );
+        try {
+            this.view.removeChild( this.stageView );
+            this.view.removeChild( this.domView );
+            this.el.removeChild( this.view );
+        } catch(e){
+
+        };
         this.el.innerHTML = "";
         this.event = null;
         this._bufferStage = null;
@@ -186,7 +190,11 @@ export default class Application extends DisplayObjectContainer
 
     _afterDelChild(stage)
     {
-        this.stageView.removeChild( stage.canvas );
+        try {
+            this.stageView.removeChild( stage.canvas );
+        } catch (error) {
+            
+        }
     }
     
     heartBeat(opt)

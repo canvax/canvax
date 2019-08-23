@@ -1286,18 +1286,25 @@ var canvax = (function () {
             var val = "val" in opt ? opt.val : this.getValOfInd(opt.ind);
 
             if (val >= min && val <= max) {
-              var _origin = this.origin; //如果 origin 并不在这个区间
+              var _origin = this.origin;
+              var origiInRange = !(_origin < min || _origin > max); //如果 origin 并不在这个区间
 
-              if (_origin < min || _origin > max) {
+              if (!origiInRange) {
                 _origin = min;
               }
+
               var maxGroupDisABS = Math.max(Math.abs(max - _origin), Math.abs(_origin - min));
               var amountABS = Math.abs(max - min);
-              var h = maxGroupDisABS / amountABS * groupLength;
-              pos = (val - _origin) / maxGroupDisABS * h + preGroupLenth;
+              var originPos = maxGroupDisABS / amountABS * groupLength;
+              pos = (val - _origin) / maxGroupDisABS * originPos + preGroupLenth;
 
               if (isNaN(pos)) {
                 pos = parseInt(preGroupLenth);
+              }
+
+              if (origiInRange) {
+                //origin在区间内的时候，才需要便宜_originTrans
+                pos += this._originTrans;
               }
               break;
             }
@@ -1333,7 +1340,7 @@ var canvax = (function () {
           }
         }
         !pos && (pos = 0);
-        pos = Number(pos.toFixed(1)) + this._originTrans;
+        pos = Number(pos.toFixed(1));
         return Math.abs(pos);
       }
     }, {
@@ -6617,9 +6624,12 @@ var canvax = (function () {
           stage = null;
           i--, l--;
         }
-        this.view.removeChild(this.stageView);
-        this.view.removeChild(this.domView);
-        this.el.removeChild(this.view);
+
+        try {
+          this.view.removeChild(this.stageView);
+          this.view.removeChild(this.domView);
+          this.el.removeChild(this.view);
+        } catch (e) {}
         this.el.innerHTML = "";
         this.event = null;
         this._bufferStage = null;
@@ -6719,7 +6729,9 @@ var canvax = (function () {
     }, {
       key: "_afterDelChild",
       value: function _afterDelChild(stage) {
-        this.stageView.removeChild(stage.canvas);
+        try {
+          this.stageView.removeChild(stage.canvas);
+        } catch (error) {}
       }
     }, {
       key: "heartBeat",
