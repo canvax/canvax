@@ -37,7 +37,7 @@
         "earcut": "2.0.7",
         "@tweenjs/tween.js": "17.2.0",
         "pixi-gl-core": "1.0.3",
-        "mmvis": "^0.0.73"
+        "mmvis": "^0.0.74"
     },
     "scripts": {
         "build": "rollup -c",
