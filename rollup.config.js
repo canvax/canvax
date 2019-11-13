@@ -11,53 +11,53 @@ var resolve = require('rollup-plugin-node-resolve');
 // umd – 适用于CommonJs和AMD风格通用模式
 
 export default {
-    input : 'src/index.js',
+    input : 'dist/index.js',
     output: [{
-        file : "dist/index.js",
+        file : "dist/index_iife.js",
         name : "canvax",
         format: "iife"
     }
-    /*
+    
     ,{
-        file : "dist/cjs.js",
+        file : "dist/index_cjs.js",
         name : "canvax",
         format: "cjs"
     },{
-        file : "dist/amd.js",
+        file : "dist/index_amd.js",
         name : "canvax",
         format: "amd"
     },{
-        file : "dist/es.js",
+        file : "dist/index_es.js",
         name : "canvax",
         format: "es"
     },{
-        file : "dist/umd.js",
+        file : "dist/index_umd.js",
         name : "canvax",
         format: "umd"
     }
-    */
+    
     
     ],
     plugins: [
         resolve({ jsnext: true, main: true, browser: true }), 
         commonjs(),
-        babel({
-            exclude: /node_modules\/(?!.*@*(mmvis)\/).*/,
-            //exclude: 'node_modules/**',///node_modules/,
-            externalHelpers: true,
-            babelrc: false,
-            presets: [
-                [
-                    "@babel/preset-env",
-                    {
-                    "modules": false
-                    }
-                ]
-            ],
-            plugins: [
-                "@babel/plugin-external-helpers"
-            ]
-        })
-    ]
-    //external: ['mmvis']
+        // babel({
+        //     exclude: /node_modules\/(?!.*@*(mmvis)\/).*/,
+        //     //exclude: 'node_modules/**',///node_modules/,
+        //     externalHelpers: true,
+        //     babelrc: false,
+        //     presets: [
+        //         [
+        //             "@babel/preset-env",
+        //             {
+        //             "modules": false
+        //             }
+        //         ]
+        //     ],
+        //     plugins: [
+        //         "@babel/plugin-external-helpers"
+        //     ]
+        // })
+    ],
+    external: ['mmvis']
 }

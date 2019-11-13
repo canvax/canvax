@@ -1,1 +1,0 @@
-define("math/index",["./Arc","./shapes/Circle","./shapes/Ellipse","./shapes/Polygon","./shapes/Rectangle"],function(e,a,s){"use strict";a.__esModule=!0;var l=e("./Arc");a.Arc=l.default;var r=e("./shapes/Circle");a.Circle=r.default;var t=e("./shapes/Ellipse");a.Ellipse=t.default;var c=e("./shapes/Polygon");a.Polygon=c.default;var p=e("./shapes/Rectangle");a.Rectangle=p.default});
