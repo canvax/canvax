@@ -1,5 +1,3 @@
-
-var babel = require('rollup-plugin-babel');
 var commonjs = require('rollup-plugin-commonjs');
 var resolve = require('rollup-plugin-node-resolve');
 
@@ -16,9 +14,7 @@ export default {
         file : "dist/index_iife.js",
         name : "canvax",
         format: "iife"
-    }
-    
-    ,{
+    },{
         file : "dist/index_cjs.js",
         name : "canvax",
         format: "cjs"
@@ -34,30 +30,10 @@ export default {
         file : "dist/index_umd.js",
         name : "canvax",
         format: "umd"
-    }
-    
-    
-    ],
+    }],
     plugins: [
         resolve({ jsnext: true, main: true, browser: true }), 
-        commonjs(),
-        // babel({
-        //     exclude: /node_modules\/(?!.*@*(mmvis)\/).*/,
-        //     //exclude: 'node_modules/**',///node_modules/,
-        //     externalHelpers: true,
-        //     babelrc: false,
-        //     presets: [
-        //         [
-        //             "@babel/preset-env",
-        //             {
-        //             "modules": false
-        //             }
-        //         ]
-        //     ],
-        //     plugins: [
-        //         "@babel/plugin-external-helpers"
-        //     ]
-        // })
+        commonjs()
     ],
     external: ['mmvis']
 }
