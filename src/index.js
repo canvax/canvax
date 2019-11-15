@@ -55,7 +55,6 @@ Canvax.Shapes = {
 
 
 Canvax.AnimationFrame = AnimationFrame;
-
 Canvax.utils = utils;
 
 export default Canvax;

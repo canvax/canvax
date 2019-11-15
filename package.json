@@ -24,17 +24,17 @@
     "module": "./src/index.js",
     "devDependencies": {
         "@babel/core": "^7.2.2",
-        "@babel/plugin-external-helpers": "7.2.0",
         "@babel/preset-env": "^7.2.3",
         "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
+        "colors-console": "^1.0.3",
         "gulp": "^4.0.2",
         "gulp-babel": "^8.0.0",
-        "rollup": "1.1.0",
-        "rollup-plugin-babel": "4.3.0",
-        "rollup-plugin-commonjs": "9.2.0",
-        "rollup-plugin-node-resolve": "4.0.0",
-        "rollup-plugin-uglify": "6.0.1",
-        "rollup-watch": "4.3.1"
+        "gulp-copy": "^4.0.1",
+        "gulp-uglify": "^3.0.2",
+        "readable-stream": "^3.4.0",
+        "rollup": "1.27.0",
+        "rollup-plugin-commonjs": "10.1.0",
+        "rollup-plugin-node-resolve": "5.2.0"
     },
     "dependencies": {
         "earcut": "2.0.7",
