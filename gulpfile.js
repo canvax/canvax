@@ -99,12 +99,12 @@ let rollupDist = ()=>{
                 };
                 rollupNum++;
 
-                pipeline(
-                    gulp.src(['./dist/index_*.js', '!./dist/index_es.js']),
-                    //gulp.src('./dist/index_(?!es.js)'),
-                    uglify(),
-                    gulp.dest('./dist/')
-                );
+                // pipeline(
+                //     gulp.src(['./dist/index_*.js', '!./dist/index_es.js']),
+                //     //gulp.src('./dist/index_(?!es.js)'),
+                //     uglify(),
+                //     gulp.dest('./dist/')
+                // );
 
                 resolve( event );
             };
