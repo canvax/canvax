@@ -12,6 +12,11 @@ let time = new Date().getTime();
 let _srcPath = "src/**/*.js";
 let outputTypes = [ 'umd','amd','cjs','iife','es' ];
 
+let cleanHandle = ()=>{
+    return gulp.src('dist/**/*.js', {read: false})
+        .pipe(clean());
+}
+
 let babelHandle = ( _src = _srcPath ) => {
     return gulp.src( _src )
     .pipe(babel({
@@ -99,12 +104,11 @@ let rollupDist = ()=>{
                 };
                 rollupNum++;
 
-                // pipeline(
-                //     gulp.src(['./dist/index_*.js', '!./dist/index_es.js']),
-                //     //gulp.src('./dist/index_(?!es.js)'),
-                //     uglify(),
-                //     gulp.dest('./dist/')
-                // );
+                pipeline(
+                    gulp.src(['./dist/index_*.js', '!./dist/index_es.js']),
+                    uglify(),
+                    gulp.dest('./dist/')
+                );
 
                 resolve( event );
             };
@@ -132,4 +136,4 @@ let watchSrc = () => {
 
 //把mmvis从node_models里面copy到本地
 
-exports.default = gulp.series( babelSrc, rollupDist, watchSrc );
+exports.default = gulp.series(cleanHandle, babelSrc, rollupDist, watchSrc );
