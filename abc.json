@@ -4,7 +4,7 @@
         "command":{
             "cmd":[
                 "tnpm i",
-                "npm run rollup",
+                "gulp",
                 "mv ./dist $BUILD_DEST"
             ]
         }
