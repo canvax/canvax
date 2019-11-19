@@ -137,5 +137,4 @@ let watchSrc = () => {
 };
 
 //把mmvis从node_models里面copy到本地
-
 exports.default = gulp.series(cleanHandle, babelSrc, rollupDist, watchSrc );
