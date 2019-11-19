@@ -1,1 +1,375 @@
-"use strict";!function(e,t){if("function"==typeof define&&define.amd)define(["exports","mmvis","./DisplayObject"],t);else if("undefined"!=typeof exports)t(exports,require("mmvis"),require("./DisplayObject"));else{var n={};t(n,e.mmvis,e.DisplayObject),e.undefined=n}}(void 0,function(e,i,t){var n;function r(e){return(r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e})(e)}function l(e,t){for(var n=0;n<t.length;n++){var i=t[n];i.enumerable=i.enumerable||!1,i.configurable=!0,"value"in i&&(i.writable=!0),Object.defineProperty(e,i.key,i)}}function o(e,t){return!t||"object"!==r(t)&&"function"!=typeof t?function(e){if(void 0!==e)return e;throw new ReferenceError("this hasn't been initialised - super() hasn't been called")}(e):t}function h(e){return(h=Object.setPrototypeOf?Object.getPrototypeOf:function(e){return e.__proto__||Object.getPrototypeOf(e)})(e)}function u(e,t){return(u=Object.setPrototypeOf||function(e,t){return e.__proto__=t,e})(e,t)}Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0;var d,c,s,a=(function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function");e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,writable:!0,configurable:!0}}),t&&u(e,t)}(f,((n=t)&&n.__esModule?n:{default:n}).default),d=f,(c=[{key:"addChild",value:function(e,t){if(e)return-1!=this.getChildIndex(e)?e.parent=this:(e.parent&&e.parent.removeChild(e),void 0===t&&(t=this.children.length),this.children.splice(t,0,e),(e.parent=this).heartBeat&&this.heartBeat({convertType:"children",target:e,src:this}),this._afterAddChild&&this._afterAddChild(e)),e}},{key:"addChildAt",value:function(e,t){return this.addChild(e,t)}},{key:"removeChild",value:function(e){return this.removeChildAt(i._.indexOf(this.children,e))}},{key:"removeChildAt",value:function(e){if(e<0||e>this.children.length-1)return!1;var t=this.children[e];return null!=t&&(t.parent=null),this.children.splice(e,1),this.heartBeat&&this.heartBeat({convertType:"children",target:t,src:this}),this._afterDelChild&&this._afterDelChild(t,e),t}},{key:"removeChildById",value:function(e){for(var t=0,n=this.children.length;t<n;t++)if(this.children[t].id==e)return this.removeChildAt(t);return!1}},{key:"removeAllChildren",value:function(){for(;0<this.children.length;)this.removeChildAt(0)}},{key:"destroy",value:function(){for(var e=0,t=this.children.length;e<t;e++)this.getChildAt(e).destroy(),e--,t--;this._destroy()}},{key:"cleanAnimates",value:function(){for(var e=0,t=this.children.length;e<t;e++)this.getChildAt(e).cleanAnimates();this._cleanAnimates()}},{key:"getChildById",value:function(e,t){if(t)return null;for(var n=0,i=this.children.length;n<i;n++)if(this.children[n].id==e)return this.children[n];return null}},{key:"getChildAt",value:function(e){return e<0||e>this.children.length-1?null:this.children[e]}},{key:"getChildIndex",value:function(e){return i._.indexOf(this.children,e)}},{key:"setChildIndex",value:function(e,t){if(e.parent==this){var n=i._.indexOf(this.children,e);t!=n&&(this.children.splice(n,1),this.children.splice(t,0,e))}}},{key:"getNumChildren",value:function(){return this.children.length}},{key:"getObjectsUnderPoint",value:function(e,t){for(var n=[],i=this.children.length-1;0<=i;i--){var r=this.children[i];if(null!=r&&r.context.$model.visible)if(r instanceof f){if(!r._eventEnabled)continue;if(r.mouseChildren&&0<r.getNumChildren()){var l=r.getObjectsUnderPoint(e);0<l.length&&(n=n.concat(l))}}else{if(!r._eventEnabled&&!r.dragEnabled)continue;if(r.getChildInPoint(e)&&(n.push(r),null!=t&&!isNaN(t)&&n.length==t))return n}}return n}}])&&l(d.prototype,c),void(s&&l(d,s)),f);function f(e){var t;return function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,f),(t=o(this,h(f).call(this,e))).children=[],t.mouseChildren=[],t._eventEnabled=!0,t}e.default=a});
+"use strict";
+
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(["exports", "mmvis", "./DisplayObject"], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports, require("mmvis"), require("./DisplayObject"));
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports, global.mmvis, global.DisplayObject);
+    global.undefined = mod.exports;
+  }
+})(void 0, function (exports, _mmvis, _DisplayObject2) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = undefined;
+
+  var _DisplayObject3 = _interopRequireDefault(_DisplayObject2);
+
+  function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : {
+      default: obj
+    };
+  }
+
+  function _typeof(obj) {
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof(obj) {
+        return typeof obj;
+      };
+    } else {
+      _typeof = function _typeof(obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      };
+    }
+
+    return _typeof(obj);
+  }
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  function _defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  function _createClass(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    return Constructor;
+  }
+
+  function _possibleConstructorReturn(self, call) {
+    if (call && (_typeof(call) === "object" || typeof call === "function")) {
+      return call;
+    }
+
+    return _assertThisInitialized(self);
+  }
+
+  function _assertThisInitialized(self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return self;
+  }
+
+  function _getPrototypeOf(o) {
+    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+      return o.__proto__ || Object.getPrototypeOf(o);
+    };
+    return _getPrototypeOf(o);
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function");
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) _setPrototypeOf(subClass, superClass);
+  }
+
+  function _setPrototypeOf(o, p) {
+    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+      o.__proto__ = p;
+      return o;
+    };
+
+    return _setPrototypeOf(o, p);
+  }
+
+  var DisplayObjectContainer = function (_DisplayObject) {
+    _inherits(DisplayObjectContainer, _DisplayObject);
+
+    function DisplayObjectContainer(opt) {
+      var _this;
+
+      _classCallCheck(this, DisplayObjectContainer);
+
+      _this = _possibleConstructorReturn(this, _getPrototypeOf(DisplayObjectContainer).call(this, opt));
+      _this.children = [];
+      _this.mouseChildren = []; //所有的容器默认支持event 检测，因为 可能有里面的shape是eventEnable是true的
+      //如果用户有强制的需求让容器下的所有元素都 不可检测，可以调用
+      //DisplayObjectContainer的 setEventEnable() 方法
+
+      _this._eventEnabled = true;
+      return _this;
+    }
+
+    _createClass(DisplayObjectContainer, [{
+      key: "addChild",
+      value: function addChild(child, index) {
+        if (!child) {
+          return;
+        }
+
+        ;
+
+        if (this.getChildIndex(child) != -1) {
+          child.parent = this;
+          return child;
+        }
+
+        ; //如果他在别的子元素中，那么就从别人那里删除了
+
+        if (child.parent) {
+          child.parent.removeChild(child);
+        }
+
+        ;
+
+        if (index === undefined) {
+          index = this.children.length;
+        }
+
+        ;
+        this.children.splice(index, 0, child);
+        child.parent = this;
+
+        if (this.heartBeat) {
+          this.heartBeat({
+            convertType: "children",
+            target: child,
+            src: this
+          });
+        }
+
+        ;
+
+        if (this._afterAddChild) {
+          this._afterAddChild(child);
+        }
+
+        ;
+        return child;
+      }
+    }, {
+      key: "addChildAt",
+      value: function addChildAt(child, index) {
+        return this.addChild(child, index);
+      }
+    }, {
+      key: "removeChild",
+      value: function removeChild(child) {
+        return this.removeChildAt(_mmvis._.indexOf(this.children, child));
+      }
+    }, {
+      key: "removeChildAt",
+      value: function removeChildAt(index) {
+        if (index < 0 || index > this.children.length - 1) {
+          return false;
+        }
+
+        ;
+        var child = this.children[index];
+
+        if (child != null) {
+          child.parent = null;
+        }
+
+        ;
+        this.children.splice(index, 1);
+
+        if (this.heartBeat) {
+          this.heartBeat({
+            convertType: "children",
+            target: child,
+            src: this
+          });
+        }
+
+        ;
+
+        if (this._afterDelChild) {
+          this._afterDelChild(child, index);
+        }
+
+        return child;
+      }
+    }, {
+      key: "removeChildById",
+      value: function removeChildById(id) {
+        for (var i = 0, len = this.children.length; i < len; i++) {
+          if (this.children[i].id == id) {
+            return this.removeChildAt(i);
+          }
+        }
+
+        return false;
+      }
+    }, {
+      key: "removeAllChildren",
+      value: function removeAllChildren() {
+        while (this.children.length > 0) {
+          this.removeChildAt(0);
+        }
+      }
+    }, {
+      key: "destroy",
+      value: function destroy() {
+        /*
+        if( this.parent ){
+            this.parent.removeChild(this);
+            this.parent = null;
+        };
+        this.fire("destroy");
+        */
+        //依次销毁所有子元素
+        for (var i = 0, l = this.children.length; i < l; i++) {
+          this.getChildAt(i).destroy();
+          i--;
+          l--;
+        }
+
+        ;
+
+        this._destroy();
+      }
+    }, {
+      key: "cleanAnimates",
+      value: function cleanAnimates() {
+        //依次销毁所有子元素
+        for (var i = 0, l = this.children.length; i < l; i++) {
+          this.getChildAt(i).cleanAnimates();
+        }
+
+        ;
+
+        this._cleanAnimates();
+      }
+    }, {
+      key: "getChildById",
+      value: function getChildById(id, boolen) {
+        if (!boolen) {
+          for (var i = 0, len = this.children.length; i < len; i++) {
+            if (this.children[i].id == id) {
+              return this.children[i];
+            }
+          }
+        } else {
+          //深度查询
+          //TODO:暂时未实现
+          return null;
+        }
+
+        return null;
+      }
+    }, {
+      key: "getChildAt",
+      value: function getChildAt(index) {
+        if (index < 0 || index > this.children.length - 1) return null;
+        return this.children[index];
+      }
+    }, {
+      key: "getChildIndex",
+      value: function getChildIndex(child) {
+        return _mmvis._.indexOf(this.children, child);
+      }
+    }, {
+      key: "setChildIndex",
+      value: function setChildIndex(child, index) {
+        if (child.parent != this) return;
+
+        var oldIndex = _mmvis._.indexOf(this.children, child);
+
+        if (index == oldIndex) return;
+        this.children.splice(oldIndex, 1);
+        this.children.splice(index, 0, child);
+      }
+    }, {
+      key: "getNumChildren",
+      value: function getNumChildren() {
+        return this.children.length;
+      }
+    }, {
+      key: "getObjectsUnderPoint",
+      value: function getObjectsUnderPoint(point, num) {
+        var result = [];
+
+        for (var i = this.children.length - 1; i >= 0; i--) {
+          var child = this.children[i];
+
+          if (child == null || !child.context.$model.visible) {
+            //不管是集合还是非集合，如果不显示的都不接受点击检测
+            continue;
+          }
+
+          ;
+
+          if (child instanceof DisplayObjectContainer) {
+            if (!child._eventEnabled) {
+              //容易一般默认 _eventEnabled == true; 但是如果被设置成了false
+              //如果容器设置了不接受事件检测，那么下面所有的元素都不接受事件检测
+              continue;
+            }
+
+            ; //是集合
+
+            if (child.mouseChildren && child.getNumChildren() > 0) {
+              var objs = child.getObjectsUnderPoint(point);
+
+              if (objs.length > 0) {
+                result = result.concat(objs);
+              }
+            }
+          } else {
+            if (!child._eventEnabled && !child.dragEnabled) {
+              continue;
+            }
+
+            ; //非集合，可以开始做getChildInPoint了
+
+            if (child.getChildInPoint(point)) {
+              result.push(child);
+
+              if (num != undefined && !isNaN(num)) {
+                if (result.length == num) {
+                  return result;
+                }
+              }
+            }
+          }
+        }
+
+        return result;
+      }
+    }]);
+
+    return DisplayObjectContainer;
+  }(_DisplayObject3["default"]);
+
+  exports.default = DisplayObjectContainer;
+});

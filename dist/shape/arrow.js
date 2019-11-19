@@ -1,1 +1,194 @@
-"use strict";!function(e,t){if("function"==typeof define&&define.amd)define(["exports","../display/Shape","mmvis"],t);else if("undefined"!=typeof exports)t(exports,require("../display/Shape"),require("mmvis"));else{var n={};t(n,e.Shape,e.mmvis),e.undefined=n}}(void 0,function(e,t,n){var o;function r(e){return(r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e})(e)}function i(e,t){for(var n=0;n<t.length;n++){var o=t[n];o.enumerable=o.enumerable||!1,o.configurable=!0,"value"in o&&(o.writable=!0),Object.defineProperty(e,o.key,o)}}function l(e,t){return!t||"object"!==r(t)&&"function"!=typeof t?function(e){if(void 0!==e)return e;throw new ReferenceError("this hasn't been initialised - super() hasn't been called")}(e):t}function a(e){return(a=Object.setPrototypeOf?Object.getPrototypeOf:function(e){return e.__proto__||Object.getPrototypeOf(e)})(e)}function u(e,t){return(u=Object.setPrototypeOf||function(e,t){return e.__proto__=t,e})(e,t)}Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0;var f,c,s,p=(function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function");e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,writable:!0,configurable:!0}}),t&&u(e,t)}(y,((o=t)&&o.__esModule?o:{default:o}).default),f=y,(c=[{key:"watch",value:function(e){"x"!=e&&"y"!=e&&"theta"!=e&&"headlen"!=e&&"angle"!=e||this.graphics.clear()}},{key:"draw",value:function(e){var t=this.context.$model,n=t.control.x,o=t.control.y,r=t.point.x,i=t.point.y,l=null!=t.angle?t.angle-180:180*Math.atan2(o-i,n-r)/Math.PI,a=(l+t.theta)*Math.PI/180,u=(l-t.theta)*Math.PI/180,f=t.headlen*Math.cos(a),c=t.headlen*Math.sin(a),s=t.headlen*Math.cos(u),p=t.headlen*Math.sin(u),y=r+f,h=i+c;return e.moveTo(y,h),e.lineTo(r,i),e.lineTo(r+s,i+p),t.fillStyle&&(e.lineTo(y,h),e.closePath()),this}}])&&i(f.prototype,c),void(s&&i(f,s)),y);function y(e){!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,y);var t=n._.extend(!0,{control:{x:0,y:0},point:{x:0,y:0},angle:null,theta:30,headlen:6,lineWidth:1,strokeStyle:"#666",fillStyle:null},e.context);return e.context=t,e.type="arrow",l(this,a(y).call(this,e))}e.default=p});
+"use strict";
+
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(["exports", "../display/Shape", "mmvis"], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports, require("../display/Shape"), require("mmvis"));
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports, global.Shape, global.mmvis);
+    global.undefined = mod.exports;
+  }
+})(void 0, function (exports, _Shape2, _mmvis) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = undefined;
+
+  var _Shape3 = _interopRequireDefault(_Shape2);
+
+  function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : {
+      default: obj
+    };
+  }
+
+  function _typeof(obj) {
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof(obj) {
+        return typeof obj;
+      };
+    } else {
+      _typeof = function _typeof(obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      };
+    }
+
+    return _typeof(obj);
+  }
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  function _defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  function _createClass(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    return Constructor;
+  }
+
+  function _possibleConstructorReturn(self, call) {
+    if (call && (_typeof(call) === "object" || typeof call === "function")) {
+      return call;
+    }
+
+    return _assertThisInitialized(self);
+  }
+
+  function _assertThisInitialized(self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return self;
+  }
+
+  function _getPrototypeOf(o) {
+    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+      return o.__proto__ || Object.getPrototypeOf(o);
+    };
+    return _getPrototypeOf(o);
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function");
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) _setPrototypeOf(subClass, superClass);
+  }
+
+  function _setPrototypeOf(o, p) {
+    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+      o.__proto__ = p;
+      return o;
+    };
+
+    return _setPrototypeOf(o, p);
+  }
+
+  var Line = function (_Shape) {
+    _inherits(Line, _Shape);
+
+    function Line(opt) {
+      _classCallCheck(this, Line);
+
+      var _context = _mmvis._.extend(true, {
+        control: {
+          x: 0,
+          // 必须，起点横坐标
+          y: 0 // 必须，起点纵坐标
+
+        },
+        point: {
+          x: 0,
+          // 必须，终点横坐标
+          y: 0 // 必须，终点纵坐标
+
+        },
+        angle: null,
+        // control的存在，也就是为了计算出来这个angle
+        theta: 30,
+        // 箭头夹角
+        headlen: 6,
+        // 斜边长度
+        lineWidth: 1,
+        strokeStyle: '#666',
+        fillStyle: null
+      }, opt.context);
+
+      opt.context = _context;
+      opt.type = "arrow";
+      return _possibleConstructorReturn(this, _getPrototypeOf(Line).call(this, opt));
+    }
+
+    _createClass(Line, [{
+      key: "watch",
+      value: function watch(name, value, preValue) {
+        //并不清楚是start.x 还是end.x， 当然，这并不重要
+        if (name == "x" || name == "y" || name == "theta" || name == "headlen" || name == "angle") {
+          this.graphics.clear();
+        }
+      }
+    }, {
+      key: "draw",
+      value: function draw(graphics) {
+        var model = this.context.$model;
+        var fromX = model.control.x;
+        var fromY = model.control.y;
+        var toX = model.point.x;
+        var toY = model.point.y; // 计算各角度和对应的P2,P3坐标 
+
+        var angle = model.angle != null ? model.angle - 180 : Math.atan2(fromY - toY, fromX - toX) * 180 / Math.PI,
+            angle1 = (angle + model.theta) * Math.PI / 180,
+            angle2 = (angle - model.theta) * Math.PI / 180,
+            topX = model.headlen * Math.cos(angle1),
+            topY = model.headlen * Math.sin(angle1),
+            botX = model.headlen * Math.cos(angle2),
+            botY = model.headlen * Math.sin(angle2);
+        var arrowX = toX + topX;
+        var arrowY = toY + topY;
+        graphics.moveTo(arrowX, arrowY);
+        graphics.lineTo(toX, toY);
+        graphics.lineTo(toX + botX, toY + botY);
+
+        if (model.fillStyle) {
+          graphics.lineTo(arrowX, arrowY);
+          graphics.closePath();
+        }
+
+        ;
+        return this;
+      }
+    }]);
+
+    return Line;
+  }(_Shape3["default"]);
+
+  exports.default = Line;
+  ;
+});

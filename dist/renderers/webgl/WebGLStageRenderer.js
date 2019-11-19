@@ -1,1 +1,292 @@
-"use strict";!function(t,e){if("function"==typeof define&&define.amd)define(["exports","./utils/RenderTarget","./WebGLState","pixi-gl-core","../../const","../../settings","../../graphics/webgl/GraphicsRenderer"],e);else if("undefined"!=typeof exports)e(exports,require("./utils/RenderTarget"),require("./WebGLState"),require("pixi-gl-core"),require("../../const"),require("../../settings"),require("../../graphics/webgl/GraphicsRenderer"));else{var i={};e(i,t.RenderTarget,t.WebGLState,t.pixiGlCore,t._const,t.settings,t.GraphicsRenderer),t.undefined=i}}(void 0,function(t,e,i,n,r,a,s){Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;var o=u(e),h=u(i),l=u(n),c=u(a),d=u(s);function u(t){return t&&t.__esModule?t:{default:t}}function g(t,e){for(var i=0;i<e.length;i++){var n=e[i];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n)}}function v(t,e,i){return(v="undefined"!=typeof Reflect&&Reflect.get?Reflect.get:function(t,e,i){var n=function(t,e){for(;!Object.prototype.hasOwnProperty.call(t,e)&&null!==(t=f(t)););return t}(t,e);if(n){var r=Object.getOwnPropertyDescriptor(n,e);return r.get?r.get.call(i):r.value}})(t,e,i||t)}function f(t){return(f=Object.setPrototypeOf?Object.getPrototypeOf:function(t){return t.__proto__||Object.getPrototypeOf(t)})(t)}var _,R,p,x=0,b=(_=T,(R=[{key:"_initContext",value:function(){var t=this.gl;t.isContextLost()&&t.getExtension("WEBGL_lose_context")&&t.getExtension("WEBGL_lose_context").restoreContext(),this.state.resetToDefault(),this.rootRenderTarget=new o.default(t,this.width,this.height,c.default.RESOLUTION,!0),this.rootRenderTarget.clearColor=this._backgroundColorRgba,this.bindRenderTarget(this.rootRenderTarget),this.webglGR.onContextChange()}},{key:"render",value:function(t,e){this.gl&&!this.gl.isContextLost()&&this.webglGR.render(t,e)}},{key:"resize",value:function(t,e){this.rootRenderTarget.resize(t,e),this._activeRenderTarget===this.rootRenderTarget&&(this.rootRenderTarget.activate(),this._activeShader&&(this._activeShader.uniforms.projectionMatrix=this.rootRenderTarget.projectionMatrix.toArray(!0)))}},{key:"clear",value:function(t){this._activeRenderTarget.clear(t)}},{key:"bindRenderTarget",value:function(t){return t!==this._activeRenderTarget&&((this._activeRenderTarget=t).activate(),this._activeShader&&(this._activeShader.uniforms.projectionMatrix=t.projectionMatrix.toArray(!0))),this}},{key:"bindShader",value:function(t){return this._activeShader!==t&&((this._activeShader=t).bind(),t.uniforms.projectionMatrix=this._activeRenderTarget.projectionMatrix.toArray(!0)),this}},{key:"createVao",value:function(){return new l.default.VertexArrayObject(this.gl,this.state.attribState)}},{key:"bindVao",value:function(t){return this._activeVao===t||(t?t.bind():this._activeVao&&this._activeVao.unbind(),this._activeVao=t),this}},{key:"reset",value:function(){return this._activeShader=null,this._activeRenderTarget=this.rootRenderTarget,this.rootRenderTarget.activate(),this.state.resetToDefault(),this}},{key:"handleContextLost",value:function(t){t.preventDefault()}},{key:"handleContextRestored",value:function(){this._initContext(),this.textureManager.removeAll()}},{key:"mapWebGLDrawModes",value:function(t){var e=0<arguments.length&&void 0!==t?t:{};return e[r.DRAW_MODES.POINTS]=this.gl.POINTS,e[r.DRAW_MODES.LINES]=this.gl.LINES,e[r.DRAW_MODES.LINE_LOOP]=this.gl.LINE_LOOP,e[r.DRAW_MODES.LINE_STRIP]=this.gl.LINE_STRIP,e[r.DRAW_MODES.TRIANGLES]=this.gl.TRIANGLES,e[r.DRAW_MODES.TRIANGLE_STRIP]=this.gl.TRIANGLE_STRIP,e[r.DRAW_MODES.TRIANGLE_FAN]=this.gl.TRIANGLE_FAN,e}},{key:"destroy",value:function(t){this.destroyPlugins(),this.canvas.removeEventListener("webglcontextlost",this.handleContextLost),this.canvas.removeEventListener("webglcontextrestored",this.handleContextRestored),v(f(T.prototype),"destroy",this).call(this,t),this.uid=0,this.handleContextLost=null,this.handleContextRestored=null,this._contextOptions=null,this.gl.useProgram(null),this.gl.getExtension("WEBGL_lose_context")&&this.gl.getExtension("WEBGL_lose_context").loseContext(),this.gl=null}}])&&g(_.prototype,R),void(p&&g(_,p)),T);function T(t,e){var i=2<arguments.length&&void 0!==arguments[2]?arguments[2]:{};!function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,T),this.type=r.RENDERER_TYPE.WEBGL,this.width=e.width,this.height=e.height,this.canvas=t.canvas,this.handleContextLost=this.handleContextLost.bind(this),this.handleContextRestored=this.handleContextRestored.bind(this),this.canvas.addEventListener("webglcontextlost",this.handleContextLost,!1),this.canvas.addEventListener("webglcontextrestored",this.handleContextRestored,!1),this._backgroundColorRgba=[0,0,0,0],this._contextOptions={alpha:i.transparent,antialias:i.antialias,premultipliedAlpha:i.transparent&&"notMultiplied"!==i.transparent,stencil:!0,preserveDrawingBuffer:i.preserveDrawingBuffer},this.gl=i.context||l.default.createContext(this.canvas,this._contextOptions),this.CONTEXT_UID=x++,this.state=new h.default(this.gl),this._activeShader=null,this._activeVao=null,this._activeRenderTarget=null,this.drawModes=this.mapWebGLDrawModes(),this.webglGR=new d.default(this),this._initContext()}t.default=b});
+"use strict";
+
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(["exports", "./utils/RenderTarget", "./WebGLState", "pixi-gl-core", "../../const", "../../settings", "../../graphics/webgl/GraphicsRenderer"], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports, require("./utils/RenderTarget"), require("./WebGLState"), require("pixi-gl-core"), require("../../const"), require("../../settings"), require("../../graphics/webgl/GraphicsRenderer"));
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports, global.RenderTarget, global.WebGLState, global.pixiGlCore, global._const, global.settings, global.GraphicsRenderer);
+    global.undefined = mod.exports;
+  }
+})(void 0, function (exports, _RenderTarget, _WebGLState, _pixiGlCore, _const, _settings, _GraphicsRenderer) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = undefined;
+
+  var _RenderTarget2 = _interopRequireDefault(_RenderTarget);
+
+  var _WebGLState2 = _interopRequireDefault(_WebGLState);
+
+  var _pixiGlCore2 = _interopRequireDefault(_pixiGlCore);
+
+  var _settings2 = _interopRequireDefault(_settings);
+
+  var _GraphicsRenderer2 = _interopRequireDefault(_GraphicsRenderer);
+
+  function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : {
+      default: obj
+    };
+  }
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  function _defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  function _createClass(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    return Constructor;
+  }
+
+  function _get(target, property, receiver) {
+    if (typeof Reflect !== "undefined" && Reflect.get) {
+      _get = Reflect.get;
+    } else {
+      _get = function _get(target, property, receiver) {
+        var base = _superPropBase(target, property);
+
+        if (!base) return;
+        var desc = Object.getOwnPropertyDescriptor(base, property);
+
+        if (desc.get) {
+          return desc.get.call(receiver);
+        }
+
+        return desc.value;
+      };
+    }
+
+    return _get(target, property, receiver || target);
+  }
+
+  function _superPropBase(object, property) {
+    while (!Object.prototype.hasOwnProperty.call(object, property)) {
+      object = _getPrototypeOf(object);
+      if (object === null) break;
+    }
+
+    return object;
+  }
+
+  function _getPrototypeOf(o) {
+    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+      return o.__proto__ || Object.getPrototypeOf(o);
+    };
+    return _getPrototypeOf(o);
+  }
+
+  var CONTEXT_UID = 0;
+
+  var WebGLStageRenderer = function () {
+    function WebGLStageRenderer(stage, app) {
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+      _classCallCheck(this, WebGLStageRenderer);
+
+      this.type = _const.RENDERER_TYPE.WEBGL;
+      this.width = app.width;
+      this.height = app.height;
+      this.canvas = stage.canvas;
+      /*
+      * WebGL程序必须有一个用于处理上下文丢失（Lost Context）的机制
+      * 导致上下文丢失的原因：
+      * 移动设备电力不足
+      * 其他外因导致GPU重置
+      * 当浏览器标签页处于后台时，浏览器抛弃了上下文
+      * 耗费资源过多，浏览器抛弃了上下文
+      */
+
+      this.handleContextLost = this.handleContextLost.bind(this);
+      this.handleContextRestored = this.handleContextRestored.bind(this);
+      this.canvas.addEventListener('webglcontextlost', this.handleContextLost, false);
+      this.canvas.addEventListener('webglcontextrestored', this.handleContextRestored, false);
+      this._backgroundColorRgba = [0, 0, 0, 0];
+      this._contextOptions = {
+        alpha: options.transparent,
+        antialias: options.antialias,
+        premultipliedAlpha: options.transparent && options.transparent !== 'notMultiplied',
+        stencil: true,
+        preserveDrawingBuffer: options.preserveDrawingBuffer
+      };
+      this.gl = options.context || _pixiGlCore2["default"].createContext(this.canvas, this._contextOptions);
+      this.CONTEXT_UID = CONTEXT_UID++;
+      this.state = new _WebGLState2["default"](this.gl);
+      this._activeShader = null;
+      this._activeVao = null;
+      this._activeRenderTarget = null;
+      this.drawModes = this.mapWebGLDrawModes();
+      this.webglGR = new _GraphicsRenderer2["default"](this);
+
+      this._initContext();
+    }
+
+    _createClass(WebGLStageRenderer, [{
+      key: "_initContext",
+      value: function _initContext() {
+        var gl = this.gl; // restore a context if it was previously lost
+
+        if (gl.isContextLost() && gl.getExtension('WEBGL_lose_context')) {
+          gl.getExtension('WEBGL_lose_context').restoreContext();
+        }
+
+        this.state.resetToDefault();
+        this.rootRenderTarget = new _RenderTarget2["default"](gl, this.width, this.height, _settings2["default"].RESOLUTION, true);
+        this.rootRenderTarget.clearColor = this._backgroundColorRgba;
+        this.bindRenderTarget(this.rootRenderTarget);
+        this.webglGR.onContextChange();
+      }
+    }, {
+      key: "render",
+      value: function render(displayObject, stage) {
+        if (!this.gl || this.gl.isContextLost()) {
+          return;
+        }
+
+        this.webglGR.render(displayObject, stage);
+      }
+    }, {
+      key: "resize",
+      value: function resize(width, height) {
+        this.rootRenderTarget.resize(width, height);
+
+        if (this._activeRenderTarget === this.rootRenderTarget) {
+          this.rootRenderTarget.activate();
+
+          if (this._activeShader) {
+            this._activeShader.uniforms.projectionMatrix = this.rootRenderTarget.projectionMatrix.toArray(true);
+          }
+        }
+      }
+    }, {
+      key: "clear",
+      value: function clear(clearColor) {
+        this._activeRenderTarget.clear(clearColor);
+      }
+    }, {
+      key: "bindRenderTarget",
+      value: function bindRenderTarget(renderTarget) {
+        if (renderTarget !== this._activeRenderTarget) {
+          this._activeRenderTarget = renderTarget;
+          renderTarget.activate();
+
+          if (this._activeShader) {
+            this._activeShader.uniforms.projectionMatrix = renderTarget.projectionMatrix.toArray(true);
+          }
+        }
+
+        return this;
+      }
+    }, {
+      key: "bindShader",
+      value: function bindShader(shader) {
+        if (this._activeShader !== shader) {
+          this._activeShader = shader;
+          shader.bind();
+          shader.uniforms.projectionMatrix = this._activeRenderTarget.projectionMatrix.toArray(true);
+        }
+
+        return this;
+      }
+    }, {
+      key: "createVao",
+      value: function createVao() {
+        return new _pixiGlCore2["default"].VertexArrayObject(this.gl, this.state.attribState);
+      }
+    }, {
+      key: "bindVao",
+      value: function bindVao(vao) {
+        if (this._activeVao === vao) {
+          return this;
+        }
+
+        if (vao) {
+          vao.bind();
+        } else if (this._activeVao) {
+          this._activeVao.unbind();
+        }
+
+        this._activeVao = vao;
+        return this;
+      }
+    }, {
+      key: "reset",
+      value: function reset() {
+        this._activeShader = null;
+        this._activeRenderTarget = this.rootRenderTarget;
+        this.rootRenderTarget.activate();
+        this.state.resetToDefault();
+        return this;
+      }
+    }, {
+      key: "handleContextLost",
+      value: function handleContextLost(event) {
+        event.preventDefault();
+      }
+    }, {
+      key: "handleContextRestored",
+      value: function handleContextRestored() {
+        this._initContext();
+
+        this.textureManager.removeAll();
+      }
+    }, {
+      key: "mapWebGLDrawModes",
+      value: function mapWebGLDrawModes() {
+        var object = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+        object[_const.DRAW_MODES.POINTS] = this.gl.POINTS;
+        object[_const.DRAW_MODES.LINES] = this.gl.LINES;
+        object[_const.DRAW_MODES.LINE_LOOP] = this.gl.LINE_LOOP;
+        object[_const.DRAW_MODES.LINE_STRIP] = this.gl.LINE_STRIP;
+        object[_const.DRAW_MODES.TRIANGLES] = this.gl.TRIANGLES;
+        object[_const.DRAW_MODES.TRIANGLE_STRIP] = this.gl.TRIANGLE_STRIP;
+        object[_const.DRAW_MODES.TRIANGLE_FAN] = this.gl.TRIANGLE_FAN;
+        return object;
+      }
+    }, {
+      key: "destroy",
+      value: function destroy(removeView) {
+        this.destroyPlugins();
+        this.canvas.removeEventListener('webglcontextlost', this.handleContextLost);
+        this.canvas.removeEventListener('webglcontextrestored', this.handleContextRestored);
+
+        _get(_getPrototypeOf(WebGLStageRenderer.prototype), "destroy", this).call(this, removeView);
+
+        this.uid = 0;
+        this.handleContextLost = null;
+        this.handleContextRestored = null;
+        this._contextOptions = null;
+        this.gl.useProgram(null);
+
+        if (this.gl.getExtension('WEBGL_lose_context')) {
+          this.gl.getExtension('WEBGL_lose_context').loseContext();
+        }
+
+        this.gl = null;
+      }
+    }]);
+
+    return WebGLStageRenderer;
+  }();
+
+  exports.default = WebGLStageRenderer;
+});

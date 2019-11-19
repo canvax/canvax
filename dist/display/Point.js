@@ -1,1 +1,103 @@
-"use strict";!function(e,t){if("function"==typeof define&&define.amd)define(["exports"],t);else if("undefined"!=typeof exports)t(exports);else{var n={};t(n),(void 0).undefined=n}}(0,function(e){function r(e){return(r="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e})(e)}function t(e,t){for(var n=0;n<t.length;n++){var o=t[n];o.enumerable=o.enumerable||!1,o.configurable=!0,"value"in o&&(o.writable=!0),Object.defineProperty(e,o.key,o)}}Object.defineProperty(e,"__esModule",{value:!0});var n,o,i,f=(n=u,(o=[{key:"toArray",value:function(){return[this.x,this.y]}}])&&t(n.prototype,o),void(i&&t(n,i)),u);function u(){var e=0<arguments.length&&void 0!==arguments[0]?arguments[0]:0,t=1<arguments.length&&void 0!==arguments[1]?arguments[1]:0;if(!function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,u),1==arguments.length&&"object"==r(arguments[0])){var n=arguments[0];if("x"in n&&"y"in n)this.x=1*n.x,this.y=1*n.y;else{var o=0;for(var i in n){if(0!=o){this.y=1*n[i];break}this.x=1*n[i],o++}}}else this.x=1*e,this.y=1*t}e.default=f});
+"use strict";
+
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(["exports"], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports);
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports);
+    global.undefined = mod.exports;
+  }
+})(void 0, function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+
+  function _typeof(obj) {
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof(obj) {
+        return typeof obj;
+      };
+    } else {
+      _typeof = function _typeof(obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      };
+    }
+
+    return _typeof(obj);
+  }
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  function _defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  function _createClass(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    return Constructor;
+  }
+
+  var Point = function () {
+    function Point() {
+      var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+      var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+
+      _classCallCheck(this, Point);
+
+      if (arguments.length == 1 && _typeof(arguments[0]) == 'object') {
+        var arg = arguments[0];
+
+        if ("x" in arg && "y" in arg) {
+          this.x = arg.x * 1;
+          this.y = arg.y * 1;
+        } else {
+          var i = 0;
+
+          for (var p in arg) {
+            if (i == 0) {
+              this.x = arg[p] * 1;
+            } else {
+              this.y = arg[p] * 1;
+              break;
+            }
+
+            i++;
+          }
+        }
+      } else {
+        this.x = x * 1;
+        this.y = y * 1;
+      }
+    }
+
+    _createClass(Point, [{
+      key: "toArray",
+      value: function toArray() {
+        return [this.x, this.y];
+      }
+    }]);
+
+    return Point;
+  }();
+
+  exports.default = Point;
+  ;
+});

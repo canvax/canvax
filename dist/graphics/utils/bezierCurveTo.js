@@ -1,1 +1,45 @@
-"use strict";!function(e,n){if("function"==typeof define&&define.amd)define(["exports"],n);else if("undefined"!=typeof exports)n(exports);else{var f={};n(f),(void 0).undefined=f}}(0,function(e){Object.defineProperty(e,"__esModule",{value:!0}),e.default=function(e,n,f,t,i,o,d,u){var r=8<arguments.length&&void 0!==arguments[8]?arguments[8]:[],s=0,p=0,a=0,c=0,l=0;r.push(e,n);for(var v=1,h=0;v<=20;++v)a=(p=(s=1-(h=v/20))*s)*s,l=(c=h*h)*h,r.push(a*e+3*p*h*f+3*s*c*i+l*d,a*n+3*p*h*t+3*s*c*o+l*u);return r}});
+"use strict";
+
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(["exports"], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports);
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports);
+    global.undefined = mod.exports;
+  }
+})(void 0, function (exports) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = bezierCurveTo;
+
+  function bezierCurveTo(fromX, fromY, cpX, cpY, cpX2, cpY2, toX, toY) {
+    var path = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : [];
+    var n = 20;
+    var dt = 0;
+    var dt2 = 0;
+    var dt3 = 0;
+    var t2 = 0;
+    var t3 = 0;
+    path.push(fromX, fromY);
+
+    for (var i = 1, j = 0; i <= n; ++i) {
+      j = i / n;
+      dt = 1 - j;
+      dt2 = dt * dt;
+      dt3 = dt2 * dt;
+      t2 = j * j;
+      t3 = t2 * j;
+      path.push(dt3 * fromX + 3 * dt2 * j * cpX + 3 * dt * t2 * cpX2 + t3 * toX, dt3 * fromY + 3 * dt2 * j * cpY + 3 * dt * t2 * cpY2 + t3 * toY);
+    }
+
+    return path;
+  }
+});

@@ -1,1 +1,68 @@
-"use strict";!function(e,i){if("function"==typeof define&&define.amd)define(["exports","./buildLine","mmvis"],i);else if("undefined"!=typeof exports)i(exports,require("./buildLine"),require("mmvis"));else{var s={};i(s,e.buildLine,e.mmvis),e.undefined=s}}(void 0,function(e,i,s){Object.defineProperty(e,"__esModule",{value:!0}),e.default=function(e,i){var s=e.shape,u=s.x,n=s.y,t=s.width,l=s.height;if(e.hasFill()&&e.fillAlpha){var p=p.hexTorgb(e.fillStyle),f=e.fillAlpha,d=p[0]*f,h=p[1]*f,o=p[2]*f,r=i.points,a=i.indices,v=r.length/6;r.push(u,n),r.push(d,h,o,f),r.push(u+t,n),r.push(d,h,o,f),r.push(u,n+l),r.push(d,h,o,f),r.push(u+t,n+l),r.push(d,h,o,f),a.push(v,v,1+v,2+v,3+v,3+v)}if(e.hasLine()&&e.strokeAlpha){var c=e.points;e.points=[u,n,u+t,n,u+t,n+l,u,n+l,u,n],(0,m.default)(e,i),e.points=c}};var u,m=(u=i)&&u.__esModule?u:{default:u}});
+"use strict";
+
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(["exports", "./buildLine", "mmvis"], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports, require("./buildLine"), require("mmvis"));
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports, global.buildLine, global.mmvis);
+    global.undefined = mod.exports;
+  }
+})(void 0, function (exports, _buildLine, _mmvis) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = buildRectangle;
+
+  var _buildLine2 = _interopRequireDefault(_buildLine);
+
+  function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : {
+      default: obj
+    };
+  }
+
+  function buildRectangle(graphicsData, webGLData) {
+    var rectData = graphicsData.shape;
+    var x = rectData.x;
+    var y = rectData.y;
+    var width = rectData.width;
+    var height = rectData.height;
+
+    if (graphicsData.hasFill() && graphicsData.fillAlpha) {
+      var _color = _color.hexTorgb(graphicsData.fillStyle);
+
+      var alpha = graphicsData.fillAlpha;
+      var r = _color[0] * alpha;
+      var g = _color[1] * alpha;
+      var b = _color[2] * alpha;
+      var verts = webGLData.points;
+      var indices = webGLData.indices;
+      var vertPos = verts.length / 6; // start
+
+      verts.push(x, y);
+      verts.push(r, g, b, alpha);
+      verts.push(x + width, y);
+      verts.push(r, g, b, alpha);
+      verts.push(x, y + height);
+      verts.push(r, g, b, alpha);
+      verts.push(x + width, y + height);
+      verts.push(r, g, b, alpha); // insert 2 dead triangles..
+
+      indices.push(vertPos, vertPos, vertPos + 1, vertPos + 2, vertPos + 3, vertPos + 3);
+    }
+
+    if (graphicsData.hasLine() && graphicsData.strokeAlpha) {
+      var tempPoints = graphicsData.points;
+      graphicsData.points = [x, y, x + width, y, x + width, y + height, x, y + height, x, y];
+      (0, _buildLine2["default"])(graphicsData, webGLData);
+      graphicsData.points = tempPoints;
+    }
+  }
+});

@@ -1,1 +1,206 @@
-"use strict";!function(t,e){if("function"==typeof define&&define.amd)define(["exports","../display/Shape","../utils/index","mmvis","../geom/Math"],e);else if("undefined"!=typeof exports)e(exports,require("../display/Shape"),require("../utils/index"),require("mmvis"),require("../geom/Math"));else{var o={};e(o,t.Shape,t.index,t.mmvis,t.Math),t.undefined=o}}(void 0,function(t,e,o,n,i){Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;var r=f(e),s=f(o),u=f(i);function f(t){return t&&t.__esModule?t:{default:t}}function l(t){return(l="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t})(t)}function c(t,e){for(var o=0;o<e.length;o++){var n=e[o];n.enumerable=n.enumerable||!1,n.configurable=!0,"value"in n&&(n.writable=!0),Object.defineProperty(t,n.key,n)}}function a(t,e){return!e||"object"!==l(e)&&"function"!=typeof e?function(t){if(void 0!==t)return t;throw new ReferenceError("this hasn't been initialised - super() hasn't been called")}(t):e}function p(t){return(p=Object.setPrototypeOf?Object.getPrototypeOf:function(t){return t.__proto__||Object.getPrototypeOf(t)})(t)}function h(t,e){return(h=Object.setPrototypeOf||function(t,e){return t.__proto__=e,t})(t,e)}var y,d,m,b=(function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function");t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,writable:!0,configurable:!0}}),e&&h(t,e)}(v,r.default),y=v,(d=[{key:"watch",value:function(t,e){"pointList"!=t&&"smooth"!=t&&"lineType"!=t||("pointList"==t&&this.context.smooth&&(this.context.pointList=u.default.getSmoothPointList(e,this.context.smoothFilter),this._pointList=e),"smooth"==t&&(this.context.pointList=e?u.default.getSmoothPointList(this._pointList,this.context.smoothFilter):this._pointList),this.graphics.clear())}},{key:"draw",value:function(t){for(var e=this.context.pointList,o=!1,n=0,i=e.length;n<i;n++){var r=e[n];o=!!u.default.isValibPoint(r)&&(o?t.lineTo(r[0],r[1]):t.moveTo(r[0],r[1]),!0)}return this}}])&&c(y.prototype,d),void(m&&c(y,m)),v);function v(t){var e;!function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,v),t=s.default.checkOpt(t);var o=n._.extend(!0,{lineType:null,smooth:!1,pointList:[],smoothFilter:s.default.__emptyFunc},t.context);return!t.isClone&&o.smooth&&(o.pointList=u.default.getSmoothPointList(o.pointList,o.smoothFilter)),t.context=o,t.type="brokenline",(e=a(this,p(v).call(this,t)))._pointList=o.pointList,e}t.default=b});
+"use strict";
+
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(["exports", "../display/Shape", "../utils/index", "mmvis", "../geom/Math"], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports, require("../display/Shape"), require("../utils/index"), require("mmvis"), require("../geom/Math"));
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports, global.Shape, global.index, global.mmvis, global.Math);
+    global.undefined = mod.exports;
+  }
+})(void 0, function (exports, _Shape2, _index, _mmvis, _Math2) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = undefined;
+
+  var _Shape3 = _interopRequireDefault(_Shape2);
+
+  var _index2 = _interopRequireDefault(_index);
+
+  var _Math3 = _interopRequireDefault(_Math2);
+
+  function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : {
+      default: obj
+    };
+  }
+
+  function _typeof(obj) {
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof(obj) {
+        return typeof obj;
+      };
+    } else {
+      _typeof = function _typeof(obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      };
+    }
+
+    return _typeof(obj);
+  }
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  function _defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  function _createClass(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    return Constructor;
+  }
+
+  function _possibleConstructorReturn(self, call) {
+    if (call && (_typeof(call) === "object" || typeof call === "function")) {
+      return call;
+    }
+
+    return _assertThisInitialized(self);
+  }
+
+  function _assertThisInitialized(self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return self;
+  }
+
+  function _getPrototypeOf(o) {
+    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+      return o.__proto__ || Object.getPrototypeOf(o);
+    };
+    return _getPrototypeOf(o);
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function");
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) _setPrototypeOf(subClass, superClass);
+  }
+
+  function _setPrototypeOf(o, p) {
+    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+      o.__proto__ = p;
+      return o;
+    };
+
+    return _setPrototypeOf(o, p);
+  }
+
+  var BrokenLine = function (_Shape) {
+    _inherits(BrokenLine, _Shape);
+
+    function BrokenLine(opt) {
+      var _this;
+
+      _classCallCheck(this, BrokenLine);
+
+      opt = _index2["default"].checkOpt(opt);
+
+      var _context = _mmvis._.extend(true, {
+        lineType: null,
+        smooth: false,
+        pointList: [],
+        //{Array}  // 必须，各个顶角坐标
+        smoothFilter: _index2["default"].__emptyFunc
+      }, opt.context);
+
+      if (!opt.isClone && _context.smooth) {
+        _context.pointList = _Math3["default"].getSmoothPointList(_context.pointList, _context.smoothFilter);
+      }
+
+      ;
+      opt.context = _context;
+      opt.type = "brokenline";
+      _this = _possibleConstructorReturn(this, _getPrototypeOf(BrokenLine).call(this, opt)); //保存好原始值
+
+      _this._pointList = _context.pointList;
+      return _this;
+    }
+
+    _createClass(BrokenLine, [{
+      key: "watch",
+      value: function watch(name, value, preValue) {
+        if (name == "pointList" || name == "smooth" || name == "lineType") {
+          if (name == "pointList" && this.context.smooth) {
+            this.context.pointList = _Math3["default"].getSmoothPointList(value, this.context.smoothFilter);
+            this._pointList = value;
+          }
+
+          ;
+
+          if (name == "smooth") {
+            //如果是smooth的切换
+            if (value) {
+              //从原始中拿数据重新生成
+              this.context.pointList = _Math3["default"].getSmoothPointList(this._pointList, this.context.smoothFilter);
+            } else {
+              this.context.pointList = this._pointList;
+            }
+          }
+
+          ;
+          this.graphics.clear();
+        }
+      }
+    }, {
+      key: "draw",
+      value: function draw(graphics) {
+        var context = this.context;
+        var pointList = context.pointList;
+        var beginPath = false;
+
+        for (var i = 0, l = pointList.length; i < l; i++) {
+          var point = pointList[i];
+
+          if (_Math3["default"].isValibPoint(point)) {
+            if (!beginPath) {
+              graphics.moveTo(point[0], point[1]);
+            } else {
+              graphics.lineTo(point[0], point[1]);
+            }
+
+            ;
+            beginPath = true;
+          } else {
+            beginPath = false;
+          }
+        }
+
+        return this;
+      }
+    }]);
+
+    return BrokenLine;
+  }(_Shape3["default"]);
+
+  exports.default = BrokenLine;
+});

@@ -24,7 +24,7 @@ let babelHandle = ( _src = _srcPath ) => {
         presets: ['@babel/env'],
         plugins: ["transform-es2015-modules-umd"]
     }))
-    .pipe(uglify())
+    //.pipe(uglify())
     .pipe(gulp.dest('dist')); 
 };
 

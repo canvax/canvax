@@ -1,12 +1,3 @@
-
-export const VERSION = __VERSION__;
-
-export const PI_2 = Math.PI * 2;
-
-export const RAD_TO_DEG = 180 / Math.PI;
-
-export const DEG_TO_RAD = Math.PI / 180;
-
 export const RENDERER_TYPE = {
     UNKNOWN:    0,
     WEBGL:      1,

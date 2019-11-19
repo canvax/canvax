@@ -1,1 +1,205 @@
-"use strict";!function(e,t){if("function"==typeof define&&define.amd)define(["exports","../SystemRenderer","../../const","../../settings","./WebGLStageRenderer","mmvis"],t);else if("undefined"!=typeof exports)t(exports,require("../SystemRenderer"),require("../../const"),require("../../settings"),require("./WebGLStageRenderer"),require("mmvis"));else{var n={};t(n,e.SystemRenderer,e._const,e.settings,e.WebGLStageRenderer,e.mmvis),e.undefined=n}}(void 0,function(e,t,n,r,o,i){Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0;var u=c(t),a=(c(r),c(o));function c(e){return e&&e.__esModule?e:{default:e}}function f(e){return(f="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e})(e)}function s(e,t){for(var n=0;n<t.length;n++){var r=t[n];r.enumerable=r.enumerable||!1,r.configurable=!0,"value"in r&&(r.writable=!0),Object.defineProperty(e,r.key,r)}}function l(e,t){return!t||"object"!==f(t)&&"function"!=typeof t?function(e){if(void 0!==e)return e;throw new ReferenceError("this hasn't been initialised - super() hasn't been called")}(e):t}function d(e){return(d=Object.setPrototypeOf?Object.getPrototypeOf:function(e){return e.__proto__||Object.getPrototypeOf(e)})(e)}function p(e,t){return(p=Object.setPrototypeOf||function(e,t){return e.__proto__=t,e})(e,t)}var y,b,g,h=(function(e,t){if("function"!=typeof t&&null!==t)throw new TypeError("Super expression must either be null or a function");e.prototype=Object.create(t&&t.prototype,{constructor:{value:e,writable:!0,configurable:!0}}),t&&p(e,t)}(v,u.default),y=v,(b=[{key:"render",value:function(e,t){var n=1<arguments.length&&void 0!==t?t:{},r=this;r.app=e,i._.extend(this.options,n),i._.each(i._.values(e.convertStages),function(e){r.renderStage(e.stage)}),e.convertStages={}}},{key:"renderStage",value:function(e){e.webGLStageRenderer||(e.webGLStageRenderer=new a.default(e,app,this.options)),e.stageRending=!0,this._clear(e),this._render(e),e.stageRending=!1}},{key:"_render",value:function(e,t){if((t=t||e).graphics){if(!t.context.$model.visible||t.context.$model.globalAlpha<=0)return;t.graphics.graphicsData.length||t._draw(t.graphics),e.webGLStageRenderer.render(t,e)}if(t.children)for(var n=0,r=t.children.length;n<r;n++)this._render(e,t.children[n])}},{key:"_clear",value:function(e){e.webGLStageRenderer.clear()}}])&&s(y.prototype,b),void(g&&s(y,g)),v);function v(e){var t=1<arguments.length&&void 0!==arguments[1]?arguments[1]:{};return function(e,t){if(!(e instanceof t))throw new TypeError("Cannot call a class as a function")}(this,v),l(this,d(v).call(this,n.RENDERER_TYPE.CANVAS,e,t))}e.default=h});
+"use strict";
+
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(["exports", "../SystemRenderer", "../../const", "../../settings", "./WebGLStageRenderer", "mmvis"], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports, require("../SystemRenderer"), require("../../const"), require("../../settings"), require("./WebGLStageRenderer"), require("mmvis"));
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports, global.SystemRenderer, global._const, global.settings, global.WebGLStageRenderer, global.mmvis);
+    global.undefined = mod.exports;
+  }
+})(void 0, function (exports, _SystemRenderer2, _const, _settings, _WebGLStageRenderer, _mmvis) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = undefined;
+
+  var _SystemRenderer3 = _interopRequireDefault(_SystemRenderer2);
+
+  var _settings2 = _interopRequireDefault(_settings);
+
+  var _WebGLStageRenderer2 = _interopRequireDefault(_WebGLStageRenderer);
+
+  function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : {
+      default: obj
+    };
+  }
+
+  function _typeof(obj) {
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof(obj) {
+        return typeof obj;
+      };
+    } else {
+      _typeof = function _typeof(obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      };
+    }
+
+    return _typeof(obj);
+  }
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  function _defineProperties(target, props) {
+    for (var i = 0; i < props.length; i++) {
+      var descriptor = props[i];
+      descriptor.enumerable = descriptor.enumerable || false;
+      descriptor.configurable = true;
+      if ("value" in descriptor) descriptor.writable = true;
+      Object.defineProperty(target, descriptor.key, descriptor);
+    }
+  }
+
+  function _createClass(Constructor, protoProps, staticProps) {
+    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+    if (staticProps) _defineProperties(Constructor, staticProps);
+    return Constructor;
+  }
+
+  function _possibleConstructorReturn(self, call) {
+    if (call && (_typeof(call) === "object" || typeof call === "function")) {
+      return call;
+    }
+
+    return _assertThisInitialized(self);
+  }
+
+  function _assertThisInitialized(self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return self;
+  }
+
+  function _getPrototypeOf(o) {
+    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+      return o.__proto__ || Object.getPrototypeOf(o);
+    };
+    return _getPrototypeOf(o);
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function");
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) _setPrototypeOf(subClass, superClass);
+  }
+
+  function _setPrototypeOf(o, p) {
+    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+      o.__proto__ = p;
+      return o;
+    };
+
+    return _setPrototypeOf(o, p);
+  }
+
+  var WebGLRenderer = function (_SystemRenderer) {
+    _inherits(WebGLRenderer, _SystemRenderer);
+
+    function WebGLRenderer(app) {
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+      _classCallCheck(this, WebGLRenderer);
+
+      return _possibleConstructorReturn(this, _getPrototypeOf(WebGLRenderer).call(this, _const.RENDERER_TYPE.CANVAS, app, options));
+    }
+
+    _createClass(WebGLRenderer, [{
+      key: "render",
+      value: function render(app) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+        var me = this;
+        me.app = app;
+
+        _mmvis._.extend(this.options, options);
+
+        _mmvis._.each(_mmvis._.values(app.convertStages), function (convertStage) {
+          me.renderStage(convertStage.stage);
+        });
+
+        app.convertStages = {};
+      }
+    }, {
+      key: "renderStage",
+      value: function renderStage(stage) {
+        if (!stage.webGLStageRenderer) {
+          stage.webGLStageRenderer = new _WebGLStageRenderer2["default"](stage, app, this.options);
+        }
+
+        ;
+        stage.stageRending = true;
+
+        this._clear(stage);
+
+        this._render(stage);
+
+        stage.stageRending = false;
+      }
+    }, {
+      key: "_render",
+      value: function _render(stage, displayObject) {
+        if (!displayObject) {
+          displayObject = stage;
+        }
+
+        ;
+
+        if (displayObject.graphics) {
+          if (!displayObject.context.$model.visible || displayObject.context.$model.globalAlpha <= 0) {
+            return;
+          }
+
+          ;
+
+          if (!displayObject.graphics.graphicsData.length) {
+            displayObject._draw(displayObject.graphics);
+          }
+
+          ;
+          stage.webGLStageRenderer.render(displayObject, stage);
+        }
+
+        ;
+
+        if (displayObject.children) {
+          for (var i = 0, len = displayObject.children.length; i < len; i++) {
+            this._render(stage, displayObject.children[i]);
+          }
+        }
+
+        ;
+      }
+    }, {
+      key: "_clear",
+      value: function _clear(stage) {
+        stage.webGLStageRenderer.clear();
+      }
+    }]);
+
+    return WebGLRenderer;
+  }(_SystemRenderer3["default"]);
+
+  exports.default = WebGLRenderer;
+});

@@ -1,1 +1,82 @@
-"use strict";!function(e,i){if("function"==typeof define&&define.amd)define(["exports","./buildLine","mmvis","earcut"],i);else if("undefined"!=typeof exports)i(exports,require("./buildLine"),require("mmvis"),require("earcut"));else{var n={};i(n,e.buildLine,e.mmvis,e.earcut),e.undefined=n}}(void 0,function(e,i,n,t){Object.defineProperty(e,"__esModule",{value:!0}),e.default=function(e,i){e.points=e.shape.points.slice();var n=e.points;if(e.hasFill()&&e.fillAlpha&&6<=n.length){for(var t=[],u=e.holes,l=0;l<u.length;l++){var r=u[l];t.push(n.length/2),n=n.concat(r.points)}var s=i.points,f=i.indices,o=n.length/2,a=a.hexTorgb(e.fillStyle),p=e.fillAlpha,h=a[0]*p,d=a[1]*p,c=a[2]*p,v=(0,y.default)(n,t,2);if(!v)return;for(var g=s.length/6,m=0;m<v.length;m+=3)f.push(v[m]+g),f.push(v[m]+g),f.push(v[m+1]+g),f.push(v[m+2]+g),f.push(v[m+2]+g);for(var b=0;b<o;b++)s.push(n[2*b],n[2*b+1],h,d,c,p)}e.hasLine()&&e.strokeAlpha&&(0,x.default)(e,i)};var x=u(i),y=u(t);function u(e){return e&&e.__esModule?e:{default:e}}});
+"use strict";
+
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(["exports", "./buildLine", "mmvis", "earcut"], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports, require("./buildLine"), require("mmvis"), require("earcut"));
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports, global.buildLine, global.mmvis, global.earcut);
+    global.undefined = mod.exports;
+  }
+})(void 0, function (exports, _buildLine, _mmvis, _earcut) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = buildPoly;
+
+  var _buildLine2 = _interopRequireDefault(_buildLine);
+
+  var _earcut2 = _interopRequireDefault(_earcut);
+
+  function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : {
+      default: obj
+    };
+  }
+
+  function buildPoly(graphicsData, webGLData) {
+    graphicsData.points = graphicsData.shape.points.slice();
+    var points = graphicsData.points;
+
+    if (graphicsData.hasFill() && graphicsData.fillAlpha && points.length >= 6) {
+      var holeArray = [];
+      var holes = graphicsData.holes;
+
+      for (var i = 0; i < holes.length; i++) {
+        var hole = holes[i];
+        holeArray.push(points.length / 2);
+        points = points.concat(hole.points);
+      }
+
+      var verts = webGLData.points;
+      var indices = webGLData.indices;
+      var length = points.length / 2;
+
+      var _color = _color.hexTorgb(graphicsData.fillStyle);
+
+      var alpha = graphicsData.fillAlpha;
+      var r = _color[0] * alpha;
+      var g = _color[1] * alpha;
+      var b = _color[2] * alpha;
+      var triangles = (0, _earcut2["default"])(points, holeArray, 2);
+
+      if (!triangles) {
+        return;
+      }
+
+      var vertPos = verts.length / 6;
+
+      for (var _i = 0; _i < triangles.length; _i += 3) {
+        indices.push(triangles[_i] + vertPos);
+        indices.push(triangles[_i] + vertPos);
+        indices.push(triangles[_i + 1] + vertPos);
+        indices.push(triangles[_i + 2] + vertPos);
+        indices.push(triangles[_i + 2] + vertPos);
+      }
+
+      for (var _i2 = 0; _i2 < length; _i2++) {
+        verts.push(points[_i2 * 2], points[_i2 * 2 + 1], r, g, b, alpha);
+      }
+    }
+
+    if (graphicsData.hasLine() && graphicsData.strokeAlpha) {
+      (0, _buildLine2["default"])(graphicsData, webGLData);
+    }
+  }
+});

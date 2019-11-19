@@ -1,1 +1,145 @@
-"use strict";!function(t,e){if("function"==typeof define&&define.amd)define(["exports","pixi-gl-core","./settings"],e);else if("undefined"!=typeof exports)e(exports,require("pixi-gl-core"),require("./settings"));else{var n={};e(n,t.pixiGlCore,t.settings),t.undefined=n}}(void 0,function(t,e,n){Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0;var o=r(e);function r(t){return t&&t.__esModule?t:{default:t}}function i(t){return(i="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(t){return typeof t}:function(t){return t&&"function"==typeof Symbol&&t.constructor===Symbol&&t!==Symbol.prototype?"symbol":typeof t})(t)}function f(t,e){return!e||"object"!==i(e)&&"function"!=typeof e?function(t){if(void 0!==t)return t;throw new ReferenceError("this hasn't been initialised - super() hasn't been called")}(t):e}function u(t){return(u=Object.setPrototypeOf?Object.getPrototypeOf:function(t){return t.__proto__||Object.getPrototypeOf(t)})(t)}function c(t,e){return(c=Object.setPrototypeOf||function(t,e){return t.__proto__=e,t})(t,e)}var s=r(n).default.PRECISION;function l(t){if(t instanceof Array){if("precision"!==t[0].substring(0,9)){var e=t.slice(0);return e.unshift("precision ".concat(s," float;")),e}}else if("precision"!==t.substring(0,9))return"precision ".concat(s," float;\n").concat(t);return t}var a=(function(t,e){if("function"!=typeof e&&null!==e)throw new TypeError("Super expression must either be null or a function");t.prototype=Object.create(e&&e.prototype,{constructor:{value:t,writable:!0,configurable:!0}}),e&&c(t,e)}(p,o.default.GLShader),p);function p(t,e,n){return function(t,e){if(!(t instanceof e))throw new TypeError("Cannot call a class as a function")}(this,p),f(this,u(p).call(this,t,l(e),l(n)))}t.default=a});
+"use strict";
+
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(["exports", "pixi-gl-core", "./settings"], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports, require("pixi-gl-core"), require("./settings"));
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports, global.pixiGlCore, global.settings);
+    global.undefined = mod.exports;
+  }
+})(void 0, function (exports, _pixiGlCore, _settings) {
+  "use strict";
+
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+  exports.default = undefined;
+
+  var _pixiGlCore2 = _interopRequireDefault(_pixiGlCore);
+
+  var _settings2 = _interopRequireDefault(_settings);
+
+  function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : {
+      default: obj
+    };
+  }
+
+  function _typeof(obj) {
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function _typeof(obj) {
+        return typeof obj;
+      };
+    } else {
+      _typeof = function _typeof(obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      };
+    }
+
+    return _typeof(obj);
+  }
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  function _possibleConstructorReturn(self, call) {
+    if (call && (_typeof(call) === "object" || typeof call === "function")) {
+      return call;
+    }
+
+    return _assertThisInitialized(self);
+  }
+
+  function _assertThisInitialized(self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return self;
+  }
+
+  function _getPrototypeOf(o) {
+    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+      return o.__proto__ || Object.getPrototypeOf(o);
+    };
+    return _getPrototypeOf(o);
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function");
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) _setPrototypeOf(subClass, superClass);
+  }
+
+  function _setPrototypeOf(o, p) {
+    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+      o.__proto__ = p;
+      return o;
+    };
+
+    return _setPrototypeOf(o, p);
+  }
+
+  var PRECISION = _settings2["default"].PRECISION;
+  var GLShader = _pixiGlCore2["default"].GLShader;
+
+  function checkPrecision(src) {
+    if (src instanceof Array) {
+      if (src[0].substring(0, 9) !== 'precision') {
+        var copy = src.slice(0);
+        copy.unshift("precision ".concat(PRECISION, " float;"));
+        return copy;
+      }
+    } else if (src.substring(0, 9) !== 'precision') {
+      return "precision ".concat(PRECISION, " float;\n").concat(src);
+    }
+
+    return src;
+  }
+  /**
+   * Wrapper class, webGL Shader for Pixi.
+   * Adds precision string if vertexSrc or fragmentSrc have no mention of it.
+   *
+   * @class
+   * @extends GLShader
+   * @memberof PIXI
+   */
+
+
+  var Shader = function (_GLShader) {
+    _inherits(Shader, _GLShader);
+
+    /**
+     *
+     * @param {WebGLRenderingContext} gl - The current WebGL rendering context
+     * @param {string|string[]} vertexSrc - The vertex shader source as an array of strings.
+     * @param {string|string[]} fragmentSrc - The fragment shader source as an array of strings.
+     */
+    function Shader(gl, vertexSrc, fragmentSrc) {
+      _classCallCheck(this, Shader);
+
+      return _possibleConstructorReturn(this, _getPrototypeOf(Shader).call(this, gl, checkPrecision(vertexSrc), checkPrecision(fragmentSrc)));
+    }
+
+    return Shader;
+  }(GLShader);
+
+  exports.default = Shader;
+});
