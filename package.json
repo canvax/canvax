@@ -1,49 +1,50 @@
 {
-    "name": "canvax",
-    "title": "Canvax.JS",
-    "description": "A javascript canvas 2d rendering engine",
-    "version": "2.0.62",
-    "homepage": "http://canvax.org",
-    "license": "MIT",
-    "magixCliConfig": {
-        "cloudBuild": true
-    },
-    "keywords": [
-        "2d",
-        "canvas",
-        "webgl",
-        "Cross-platform",
-        "Cross-terminal"
-    ],
-    "author": {
-        "name": "nickli",
-        "email": "252759102@qq.com"
-    },
-    "repository": "git",
-    "main": "./dist/index_cjs.js",
-    "devDependencies": {
-        "@babel/core": "^7.2.2",
-        "@babel/preset-env": "^7.2.3",
-        "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
-        "colors-console": "^1.0.3",
-        "gulp": "^4.0.2",
-        "gulp-babel": "^8.0.0",
-        "gulp-clean": "^0.4.0",
-        "gulp-copy": "^4.0.1",
-        "gulp-uglify": "^3.0.2",
-        "readable-stream": "^3.4.0",
-        "rollup": "1.27.0",
-        "rollup-plugin-commonjs": "10.1.0",
-        "rollup-plugin-node-resolve": "5.2.0"
-    },
-    "dependencies": {
-        "earcut": "2.0.7",
-        "@tweenjs/tween.js": "17.2.0",
-        "pixi-gl-core": "1.0.3",
-        "mmvis": "^0.0.78"
-    },
-    "scripts": {
-        "build": "rollup -c",
-        "dev": "rollup -c -w"
-    }
+  "name": "canvax",
+  "title": "Canvax.JS",
+  "description": "A javascript canvas 2d rendering engine",
+  "version": "2.0.66",
+  "homepage": "http://canvax.org",
+  "license": "MIT",
+  "magixCliConfig": {
+    "cloudBuild": true
+  },
+  "keywords": [
+    "2d",
+    "canvas",
+    "webgl",
+    "Cross-platform",
+    "Cross-terminal"
+  ],
+  "author": {
+    "name": "nickli",
+    "email": "252759102@qq.com"
+  },
+  "repository": "git",
+  "main": "./dist/index_cjs.js",
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.2.3",
+    "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
+    "colors-console": "^1.0.3",
+    "gulp": "^4.0.2",
+    "gulp-babel": "^8.0.0",
+    "gulp-clean": "^0.4.0",
+    "gulp-copy": "^4.0.1",
+    "gulp-uglify": "^3.0.2",
+    "mmvis": "^0.0.80",
+    "readable-stream": "^3.4.0",
+    "rollup": "1.27.0",
+    "rollup-plugin-commonjs": "10.1.0",
+    "rollup-plugin-node-resolve": "5.2.0"
+  },
+  "dependencies": {
+    "earcut": "2.0.7",
+    "@tweenjs/tween.js": "17.2.0",
+    "pixi-gl-core": "1.0.3",
+    "mmvis": "0.0.80"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w"
+  }
 }

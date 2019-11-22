@@ -5,7 +5,6 @@ const commonjs = require('rollup-plugin-commonjs');
 const resolve = require('rollup-plugin-node-resolve');
 const colors = require('colors-console');
 const clean = require('gulp-clean');
-const copy = require('gulp-copy');
 const uglify = require('gulp-uglify');
 const pipeline = require('readable-stream').pipeline;
 
@@ -107,7 +106,8 @@ let rollupDist = ()=>{
                 rollupNum++;
 
                 pipeline(
-                    gulp.src(['./dist/index_*.js', '!./dist/index_es.js']),
+                    //gulp.src(['./dist/index_*.js', '!./dist/index_es.js']),
+                    gulp.src(['./dist/index_iife.js']),//只有iife需要压缩，因为是给到chartpark拼文件用的
                     uglify(),
                     gulp.dest('./dist/')
                 );
