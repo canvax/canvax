@@ -3,7 +3,8 @@
  *
  * @author 释剑 (李涛, litao.lt@alibaba-inc.com 
 */
-import {_,$} from "mmvis";
+import _ from "../utils/underscore";
+import $ from '../utils/dom';
 
 var Utils = {
     mainFrameRate   : 60,//默认主帧率

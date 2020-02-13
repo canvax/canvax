@@ -6,7 +6,7 @@
  * 线条 类
  **/
 import Shape from "../display/Shape";
-import {_} from "mmvis";
+import _ from "../utils/underscore";
 
 export default class Line extends Shape
 {

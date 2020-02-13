@@ -7,8 +7,8 @@
  */
 import DisplayObject from "./DisplayObject";
 import Utils from "../utils/index";
-import {_} from "mmvis";
-import {SHAPE_CONTEXT_DEFAULT, STYLE_PROPS} from "../const";
+import _ from "../utils/underscore";
+import { STYLE_PROPS } from "../const";
 import Graphics from "../graphics/Graphics";
 
 export default class Shape extends DisplayObject

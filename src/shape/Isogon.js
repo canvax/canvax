@@ -13,8 +13,7 @@
  * @pointList 私有，从上面的r和n计算得到的边界值的集合
  */
 import Polygon from "./Polygon";
-import Utils from "../utils/index";
-import {_} from "mmvis";
+import _ from "../utils/underscore";
 import _Math from "../geom/Math"
 
 export default class Isogon extends Polygon

@@ -1,22 +1,22 @@
 import Tween from "@tweenjs/tween.js";
 //import Tween from "./Tween"
 import Utils from "../utils/index";
-import {_,global} from "mmvis";
+import _ from "../utils/underscore";
 
 /**
  * 设置 AnimationFrame begin
  */
 
 
-var lastTime = 0;
-
-var requestAnimationFrame,cancelAnimationFrame;
+let lastTime = 0;
+let _globalAnimationEnabled=true;
+let requestAnimationFrame,cancelAnimationFrame;
 
 if( typeof (window) !== 'undefined' ){
     requestAnimationFrame = window.requestAnimationFrame;
     cancelAnimationFrame  = window.cancelAnimationFrame;
-    var vendors = ['ms', 'moz', 'webkit', 'o'];
-    for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+    let vendors = ['ms', 'moz', 'webkit', 'o'];
+    for (let x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
         requestAnimationFrame = window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
         cancelAnimationFrame = window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame'] || window[vendors[x] + 'CancelRequestAnimationFrame'];
     };
@@ -24,9 +24,9 @@ if( typeof (window) !== 'undefined' ){
 
 if (!requestAnimationFrame) {
     requestAnimationFrame = function(callback, element) {
-        var currTime = new Date().getTime();
-        var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-        var id = setTimeout(function() {
+        let currTime = new Date().getTime();
+        let timeToCall = Math.max(0, 16 - (currTime - lastTime));
+        let id = setTimeout(function() {
                 callback(currTime + timeToCall);
             },
             timeToCall);
@@ -41,8 +41,8 @@ if (!cancelAnimationFrame) {
 };
 
 //管理所有图表的渲染任务
-var _taskList = []; //[{ id : task: }...]
-var _requestAid = null;
+let _taskList = []; //[{ id : task: }...]
+let _requestAid = null;
 
 function enabledAnimationFrame(){
     if (!_requestAid) {
@@ -51,7 +51,7 @@ function enabledAnimationFrame(){
             //if ( Tween.getAll().length ) {
             Tween.update(); //tween自己会做length判断
             //};
-            var currTaskList = _taskList;
+            let currTaskList = _taskList;
             _taskList = [];
             _requestAid = null;
             while (currTaskList.length > 0) {
@@ -78,8 +78,8 @@ function registFrame( $frame ) {
  *  @param task 要从渲染帧队列中删除的任务
  */
 function destroyFrame( $frame ) {
-    var d_result = false;
-    for (var i = 0, l = _taskList.length; i < l; i++) {
+    let d_result = false;
+    for (let i = 0, l = _taskList.length; i < l; i++) {
         if (_taskList[i].id === $frame.id) {
             d_result = true;
             _taskList.splice(i, 1);
@@ -101,7 +101,7 @@ function destroyFrame( $frame ) {
  */
 function registTween(options) {
     
-    var opt = _.extend({
+    let opt = _.extend({
         from: null,
         to: null,
         duration: 500,
@@ -115,15 +115,15 @@ function registTween(options) {
         desc: '' //动画描述，方便查找bug
     }, options);
 
-    if( !global.getAnimationEnabled() ){
+    if( !getAnimationEnabled() ){
         //如果全局动画被禁用，那么下面两项强制设置为0
         //TODO:其实应该直接执行回调函数的
         opt.duration = 0;
         opt.delay = 0;
     };
 
-    var tween = {};
-    var tid = "tween_" + Utils.getUID();
+    let tween = {};
+    let tid = "tween_" + Utils.getUID();
     opt.id && ( tid = tid+"_"+opt.id );
 
     if (opt.from && opt.to) {
@@ -184,11 +184,20 @@ function destroyTween(tween , msg) {
     tween.stop();
 };
 
+function setAnimationEnabled( bool ){
+    _globalAnimationEnabled = bool
+}
+
+function getAnimationEnabled(){
+    return _globalAnimationEnabled;
+}
+
 export default {
-    registFrame: registFrame,
-    destroyFrame: destroyFrame,
-    registTween: registTween,
-    destroyTween: destroyTween,
-    Tween: Tween,
+    setAnimationEnabled,getAnimationEnabled,
+    registFrame,
+    destroyFrame,
+    registTween,
+    destroyTween,
+    Tween,
     taskList: _taskList
 };

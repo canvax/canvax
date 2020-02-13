@@ -9,9 +9,7 @@
  * @path path串
  **/
 import Shape from "../display/Shape";
-import Utils from "../utils/index";
-import {_} from "mmvis";
-import Matrix from "../geom/Matrix";
+import _ from "../utils/underscore";
 import { Arc } from '../math/index';
 
 export default class Path extends Shape

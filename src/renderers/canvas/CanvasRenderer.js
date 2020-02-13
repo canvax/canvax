@@ -1,7 +1,7 @@
 import SystemRenderer from '../SystemRenderer';
 import { RENDERER_TYPE } from '../../const';
 import CGR from "../../graphics/canvas/GraphicsRenderer";
-import {_} from "mmvis";
+import _ from "../../utils/underscore";
 
 export default class CanvasRenderer extends SystemRenderer
 {

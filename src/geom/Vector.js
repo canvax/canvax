@@ -6,7 +6,7 @@
  *
  * 向量操作类
  * */
-import {_} from "mmvis";
+import _ from "../utils/underscore";
 
 function Vector(x, y) {
     var vx = 0,vy = 0;

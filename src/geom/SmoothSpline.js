@@ -6,7 +6,7 @@
  * 处理为平滑线条
  */
 import Vector from "./Vector";
-import {_} from "mmvis";
+import _ from "../utils/underscore";
 
 /**
  * @inner

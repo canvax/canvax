@@ -5,7 +5,7 @@
  *
  * 模拟as3的DisplayList 中的容器类
  */
-import {_} from "mmvis";
+import _ from "../utils/underscore";
 import DisplayObject from "./DisplayObject";
 
 export default class DisplayObjectContainer extends DisplayObject

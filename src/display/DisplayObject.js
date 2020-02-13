@@ -5,7 +5,8 @@
  * 事件 destroy addToStage transformChange 
  * 模拟as3 DisplayList 的 现实对象基类
  */
-import {_,event} from "mmvis";
+import _ from "../utils/underscore";
+import event from "../event/index";
 import Matrix from "../geom/Matrix";
 import Point from "./Point";
 import Utils from "../utils/index";
@@ -283,9 +284,14 @@ export default class DisplayObject extends event.Dispatcher
 
         if (cm == null) return new Point( 0 , 0 ); //{x:0, y:0};
         cm.invert();
+
+        //let originPos = cm.mulVector( [ point.x, point.y ] );
+        //return new Point( originPos[0], originPos[1] );
+
         var m = new Matrix(1, 0, 0, 1, point.x , point.y);
         m.concat(cm);
         return new Point( m.tx , m.ty ); //{x:m.tx, y:m.ty};
+        
     }
 
     localToTarget( point , target)
@@ -473,15 +479,12 @@ export default class DisplayObject extends event.Dispatcher
     
         //对鼠标的坐标也做相同的变换
         if( this.worldTransform ){
-            
             var inverseMatrix = this.worldTransform.clone().invert();
             var originPos = [
                 x * Settings.RESOLUTION,
                 y * Settings.RESOLUTION
             ];
-
             originPos = inverseMatrix.mulVector( originPos );
-
             x = originPos[0];
             y = originPos[1];
         };

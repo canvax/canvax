@@ -1,5 +1,5 @@
 import buildLine from './buildLine';
-import { color } from 'mmvis';
+import { hexTorgb } from '../../../utils/color';
 import earcut from 'earcut';
 
 export default function buildPoly(graphicsData, webGLData)
@@ -27,7 +27,7 @@ export default function buildPoly(graphicsData, webGLData)
 
         const length = points.length / 2;
 
-        const color = color.hexTorgb(graphicsData.fillStyle);
+        const color = hexTorgb(graphicsData.fillStyle);
         const alpha = graphicsData.fillAlpha;
         const r = color[0] * alpha;
         const g = color[1] * alpha;

@@ -8,7 +8,7 @@
  **/
 
 import SmoothSpline from "../geom/SmoothSpline";
-import {_} from "mmvis";
+import _ from "../utils/underscore";
 
 
 var _cache = {

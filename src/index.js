@@ -25,7 +25,14 @@ import AnimationFrame from "./animation/AnimationFrame"
 
 import utils from "./utils/index"
 
-var Canvax = {
+import _ from "./utils/underscore"
+import $ from "./utils/dom"
+import event from "./event/index"
+
+
+let Canvax = {
+    version: "__VERSION__",
+    _,$,event, //这三个共享给 chartx用
     App: Application
 };
 
@@ -52,7 +59,6 @@ Canvax.Shapes = {
     Sector : Sector,
     Arrow  : Arrow
 }
-
 
 Canvax.AnimationFrame = AnimationFrame;
 Canvax.utils = utils;

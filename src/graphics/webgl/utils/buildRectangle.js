@@ -1,5 +1,5 @@
 import buildLine from './buildLine';
-import { color } from 'mmvis';
+import { hexTorgb } from '../../../utils/color';
 
 export default function buildRectangle(graphicsData, webGLData)
 {
@@ -12,7 +12,7 @@ export default function buildRectangle(graphicsData, webGLData)
 
     if (graphicsData.hasFill() && graphicsData.fillAlpha)
     {
-        const color = color.hexTorgb(graphicsData.fillStyle);
+        const color = hexTorgb(graphicsData.fillStyle);
         const alpha = graphicsData.fillAlpha;
 
         const r = color[0] * alpha;

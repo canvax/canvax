@@ -421,25 +421,25 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
                     x:50,
                     y:50
                 },
-                
                 //scaleY : 0.5,
                 cursor:"pointer",
 
-
                 radius: [],//[10, 20,0],
                 lineWidth : 1,
-                fillStyle:colors.getColor(colorInd++),
+                fillStyle:'red',//colors.getColor(colorInd++),
                 strokeStyle:colors.getColor(colorInd++),
                 
                 //shadowColor :"blue",
-
                 //shadowOffsetX : 3,
-
                 //shadowOffsetY : 3,
-
                 //shadowBlur : 0
-
             }
+        });
+        rect.on("mouseover" , function(){
+            this.context.lineWidth = 3;
+        });
+        rect.on("mouseout"  , function(){
+            this.context.lineWidth = 2
         });
 
         window.arrow = new Shapes.Arrow({
@@ -572,7 +572,7 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
         sprite.addChild(sector_rect);
         sprite1.addChild(rect);
 
-        stage.addChild( rect.clone() )
+        stage.addChild( rect.clone() );
 
         stage.addChild(line);
         app.addChild(stage); 

@@ -2,7 +2,7 @@
   "name": "canvax",
   "title": "Canvax.JS",
   "description": "A javascript canvas 2d rendering engine",
-  "version": "2.0.66",
+  "version": "2.0.67",
   "homepage": "http://canvax.org",
   "license": "MIT",
   "magixCliConfig": {
@@ -21,30 +21,37 @@
   },
   "repository": "git",
   "main": "./dist/index_cjs.js",
+  "module": "./dist/index_es.js",
+  "files": [
+    "/dist"
+  ],
   "devDependencies": {
     "@babel/core": "^7.2.2",
+    "@babel/plugin-transform-runtime": "^7.7.6",
     "@babel/preset-env": "^7.2.3",
-    "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
+    "@rollup/plugin-commonjs": "^11.0.0",
+    "@rollup/plugin-node-resolve": "^6.0.0",
+    "@rollup/plugin-replace": "^2.3.0",
     "colors-console": "^1.0.3",
+    "fs-extra": "^8.1.0",
     "gulp": "^4.0.2",
-    "gulp-babel": "^8.0.0",
     "gulp-clean": "^0.4.0",
     "gulp-copy": "^4.0.1",
+    "gulp-rename": "^2.0.0",
     "gulp-uglify": "^3.0.2",
-    "mmvis": "^0.0.80",
     "readable-stream": "^3.4.0",
-    "rollup": "1.27.0",
-    "rollup-plugin-commonjs": "10.1.0",
-    "rollup-plugin-node-resolve": "5.2.0"
+    "rollup": "1.27.14",
+    "rollup-plugin-babel": "^4.3.3"
   },
   "dependencies": {
-    "earcut": "2.0.7",
+    "@babel/runtime": "^7.7.7",
     "@tweenjs/tween.js": "17.2.0",
-    "pixi-gl-core": "1.0.3",
-    "mmvis": "0.0.80"
+    "earcut": "2.0.7",
+    "pixi-gl-core": "1.0.3"
   },
   "scripts": {
     "build": "rollup -c",
-    "dev": "rollup -c -w"
+    "dev": "rollup -c -w",
+    "prepare": "gulp prePublishToNpm"
   }
 }

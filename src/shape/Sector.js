@@ -15,7 +15,7 @@
  **/
 import Shape from "../display/Shape";
 import Utils from "../utils/index";
-import {_} from "mmvis";
+import _ from "../utils/underscore";
 import myMath from "../geom/Math";
 
 export default class Sector extends Shape

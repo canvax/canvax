@@ -17,7 +17,9 @@ import Stage from "./display/Stage";
 import autoRenderer from "./renderers/autoRenderer";
 import Matrix from "./geom/Matrix";
 
-import {_,$,event} from "mmvis";
+import _ from "./utils/underscore";
+import $ from "./utils/dom";
+import event from "./event/index";
 
 export default class Application extends DisplayObjectContainer
 {
