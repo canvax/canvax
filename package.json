@@ -2,7 +2,7 @@
   "name": "canvax",
   "title": "Canvax.JS",
   "description": "A javascript canvas 2d rendering engine",
-  "version": "2.0.67",
+  "version": "2.0.68",
   "homepage": "http://canvax.org",
   "license": "MIT",
   "magixCliConfig": {
@@ -52,6 +52,6 @@
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "prepare": "gulp prePublishToNpm"
+    "prepublish": "gulp prePublishToNpm"
   }
 }

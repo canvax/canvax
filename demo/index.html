@@ -165,7 +165,8 @@
                 strokeStyle : colors.getColor(colorInd++),//colors.getColor(colorInd++),
                 lineWidth : 1,
                 smooth    : true,
-                lineType  : "dashed"
+                lineType  : "dashed",
+                //shadowColor: 'red'
             }
         });
 
@@ -231,7 +232,9 @@
                 vr : 30,
                 fillStyle:colors.getColor(colorInd++),
                 strokeStyle:colors.getColor(colorInd++),
-                lineWidth : 8
+                lineWidth : 8,
+                shadowColor: 'red',
+                shadowBlur: 30
 
             }
         });
@@ -456,6 +459,32 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
         });
         stage.addChild( arrow );
 
+        window.diamond = new Shapes.Diamond({
+            context : {
+                x: 200,
+                y: 650,
+                innerRect: {
+                    width: 100,
+                    height: 50
+                },
+                includedAngle: 50,
+                fillStyle: "green",
+                shadowBlur: 20,
+                //shadowColor: 'green'
+            }
+        });
+        window.diamondInnerRect = new Shapes.Rect({
+            context : {
+                x: 200 - 100/2,
+                y: 650 - 50/2,
+                width: 100,
+                height: 50,
+                fillStyle: colors.getColor(colorInd++)
+            }
+        });
+        stage.addChild( diamond );
+        stage.addChild( diamondInnerRect );
+
 
         window.line = new Shapes.Line({
             id : "line1",
@@ -524,12 +553,13 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
                 context : {
                     x :500,
                     y :530,
-                    fillStyle : "#fb8400",
+                    fillStyle : "blue",
                     fontSize  : 20,
                     textAlign    : "center",
                     textBaseline : "middle",
                     lineWidth: 1,
-                    fontFamily: "iconfont"
+                    fontFamily: "iconfont",
+                    shadowBlur: 10
                 }
             })
             textStage.addChild( text );

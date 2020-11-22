@@ -46,6 +46,8 @@ export const CONTEXT_DEFAULT = {
     globalAlpha   : 1
 
 };
+
+//暂时没用了， 直接写死在shape里
 export const SHAPE_CONTEXT_DEFAULT = {
     cursor        : "default",
 
@@ -81,7 +83,11 @@ export const STYLE_PROPS = [
     "strokeStyle",
     "fillStyle",
     "fillAlpha",
-    "globalAlpha"
+    "globalAlpha",
+    "shadowOffsetX",
+    "shadowOffsetY",
+    "shadowColor",
+    "shadowBlur"
 ]
 
 

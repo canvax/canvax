@@ -190,7 +190,7 @@ let minFile = ()=> {
         return pipeline(
             //gulp.src(['./dist/index_*.js', '!./dist/index_es.js']),
             //gulp.src('./dist/index_(?!es.js)'), //好像不生效
-            gulp.src(['./dist/index.js']), //只有iife需要压缩，因为是给到chartpark拼文件用的
+            gulp.src(['./dist/index_iife.js']), //只有iife需要压缩，因为是给到chartpark拼文件用的
             uglify(),
             rename({ suffix: '.min' }),
             gulp.dest('./dist/')

@@ -19,7 +19,8 @@ import Path from "./shape/Path";
 import Polygon from "./shape/Polygon";
 import Rect from "./shape/Rect";
 import Sector from "./shape/Sector";
-import Arrow from "./shape/arrow";
+import Arrow from "./shape/Arrow";
+import Diamond from "./shape/Diamond";
 
 import AnimationFrame from "./animation/AnimationFrame"
 
@@ -37,27 +38,28 @@ let Canvax = {
 };
 
 Canvax.Display = {
-    DisplayObject : DisplayObject,
+    DisplayObject          : DisplayObject,
     DisplayObjectContainer : DisplayObjectContainer,
-    Stage  : Stage,
-    Sprite : Sprite,
-    Shape  : Shape,
-    Point  : Point,
-    Text   : Text
+    Stage                  : Stage,
+    Sprite                 : Sprite,
+    Shape                  : Shape,
+    Point                  : Point,
+    Text                   : Text
 }
 
 Canvax.Shapes = {
     BrokenLine : BrokenLine,
-    Circle : Circle,
-    Droplet : Droplet,
-    Ellipse : Ellipse,
-    Isogon : Isogon,
-    Line : Line,
-    Path : Path,
-    Polygon : Polygon,
-    Rect : Rect,
-    Sector : Sector,
-    Arrow  : Arrow
+    Circle     : Circle,
+    Droplet    : Droplet,
+    Ellipse    : Ellipse,
+    Isogon     : Isogon,
+    Line       : Line,
+    Path       : Path,
+    Polygon    : Polygon,
+    Rect       : Rect,
+    Sector     : Sector,
+    Arrow      : Arrow,
+    Diamond    : Diamond
 }
 
 Canvax.AnimationFrame = AnimationFrame;

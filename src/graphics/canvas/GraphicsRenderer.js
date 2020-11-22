@@ -29,7 +29,11 @@ export default class CanvasGraphicsRenderer
             const fill = data.hasFill() && data.fillAlpha && !isClip;
             const line = data.hasLine() && data.strokeAlpha && !isClip;
 
-            ctx.lineWidth = data.lineWidth;
+            ctx.lineWidth     = data.lineWidth;
+            ctx.shadowColor   = data.shadowColor;
+            ctx.shadowBlur    = data.shadowBlur;
+            ctx.shadowOffsetX = data.shadowOffsetX;
+            ctx.shadowOffsetY = data.shadowOffsetY;
 
             if (data.type === SHAPES.POLY)
             {
@@ -48,6 +52,11 @@ export default class CanvasGraphicsRenderer
                 {
                     ctx.globalAlpha = data.strokeAlpha * globalAlpha;
                     ctx.strokeStyle = strokeStyle;
+                    if( fill &&  data.shadowBlur){
+                        //如果有fill的时候也有shadow， 那么在描边的时候不需要阴影
+                        //因为fill的时候已经画过了
+                        ctx.shadowBlur = 0;
+                    };
                     ctx.stroke();
                 }
             }
@@ -70,6 +79,11 @@ export default class CanvasGraphicsRenderer
                 {
                     ctx.globalAlpha = data.strokeAlpha * globalAlpha;
                     ctx.strokeStyle = strokeStyle;
+                    if( fill &&  data.shadowBlur){
+                        //如果有fill的时候也有shadow， 那么在描边的时候不需要阴影
+                        //因为fill的时候已经画过了
+                        ctx.shadowBlur = 0;
+                    };
                     ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
                 }
             }
@@ -91,6 +105,11 @@ export default class CanvasGraphicsRenderer
                 {
                     ctx.globalAlpha = data.strokeAlpha * globalAlpha;
                     ctx.strokeStyle = strokeStyle;
+                    if( fill &&  data.shadowBlur){
+                        //如果有fill的时候也有shadow， 那么在描边的时候不需要阴影
+                        //因为fill的时候已经画过了
+                        ctx.shadowBlur = 0;
+                    };
                     ctx.stroke();
                 }
             }
@@ -130,9 +149,15 @@ export default class CanvasGraphicsRenderer
                 {
                     ctx.globalAlpha = data.strokeAlpha * globalAlpha;
                     ctx.strokeStyle = strokeStyle;
+                    if( fill &&  data.shadowBlur){
+                        //如果有fill的时候也有shadow， 那么在描边的时候不需要阴影
+                        //因为fill的时候已经画过了
+                        ctx.shadowBlur = 0;
+                    };
                     ctx.stroke();
                 }
             }
+
         }
     }
 

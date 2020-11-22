@@ -82,23 +82,23 @@ export default class DisplayObject extends event.Dispatcher
         var optCtx = opt.context || {};
         
         var _contextATTRS = {
-            width         : optCtx.width  || 0,
-            height        : optCtx.height || 0,
-            x             : optCtx.x      || 0,
-            y             : optCtx.y      || 0,
-            scaleX        : optCtx.scaleX || 1,
-            scaleY        : optCtx.scaleY || 1,
-            scaleOrigin   : optCtx.scaleOrigin || {
+            width         : optCtx.width        || 0,
+            height        : optCtx.height       || 0,
+            x             : optCtx.x            || 0,
+            y             : optCtx.y            || 0,
+            scaleX        : optCtx.scaleX       || 1,
+            scaleY        : optCtx.scaleY       || 1,
+            scaleOrigin   : optCtx.scaleOrigin  || {
                 x : 0,
                 y : 0
             },
-            rotation      : optCtx.rotation || 0,
+            rotation      : optCtx.rotation     || 0,
             rotateOrigin  : optCtx.rotateOrigin || {
                 x : 0,
                 y : 0
             },
-            visible       : optCtx.visible || true,
-            globalAlpha   : optCtx.globalAlpha || 1
+            visible       : optCtx.visible      || true,
+            globalAlpha   : optCtx.globalAlpha  || 1
 
             //样式部分迁移到shape中
         }

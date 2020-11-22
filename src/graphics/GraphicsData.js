@@ -1,13 +1,18 @@
 export default class GraphicsData
 {
-    constructor(lineWidth, strokeStyle, strokeAlpha, fillStyle, fillAlpha, shape)
+    constructor(lineWidth, strokeStyle, strokeAlpha, fillStyle, fillAlpha, shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, shape)
     {
-        this.lineWidth = lineWidth;
-        this.strokeStyle = strokeStyle;
-        this.strokeAlpha = strokeAlpha;
+        this.lineWidth     = lineWidth;
+        this.strokeStyle   = strokeStyle;
+        this.strokeAlpha   = strokeAlpha;
 
-        this.fillStyle = fillStyle;
-        this.fillAlpha = fillAlpha;
+        this.fillStyle     = fillStyle;
+        this.fillAlpha     = fillAlpha;
+
+        this.shadowOffsetX = shadowOffsetX;
+        this.shadowOffsetY = shadowOffsetY;
+        this.shadowBlur    = shadowBlur;
+        this.shadowColor   = shadowColor;
         
         this.shape = shape;
         this.type = shape.type;
@@ -29,6 +34,10 @@ export default class GraphicsData
             this.strokeAlpha,
             this.fillStyle,
             this.fillAlpha,
+            this.shadowOffsetX ,
+            this.shadowOffsetY ,
+            this.shadowBlur    ,
+            this.shadowColor   ,
             this.shape
         );
         cloneGraphicsData.fill = this.fill;
@@ -47,7 +56,7 @@ export default class GraphicsData
         //console.log("line:"+this.line+"__fill:"+this.fill)
         //从shape中把绘图需要的style属性同步过来
         if( this.line ){
-            this.lineWidth = style.lineWidth;
+            this.lineWidth   = style.lineWidth;
             this.strokeStyle = style.strokeStyle;
             this.strokeAlpha = style.strokeAlpha;
         }
@@ -56,6 +65,11 @@ export default class GraphicsData
             this.fillStyle = style.fillStyle;
             this.fillAlpha = style.fillAlpha;
         }
+
+        this.shadowOffsetX = style.shadowOffsetX; //阴影向右偏移量
+        this.shadowOffsetY = style.shadowOffsetY; //阴影向下偏移量
+        this.shadowBlur    = style.shadowBlur;    //阴影模糊效果
+        this.shadowColor   = style.shadowColor;   //阴影颜色
     }
 
     hasFill()

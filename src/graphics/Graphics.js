@@ -14,11 +14,17 @@ export default class Graphics
 {
     constructor( shape )
     {
+
         this.lineWidth = 1;
         this.strokeStyle = null;
         this.strokeAlpha = 1;
         this.fillStyle = null;
         this.fillAlpha = 1;
+
+        this.shadowOffsetX = 0;     //阴影向右偏移量
+        this.shadowOffsetY = 0;     //阴影向下偏移量
+        this.shadowBlur    = 0;    //阴影模糊效果
+        this.shadowColor   ='black';//阴影颜色
 
         //比如path m 0 0 l 0 0 m 1 1 l 1 1
         //就会有两条graphicsData数据产生
@@ -41,12 +47,18 @@ export default class Graphics
     {
         //从 shape 中把绘图需要的style属性同步过来
         const model = context.$model;
-        this.lineWidth = model.lineWidth;
-        this.strokeStyle = model.strokeStyle;
-        this.strokeAlpha = model.strokeAlpha * model.globalAlpha;
 
-        this.fillStyle = model.fillStyle;
-        this.fillAlpha = model.fillAlpha * model.globalAlpha;
+        this.lineWidth     = model.lineWidth;
+        this.strokeStyle   = model.strokeStyle;
+        this.strokeAlpha   = model.strokeAlpha * model.globalAlpha;
+
+        this.fillStyle     = model.fillStyle;
+        this.fillAlpha     = model.fillAlpha * model.globalAlpha;
+debugger
+        this.shadowOffsetX = model.shadowOffsetX; //阴影向右偏移量
+        this.shadowOffsetY = model.shadowOffsetY; //阴影向下偏移量
+        this.shadowBlur    = model.shadowBlur;    //阴影模糊效果
+        this.shadowColor   = model.shadowColor;   //阴影颜色
 
         var g = this;
 
@@ -386,6 +398,10 @@ export default class Graphics
             this.strokeAlpha,
             this.fillStyle,
             this.fillAlpha,
+            this.shadowOffsetX, //阴影向右偏移量
+            this.shadowOffsetY, //阴影向下偏移量
+            this.shadowBlur   , //阴影模糊效果
+            this.shadowColor  , //阴影颜色
             shape
         );
 
