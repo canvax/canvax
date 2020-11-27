@@ -54,7 +54,7 @@ export default class Graphics
 
         this.fillStyle     = model.fillStyle;
         this.fillAlpha     = model.fillAlpha * model.globalAlpha;
-debugger
+
         this.shadowOffsetX = model.shadowOffsetX; //阴影向右偏移量
         this.shadowOffsetY = model.shadowOffsetY; //阴影向下偏移量
         this.shadowBlur    = model.shadowBlur;    //阴影模糊效果

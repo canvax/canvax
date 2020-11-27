@@ -5669,7 +5669,6 @@ function () {
       this.strokeAlpha = model.strokeAlpha * model.globalAlpha;
       this.fillStyle = model.fillStyle;
       this.fillAlpha = model.fillAlpha * model.globalAlpha;
-      debugger;
       this.shadowOffsetX = model.shadowOffsetX; //阴影向右偏移量
 
       this.shadowOffsetY = model.shadowOffsetY; //阴影向下偏移量
@@ -7872,7 +7871,7 @@ function (_Shape) {
 }(Shape);
 
 var Canvax = {
-  version: "2.0.68",
+  version: "2.0.70",
   _: _,
   $: $,
   event: event,
