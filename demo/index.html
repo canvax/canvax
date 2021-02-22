@@ -11,25 +11,27 @@
     
     @font-face {
         font-family: 'iconfont';  /* project id 308 */
-        src: url('//at.alicdn.com/t/font_308_f0r75zdxhol.eot');
-        src: url('//at.alicdn.com/t/font_308_f0r75zdxhol.eot?#iefix') format('embedded-opentype'),
-        url('//at.alicdn.com/t/font_308_f0r75zdxhol.woff2') format('woff2'),
-        url('//at.alicdn.com/t/font_308_f0r75zdxhol.woff') format('woff'),
-        url('//at.alicdn.com/t/font_308_f0r75zdxhol.ttf') format('truetype'),
-        url('//at.alicdn.com/t/font_308_f0r75zdxhol.svg#iconfont') format('svg');
+        src: url('http://at.alicdn.com/t/font_308_g5p4byrm2rm.eot');
+        src: url('http://at.alicdn.com/t/font_308_g5p4byrm2rm.eot?#iefix') format('embedded-opentype'),
+        url('http://at.alicdn.com/t/font_308_g5p4byrm2rm.woff2') format('woff2'),
+        url('http://at.alicdn.com/t/font_308_g5p4byrm2rm.woff') format('woff'),
+        url('http://at.alicdn.com/t/font_308_g5p4byrm2rm.ttf') format('truetype'),
+        url('http://at.alicdn.com/t/font_308_g5p4byrm2rm.svg#iconfont') format('svg');
     }
-    .iconfont1 {
-        font-display: fallback;
-        font-family: 'iconfont';
+    .iconfont {
+        font-family: "iconfont";
         line-height: 1;
         font-size: 16px;
         font-style: normal;
-        font-variant: normal;
         font-weight: normal;
-        speak: none;
+        font-variant: normal;
+        display: inline-block;
+        position: relative;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-     }
+        vertical-align: -1px;
+        color:#92A5AF;
+    }
 
   
     </style>
@@ -45,7 +47,8 @@
 
 </head>
 
-<body onload="pageload()">
+<body onload="pageload()" >
+    <i class="iconfont">&#xe8ff;</i>
     <div id="ready"></div>
    
     <script>
@@ -454,7 +457,8 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
                 point : {
                     x: 300,
                     y: 300
-                }
+                },
+                fillStyle: "green"
             }
         });
         stage.addChild( arrow );
@@ -544,29 +548,34 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
             //line.cleanAnimates();
         },2000)
 
-        var icon = String.fromCharCode(parseInt('e6a3', 16));
+        var icon = String.fromCharCode(parseInt('e66f', 16));
 
         
         setTimeout(function(){
             //text内部要做icon加载的
-            window.text = new canvax.Display.Text( icon + "->\ue6a3" , {
+            window._iconText = new canvax.Display.Text( icon + " -> \ue66f" , {
                 context : {
                     x :500,
                     y :530,
-                    fillStyle : "blue",
+                    fillStyle : "green",
                     fontSize  : 20,
                     textAlign    : "center",
                     textBaseline : "middle",
                     lineWidth: 1,
+                    strokeStyle: 'red',
                     fontFamily: "iconfont",
-                    shadowBlur: 10
+                    shadowBlur: 10,
+                    cursor: 'pointer'
                 }
             })
-            textStage.addChild( text );
+            _iconText.on('click',function(){
 
-        }, 1)
+            });
+            textStage.addChild( _iconText );
 
-        window.text1 = new canvax.Display.Text( "我的大刀/n已经饥渴难耐" , {
+        }, 1000)
+
+        window.text1 = new canvax.Display.Text( "我的大刀\n已经饥渴难耐" , {
             context : {
                 x :550,
                 y :400,
@@ -577,7 +586,8 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
                 lineWidth: 1,
                 fontFamily: "iconfont"
             }
-        })
+        });
+        textStage.addChild( text1 );
 
 
         //stage.addChild(rect);
@@ -592,9 +602,6 @@ map1Path = "M0 -122.55508999999999 L1.606533725291556 -123.30539705294983 L4.263
         stage.addChild(droplet);
 
         
-
-        
-        textStage.addChild( text1 );
         app.addChild( textStage );
 
         sprite.addChild(sector);
