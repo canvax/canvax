@@ -24,30 +24,6 @@ function _createClass(Constructor, protoProps, staticProps) {
 
 var createClass = _createClass;
 
-function createCommonjsModule(fn, module) {
-	return module = { exports: {} }, fn(module, module.exports), module.exports;
-}
-
-var _typeof_1 = createCommonjsModule(function (module) {
-function _typeof(obj) {
-  "@babel/helpers - typeof";
-
-  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
-    module.exports = _typeof = function _typeof(obj) {
-      return typeof obj;
-    };
-  } else {
-    module.exports = _typeof = function _typeof(obj) {
-      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-    };
-  }
-
-  return _typeof(obj);
-}
-
-module.exports = _typeof;
-});
-
 function _assertThisInitialized(self) {
   if (self === void 0) {
     throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
@@ -58,26 +34,9 @@ function _assertThisInitialized(self) {
 
 var assertThisInitialized = _assertThisInitialized;
 
-function _possibleConstructorReturn(self, call) {
-  if (call && (_typeof_1(call) === "object" || typeof call === "function")) {
-    return call;
-  }
-
-  return assertThisInitialized(self);
+function createCommonjsModule(fn, module) {
+	return module = { exports: {} }, fn(module, module.exports), module.exports;
 }
-
-var possibleConstructorReturn = _possibleConstructorReturn;
-
-var getPrototypeOf = createCommonjsModule(function (module) {
-function _getPrototypeOf(o) {
-  module.exports = _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
-    return o.__proto__ || Object.getPrototypeOf(o);
-  };
-  return _getPrototypeOf(o);
-}
-
-module.exports = _getPrototypeOf;
-});
 
 var setPrototypeOf = createCommonjsModule(function (module) {
 function _setPrototypeOf(o, p) {
@@ -108,6 +67,47 @@ function _inherits(subClass, superClass) {
 }
 
 var inherits = _inherits;
+
+var _typeof_1 = createCommonjsModule(function (module) {
+function _typeof(obj) {
+  "@babel/helpers - typeof";
+
+  if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+    module.exports = _typeof = function _typeof(obj) {
+      return typeof obj;
+    };
+  } else {
+    module.exports = _typeof = function _typeof(obj) {
+      return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+    };
+  }
+
+  return _typeof(obj);
+}
+
+module.exports = _typeof;
+});
+
+function _possibleConstructorReturn(self, call) {
+  if (call && (_typeof_1(call) === "object" || typeof call === "function")) {
+    return call;
+  }
+
+  return assertThisInitialized(self);
+}
+
+var possibleConstructorReturn = _possibleConstructorReturn;
+
+var getPrototypeOf = createCommonjsModule(function (module) {
+function _getPrototypeOf(o) {
+  module.exports = _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+    return o.__proto__ || Object.getPrototypeOf(o);
+  };
+  return _getPrototypeOf(o);
+}
+
+module.exports = _getPrototypeOf;
+});
 
 var _ = {};
 var breaker = {};
@@ -571,9 +571,62 @@ _.radToDeg = function (radians) {
   return radians * _.RAD2DEG;
 };
 
-var RESOLUTION = typeof window !== 'undefined' ? window.devicePixelRatio : 1;
+var Settings = {
+  //设备分辨率
+  RESOLUTION: 1,
+
+  /**
+   * Target frames per millisecond.
+   */
+  TARGET_FPMS: 0.06,
+
+  /**
+   * If set to true WebGL will attempt make textures mimpaped by default.
+   * Mipmapping will only succeed if the base texture uploaded has power of two dimensions.
+   */
+  MIPMAP_TEXTURES: true,
+
+  /**
+   * Default filter resolution.
+   */
+  FILTER_RESOLUTION: 1,
+  // TODO: maybe change to SPRITE.BATCH_SIZE: 2000
+  // TODO: maybe add PARTICLE.BATCH_SIZE: 15000
+
+  /**
+   * The default sprite batch size.
+   *
+   * The default aims to balance desktop and mobile devices.
+   */
+  SPRITE_BATCH_SIZE: 4096,
+
+  /**
+   * The prefix that denotes a URL is for a retina asset.
+   */
+  RETINA_PREFIX: /@(.+)x/,
+  RENDER_OPTIONS: {
+    view: null,
+    antialias: true,
+    forceFXAA: false,
+    autoResize: false,
+    transparent: true,
+    backgroundColor: 0x000000,
+    clearBeforeRender: true,
+    preserveDrawingBuffer: false,
+    roundPixels: false
+  },
+  TRANSFORM_MODE: 0,
+  GC_MODE: 0,
+  GC_MAX_IDLE: 60 * 60,
+  GC_MAX_CHECK_COUNT: 60 * 10,
+  WRAP_MODE: 0,
+  SCALE_MODE: 0,
+  PRECISION: 'mediump'
+};
 
 var addOrRmoveEventHand = function addOrRmoveEventHand(domHand, ieHand) {
+  if (!document) return;
+
   if (document[domHand]) {
     var eventDomFn = function eventDomFn(el, type, fn) {
       if (el.length) {
@@ -604,6 +657,8 @@ var addOrRmoveEventHand = function addOrRmoveEventHand(domHand, ieHand) {
 var $ = {
   // dom操作相关代码
   query: function query(el) {
+    if (!el) return;
+
     if (_.isString(el)) {
       return document.getElementById(el);
     }
@@ -620,6 +675,12 @@ var $ = {
     return null;
   },
   offset: function offset(el) {
+    if (!el) {
+      return {
+        top: 0,
+        left: 0
+      };
+    }
     var box = el.getBoundingClientRect(),
         doc = el.ownerDocument,
         body = doc.body,
@@ -663,14 +724,15 @@ var $ = {
    * @param {string} type : dom type， such as canvas, div etc.
    */
   createCanvas: function createCanvas(_width, _height, id) {
+    if (!document) return;
     var canvas = document.createElement("canvas");
     canvas.style.position = 'absolute';
     canvas.style.width = _width + 'px';
     canvas.style.height = _height + 'px';
     canvas.style.left = 0;
     canvas.style.top = 0;
-    canvas.setAttribute('width', _width * RESOLUTION);
-    canvas.setAttribute('height', _height * RESOLUTION);
+    canvas.setAttribute('width', _width * Settings.RESOLUTION);
+    canvas.setAttribute('height', _height * Settings.RESOLUTION);
     canvas.setAttribute('id', id);
     return canvas;
   },
@@ -708,7 +770,6 @@ var Utils = {
   _pixelCtx: null,
   __emptyFunc: function __emptyFunc() {},
   //retina 屏幕优化
-  _devicePixelRatio: typeof window !== 'undefined' ? window.devicePixelRatio : 1,
   _UID: 0,
   //该值为向上的自增长整数值
   getUID: function getUID() {
@@ -724,6 +785,8 @@ var Utils = {
     return !!document.createElement('canvas').getContext;
   },
   initElement: function initElement(canvas) {
+    if (!window) return;
+
     if (window.FlashCanvas && FlashCanvas.initElement) {
       FlashCanvas.initElement(canvas);
     }
@@ -795,7 +858,10 @@ var Utils = {
     return opt;
   }
 };
-Utils._pixelCtx = Utils.initElement($.createCanvas(1, 1, "_pixelCanvas")).getContext('2d');
+
+var _canvas = Utils.initElement($.createCanvas(1, 1, "_pixelCanvas"));
+
+Utils._pixelCtx = _canvas && _canvas.getContext('2d');
 
 /**
  * Canvax
@@ -1058,15 +1124,19 @@ Manager.prototype = {
   }
 };
 
-var Dispatcher =
-/*#__PURE__*/
-function (_Manager) {
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Dispatcher = /*#__PURE__*/function (_Manager) {
   inherits(Dispatcher, _Manager);
+
+  var _super = _createSuper(Dispatcher);
 
   function Dispatcher() {
     classCallCheck(this, Dispatcher);
 
-    return possibleConstructorReturn(this, getPrototypeOf(Dispatcher).call(this));
+    return _super.call(this);
   }
 
   createClass(Dispatcher, [{
@@ -1241,7 +1311,8 @@ function (_Manager) {
  */
 var _hammerEventTypes = ["pan", "panstart", "panmove", "panend", "pancancel", "panleft", "panright", "panup", "pandown", "press", "pressup", "swipe", "swipeleft", "swiperight", "swipeup", "swipedown", "tap"];
 
-var Handler = function Handler(canvax, opt) {
+var Handler = function Handler(canvax) {
+  var opt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   this.canvax = canvax;
   this.curPoints = [{
     x: 0,
@@ -1263,6 +1334,7 @@ var Handler = function Handler(canvax, opt) {
     move: "panmove",
     end: "panend"
   };
+  this._opt = opt;
 
   _.extend(true, this, opt);
 }; //这样的好处是document.compareDocumentPosition只会在定义的时候执行一次。
@@ -1285,33 +1357,46 @@ Handler.prototype = {
     //依次添加上浏览器的自带事件侦听
     var me = this;
 
-    if (me.target.nodeType == undefined) {
-      //如果target.nodeType没有的话， 说明该target为一个jQuery对象 or kissy 对象or hammer对象
-      //即为第三方库，那么就要对接第三方库的事件系统。默认实现hammer的大部分事件系统
-      types.register(_hammerEventTypes);
+    if (this._opt.events) {
+      types.register(this._opt.events);
     }
 
-    $.addEvent(me.target, "contextmenu", function (e) {
-      if (e && e.preventDefault) {
-        e.preventDefault();
-      } else {
-        window.event.returnValue = false;
+    if (me.target) {
+      if (me.target.nodeType == undefined) {
+        //如果target.nodeType没有的话， 说明该target为一个jQuery对象 or kissy 对象or hammer对象
+        //即为第三方库，那么就要对接第三方库的事件系统。默认实现hammer的大部分事件系统
+        types.register(_hammerEventTypes);
       }
-    });
 
-    _.each(types.get(), function (type) {
-      //不再关心浏览器环境是否 'ontouchstart' in window 
-      //而是直接只管传给事件模块的是一个原生dom还是 jq对象 or hammer对象等
-      if (me.target.nodeType == 1) {
-        $.addEvent(me.target, type, function (e) {
-          me.__mouseHandler(e);
-        });
-      } else {
-        me.target.on(type, function (e) {
-          me.__libHandler(e);
-        });
-      }
-    });
+      $.addEvent(me.target, "contextmenu", function (e) {
+        if (e && e.preventDefault) {
+          e.preventDefault();
+        } else {
+          window.event.returnValue = false;
+        }
+      });
+
+      _.each(types.get(), function (type) {
+        //不再关心浏览器环境是否 'ontouchstart' in window 
+        //而是直接只管传给事件模块的是一个原生dom还是 jq对象 or hammer对象等
+        if (me.target.nodeType == 1) {
+          $.addEvent(me.target, type, function (e) {
+            me.__mouseHandler(e);
+          });
+        } else {
+          me.target.on(type, function (e) {
+            me.__libHandler(e);
+          });
+        }
+      });
+    }
+  },
+  bindEventHandle: function bindEventHandle(e, type) {
+    if (type == 'mouse') {
+      this.__mouseHandler.apply(this, [e]);
+    } else {
+      this.__libHandler.apply(this, [e]);
+    }
   },
 
   /*
@@ -1510,7 +1595,7 @@ Handler.prototype = {
 
     if (me.curPointsTarget.length > 0) {
       //drag开始
-      if (e.type == me.drag.start) {
+      if (me.drag.start.indexOf(e.type) > -1) {
         //dragstart的时候touch已经准备好了target， curPointsTarget 里面只要有一个是有效的
         //就认为drags开始
         _.each(me.curPointsTarget, function (child, i) {
@@ -1532,7 +1617,7 @@ Handler.prototype = {
         });
       }
 
-      if (e.type == me.drag.move) {
+      if (me.drag.move.indexOf(e.type) > -1) {
         if (me._draging) {
           _.each(me.curPointsTarget, function (child, i) {
             if (child && child.dragEnabled) {
@@ -1542,7 +1627,7 @@ Handler.prototype = {
         }
       }
 
-      if (e.type == me.drag.end) {
+      if (me.drag.end.indexOf(e.type) > -1) {
         if (me._draging) {
           _.each(me.curPointsTarget, function (child, i) {
             if (child && child.dragEnabled) {
@@ -1568,10 +1653,10 @@ Handler.prototype = {
     var root = me.canvax;
     var curTouchs = [];
 
-    _.each(e.point, function (touch) {
+    _.each(e.point || e.touches, function (touch) {
       curTouchs.push({
-        x: $.pageX(touch) - root.viewOffset.left,
-        y: $.pageY(touch) - root.viewOffset.top
+        x: 'x' in touch ? touch.x : $.pageX(touch) - root.viewOffset.left,
+        y: 'y' in touch ? touch.y : $.pageY(touch) - root.viewOffset.top
       });
     });
 
@@ -1867,9 +1952,7 @@ Matrix.prototype = {
  *
  * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
  */
-var Point =
-/*#__PURE__*/
-function () {
+var Point = /*#__PURE__*/function () {
   function Point() {
     var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
     var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
@@ -3234,70 +3317,21 @@ function insideLine(data, x, y, line) {
   return insideCatch;
 }
 
-var settings = {
-  //设备分辨率
-  RESOLUTION: typeof window !== 'undefined' ? window.devicePixelRatio : 1,
+function _createSuper$1(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$1(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
 
-  /**
-   * Target frames per millisecond.
-   */
-  TARGET_FPMS: 0.06,
+function _isNativeReflectConstruct$1() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
 
-  /**
-   * If set to true WebGL will attempt make textures mimpaped by default.
-   * Mipmapping will only succeed if the base texture uploaded has power of two dimensions.
-   */
-  MIPMAP_TEXTURES: true,
-
-  /**
-   * Default filter resolution.
-   */
-  FILTER_RESOLUTION: 1,
-  // TODO: maybe change to SPRITE.BATCH_SIZE: 2000
-  // TODO: maybe add PARTICLE.BATCH_SIZE: 15000
-
-  /**
-   * The default sprite batch size.
-   *
-   * The default aims to balance desktop and mobile devices.
-   */
-  SPRITE_BATCH_SIZE: 4096,
-
-  /**
-   * The prefix that denotes a URL is for a retina asset.
-   */
-  RETINA_PREFIX: /@(.+)x/,
-  RENDER_OPTIONS: {
-    view: null,
-    antialias: true,
-    forceFXAA: false,
-    autoResize: false,
-    transparent: true,
-    backgroundColor: 0x000000,
-    clearBeforeRender: true,
-    preserveDrawingBuffer: false,
-    roundPixels: false
-  },
-  TRANSFORM_MODE: 0,
-  GC_MODE: 0,
-  GC_MAX_IDLE: 60 * 60,
-  GC_MAX_CHECK_COUNT: 60 * 10,
-  WRAP_MODE: 0,
-  SCALE_MODE: 0,
-  PRECISION: 'mediump'
-};
-
-var DisplayObject =
-/*#__PURE__*/
-function (_event$Dispatcher) {
+var DisplayObject = /*#__PURE__*/function (_event$Dispatcher) {
   inherits(DisplayObject, _event$Dispatcher);
+
+  var _super = _createSuper$1(DisplayObject);
 
   function DisplayObject(opt) {
     var _this;
 
     classCallCheck(this, DisplayObject);
 
-    _this = possibleConstructorReturn(this, getPrototypeOf(DisplayObject).call(this, opt)); //相对父级元素的矩阵
+    _this = _super.call(this, opt); //相对父级元素的矩阵
 
     _this._transform = null;
     _this.worldTransform = null; //_transform如果有修改，则_transformChange为true，renderer的时候worldTransform
@@ -3756,7 +3790,7 @@ function (_event$Dispatcher) {
 
       if (this.worldTransform) {
         var inverseMatrix = this.worldTransform.clone().invert();
-        var originPos = [x * settings.RESOLUTION, y * settings.RESOLUTION];
+        var originPos = [x * Settings.RESOLUTION, y * Settings.RESOLUTION];
         originPos = inverseMatrix.mulVector(originPos);
         x = originPos[0];
         y = originPos[1];
@@ -3982,19 +4016,22 @@ function (_event$Dispatcher) {
   return DisplayObject;
 }(event.Dispatcher);
 
-var DisplayObjectContainer =
-/*#__PURE__*/
-function (_DisplayObject) {
+function _createSuper$2(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$2(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$2() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var DisplayObjectContainer = /*#__PURE__*/function (_DisplayObject) {
   inherits(DisplayObjectContainer, _DisplayObject);
+
+  var _super = _createSuper$2(DisplayObjectContainer);
 
   function DisplayObjectContainer(opt) {
     var _this;
 
     classCallCheck(this, DisplayObjectContainer);
 
-    _this = possibleConstructorReturn(this, getPrototypeOf(DisplayObjectContainer).call(this, opt));
-    _this.children = [];
-    _this.mouseChildren = []; //所有的容器默认支持event 检测，因为 可能有里面的shape是eventEnable是true的
+    _this = _super.call(this, opt);
+    _this.children = []; //所有的容器默认支持event 检测，因为 可能有里面的shape是eventEnable是true的
     //如果用户有强制的需求让容器下的所有元素都 不可检测，可以调用
     //DisplayObjectContainer的 setEventEnable() 方法
 
@@ -4193,7 +4230,7 @@ function (_DisplayObject) {
             continue;
           }
 
-          if (child.mouseChildren && child.getNumChildren() > 0) {
+          if (child.getNumChildren() > 0) {
             var objs = child.getObjectsUnderPoint(point);
 
             if (objs.length > 0) {
@@ -4224,10 +4261,14 @@ function (_DisplayObject) {
   return DisplayObjectContainer;
 }(DisplayObject);
 
-var Stage =
-/*#__PURE__*/
-function (_DisplayObjectContain) {
+function _createSuper$3(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$3(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$3() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Stage = /*#__PURE__*/function (_DisplayObjectContain) {
   inherits(Stage, _DisplayObjectContain);
+
+  var _super = _createSuper$3(Stage);
 
   function Stage(opt) {
     var _this;
@@ -4235,15 +4276,16 @@ function (_DisplayObjectContain) {
     classCallCheck(this, Stage);
 
     opt.type = "stage";
-    _this = possibleConstructorReturn(this, getPrototypeOf(Stage).call(this, opt));
-    _this.canvas = null;
-    _this.ctx = null; //渲染的时候由renderer决定,这里不做初始值
-    //stage正在渲染中
+    _this = _super.call(this, opt);
+    _this.canvas = null; //渲染的时候由renderer决定,这里不做初始值, 也接受外界手动设置好的ctx
+
+    _this.ctx = opt.ctx || null; //stage正在渲染中
 
     _this.stageRending = false;
     _this._isReady = false;
     return _this;
   } //由canvax的afterAddChild 回调
+  //width、height都是app的width， 如果后续有每个stage设置不同的width和height，在判断opt里面的width和height
 
 
   createClass(Stage, [{
@@ -4254,8 +4296,8 @@ function (_DisplayObjectContain) {
       var model = self.context;
       model.width = width;
       model.height = height;
-      model.scaleX = Utils._devicePixelRatio;
-      model.scaleY = Utils._devicePixelRatio;
+      model.scaleX = Settings.RESOLUTION;
+      model.scaleY = Settings.RESOLUTION;
       self._isReady = true;
     }
   }, {
@@ -4278,9 +4320,7 @@ function (_DisplayObjectContain) {
   return Stage;
 }(DisplayObjectContainer);
 
-var SystemRenderer =
-/*#__PURE__*/
-function () {
+var SystemRenderer = /*#__PURE__*/function () {
   function SystemRenderer() {
     var type = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : RENDERER_TYPE.UNKNOWN;
     var app = arguments.length > 1 ? arguments[1] : undefined;
@@ -4293,13 +4333,13 @@ function () {
     this.app = app;
 
     if (options) {
-      for (var i in settings.RENDER_OPTIONS) {
+      for (var i in Settings.RENDER_OPTIONS) {
         if (typeof options[i] === 'undefined') {
-          options[i] = settings.RENDER_OPTIONS[i];
+          options[i] = Settings.RENDER_OPTIONS[i];
         }
       }
     } else {
-      options = settings.RENDER_OPTIONS;
+      options = Settings.RENDER_OPTIONS;
     }
 
     this.options = options;
@@ -4446,9 +4486,7 @@ function () {
   return SystemRenderer;
 }();
 
-var CanvasGraphicsRenderer =
-/*#__PURE__*/
-function () {
+var CanvasGraphicsRenderer = /*#__PURE__*/function () {
   function CanvasGraphicsRenderer(renderer) {
     classCallCheck(this, CanvasGraphicsRenderer);
 
@@ -4613,10 +4651,14 @@ function () {
   return CanvasGraphicsRenderer;
 }();
 
-var CanvasRenderer =
-/*#__PURE__*/
-function (_SystemRenderer) {
+function _createSuper$4(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$4(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$4() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var CanvasRenderer = /*#__PURE__*/function (_SystemRenderer) {
   inherits(CanvasRenderer, _SystemRenderer);
+
+  var _super = _createSuper$4(CanvasRenderer);
 
   function CanvasRenderer(app) {
     var _this;
@@ -4625,7 +4667,8 @@ function (_SystemRenderer) {
 
     classCallCheck(this, CanvasRenderer);
 
-    _this = possibleConstructorReturn(this, getPrototypeOf(CanvasRenderer).call(this, RENDERER_TYPE.CANVAS, app, options));
+    _this = _super.call(this, RENDERER_TYPE.CANVAS, app, options);
+    _this.renderType = 'canvas';
     _this.CGR = new CanvasGraphicsRenderer(assertThisInitialized(_this));
     return _this;
   }
@@ -4752,6 +4795,10 @@ function (_SystemRenderer) {
         //如果这个对象有裁剪对象， 则要恢复，裁剪之前的环境
         ctx.restore();
       }
+
+      if (ctx.draw) {
+        ctx.draw();
+      }
     }
   }, {
     key: "_clear",
@@ -4765,8 +4812,41 @@ function (_SystemRenderer) {
   return CanvasRenderer;
 }(SystemRenderer);
 
-function autoRenderer(app, options) {
-  return new CanvasRenderer(app, options);
+function _createSuper$5(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$5(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$5() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var AlipayMiniRenderer = /*#__PURE__*/function (_CanvasRenderer) {
+  inherits(AlipayMiniRenderer, _CanvasRenderer);
+
+  var _super = _createSuper$5(AlipayMiniRenderer);
+
+  function AlipayMiniRenderer(app) {
+    var _this;
+
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+    classCallCheck(this, AlipayMiniRenderer);
+
+    _this = _super.call(this, app, options);
+    _this.renderType = 'alipayMini';
+    return _this;
+  }
+
+  return AlipayMiniRenderer;
+}(CanvasRenderer);
+
+function autoRenderer(app, opt) {
+  var _renderer; //opt.renderer 支持cavnas alipayMini webGl(暂时弃用)
+
+
+  if (opt.renderer == 'alipayMini') {
+    _renderer = new AlipayMiniRenderer(app, opt);
+  } else {
+    _renderer = new CanvasRenderer(app, opt);
+  }
+
+  return _renderer;
   /*
      if (app.webGL && utils.isWebGLSupported())
      {
@@ -4776,47 +4856,49 @@ function autoRenderer(app, options) {
      */
 }
 
-var Application =
-/*#__PURE__*/
-function (_DisplayObjectContain) {
+function _createSuper$6(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$6(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$6() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Application = /*#__PURE__*/function (_DisplayObjectContain) {
   inherits(Application, _DisplayObjectContain);
+
+  var _super = _createSuper$6(Application);
 
   function Application(opt) {
     var _this;
 
-    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
     classCallCheck(this, Application);
 
     opt.type = "canvax";
-    _this = possibleConstructorReturn(this, getPrototypeOf(Application).call(this, opt));
-    _this._cid = new Date().getTime() + "_" + Math.floor(Math.random() * 100);
-    _this.el = $.query(opt.el);
-    _this.width = parseInt("width" in opt || _this.el.offsetWidth, 10);
-    _this.height = parseInt("height" in opt || _this.el.offsetHeight, 10);
-    var viewObj = $.createView(_this.width, _this.height, _this._cid);
-    _this.view = viewObj.view;
-    _this.stageView = viewObj.stageView;
-    _this.domView = viewObj.domView;
-    _this.el.innerHTML = "";
+    _this = _super.call(this, opt);
+    _this.uid = opt.uid || new Date().getTime() + "_" + Math.floor(Math.random() * 100);
+    Settings.RESOLUTION = opt.devicePixelRatio || (typeof window !== 'undefined' ? window.devicePixelRatio : 1);
+    _this.el = $.query(opt.el); //优先使用外部传入的width
 
-    _this.el.appendChild(_this.view);
+    _this.width = opt.width || parseInt("width" in opt || _this.el.offsetWidth, 10);
+    _this.height = opt.height || parseInt("height" in opt || _this.el.offsetHeight, 10);
 
-    _this.viewOffset = $.offset(_this.view);
+    if (_this.el) {
+      var viewObj = $.createView(_this.width, _this.height, _this.uid);
+      _this.view = viewObj.view;
+      _this.stageView = viewObj.stageView;
+      _this.domView = viewObj.domView;
+      _this.el.innerHTML = "";
+
+      _this.el.appendChild(_this.view);
+    }
+    _this.viewOffset = opt.viewOffset || $.offset(_this.view);
     _this.lastGetRO = 0; //最后一次获取 viewOffset 的时间
 
-    _this.webGL = opt.webGL;
-    _this.renderer = autoRenderer(assertThisInitialized(_this), options);
+    _this.renderer = autoRenderer(assertThisInitialized(_this), opt);
     _this.event = null; //该属性在systenRender里面操作，每帧由心跳上报的 需要重绘的stages 列表
 
     _this.convertStages = {};
     _this.context.$model.width = _this.width;
     _this.context.$model.height = _this.height; //然后创建一个用于绘制激活 shape 的 stage 到activation
 
-    _this._bufferStage = null;
-
-    _this._creatHoverStage(); //设置一个默认的matrix做为app的世界根节点坐标
-
+    _this._bufferStage = _this._creatHoverStage(opt); //设置一个默认的matrix做为app的世界根节点坐标
 
     _this.worldTransform = new Matrix().identity();
     return _this;
@@ -4847,7 +4929,7 @@ function (_DisplayObjectContain) {
         this.view.removeChild(this.domView);
         this.el.removeChild(this.view);
       } catch (e) {}
-      this.el.innerHTML = "";
+      this.el && (this.el.innerHTML = "");
       this.event = null;
       this._bufferStage = null;
     }
@@ -4860,7 +4942,9 @@ function (_DisplayObjectContain) {
       //this.view.style.width  = this.width +"px";
       //this.view.style.height = this.height+"px";
 
-      this.viewOffset = $.offset(this.view);
+      if (this.view) {
+        this.viewOffset = $.offset(this.view);
+      }
       this.context.$model.width = this.width;
       this.context.$model.height = this.height;
       var me = this;
@@ -4868,8 +4952,8 @@ function (_DisplayObjectContain) {
       var reSizeCanvas = function reSizeCanvas(canvas) {
         canvas.style.width = me.width + "px";
         canvas.style.height = me.height + "px";
-        canvas.setAttribute("width", me.width * Utils._devicePixelRatio);
-        canvas.setAttribute("height", me.height * Utils._devicePixelRatio);
+        canvas.setAttribute("width", me.width * Settings.RESOLUTION);
+        canvas.setAttribute("height", me.height * Settings.RESOLUTION);
       };
 
       _.each(this.children, function (s, i) {
@@ -4891,26 +4975,25 @@ function (_DisplayObjectContain) {
     }
   }, {
     key: "_creatHoverStage",
-    value: function _creatHoverStage() {
+    value: function _creatHoverStage(opt) {
       //TODO:创建stage的时候一定要传入width height  两个参数
       this._bufferStage = new Stage({
         id: "activCanvas" + new Date().getTime(),
-        context: {
-          width: this.context.$model.width,
-          height: this.context.$model.height
-        }
+        ctx: opt.activCanvas || null
       }); //该stage不参与事件检测
 
       this._bufferStage._eventEnabled = false;
       this.addChild(this._bufferStage);
-    }
+      return this._bufferStage;
+    } //小程序等不支持dom获取的地址需要手动调用下updateViewOffset()
+
   }, {
     key: "updateViewOffset",
-    value: function updateViewOffset() {
+    value: function updateViewOffset(viewOffset) {
       var now = new Date().getTime();
 
       if (now - this.lastGetRO > 1000) {
-        this.viewOffset = $.offset(this.view);
+        this.viewOffset = viewOffset || $.offset(this.view);
         this.lastGetRO = now;
       }
     }
@@ -4925,18 +5008,20 @@ function (_DisplayObjectContain) {
         canvas = stage.canvas;
       }
 
-      if (this.children.length == 1) {
-        this.stageView.appendChild(canvas);
-      } else if (this.children.length > 1) {
-        if (index === undefined) {
-          //如果没有指定位置，那么就放到 _bufferStage 的下面。
-          this.stageView.insertBefore(canvas, this._bufferStage.canvas);
-        } else {
-          //如果有指定的位置，那么就指定的位置来
-          if (index >= this.children.length - 1) {
-            this.stageView.appendChild(canvas);
+      if (this.stageView) {
+        if (this.children.length == 1) {
+          this.stageView.appendChild(canvas);
+        } else if (this.children.length > 1) {
+          if (index === undefined) {
+            //如果没有指定位置，那么就放到 _bufferStage 的下面。
+            this.stageView.insertBefore(canvas, this._bufferStage.canvas);
           } else {
-            this.stageView.insertBefore(canvas, this.children[index].canvas);
+            //如果有指定的位置，那么就指定的位置来
+            if (index >= this.children.length - 1) {
+              this.stageView.appendChild(canvas);
+            } else {
+              this.stageView.insertBefore(canvas, this.children[index].canvas);
+            }
           }
         }
       }
@@ -4947,7 +5032,7 @@ function (_DisplayObjectContain) {
     key: "_afterDelChild",
     value: function _afterDelChild(stage) {
       try {
-        this.stageView.removeChild(stage.canvas);
+        this.stageView && stage.canvas && this.stageView.removeChild(stage.canvas);
       } catch (error) {}
     }
   }, {
@@ -4974,25 +5059,27 @@ function (_DisplayObjectContain) {
   return Application;
 }(DisplayObjectContainer);
 
-var Sprite =
-/*#__PURE__*/
-function (_DisplayObjectContain) {
+function _createSuper$7(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$7(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$7() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Sprite = /*#__PURE__*/function (_DisplayObjectContain) {
   inherits(Sprite, _DisplayObjectContain);
+
+  var _super = _createSuper$7(Sprite);
 
   function Sprite(opt) {
     classCallCheck(this, Sprite);
 
     opt = Utils.checkOpt(opt);
     opt.type = "sprite";
-    return possibleConstructorReturn(this, getPrototypeOf(Sprite).call(this, opt));
+    return _super.call(this, opt);
   }
 
   return Sprite;
 }(DisplayObjectContainer);
 
-var GraphicsData =
-/*#__PURE__*/
-function () {
+var GraphicsData = /*#__PURE__*/function () {
   function GraphicsData(lineWidth, strokeStyle, strokeAlpha, fillStyle, fillAlpha, shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, shape) {
     classCallCheck(this, GraphicsData);
 
@@ -5364,9 +5451,7 @@ var Arc = {
   getBoundsOfArc: getBoundsOfArc
 };
 
-var Rectangle =
-/*#__PURE__*/
-function () {
+var Rectangle = /*#__PURE__*/function () {
   function Rectangle() {
     var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
     var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
@@ -5421,9 +5506,7 @@ function () {
   return Rectangle;
 }();
 
-var Circle =
-/*#__PURE__*/
-function () {
+var Circle = /*#__PURE__*/function () {
   function Circle() {
     var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
     var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
@@ -5467,9 +5550,7 @@ function () {
   return Circle;
 }();
 
-var Ellipse =
-/*#__PURE__*/
-function () {
+var Ellipse = /*#__PURE__*/function () {
   function Ellipse() {
     var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
     var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
@@ -5514,9 +5595,7 @@ function () {
   return Ellipse;
 }();
 
-var Polygon =
-/*#__PURE__*/
-function () {
+var Polygon = /*#__PURE__*/function () {
   function Polygon() {
     for (var _len = arguments.length, points = new Array(_len), _key = 0; _key < _len; _key++) {
       points[_key] = arguments[_key];
@@ -5618,9 +5697,7 @@ function bezierCurveTo(fromX, fromY, cpX, cpY, cpX2, cpY2, toX, toY) {
   return path;
 }
 
-var Graphics =
-/*#__PURE__*/
-function () {
+var Graphics = /*#__PURE__*/function () {
   function Graphics(shape) {
     classCallCheck(this, Graphics);
 
@@ -6104,10 +6181,14 @@ function () {
   return Graphics;
 }();
 
-var Shape =
-/*#__PURE__*/
-function (_DisplayObject) {
+function _createSuper$8(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$8(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$8() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Shape = /*#__PURE__*/function (_DisplayObject) {
   inherits(Shape, _DisplayObject);
+
+  var _super = _createSuper$8(Shape);
 
   function Shape(opt) {
     var _this;
@@ -6151,7 +6232,7 @@ function (_DisplayObject) {
     if (opt.id === undefined && opt.type !== undefined) {
       opt.id = Utils.createId(opt.type);
     }
-    _this = possibleConstructorReturn(this, getPrototypeOf(Shape).call(this, opt)); //over的时候如果有修改样式，就为true
+    _this = _super.call(this, opt); //over的时候如果有修改样式，就为true
 
     _this._hoverClass = false;
     _this.hoverClone = true; //是否开启在hover的时候clone一份到active stage 中 
@@ -6225,10 +6306,14 @@ function (_DisplayObject) {
   return Shape;
 }(DisplayObject);
 
-var Text =
-/*#__PURE__*/
-function (_DisplayObject) {
+function _createSuper$9(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$9(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$9() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Text = /*#__PURE__*/function (_DisplayObject) {
   inherits(Text, _DisplayObject);
+
+  var _super = _createSuper$9(Text);
 
   function Text(text, opt) {
     var _this;
@@ -6256,7 +6341,7 @@ function (_DisplayObject) {
       backgroundColor: null,
       textBackgroundColor: null
     }, opt.context);
-    _this = possibleConstructorReturn(this, getPrototypeOf(Text).call(this, opt));
+    _this = _super.call(this, opt);
     _this._reNewline = /\r?\n/;
     _this.fontProperts = ["fontStyle", "fontVariant", "fontWeight", "fontSize", "fontFamily"];
     _this.context.font = _this._getFontDeclaration();
@@ -6807,10 +6892,14 @@ var myMath = {
   isValibPoint: isValibPoint
 };
 
-var BrokenLine =
-/*#__PURE__*/
-function (_Shape) {
+function _createSuper$a(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$a(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$a() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var BrokenLine = /*#__PURE__*/function (_Shape) {
   inherits(BrokenLine, _Shape);
+
+  var _super = _createSuper$a(BrokenLine);
 
   function BrokenLine(opt) {
     var _this;
@@ -6832,7 +6921,7 @@ function (_Shape) {
     }
     opt.context = _context;
     opt.type = "brokenline";
-    _this = possibleConstructorReturn(this, getPrototypeOf(BrokenLine).call(this, opt)); //保存好原始值
+    _this = _super.call(this, opt); //保存好原始值
 
     _this._pointList = _context.pointList;
     return _this;
@@ -6888,10 +6977,14 @@ function (_Shape) {
   return BrokenLine;
 }(Shape);
 
-var Circle$1 =
-/*#__PURE__*/
-function (_Shape) {
+function _createSuper$b(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$b(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$b() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Circle$1 = /*#__PURE__*/function (_Shape) {
   inherits(Circle, _Shape);
+
+  var _super = _createSuper$b(Circle);
 
   function Circle(opt) {
     classCallCheck(this, Circle);
@@ -6903,7 +6996,7 @@ function (_Shape) {
         r: 0
       }
     }, Utils.checkOpt(opt));
-    return possibleConstructorReturn(this, getPrototypeOf(Circle).call(this, opt));
+    return _super.call(this, opt);
   }
 
   createClass(Circle, [{
@@ -6928,10 +7021,14 @@ function (_Shape) {
   return Circle;
 }(Shape);
 
-var Path =
-/*#__PURE__*/
-function (_Shape) {
+function _createSuper$c(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$c(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$c() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Path = /*#__PURE__*/function (_Shape) {
   inherits(Path, _Shape);
+
+  var _super = _createSuper$c(Path);
 
   function Path(opt) {
     classCallCheck(this, Path);
@@ -6955,7 +7052,7 @@ function (_Shape) {
     opt.context = _context;
     opt.__parsePathData = null;
     opt.type = "path";
-    return possibleConstructorReturn(this, getPrototypeOf(Path).call(this, opt));
+    return _super.call(this, opt);
   }
 
   createClass(Path, [{
@@ -7293,10 +7390,14 @@ function (_Shape) {
   return Path;
 }(Shape);
 
-var Droplet =
-/*#__PURE__*/
-function (_Path) {
+function _createSuper$d(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$d(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$d() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Droplet = /*#__PURE__*/function (_Path) {
   inherits(Droplet, _Path);
+
+  var _super = _createSuper$d(Droplet);
 
   function Droplet(opt) {
     var _this;
@@ -7313,7 +7414,7 @@ function (_Path) {
       }
     }, Utils.checkOpt(opt));
 
-    var my = _this = possibleConstructorReturn(this, getPrototypeOf(Droplet).call(this, opt));
+    var my = _this = _super.call(this, opt);
 
     _this.context.$model.path = _this.createPath();
     return _this;
@@ -7339,10 +7440,14 @@ function (_Path) {
   return Droplet;
 }(Path);
 
-var Ellipse$1 =
-/*#__PURE__*/
-function (_Shape) {
+function _createSuper$e(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$e(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$e() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Ellipse$1 = /*#__PURE__*/function (_Shape) {
   inherits(Ellipse, _Shape);
+
+  var _super = _createSuper$e(Ellipse);
 
   function Ellipse(opt) {
     classCallCheck(this, Ellipse);
@@ -7356,7 +7461,7 @@ function (_Shape) {
 
       }
     }, Utils.checkOpt(opt));
-    return possibleConstructorReturn(this, getPrototypeOf(Ellipse).call(this, opt));
+    return _super.call(this, opt);
   }
 
   createClass(Ellipse, [{
@@ -7376,10 +7481,14 @@ function (_Shape) {
   return Ellipse;
 }(Shape);
 
-var Polygon$1 =
-/*#__PURE__*/
-function (_Shape) {
+function _createSuper$f(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$f(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$f() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Polygon$1 = /*#__PURE__*/function (_Shape) {
   inherits(Polygon, _Shape);
+
+  var _super = _createSuper$f(Polygon);
 
   function Polygon(opt) {
     classCallCheck(this, Polygon);
@@ -7405,7 +7514,7 @@ function (_Shape) {
     }
     opt.context = _context;
     opt.type = "polygon";
-    return possibleConstructorReturn(this, getPrototypeOf(Polygon).call(this, opt));
+    return _super.call(this, opt);
   }
 
   createClass(Polygon, [{
@@ -7440,10 +7549,14 @@ function (_Shape) {
   return Polygon;
 }(Shape);
 
-var Isogon =
-/*#__PURE__*/
-function (_Polygon) {
+function _createSuper$g(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$g(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$g() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Isogon = /*#__PURE__*/function (_Polygon) {
   inherits(Isogon, _Polygon);
+
+  var _super = _createSuper$g(Isogon);
 
   function Isogon(opt) {
     classCallCheck(this, Isogon);
@@ -7460,7 +7573,7 @@ function (_Polygon) {
     _context.pointList = myMath.getIsgonPointList(_context.n, _context.r);
     opt.context = _context;
     opt.type = "isogon";
-    return possibleConstructorReturn(this, getPrototypeOf(Isogon).call(this, opt));
+    return _super.call(this, opt);
   }
 
   createClass(Isogon, [{
@@ -7480,10 +7593,14 @@ function (_Polygon) {
   return Isogon;
 }(Polygon$1);
 
-var Line =
-/*#__PURE__*/
-function (_Shape) {
+function _createSuper$h(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$h(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$h() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Line = /*#__PURE__*/function (_Shape) {
   inherits(Line, _Shape);
+
+  var _super = _createSuper$h(Line);
 
   function Line(opt) {
     classCallCheck(this, Line);
@@ -7505,7 +7622,7 @@ function (_Shape) {
 
     opt.context = _context;
     opt.type = "line";
-    return possibleConstructorReturn(this, getPrototypeOf(Line).call(this, opt));
+    return _super.call(this, opt);
   }
 
   createClass(Line, [{
@@ -7529,10 +7646,14 @@ function (_Shape) {
   return Line;
 }(Shape);
 
-var Rect =
-/*#__PURE__*/
-function (_Shape) {
+function _createSuper$i(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$i(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$i() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Rect = /*#__PURE__*/function (_Shape) {
   inherits(Rect, _Shape);
+
+  var _super = _createSuper$i(Rect);
 
   function Rect(opt) {
     classCallCheck(this, Rect);
@@ -7545,7 +7666,7 @@ function (_Shape) {
 
     opt.context = _context;
     opt.type = "rect";
-    return possibleConstructorReturn(this, getPrototypeOf(Rect).call(this, opt));
+    return _super.call(this, opt);
   }
 
   createClass(Rect, [{
@@ -7609,10 +7730,14 @@ function (_Shape) {
   return Rect;
 }(Shape);
 
-var Sector =
-/*#__PURE__*/
-function (_Shape) {
+function _createSuper$j(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$j(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$j() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Sector = /*#__PURE__*/function (_Shape) {
   inherits(Sector, _Shape);
+
+  var _super = _createSuper$j(Sector);
 
   function Sector(opt) {
     classCallCheck(this, Sector);
@@ -7637,7 +7762,7 @@ function (_Shape) {
     opt.isRing = false; //是否为一个圆环
 
     opt.type = "sector";
-    return possibleConstructorReturn(this, getPrototypeOf(Sector).call(this, opt));
+    return _super.call(this, opt);
   }
 
   createClass(Sector, [{
@@ -7734,10 +7859,14 @@ function (_Shape) {
   return Sector;
 }(Shape);
 
-var Arrow =
-/*#__PURE__*/
-function (_Shape) {
+function _createSuper$k(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$k(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$k() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Arrow = /*#__PURE__*/function (_Shape) {
   inherits(Arrow, _Shape);
+
+  var _super = _createSuper$k(Arrow);
 
   function Arrow(opt) {
     classCallCheck(this, Arrow);
@@ -7768,7 +7897,7 @@ function (_Shape) {
 
     opt.context = _context;
     opt.type = "arrow";
-    return possibleConstructorReturn(this, getPrototypeOf(Arrow).call(this, opt));
+    return _super.call(this, opt);
   }
 
   createClass(Arrow, [{
@@ -7812,10 +7941,14 @@ function (_Shape) {
   return Arrow;
 }(Shape);
 
-var Diamond =
-/*#__PURE__*/
-function (_Shape) {
+function _createSuper$l(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$l(); return function _createSuperInternal() { var Super = getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return possibleConstructorReturn(this, result); }; }
+
+function _isNativeReflectConstruct$l() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+var Diamond = /*#__PURE__*/function (_Shape) {
   inherits(Diamond, _Shape);
+
+  var _super = _createSuper$l(Diamond);
 
   function Diamond(opt) {
     classCallCheck(this, Diamond);
@@ -7832,7 +7965,7 @@ function (_Shape) {
 
     opt.context = _context;
     opt.type = "diamond";
-    return possibleConstructorReturn(this, getPrototypeOf(Diamond).call(this, opt));
+    return _super.call(this, opt);
   }
 
   createClass(Diamond, [{
@@ -7869,7 +8002,7 @@ function (_Shape) {
 }(Shape);
 
 var Canvax = {
-  version: "2.0.70",
+  version: "2.0.71",
   _: _,
   $: $,
   event: event,

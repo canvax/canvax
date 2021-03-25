@@ -9,6 +9,7 @@ export default class WebGLRenderer extends SystemRenderer
     constructor(app , options = {})
     {
         super(RENDERER_TYPE.CANVAS, app, options);
+        this.renderType = 'webGl'
     }
 
     render( app , options = {} )

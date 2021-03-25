@@ -1,6 +1,6 @@
 export default {
     //设备分辨率
-    RESOLUTION: typeof (window) !== 'undefined' ? window.devicePixelRatio : 1,
+    RESOLUTION: 1,
 
     /**
      * Target frames per millisecond.

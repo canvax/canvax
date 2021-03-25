@@ -1,8 +1,8 @@
 import _ from "./underscore";
-
-const RESOLUTION =  typeof (window) !== 'undefined' ? window.devicePixelRatio : 1;
+import Settings from '../settings';
 
 var addOrRmoveEventHand = function( domHand , ieHand ){
+    if( !document ) return;
     if( document[ domHand ] ){
         function eventDomFn( el , type , fn ){
             if( el.length ){
@@ -33,6 +33,7 @@ var addOrRmoveEventHand = function( domHand , ieHand ){
 export default {
     // dom操作相关代码
     query : function(el){
+        if( !el ) return;
         if(_.isString(el)){
            return document.getElementById(el)
         }
@@ -46,6 +47,11 @@ export default {
         return null;
     },
     offset : function(el){
+        if(!el){
+            return {
+                top:0, left:0
+            }
+        };
         var box = el.getBoundingClientRect(), 
         doc = el.ownerDocument, 
         body = doc.body, 
@@ -96,14 +102,15 @@ export default {
      * @param {string} type : dom type， such as canvas, div etc.
      */
     createCanvas : function( _width , _height , id) {
+        if( !document ) return;
         var canvas = document.createElement("canvas");
         canvas.style.position = 'absolute';
         canvas.style.width  = _width + 'px';
         canvas.style.height = _height + 'px';
         canvas.style.left   = 0;
         canvas.style.top    = 0;
-        canvas.setAttribute('width', _width * RESOLUTION);
-        canvas.setAttribute('height', _height * RESOLUTION);
+        canvas.setAttribute('width', _width * Settings.RESOLUTION);
+        canvas.setAttribute('height', _height * Settings.RESOLUTION);
         canvas.setAttribute('id', id);
         return canvas;
     },
