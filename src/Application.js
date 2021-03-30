@@ -223,4 +223,9 @@ export default class Application extends DisplayObjectContainer
         } );
         return canvas.toDataURL();
     }
+
+    //一些不能动态创建_pixelCtx用来做文本检测的环境，要支持可以从外面传一个ctx进来
+    setPixelCtx( ctx ){
+        Utils._pixelCtx = ctx;
+    }
 }

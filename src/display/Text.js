@@ -105,7 +105,7 @@ export default class Text extends DisplayObject
 
     getTextHeight() 
     {
-        return this._getTextHeight(Utils._pixelCtx, this._getTextLines());
+        return this._getTextHeight(this._getTextLines());
     }
 
     _getTextLines() 
@@ -245,7 +245,7 @@ export default class Text extends DisplayObject
         return maxWidth;
     }
 
-    _getTextHeight(ctx, textLines) 
+    _getTextHeight( textLines ) 
     {
         return this.context.$model.fontSize * textLines.length * this.context.$model.lineHeight;
     }

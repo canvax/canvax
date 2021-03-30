@@ -137,7 +137,7 @@ export default class CanvasRenderer extends SystemRenderer
 
         //小程序必须调用draw才能绘制
         if( ctx.draw ){
-            ctx.draw();
+            ctx.draw( true );
         };
 
     }
