@@ -39,3 +39,7 @@ change log
 2,  去掉ctx.save ctx.resolve ctx.transform
     该用ctx.setTransform
 
+
+
+,
+    "prepublish": "gulp prePublishToNpm"

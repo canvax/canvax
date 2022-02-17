@@ -8,6 +8,7 @@ export default class CanvasRenderer extends SystemRenderer
     constructor(app, options={})
     {
         super(RENDERER_TYPE.CANVAS, app, options);
+        this.renderType = 'canvas'
         this.CGR = new CGR(this);
     }
 
@@ -134,6 +135,11 @@ export default class CanvasRenderer extends SystemRenderer
             //如果这个对象有裁剪对象， 则要恢复，裁剪之前的环境
             ctx.closePath();
             ctx.restore();
+        };
+
+        //小程序必须调用draw才能绘制
+        if( ctx.draw ){
+            ctx.draw( true );
         };
 
     }

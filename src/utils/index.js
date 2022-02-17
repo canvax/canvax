@@ -13,7 +13,6 @@ var Utils = {
     _pixelCtx   : null,
     __emptyFunc : function(){},
     //retina 屏幕优化
-    _devicePixelRatio : typeof (window) !== 'undefined' ? window.devicePixelRatio : 1,
     _UID  : 0, //该值为向上的自增长整数值
     getUID:function(){
         return this._UID++;
@@ -29,6 +28,7 @@ var Utils = {
     },
 
     initElement : function( canvas ){
+        if( !window ) return;
         if( window.FlashCanvas && FlashCanvas.initElement){
             FlashCanvas.initElement( canvas );
         };
@@ -102,6 +102,8 @@ var Utils = {
     }
 };
 
-Utils._pixelCtx = Utils.initElement($.createCanvas(1, 1, "_pixelCanvas")).getContext('2d');
+var _canvas = Utils.initElement($.createCanvas(1, 1, "_pixelCanvas"));
+
+Utils._pixelCtx = _canvas && _canvas.getContext('2d');
 
 export default Utils;

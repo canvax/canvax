@@ -8,7 +8,7 @@
  * 里面， 不是唯一的根节点。而是会交由canvax类来统一管理其层级
  */
 import DisplayObjectContainer from "./DisplayObjectContainer";
-import Utils from "../utils/index";
+import Settings from '../settings';
 
 export default class Stage extends DisplayObjectContainer
 {
@@ -20,7 +20,10 @@ export default class Stage extends DisplayObjectContainer
         super( opt );
 
         this.canvas = null;
-        this.ctx = null; //渲染的时候由renderer决定,这里不做初始值
+
+        //渲染的时候由renderer决定,这里不做初始值, 也接受外界手动设置好的ctx
+        this.ctx = opt.ctx || null;
+        
         //stage正在渲染中
         this.stageRending = false;
         this._isReady = false;
@@ -28,6 +31,7 @@ export default class Stage extends DisplayObjectContainer
 
 
     //由canvax的afterAddChild 回调
+    //width、height都是app的width， 如果后续有每个stage设置不同的width和height，在判断opt里面的width和height
     initStage( canvas , width , height )
     {
         var self = this;
@@ -35,8 +39,9 @@ export default class Stage extends DisplayObjectContainer
         var model = self.context;
         model.width  = width;
         model.height = height;
-        model.scaleX = Utils._devicePixelRatio;
-        model.scaleY = Utils._devicePixelRatio;
+        model.scaleX = Settings.RESOLUTION;
+        model.scaleY = Settings.RESOLUTION;
+        
         self._isReady = true;
     }
 

@@ -14,7 +14,6 @@ export default class DisplayObjectContainer extends DisplayObject
         super( opt );
         
         this.children = [];
-        this.mouseChildren = [];
         //所有的容器默认支持event 检测，因为 可能有里面的shape是eventEnable是true的
         //如果用户有强制的需求让容器下的所有元素都 不可检测，可以调用
         //DisplayObjectContainer的 setEventEnable() 方法
@@ -207,7 +206,7 @@ export default class DisplayObjectContainer extends DisplayObject
                     continue;
                 };
                 //是集合
-                if (child.mouseChildren && child.getNumChildren() > 0){
+                if ( child.getNumChildren() > 0 ){
                    var objs = child.getObjectsUnderPoint( point );
                    if (objs.length > 0){
                       result = result.concat( objs );

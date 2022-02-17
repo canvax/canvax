@@ -9,19 +9,14 @@ import types from "./types";
 import _ from "../utils/underscore";
 import $ from "../utils/dom";
 
-var _hammerEventTypes = [ 
-    "pan","panstart","panmove","panend","pancancel","panleft","panright","panup","pandown",
-    "press" , "pressup",
-    "swipe" , "swipeleft" , "swiperight" , "swipeup" , "swipedown",
-    "tap"
-];
-
-var Handler = function(canvax , opt) {
+var Handler = function(canvax , opt={}) {
     this.canvax = canvax;
 
     this.curPoints = [{
         x : 0, y: 0
-    }] //X,Y 的 point 集合, 在touch下面则为 touch的集合，只是这个touch被添加了对应的x，y
+    }];
+
+    //X,Y 的 point 集合, 在touch下面则为 touch的集合，只是这个touch被添加了对应的x，y
     //当前激活的点对应的obj，在touch下可以是个数组,和上面的 curPoints 对应
     this.curPointsTarget = [];
 
@@ -41,6 +36,8 @@ var Handler = function(canvax , opt) {
         move : "panmove",
         end : "panend"
     };
+
+    this._opt = opt;
 
     _.extend( true , this , opt );
 
@@ -64,35 +61,52 @@ Handler.prototype = {
         
         //依次添加上浏览器的自带事件侦听
         var me   = this;
-        if( me.target.nodeType == undefined ){
-            //如果target.nodeType没有的话， 说明该target为一个jQuery对象 or kissy 对象or hammer对象
-            //即为第三方库，那么就要对接第三方库的事件系统。默认实现hammer的大部分事件系统
-            types.register( _hammerEventTypes );
+        
+        if( this._opt.events ){
+            types.register( this._opt.events )
         };
 
-        //阻止浏览器的默认事件，右键
-        $.addEvent( me.target , "contextmenu" , function( e ){
-            if ( e && e.preventDefault ) {
-                e.preventDefault(); 
-            } else {
-                window.event.returnValue = false;
+        //canvax自己创建的dom的话， 需要动态绑定下事件，如果是外面一件装备好了的dom结构， 比如小程序的，需要外面自己绑定好事件，然后对接下事件处理函数
+        if( me.target ){
+            if( me.target.nodeType == undefined ){
+                //如果target.nodeType没有的话， 说明该target为一个jQuery对象 or kissy 对象or hammer对象
+                //即为第三方库，那么就要对接第三方库的事件系统。默认实现hammer的大部分事件系统
+                //types.register( _hammerEventTypes );
             };
-        } );
+            //阻止浏览器的默认事件，右键
+            $.addEvent( me.target , "contextmenu" , function( e ){
+                if ( e && e.preventDefault ) {
+                    e.preventDefault(); 
+                } else {
+                    window.event.returnValue = false;
+                };
+            } );
 
-        _.each( types.get() , function( type ){
-            //不再关心浏览器环境是否 'ontouchstart' in window 
-            //而是直接只管传给事件模块的是一个原生dom还是 jq对象 or hammer对象等
-            if( me.target.nodeType == 1 ){
-                $.addEvent( me.target , type , function( e ){
-                    me.__mouseHandler( e );
-                } );
-            } else {
-                me.target.on( type , function( e ){
-                    me.__libHandler( e );
-                });
-            };
-        } );
+            _.each( types.get() , function( type ){
+                //不再关心浏览器环境是否 'ontouchstart' in window 
+                //而是直接只管传给事件模块的是一个原生dom还是 jq对象 or hammer对象等
+                if( me.target.nodeType == 1 ){
+                    $.addEvent( me.target , type , function( e ){
+                        me.__mouseHandler( e );
+                    } );
+                } else {
+                    me.target.on( type , function( e ){
+                        me.__libHandler( e );
+                    });
+                };
+            } );
+        };
+        
     },
+
+    bindEventHandle: function(e, type){
+        if( type == 'mouse' ){
+            this.__mouseHandler.apply( this, [e] );
+        } else {
+            this.__libHandler.apply( this, [e] );
+        };
+    },
+
     /*
     * 原生事件系统------------------------------------------------begin
     * 鼠标事件处理函数
@@ -281,6 +295,7 @@ Handler.prototype = {
      *触屏事件处理函数
      * */
     __libHandler : function( e ) {
+        
         var me   = this;
         var root = me.canvax;
         root.updateViewOffset();
@@ -293,7 +308,7 @@ Handler.prototype = {
         };
         if( me.curPointsTarget.length > 0 ){
             //drag开始
-            if( e.type == me.drag.start){
+            if( me.drag.start.indexOf(e.type) > -1 ){
                 //dragstart的时候touch已经准备好了target， curPointsTarget 里面只要有一个是有效的
                 //就认为drags开始
                 _.each( me.curPointsTarget , function( child , i ){
@@ -320,7 +335,7 @@ Handler.prototype = {
             };
 
             //dragIng
-            if( e.type == me.drag.move){
+            if( me.drag.move.indexOf(e.type) > -1 ){
                 if( me._draging ){
                     _.each( me.curPointsTarget , function( child , i ){
                         if( child && child.dragEnabled) {
@@ -331,7 +346,7 @@ Handler.prototype = {
             };
 
             //drag结束
-            if( e.type == me.drag.end){
+            if( me.drag.end.indexOf(e.type) > -1 ){
                 if( me._draging ){
                     _.each( me.curPointsTarget , function( child , i ){
                         if( child && child.dragEnabled) {
@@ -353,10 +368,10 @@ Handler.prototype = {
         var me        = this;
         var root      = me.canvax;
         var curTouchs = [];
-        _.each( e.point , function( touch ){
+        _.each( e.point || e.touches , function( touch ){
            curTouchs.push( {
-               x : $.pageX( touch ) - root.viewOffset.left,
-               y : $.pageY( touch ) - root.viewOffset.top
+               x : 'x' in touch ? touch.x : ($.pageX( touch ) - root.viewOffset.left),
+               y : 'y' in touch ? touch.y : ($.pageY( touch ) - root.viewOffset.top)
            } );
         });
         return curTouchs;
