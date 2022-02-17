@@ -75,6 +75,7 @@ export default class CanvasRenderer extends SystemRenderer
             //如果这个对象有一个裁剪路径对象，那么就绘制这个裁剪路径
             var _clip = displayObject.clip;
             ctx.save();
+            ctx.beginPath();
             isClipSave = true;
 
             if( !_clip.worldTransform || _clip._transformChange || _clip.parent._transformChange ){
@@ -132,6 +133,7 @@ export default class CanvasRenderer extends SystemRenderer
 
         if( isClipSave ){
             //如果这个对象有裁剪对象， 则要恢复，裁剪之前的环境
+            ctx.closePath();
             ctx.restore();
         };
 

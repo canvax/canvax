@@ -1359,7 +1359,6 @@ var Dispatcher = /*#__PURE__*/function (_Manager) {
  * @author 释剑 (李涛, litao.lt@alibaba-inc.com)
  *
  */
-var _hammerEventTypes = ["pan", "panstart", "panmove", "panend", "pancancel", "panleft", "panright", "panup", "pandown", "press", "pressup", "swipe", "swipeleft", "swiperight", "swipeup", "swipedown", "tap"];
 
 var Handler = function Handler(canvax) {
   var opt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -1412,11 +1411,7 @@ Handler.prototype = {
     }
 
     if (me.target) {
-      if (me.target.nodeType == undefined) {
-        //如果target.nodeType没有的话， 说明该target为一个jQuery对象 or kissy 对象or hammer对象
-        //即为第三方库，那么就要对接第三方库的事件系统。默认实现hammer的大部分事件系统
-        types.register(_hammerEventTypes);
-      }
+      if (me.target.nodeType == undefined) ;
 
       $.addEvent(me.target, "contextmenu", function (e) {
         if (e && e.preventDefault) {
@@ -4683,6 +4678,7 @@ var CanvasRenderer = /*#__PURE__*/function (_SystemRenderer) {
         //如果这个对象有一个裁剪路径对象，那么就绘制这个裁剪路径
         var _clip = displayObject.clip;
         ctx.save();
+        ctx.beginPath();
         isClipSave = true;
 
         if (!_clip.worldTransform || _clip._transformChange || _clip.parent._transformChange) {
@@ -4736,6 +4732,7 @@ var CanvasRenderer = /*#__PURE__*/function (_SystemRenderer) {
 
       if (isClipSave) {
         //如果这个对象有裁剪对象， 则要恢复，裁剪之前的环境
+        ctx.closePath();
         ctx.restore();
       }
 
@@ -7951,7 +7948,7 @@ var Diamond = /*#__PURE__*/function (_Shape) {
 }(Shape);
 
 var Canvax = {
-  version: "2.0.73",
+  version: "2.0.75",
   _: _,
   $: $,
   event: event,

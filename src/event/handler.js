@@ -9,13 +9,6 @@ import types from "./types";
 import _ from "../utils/underscore";
 import $ from "../utils/dom";
 
-var _hammerEventTypes = [ 
-    "pan","panstart","panmove","panend","pancancel","panleft","panright","panup","pandown",
-    "press" , "pressup",
-    "swipe" , "swipeleft" , "swiperight" , "swipeup" , "swipedown",
-    "tap"
-];
-
 var Handler = function(canvax , opt={}) {
     this.canvax = canvax;
 
@@ -78,7 +71,7 @@ Handler.prototype = {
             if( me.target.nodeType == undefined ){
                 //如果target.nodeType没有的话， 说明该target为一个jQuery对象 or kissy 对象or hammer对象
                 //即为第三方库，那么就要对接第三方库的事件系统。默认实现hammer的大部分事件系统
-                types.register( _hammerEventTypes );
+                //types.register( _hammerEventTypes );
             };
             //阻止浏览器的默认事件，右键
             $.addEvent( me.target , "contextmenu" , function( e ){
