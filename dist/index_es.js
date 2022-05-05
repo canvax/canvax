@@ -4453,6 +4453,12 @@ var CanvasGraphicsRenderer = /*#__PURE__*/function () {
         ctx.shadowBlur = data.shadowBlur;
         ctx.shadowOffsetX = data.shadowOffsetX;
         ctx.shadowOffsetY = data.shadowOffsetY;
+        ctx.lineCap = data.lineCap;
+        ctx.lineJoin = data.lineJoin;
+
+        if (ctx.lineJoin == 'miter') {
+          ctx.miterLimit = data.miterLimit;
+        }
 
         if (data.type === SHAPES.POLY) {
           //只第一次需要beginPath()
@@ -5657,6 +5663,12 @@ var Graphics = /*#__PURE__*/function () {
     this.shadowBlur = 0; //阴影模糊效果
 
     this.shadowColor = 'black'; //阴影颜色
+
+    this.lineCap = 'round'; //默认都是直角
+
+    this.lineJoin = 'round'; //这两个目前webgl里面没实现
+
+    this.miterLimit = null; //miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
     //比如path m 0 0 l 0 0 m 1 1 l 1 1
     //就会有两条graphicsData数据产生
 
@@ -5696,6 +5708,9 @@ var Graphics = /*#__PURE__*/function () {
 
       this.shadowColor = model.shadowColor; //阴影颜色
 
+      this.lineCap = model.lineCap;
+      this.lineJoin = model.lineJoin;
+      this.miterLimit = model.miterLimit;
       var g = this; //一般都是先设置好style的，所以 ， 当后面再次设置新的style的时候
       //会把所有的data都修改
       //TODO: 后面需要修改, 能精准的确定是修改 graphicsData 中的哪个data
@@ -6157,7 +6172,7 @@ var Shape = /*#__PURE__*/function (_DisplayObject) {
       strokeStyle: opt.context.strokeStyle || null,
       lineType: opt.context.lineType || "solid",
       //context2d里没有，自定义线条的type，默认为实线
-      lineDash: opt.context.lineDash || [6, 3],
+      lineDash: opt.context.lineDash || [5, 2],
       lineWidth: opt.context.lineWidth || null,
       shadowOffsetX: opt.context.shadowOffsetX || 0,
       //阴影向右偏移量
@@ -6603,12 +6618,15 @@ Vector.prototype = {
  * 处理为平滑线条
  */
 /**
- * @inner
+ * curvature 曲率
  */
 
-function interpolate(p0, p1, p2, p3, t, t2, t3) {
-  var v0 = (p2 - p0) * 0.25;
-  var v1 = (p3 - p1) * 0.25;
+function interpolate(p0, p1, p2, p3, t, t2, t3, curvature) {
+  if (isNaN(curvature) || curvature == null) {
+    curvature = 0.25;
+  }
+  var v0 = (p2 - p0) * curvature;
+  var v1 = (p3 - p1) * curvature;
   return (2 * (p1 - p2) + v0 + v1) * t3 + (-3 * (p1 - p2) - 2 * v0 - v1) * t2 + v0 * t + p1;
 }
 /**
@@ -6621,6 +6639,8 @@ function SmoothSpline (opt) {
   var points = opt.points;
   var isLoop = opt.isLoop;
   var smoothFilter = opt.smoothFilter;
+  var curvature = opt.curvature; //曲率
+
   var len = points.length;
 
   if (len == 1) {
@@ -6665,7 +6685,7 @@ function SmoothSpline (opt) {
 
     var w2 = w * w;
     var w3 = w * w2;
-    var rp = [interpolate(p0[0], p1[0], p2[0], p3[0], w, w2, w3), interpolate(p0[1], p1[1], p2[1], p3[1], w, w2, w3)];
+    var rp = [interpolate(p0[0], p1[0], p2[0], p3[0], w, w2, w3, curvature), interpolate(p0[1], p1[1], p2[1], p3[1], w, w2, w3, curvature)];
     _.isFunction(smoothFilter) && smoothFilter(rp);
     ret.push(rp);
   }
@@ -6765,7 +6785,7 @@ function getIsgonPointList(n, r) {
   return pointList;
 }
 
-function getSmoothPointList(pList, smoothFilter) {
+function getSmoothPointList(pList, smoothFilter, curvature) {
   //smoothFilter -- 比如在折线图中。会传一个smoothFilter过来做point的纠正。
   //让y不能超过底部的原点
   var List = [];
@@ -6776,7 +6796,7 @@ function getSmoothPointList(pList, smoothFilter) {
     if (isNotValibPoint(point)) {
       //undefined , [ number, null] 等结构
       if (_currList.length) {
-        List = List.concat(_getSmoothGroupPointList(_currList, smoothFilter));
+        List = List.concat(_getSmoothGroupPointList(_currList, smoothFilter, curvature));
         _currList = [];
       }
 
@@ -6788,7 +6808,7 @@ function getSmoothPointList(pList, smoothFilter) {
 
     if (i == Len - 1) {
       if (_currList.length) {
-        List = List.concat(_getSmoothGroupPointList(_currList, smoothFilter));
+        List = List.concat(_getSmoothGroupPointList(_currList, smoothFilter, curvature));
         _currList = [];
       }
     }
@@ -6797,9 +6817,10 @@ function getSmoothPointList(pList, smoothFilter) {
   return List;
 }
 
-function _getSmoothGroupPointList(pList, smoothFilter) {
+function _getSmoothGroupPointList(pList, smoothFilter, curvature) {
   var obj = {
-    points: pList
+    points: pList,
+    curvature: curvature
   };
 
   if (_.isFunction(smoothFilter)) {
@@ -6855,13 +6876,15 @@ var BrokenLine = /*#__PURE__*/function (_Shape) {
     var _context = _.extend(true, {
       lineType: null,
       smooth: false,
+      curvature: null,
+      //曲率 , smooth==true生效
       pointList: [],
       //{Array}  // 必须，各个顶角坐标
       smoothFilter: Utils.__emptyFunc
     }, opt.context);
 
     if (!opt.isClone && _context.smooth) {
-      _context.pointList = myMath.getSmoothPointList(_context.pointList, _context.smoothFilter);
+      _context.pointList = myMath.getSmoothPointList(_context.pointList, _context.smoothFilter, _context.curvature);
     }
     opt.context = _context;
     opt.type = "brokenline";
@@ -6876,7 +6899,7 @@ var BrokenLine = /*#__PURE__*/function (_Shape) {
     value: function watch(name, value, preValue) {
       if (name == "pointList" || name == "smooth" || name == "lineType") {
         if (name == "pointList" && this.context.smooth) {
-          this.context.pointList = myMath.getSmoothPointList(value, this.context.smoothFilter);
+          this.context.pointList = myMath.getSmoothPointList(value, this.context.smoothFilter, _context.curvature);
           this._pointList = value;
         }
 
@@ -6884,7 +6907,7 @@ var BrokenLine = /*#__PURE__*/function (_Shape) {
           //如果是smooth的切换
           if (value) {
             //从原始中拿数据重新生成
-            this.context.pointList = myMath.getSmoothPointList(this._pointList, this.context.smoothFilter);
+            this.context.pointList = myMath.getSmoothPointList(this._pointList, this.context.smoothFilter, _context.curvature);
           } else {
             this.context.pointList = this._pointList;
           }
@@ -7946,7 +7969,7 @@ var Diamond = /*#__PURE__*/function (_Shape) {
 }(Shape);
 
 var Canvax = {
-  version: "2.0.75",
+  version: "2.0.79",
   _: _,
   $: $,
   event: event,

@@ -35,6 +35,12 @@ export default class CanvasGraphicsRenderer
             ctx.shadowOffsetX = data.shadowOffsetX;
             ctx.shadowOffsetY = data.shadowOffsetY;
 
+            ctx.lineCap       = data.lineCap;
+            ctx.lineJoin      = data.lineJoin;
+            if( ctx.lineJoin == 'miter' ){
+                ctx.miterLimit    = data.miterLimit;
+            };
+
             if (data.type === SHAPES.POLY)
             {
                 //只第一次需要beginPath()

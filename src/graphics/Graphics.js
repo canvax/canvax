@@ -23,8 +23,13 @@ export default class Graphics
 
         this.shadowOffsetX = 0;     //阴影向右偏移量
         this.shadowOffsetY = 0;     //阴影向下偏移量
-        this.shadowBlur    = 0;    //阴影模糊效果
+        this.shadowBlur    = 0;     //阴影模糊效果
         this.shadowColor   ='black';//阴影颜色
+
+        this.lineCap       = 'round';//默认都是直角
+        this.lineJoin      = 'round';//这两个目前webgl里面没实现
+        this.miterLimit    = null;//miterLimit 属性设置或返回最大斜接长度,只有当 lineJoin 属性为 "miter" 时，miterLimit 才有效。
+
 
         //比如path m 0 0 l 0 0 m 1 1 l 1 1
         //就会有两条graphicsData数据产生
@@ -59,6 +64,10 @@ export default class Graphics
         this.shadowOffsetY = model.shadowOffsetY; //阴影向下偏移量
         this.shadowBlur    = model.shadowBlur;    //阴影模糊效果
         this.shadowColor   = model.shadowColor;   //阴影颜色
+
+        this.lineCap       = model.lineCap;
+        this.lineJoin      = model.lineJoin;
+        this.miterLimit    = model.miterLimit;
 
         var g = this;
 

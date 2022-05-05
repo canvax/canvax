@@ -28,7 +28,7 @@ export default class Shape extends DisplayObject
             strokeAlpha   : opt.context.strokeAlpha   || 1,//context2d里没有，自定义
             strokeStyle   : opt.context.strokeStyle   || null,
             lineType      : opt.context.lineType      || "solid", //context2d里没有，自定义线条的type，默认为实线
-            lineDash      : opt.context.lineDash      || [6,3],
+            lineDash      : opt.context.lineDash      || [5 , 2],
             lineWidth     : opt.context.lineWidth     || null,
 
             shadowOffsetX : opt.context.shadowOffsetX || 0,       //阴影向右偏移量

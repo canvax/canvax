@@ -80,7 +80,7 @@ function getIsgonPointList( n , r ){
     return pointList;
 }
 
-function getSmoothPointList( pList, smoothFilter ){
+function getSmoothPointList( pList, smoothFilter, curvature ){
     //smoothFilter -- 比如在折线图中。会传一个smoothFilter过来做point的纠正。
     //让y不能超过底部的原点
     var List = [];
@@ -92,7 +92,7 @@ function getSmoothPointList( pList, smoothFilter ){
         if( isNotValibPoint( point ) ){
             //undefined , [ number, null] 等结构
             if( _currList.length ){
-                List = List.concat( _getSmoothGroupPointList( _currList, smoothFilter ) );
+                List = List.concat( _getSmoothGroupPointList( _currList, smoothFilter, curvature ) );
                 _currList = [];
             }
 
@@ -104,7 +104,7 @@ function getSmoothPointList( pList, smoothFilter ){
         
         if( i == Len-1 ){
             if( _currList.length ){
-                List = List.concat( _getSmoothGroupPointList( _currList, smoothFilter ) );
+                List = List.concat( _getSmoothGroupPointList( _currList, smoothFilter, curvature ) );
                 _currList = [];
             }
         }
@@ -113,9 +113,10 @@ function getSmoothPointList( pList, smoothFilter ){
     return List;
 }
 
-function _getSmoothGroupPointList( pList, smoothFilter ){
+function _getSmoothGroupPointList( pList, smoothFilter, curvature ){
     var obj = {
-        points: pList
+        points: pList,
+        curvature
     }
     if (_.isFunction(smoothFilter)) {
         obj.smoothFilter = smoothFilter;

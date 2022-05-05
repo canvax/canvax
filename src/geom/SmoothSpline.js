@@ -9,11 +9,14 @@ import Vector from "./Vector";
 import _ from "../utils/underscore";
 
 /**
- * @inner
+ * curvature 曲率
  */
-function interpolate(p0, p1, p2, p3, t, t2, t3) {
-    var v0 = (p2 - p0) * 0.25;
-    var v1 = (p3 - p1) * 0.25;
+function interpolate(p0, p1, p2, p3, t, t2, t3, curvature) {
+    if( isNaN( curvature ) || curvature == null ){
+        curvature = 0.25
+    };
+    var v0 = (p2 - p0) * curvature;
+    var v1 = (p3 - p1) * curvature;
     return (2 * (p1 - p2) + v0 + v1) * t3 
            + (- 3 * (p1 - p2) - 2 * v0 - v1) * t2
            + v0 * t + p1;
@@ -26,6 +29,7 @@ export default function ( opt ) {
     var points = opt.points;
     var isLoop = opt.isLoop;
     var smoothFilter = opt.smoothFilter;
+    var curvature = opt.curvature; //曲率
 
     var len = points.length;
     if( len == 1 ){
@@ -73,8 +77,8 @@ export default function ( opt ) {
         var w3 = w * w2;
 
         var rp = [
-                interpolate(p0[0], p1[0], p2[0], p3[0], w, w2, w3),
-                interpolate(p0[1], p1[1], p2[1], p3[1], w, w2, w3)
+                interpolate(p0[0], p1[0], p2[0], p3[0], w, w2, w3, curvature),
+                interpolate(p0[1], p1[1], p2[1], p3[1], w, w2, w3, curvature)
                 ];
 
         _.isFunction(smoothFilter) && smoothFilter( rp );

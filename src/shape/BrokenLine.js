@@ -21,12 +21,13 @@ export default class BrokenLine extends Shape
         var _context = _.extend(true,{
             lineType: null,
             smooth: false,
+            curvature: null, //曲率 , smooth==true生效
             pointList: [], //{Array}  // 必须，各个顶角坐标
             smoothFilter: Utils.__emptyFunc
         }, opt.context );
 
         if( !opt.isClone && _context.smooth ){
-            _context.pointList = _Math.getSmoothPointList( _context.pointList, _context.smoothFilter );
+            _context.pointList = _Math.getSmoothPointList( _context.pointList, _context.smoothFilter, _context.curvature );
         };
 
         opt.context = _context;
@@ -42,14 +43,14 @@ export default class BrokenLine extends Shape
     {
         if (name == "pointList" || name == "smooth" || name == "lineType") {
             if(name == "pointList" && this.context.smooth ){
-                this.context.pointList = _Math.getSmoothPointList( value , this.context.smoothFilter);
+                this.context.pointList = _Math.getSmoothPointList( value , this.context.smoothFilter, _context.curvature);
                 this._pointList = value;
             };
             if( name == "smooth" ){
                 //如果是smooth的切换
                 if( value ){
                     //从原始中拿数据重新生成
-                    this.context.pointList = _Math.getSmoothPointList( this._pointList , this.context.smoothFilter);
+                    this.context.pointList = _Math.getSmoothPointList( this._pointList , this.context.smoothFilter, _context.curvature);
                 } else {
                     this.context.pointList = this._pointList;
                 }
