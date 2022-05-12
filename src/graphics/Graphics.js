@@ -411,6 +411,9 @@ export default class Graphics
             this.shadowOffsetY, //阴影向下偏移量
             this.shadowBlur   , //阴影模糊效果
             this.shadowColor  , //阴影颜色
+            this.lineCap,
+            this.lineJoin,
+            this.miterLimit,
             shape
         );
 

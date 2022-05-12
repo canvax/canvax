@@ -1,6 +1,6 @@
 export default class GraphicsData
 {
-    constructor(lineWidth, strokeStyle, strokeAlpha, fillStyle, fillAlpha, shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, shape)
+    constructor(lineWidth, strokeStyle, strokeAlpha, fillStyle, fillAlpha, shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, lineCap, lineJoin, miterLimit, shape)
     {
         this.lineWidth     = lineWidth;
         this.strokeStyle   = strokeStyle;
@@ -13,6 +13,10 @@ export default class GraphicsData
         this.shadowOffsetY = shadowOffsetY;
         this.shadowBlur    = shadowBlur;
         this.shadowColor   = shadowColor;
+
+        this.lineCap       = lineCap;
+        this.lineJoin      = lineJoin;
+        this.miterLimit    = miterLimit;
         
         this.shape = shape;
         this.type = shape.type;
@@ -38,6 +42,11 @@ export default class GraphicsData
             this.shadowOffsetY ,
             this.shadowBlur    ,
             this.shadowColor   ,
+
+            this.lineCap       ,
+            this.lineJoin      , 
+            this.miterLimit    ,
+
             this.shape
         );
         cloneGraphicsData.fill = this.fill;
@@ -70,6 +79,11 @@ export default class GraphicsData
         this.shadowOffsetY = style.shadowOffsetY; //阴影向下偏移量
         this.shadowBlur    = style.shadowBlur;    //阴影模糊效果
         this.shadowColor   = style.shadowColor;   //阴影颜色
+
+        this.lineCap       = style.lineCap;
+        this.lineJoin      = style.lineJoin;
+        this.miterLimit    = style.miterLimit;
+        
     }
 
     hasFill()

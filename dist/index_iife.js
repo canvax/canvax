@@ -5033,7 +5033,7 @@ var canvax = (function () {
 	}(DisplayObjectContainer);
 
 	var GraphicsData = /*#__PURE__*/function () {
-	  function GraphicsData(lineWidth, strokeStyle, strokeAlpha, fillStyle, fillAlpha, shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, shape) {
+	  function GraphicsData(lineWidth, strokeStyle, strokeAlpha, fillStyle, fillAlpha, shadowOffsetX, shadowOffsetY, shadowBlur, shadowColor, lineCap, lineJoin, miterLimit, shape) {
 	    _classCallCheck(this, GraphicsData);
 
 	    this.lineWidth = lineWidth;
@@ -5045,6 +5045,9 @@ var canvax = (function () {
 	    this.shadowOffsetY = shadowOffsetY;
 	    this.shadowBlur = shadowBlur;
 	    this.shadowColor = shadowColor;
+	    this.lineCap = lineCap;
+	    this.lineJoin = lineJoin;
+	    this.miterLimit = miterLimit;
 	    this.shape = shape;
 	    this.type = shape.type;
 	    this.holes = []; //这两个可以被后续修改， 具有一票否决权
@@ -5057,7 +5060,7 @@ var canvax = (function () {
 	  _createClass(GraphicsData, [{
 	    key: "clone",
 	    value: function clone() {
-	      var cloneGraphicsData = new GraphicsData(this.lineWidth, this.strokeStyle, this.strokeAlpha, this.fillStyle, this.fillAlpha, this.shadowOffsetX, this.shadowOffsetY, this.shadowBlur, this.shadowColor, this.shape);
+	      var cloneGraphicsData = new GraphicsData(this.lineWidth, this.strokeStyle, this.strokeAlpha, this.fillStyle, this.fillAlpha, this.shadowOffsetX, this.shadowOffsetY, this.shadowBlur, this.shadowColor, this.lineCap, this.lineJoin, this.miterLimit, this.shape);
 	      cloneGraphicsData.fill = this.fill;
 	      cloneGraphicsData.line = this.line;
 	      return cloneGraphicsData;
@@ -5091,6 +5094,10 @@ var canvax = (function () {
 	      this.shadowBlur = style.shadowBlur; //阴影模糊效果
 
 	      this.shadowColor = style.shadowColor; //阴影颜色
+
+	      this.lineCap = style.lineCap;
+	      this.lineJoin = style.lineJoin;
+	      this.miterLimit = style.miterLimit;
 	    }
 	  }, {
 	    key: "hasFill",
@@ -5984,7 +5991,7 @@ var canvax = (function () {
 	      this.shadowOffsetY, //阴影向下偏移量
 	      this.shadowBlur, //阴影模糊效果
 	      this.shadowColor, //阴影颜色
-	      shape);
+	      this.lineCap, this.lineJoin, this.miterLimit, shape);
 	      this.graphicsData.push(data);
 
 	      if (data.type === SHAPES.POLY) {
@@ -7972,7 +7979,7 @@ var canvax = (function () {
 	}(Shape);
 
 	var Canvax = {
-	  version: "2.0.79",
+	  version: "2.0.80",
 	  _: _,
 	  $: $,
 	  event: event,
