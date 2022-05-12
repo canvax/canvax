@@ -41,16 +41,17 @@ export default class BrokenLine extends Shape
 
     watch(name, value, preValue) 
     {
-        if (name == "pointList" || name == "smooth" || name == "lineType") {
+        let names = ['curvature' , 'pointList', 'smooth' , 'lineType']
+        if ( names.indexOf( name ) > -1 ) {
             if(name == "pointList" && this.context.smooth ){
-                this.context.pointList = _Math.getSmoothPointList( value , this.context.smoothFilter, _context.curvature);
+                this.context.pointList = _Math.getSmoothPointList( value , this.context.smoothFilter, this.context.curvature);
                 this._pointList = value;
             };
             if( name == "smooth" ){
                 //如果是smooth的切换
                 if( value ){
                     //从原始中拿数据重新生成
-                    this.context.pointList = _Math.getSmoothPointList( this._pointList , this.context.smoothFilter, _context.curvature);
+                    this.context.pointList = _Math.getSmoothPointList( this._pointList , this.context.smoothFilter, this.context.curvature);
                 } else {
                     this.context.pointList = this._pointList;
                 }

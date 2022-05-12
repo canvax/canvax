@@ -6904,9 +6904,11 @@ var BrokenLine = /*#__PURE__*/function (_Shape) {
   _createClass(BrokenLine, [{
     key: "watch",
     value: function watch(name, value, preValue) {
-      if (name == "pointList" || name == "smooth" || name == "lineType") {
+      var names = ['curvature', 'pointList', 'smooth', 'lineType'];
+
+      if (names.indexOf(name) > -1) {
         if (name == "pointList" && this.context.smooth) {
-          this.context.pointList = myMath.getSmoothPointList(value, this.context.smoothFilter, _context.curvature);
+          this.context.pointList = myMath.getSmoothPointList(value, this.context.smoothFilter, this.context.curvature);
           this._pointList = value;
         }
 
@@ -6914,7 +6916,7 @@ var BrokenLine = /*#__PURE__*/function (_Shape) {
           //如果是smooth的切换
           if (value) {
             //从原始中拿数据重新生成
-            this.context.pointList = myMath.getSmoothPointList(this._pointList, this.context.smoothFilter, _context.curvature);
+            this.context.pointList = myMath.getSmoothPointList(this._pointList, this.context.smoothFilter, this.context.curvature);
           } else {
             this.context.pointList = this._pointList;
           }
@@ -7976,7 +7978,7 @@ var Diamond = /*#__PURE__*/function (_Shape) {
 }(Shape);
 
 var Canvax = {
-  version: "2.0.80",
+  version: "2.0.81",
   _: _,
   $: $,
   event: event,
