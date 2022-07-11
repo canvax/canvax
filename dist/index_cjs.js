@@ -7980,7 +7980,7 @@ var Diamond = /*#__PURE__*/function (_Shape) {
 }(Shape);
 
 var Canvax = {
-  version: "2.0.81",
+  version: "2.0.82",
   _: _,
   $: $,
   event: event,

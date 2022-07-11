@@ -14,7 +14,7 @@
     <script type="text/javascript" src="http://seajs.github.io/examples/sea-modules/seajs/seajs/2.1.1/sea.js"></script>
     -->
 
-    <script type="text/javascript" src="../../dist/canvax.js"></script>
+    <script type="text/javascript" src="../../dist/index_iife.js"></script>
     <script src="../js/jquery-1.11.1.min.js"></script>
     <script src="../js/color.js"></script>
     <script src="../js/underscore.js"></script>
@@ -26,51 +26,64 @@
     <script>
 
     var pageload = function(){
-        var Shapes = Canvax.Shapes;
+        var Shapes = canvax.Shapes;
         var colorInd=0;
 
 
         var box = $("#canvasTest");
-        app = new Canvax.App({
+        app = new canvax.App({
             id : "canvax",
             el : box
         });
         app.registEvent();
 
-        stage = new Canvax.Display.Stage({
+        stage = new canvax.Display.Stage({
             id : "chart0"
         });
 
-        var _sector = new Shapes.Sector({
+        window.sector =new Shapes.Sector({
+            id : "sector",
             context : {
-                x : 100,
-                y : 100,
-                r : 50,
-                startAngle: -90,
-                endAngle: 20,
-                fillStyle: "red"
+                x : 300,
+                y : 300,
+
+                //clockwise : true,//逆时针
+                r : 100,
+                r0: 70, 
+                startAngle : 135 ,
+
+                endAngle : 45,
+                fillStyle:colors.getColor(colorInd++),
+                strokeStyle:colors.getColor(colorInd++),
+                lineWidth : 1
+                //lineJoin : "round"
+            }
+        });
+
+        var srect = sector.getBound();
+        var sector_rect = new Shapes.Rect({
+            context : {
+                x           : 300 + srect.x,
+                y           : 300 + srect.y,
+                width       : srect.width,
+                height      : srect.height,
+                strokeStyle : "red",
+                lineWidth   : 1
             }
         })
 
-        _sector.hover(function(){
-            this.context.r += 3;
-        } , function(){
-            this.context.r -= 3;
+        sector.on("mouseover" , function(){
+            this.context.lineWidth = 2;
         })
 
-        stage.addChild(_sector);
-        app.addChild(stage);
-        
-        _sector.animate({
-            endAngle : 270
+        sector.on("mouseout" , function(){
+            this.context.lineWidth = 1;
         })
 
-        setTimeout( function(){
-            debugger
-            _sector.animate({
-                endAngle : 200
-            });
-        } , 1000)
+
+        stage.addChild(sector);
+        stage.addChild(sector_rect);
+        app.addChild(stage); 
 
     }
 
