@@ -6870,6 +6870,8 @@ var canvax = (function () {
 	function _createSuper$a(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct$a(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
 
 	function _isNativeReflectConstruct$a() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+	var mathMin = Math.min;
+	var mathMax = Math.max;
 
 	var BrokenLine = /*#__PURE__*/function (_Shape) {
 	  _inherits(BrokenLine, _Shape);
@@ -6877,8 +6879,6 @@ var canvax = (function () {
 	  var _super = _createSuper$a(BrokenLine);
 
 	  function BrokenLine(opt) {
-	    var _this;
-
 	    _classCallCheck(this, BrokenLine);
 
 	    opt = Utils.checkOpt(opt);
@@ -6886,70 +6886,198 @@ var canvax = (function () {
 	    var _context = _.extend(true, {
 	      lineType: null,
 	      smooth: false,
-	      curvature: null,
-	      //曲率 , smooth==true生效
-	      pointList: [],
-	      //{Array}  // 必须，各个顶角坐标
-	      smoothFilter: Utils.__emptyFunc
+	      smoothMonotone: 'none',
+	      pointList: [] //{Array}  // 必须，各个顶角坐标
+
 	    }, opt.context);
 
-	    if (!opt.isClone && _context.smooth) {
-	      _context.pointList = myMath.getSmoothPointList(_context.pointList, _context.smoothFilter, _context.curvature);
+	    if (_context.smooth === true || _context.smooth === 'true') {
+	      _context.smooth = 0.5; //smooth 0-1
 	    }
+
 	    opt.context = _context;
 	    opt.type = "brokenline";
-	    _this = _super.call(this, opt); //保存好原始值
-
-	    _this._pointList = _context.pointList;
-	    return _this;
+	    return _super.call(this, opt);
 	  }
 
 	  _createClass(BrokenLine, [{
 	    key: "watch",
 	    value: function watch(name, value, preValue) {
-	      var names = ['curvature', 'pointList', 'smooth', 'lineType'];
+	      var names = ['pointList', 'smooth', 'lineType', 'smoothMonotone'];
 
 	      if (names.indexOf(name) > -1) {
-	        if (name == "pointList" && this.context.smooth) {
-	          this.context.pointList = myMath.getSmoothPointList(value, this.context.smoothFilter, this.context.curvature);
-	          this._pointList = value;
-	        }
-
-	        if (name == "smooth") {
-	          //如果是smooth的切换
-	          if (value) {
-	            //从原始中拿数据重新生成
-	            this.context.pointList = myMath.getSmoothPointList(this._pointList, this.context.smoothFilter, this.context.curvature);
-	          } else {
-	            this.context.pointList = this._pointList;
-	          }
-	        }
 	        this.graphics.clear();
 	      }
 	    }
 	  }, {
 	    key: "draw",
 	    value: function draw(graphics) {
-	      var context = this.context;
-	      var pointList = context.pointList;
+	      var pointList = this.context.pointList;
+	      var k = this.drawGraphics(graphics, pointList, this.context.smooth, this.context.smoothMonotone);
+	      console.log(k);
+	      return this;
+	    }
+	    /**
+	     * 绘制非单调的平滑线
+	     */
+
+	  }, {
+	    key: "drawGraphics",
+	    value: function drawGraphics(ctx) {
+	      var points = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
+	      var smooth = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0.5;
+	      var smoothMonotone = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 'x' | 'y' | 'none';
+	      var start = 0;
+	      var dir = 1;
+	      var segLen = points.length;
+	      var prevX;
+	      var prevY;
+	      var cpx0;
+	      var cpy0;
+	      var cpx1;
+	      var cpy1;
+	      var idx = start;
 	      var beginPath = false;
+	      var k = 0;
 
-	      for (var i = 0, l = pointList.length; i < l; i++) {
-	        var point = pointList[i];
+	      for (; k < segLen; k++) {
+	        var point = points[idx];
 
-	        if (myMath.isValibPoint(point)) {
-	          if (!beginPath) {
-	            graphics.moveTo(point[0], point[1]);
-	          } else {
-	            graphics.lineTo(point[0], point[1]);
-	          }
-	          beginPath = true;
-	        } else {
+	        if (!myMath.isValibPoint(point)) {
+	          //如果发现是空点，那么就跳过，同时吧 beginPath 设置为false，代表一个path已经结束
+	          idx += dir;
 	          beginPath = false;
+	          continue;
 	        }
+
+	        var x = point[0];
+	        var y = point[1];
+
+	        if (!beginPath) {
+	          ctx.moveTo(x, y);
+	          cpx0 = x;
+	          cpy0 = y;
+	        } else {
+	          var dx = x - prevX;
+	          var dy = y - prevY; //忽略太过微小的片段
+
+	          if (dx * dx + dy * dy < 0.5) {
+	            idx += dir;
+	            continue;
+	          }
+
+	          if (smooth > 0) {
+	            var nextIdx = idx + dir;
+	            var nextPoint = points[nextIdx];
+	            var nextX = nextPoint ? nextPoint[0] : null;
+	            var nextY = nextPoint ? nextPoint[1] : null; //忽略重复的点
+
+	            while (nextX === x && nextY === y && k < segLen) {
+	              k++;
+	              nextIdx += dir;
+	              idx += dir;
+	              nextPoint = points[nextIdx];
+	              nextX = nextPoint ? nextPoint[0] : null;
+	              nextY = nextPoint ? nextPoint[1] : null;
+	              x = points[idx][0];
+	              y = points[idx][1];
+	              dx = x - prevX;
+	              dy = y - prevY;
+	            }
+
+	            var tmpK = k + 1;
+	            var ratioNextSeg = 0.5;
+	            var vx = 0;
+	            var vy = 0;
+	            var nextCpx0 = void 0;
+	            var nextCpy0 = void 0; // 最后一个点
+
+	            if (tmpK >= segLen || !myMath.isValibPoint({
+	              x: nextX,
+	              y: nextY
+	            })) {
+	              cpx1 = x;
+	              cpy1 = y;
+	            } else {
+	              vx = nextX - prevX;
+	              vy = nextY - prevY;
+	              var dx0 = x - prevX;
+	              var dx1 = nextX - x;
+	              var dy0 = y - prevY;
+	              var dy1 = nextY - y;
+	              var lenPrevSeg = void 0;
+	              var lenNextSeg = void 0;
+
+	              if (smoothMonotone === 'x') {
+	                lenPrevSeg = Math.abs(dx0);
+	                lenNextSeg = Math.abs(dx1);
+
+	                var _dir = vx > 0 ? 1 : -1;
+
+	                cpx1 = x - _dir * lenPrevSeg * smooth;
+	                cpy1 = y;
+	                nextCpx0 = x + _dir * lenNextSeg * smooth;
+	                nextCpy0 = y;
+	              } else if (smoothMonotone === 'y') {
+	                lenPrevSeg = Math.abs(dy0);
+	                lenNextSeg = Math.abs(dy1);
+
+	                var _dir2 = vy > 0 ? 1 : -1;
+
+	                cpx1 = x;
+	                cpy1 = y - _dir2 * lenPrevSeg * smooth;
+	                nextCpx0 = x;
+	                nextCpy0 = y + _dir2 * lenNextSeg * smooth;
+	              } else {
+	                lenPrevSeg = Math.sqrt(dx0 * dx0 + dy0 * dy0);
+	                lenNextSeg = Math.sqrt(dx1 * dx1 + dy1 * dy1); // seg长度的使用比例
+
+	                ratioNextSeg = lenNextSeg / (lenNextSeg + lenPrevSeg);
+	                cpx1 = x - vx * smooth * (1 - ratioNextSeg);
+	                cpy1 = y - vy * smooth * (1 - ratioNextSeg); // 下一段的cp0
+
+	                nextCpx0 = x + vx * smooth * ratioNextSeg;
+	                nextCpy0 = y + vy * smooth * ratioNextSeg; // 点和下一个点之间的平滑约束。
+	                // 平滑后避免过度极端。
+
+	                nextCpx0 = mathMin(nextCpx0, mathMax(nextX, x));
+	                nextCpy0 = mathMin(nextCpy0, mathMax(nextY, y));
+	                nextCpx0 = mathMax(nextCpx0, mathMin(nextX, x));
+	                nextCpy0 = mathMax(nextCpy0, mathMin(nextY, y)); // 根据下一段调整后的 cp0 重新回收 cp1。
+
+	                vx = nextCpx0 - x;
+	                vy = nextCpy0 - y;
+	                cpx1 = x - vx * lenPrevSeg / lenNextSeg;
+	                cpy1 = y - vy * lenPrevSeg / lenNextSeg; // 点和上一个点之间的平滑约束。
+	                // 平滑后避免过度极端。
+
+	                cpx1 = mathMin(cpx1, mathMax(prevX, x));
+	                cpy1 = mathMin(cpy1, mathMax(prevY, y));
+	                cpx1 = mathMax(cpx1, mathMin(prevX, x));
+	                cpy1 = mathMax(cpy1, mathMin(prevY, y)); //再次調整下一個cp0。
+
+	                vx = x - cpx1;
+	                vy = y - cpy1;
+	                nextCpx0 = x + vx * lenNextSeg / lenPrevSeg;
+	                nextCpy0 = y + vy * lenNextSeg / lenPrevSeg;
+	              }
+	            }
+
+	            ctx.bezierCurveTo(cpx0, cpy0, cpx1, cpy1, x, y);
+	            cpx0 = nextCpx0;
+	            cpy0 = nextCpy0;
+	          } else {
+	            ctx.lineTo(x, y);
+	          }
+	        }
+
+	        prevX = x;
+	        prevY = y;
+	        idx += dir;
+	        beginPath = true;
 	      }
 
-	      return this;
+	      return k;
 	    }
 	  }]);
 
@@ -7981,7 +8109,7 @@ var canvax = (function () {
 	}(Shape);
 
 	var Canvax = {
-	  version: "2.0.82",
+	  version: "2.0.83",
 	  _: _,
 	  $: $,
 	  event: event,
@@ -7999,6 +8127,7 @@ var canvax = (function () {
 	};
 	Canvax.Shapes = {
 	  BrokenLine: BrokenLine,
+	  //BrokenLineOld: BrokenLineOld,
 	  Circle: Circle$1,
 	  Droplet: Droplet,
 	  Ellipse: Ellipse$1,

@@ -10,6 +10,7 @@ import Text from "./display/Text";
 
 //shapes
 import BrokenLine from "./shape/BrokenLine";
+//import BrokenLineOld from "./shape/BrokenLineOld"; 
 import Circle from "./shape/Circle";
 import Droplet from "./shape/Droplet";
 import Ellipse from "./shape/Ellipse";
@@ -49,6 +50,7 @@ Canvax.Display = {
 
 Canvax.Shapes = {
     BrokenLine : BrokenLine,
+    //BrokenLineOld: BrokenLineOld,
     Circle     : Circle,
     Droplet    : Droplet,
     Ellipse    : Ellipse,

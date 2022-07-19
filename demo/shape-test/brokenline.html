@@ -24,11 +24,14 @@
 <body onload="pageload()">
     <div id="ready"></div>
     <script>
+    
+   
 
     var pageload = function(){
         var Shapes = canvax.Shapes;
         var colorInd=1;
 
+        var BrokenLineOld = Shapes.BrokenLineOld;
 
         var box = $("#canvasTest");
         window.app = new canvax.App({
@@ -43,32 +46,128 @@
             id : "chart0"
         });
 
+        let pointList = [ 
+            [10, 10], 
+            [100, 10],
+            [150, 130],
+            [200, 130],
+            [250, 10],
+            undefined, 
+            [300, 40], 
+            [350, 60], 
+            [400, 30 ], 
+            [450, 30 ], 
+            [480, 200 ], 
+            [520, 200 ], 
+            [550, 20 ]
+        ]
+
+        let linePoints = [
+            [0, -2.7],
+            [34.6, -0],
+            [69.1, -106.1],
+            [103.7, -15.9],
+            [138.3, -15.9],
+            [172.8, -172.5],
+            [207.4, -172.5],
+            [242, -15.9],
+            [276.5, -10.6],
+            [311.1, -13.3],
+            [345.7, -106.1],
+            [380.2, -2.7],
+            [414.8, -2.7],
+            [449.3, -0],
+            [483.9, -106.1],
+            [518.5, -15.9],
+            [553, -15.9],
+            [587.6, -145.9],
+            [622.2, -172.5],
+            [656.7, -15.9],
+            [691.3, -10.6],
+            [725.9, -13.3],
+            [760.4, -106.1],
+            [795, -2.7]
+        ]
 
 
-        var brokenLine = new Shapes.BrokenLine({
+      
+            var brokenLine = new Shapes.BrokenLine({
+                id : "brokenline",
+                context : {
+                    x:10,
+                    pointList,
+                    strokeStyle : '#666',//colors.getColor(colorInd++),//colors.getColor(colorInd++),
+                    lineWidth : 2,
+                    smooth    : false,
+                    //shadowColor: 'red'
+                }
+            });
+            stage.addChild(brokenLine);
+    
+
+        var brokenLine_1 = new Shapes.BrokenLine({
             id : "brokenline",
             context : {
-                x:10,
-                pointList : [ 
-                    [10, 10], 
-                    [100, 10],
-                    [150, 130],
-                    [200, 130],
-                    [250, 10],
-                    undefined, 
-                    [300, 40], 
-                    [350, 60], 
-                    [400, 30 ]
-                ],
-                strokeStyle : '#666',//colors.getColor(colorInd++),//colors.getColor(colorInd++),
-                lineWidth : 1,
+                x: 10,
+                y: 200,
+                pointList,
+                strokeStyle : 'blue',//colors.getColor(colorInd++),//colors.getColor(colorInd++),
+                lineWidth : 2,
                 smooth    : true,
                 //shadowColor: 'red'
             }
         });
+        stage.addChild(brokenLine_1);
+
+        if(BrokenLineOld){
+            var brokenLine_2 = new BrokenLineOld({
+                id : "brokenline",
+                context : {
+                    x: 10,
+                    y: 200,
+                    pointList,
+                    strokeStyle : 'red',//colors.getColor(colorInd++),//colors.getColor(colorInd++),
+                    lineWidth : 2,
+                    smooth : true,
+                    //shadowColor: 'red'
+                }
+            });
+            stage.addChild(brokenLine_2);
+        }
+
+        if(BrokenLineOld){
+            var brokenLine_3 = new BrokenLineOld({
+            id : "brokenline",
+            context : {
+                x: 40,
+                y: 550,
+                pointList: linePoints,
+                strokeStyle : 'blue',//colors.getColor(colorInd++),//colors.getColor(colorInd++),
+                lineWidth : 2,
+                smooth    : true,
+                //shadowColor: 'red'
+            }
+        });
+        stage.addChild(brokenLine_3);
+        }
         
 
-        stage.addChild(brokenLine);
+
+        var brokenLine_4 = new Shapes.BrokenLine({
+            id : "brokenline",
+            context : {
+                x: 40,
+                y: 790,
+                pointList: linePoints,
+                strokeStyle : 'blue',//colors.getColor(colorInd++),//colors.getColor(colorInd++),
+                lineWidth : 2,
+                smooth    : true,
+                //shadowColor: 'red'
+            }
+        });
+        stage.addChild(brokenLine_4);
+
+
         app.addChild(stage); 
 
     }
@@ -82,7 +181,7 @@
 
 
 
-<div id="canvasTest" style='background:#f3f5f4;width:1200px;height:400px;'></div>
+<div id="canvasTest" style='background:#f3f5f4;width:1200px;height:1000px;'></div>
 </body>
 </html>
 
