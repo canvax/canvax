@@ -32,6 +32,7 @@ export default class Diamond extends Shape
         //并不清楚是start.x 还是end.x， 当然，这并不重要
         if(['includedAngle'].indexOf(name) > -1){
             this.graphics.clear();
+            this.draw( this.graphics );
         };
     }
 

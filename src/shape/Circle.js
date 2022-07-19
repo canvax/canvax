@@ -33,6 +33,7 @@ export default class Circle extends Shape
     {
         if ( name == "r" ) {
             this.graphics.clear();
+            this.draw( this.graphics );
         }
     }
 

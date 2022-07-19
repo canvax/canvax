@@ -40,6 +40,7 @@ export default class Path extends Shape
     {
         if (name == "path") { //如果path有变动，需要自动计算新的pointList
             this.graphics.clear();
+            this.draw( this.graphics );
         }
     }
 

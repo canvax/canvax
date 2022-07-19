@@ -6907,14 +6907,14 @@ var canvax = (function () {
 
 	      if (names.indexOf(name) > -1) {
 	        this.graphics.clear();
+	        this.draw(this.graphics);
 	      }
 	    }
 	  }, {
 	    key: "draw",
 	    value: function draw(graphics) {
 	      var pointList = this.context.pointList;
-	      var k = this.drawGraphics(graphics, pointList, this.context.smooth, this.context.smoothMonotone);
-	      console.log(k);
+	      this.drawGraphics(graphics, pointList, this.context.smooth, this.context.smoothMonotone);
 	      return this;
 	    }
 	    /**
@@ -7111,6 +7111,7 @@ var canvax = (function () {
 	    value: function watch(name, value, preValue) {
 	      if (name == "r") {
 	        this.graphics.clear();
+	        this.draw(this.graphics);
 	      }
 	    }
 	  }, {
@@ -7168,6 +7169,7 @@ var canvax = (function () {
 	      if (name == "path") {
 	        //如果path有变动，需要自动计算新的pointList
 	        this.graphics.clear();
+	        this.draw(this.graphics);
 	      }
 	    }
 	  }, {
@@ -7576,6 +7578,7 @@ var canvax = (function () {
 	    value: function watch(name, value, preValue) {
 	      if (name == "hr" || name == "vr") {
 	        this.graphics.clear();
+	        this.draw(this.graphics);
 	      }
 	    }
 	  }, {
@@ -7630,6 +7633,7 @@ var canvax = (function () {
 	      //调用parent的setGraphics
 	      if (name == "pointList" || name == "smooth" || name == "lineType") {
 	        this.graphics.clear();
+	        this.draw(this.graphics);
 	      }
 	    }
 	  }, {
@@ -7738,6 +7742,7 @@ var canvax = (function () {
 	      //并不清楚是start.x 还是end.x， 当然，这并不重要
 	      if (name == "x" || name == "y") {
 	        this.graphics.clear();
+	        this.draw(this.graphics);
 	      }
 	    }
 	  }, {
@@ -7781,6 +7786,7 @@ var canvax = (function () {
 	    value: function watch(name, value, preValue) {
 	      if (name == "width" || name == "height" || name == "radius") {
 	        this.graphics.clear();
+	        this.draw(this.graphics);
 	      }
 	    }
 	    /**
@@ -7880,6 +7886,7 @@ var canvax = (function () {
 	        this.isRing = false; //是否为一个圆环，这里也要开始初始化一下
 
 	        this.graphics.clear();
+	        this.draw(this.graphics);
 	      }
 	    }
 	  }, {
@@ -8081,6 +8088,7 @@ var canvax = (function () {
 	      //并不清楚是start.x 还是end.x， 当然，这并不重要
 	      if (['includedAngle'].indexOf(name) > -1) {
 	        this.graphics.clear();
+	        this.draw(this.graphics);
 	      }
 	    }
 	  }, {
@@ -8109,7 +8117,7 @@ var canvax = (function () {
 	}(Shape);
 
 	var Canvax = {
-	  version: "2.0.83",
+	  version: "2.0.84",
 	  _: _,
 	  $: $,
 	  event: event,

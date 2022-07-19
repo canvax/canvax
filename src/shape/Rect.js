@@ -34,6 +34,7 @@ export default class Rect extends Shape
     {
         if ( name == "width" || name == "height" || name == "radius" ) {
             this.graphics.clear();
+            this.draw( this.graphics );
         }
     }
 

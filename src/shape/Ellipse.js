@@ -34,6 +34,7 @@ export default class Ellipse extends Shape
     {
         if ( name == "hr" || name == "vr" ) {
             this.graphics.clear();
+            this.draw( this.graphics );
         }
     }
 

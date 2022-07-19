@@ -44,6 +44,7 @@ export default class BrokenLine extends Shape
         let names = ['pointList', 'smooth', 'lineType', 'smoothMonotone']
         if ( names.indexOf( name ) > -1 ) {
             this.graphics.clear();
+            this.draw( this.graphics );
         }
     }
 
@@ -51,8 +52,7 @@ export default class BrokenLine extends Shape
     draw( graphics ) 
     {
         let pointList = this.context.pointList;
-        let k = this.drawGraphics( graphics, pointList, this.context.smooth, this.context.smoothMonotone );
-        console.log(k)
+        this.drawGraphics( graphics, pointList, this.context.smooth, this.context.smoothMonotone );
         return this;
     }
 

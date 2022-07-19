@@ -45,6 +45,7 @@ export default class Sector extends Shape
             //因为这里的graphs不一样。
             this.isRing = false;//是否为一个圆环，这里也要开始初始化一下
             this.graphics.clear();
+            this.draw( this.graphics );
         };
     }
  

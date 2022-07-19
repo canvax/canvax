@@ -44,6 +44,7 @@ export default class Polygon extends Shape
         //调用parent的setGraphics
         if (name == "pointList" || name == "smooth" || name == "lineType") {
             this.graphics.clear();
+            this.draw( this.graphics );
         }
     }
 

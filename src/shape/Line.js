@@ -34,6 +34,7 @@ export default class Line extends Shape
         //并不清楚是start.x 还是end.x， 当然，这并不重要
         if (name == "x" || name == "y"){
             this.graphics.clear();
+            this.draw( this.graphics );
         }
     }
 
